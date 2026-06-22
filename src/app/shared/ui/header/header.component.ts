@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, OnInit, computed } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthDialogComponent } from '../../../auth/auth-dialog.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, AuthDialogComponent],
   template: `
     <header class="header">
       <div class="header-inner">
@@ -18,6 +20,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           <a routerLink="/doctor" routerLinkActive="active">دکتر</a>
           <a routerLink="/gallery" routerLinkActive="active">گالری</a>
           <a routerLink="/faq" routerLinkActive="active">سوالات</a>
+          <button class="auth-button" type="button" (click)="openAuth()">{{ authLabel() }}</button>
           <a class="nav-cta" routerLink="/booking">رزرو نوبت</a>
         </nav>
         <button class="menu-toggle" (click)="menuOpen = !menuOpen" aria-label="منو">
@@ -31,9 +34,13 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         <a routerLink="/doctor" (click)="menuOpen = false">دکتر</a>
         <a routerLink="/gallery" (click)="menuOpen = false">گالری</a>
         <a routerLink="/faq" (click)="menuOpen = false">سوالات</a>
+        <button class="mobile-auth" type="button" (click)="openAuth(); menuOpen = false">{{ authLabel() }}</button>
         <a class="mobile-cta" routerLink="/booking" (click)="menuOpen = false">رزرو نوبت</a>
       </div>
     </header>
+    @if (authOpen) {
+      <app-auth-dialog (close)="authOpen = false"></app-auth-dialog>
+    }
   `,
   styles: [`
     .header {
@@ -104,6 +111,8 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       background: #0066cc;
       border-radius: 1px;
     }
+    .auth-button, .mobile-auth { border: 0; background: transparent; color: #0066cc; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .mobile-auth { text-align: right; padding: 12px 0; }
     .nav-cta {
       background: #0066cc !important;
       color: #fff !important;
@@ -181,6 +190,26 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     }
   `]
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   menuOpen = false;
+  authOpen = false;
+  authLabel = computed(() => {
+    const user = this.auth.currentUser();
+    return user ? `${user.firstName} ${user.lastName}` : 'ورود به داشبورد';
+  });
+
+  constructor(private auth: AuthService, private route: ActivatedRoute, private router: Router) {}
+
+  ngOnInit() {
+    this.route.queryParamMap.subscribe(params => {
+      if (params.get('auth') === 'login') {
+        this.authOpen = true;
+        this.router.navigate([], { queryParams: { auth: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      }
+    });
+  }
+
+  openAuth() {
+    this.authOpen = true;
+  }
 }
