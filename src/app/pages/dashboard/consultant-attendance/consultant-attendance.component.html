@@ -1,0 +1,15 @@
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Admin Dashboard</p>
+      <h1>Consultant Attendance</h1>
+      <p>Consultant ID: {{ consultantId }}</p>
+    </div>
+    <a routerLink="/dashboard/consultants">Back to Consultants</a>
+  </header>
+
+  <app-table *ngIf="attendanceItems.length; else noAttendance" [columns]="columns" [data]="attendanceItems"></app-table>
+  <ng-template #noAttendance>
+    <app-empty-state title="No attendance history" description="This consultant has no attendance records yet."></app-empty-state>
+  </ng-template>
+</section>

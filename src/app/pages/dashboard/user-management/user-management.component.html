@@ -1,0 +1,25 @@
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Admin Dashboard</p>
+      <h1>User Management</h1>
+    </div>
+    <button type="button" (click)="openAddDialog()">Add User</button>
+  </header>
+
+  <app-table *ngIf="users.length; else noUsers" [columns]="columns" [data]="users" [actions]="actions" (actionClick)="handleAction($event)"></app-table>
+  <ng-template #noUsers>
+    <app-empty-state title="No users found" description="Add the first user to see it here." actionLabel="Add User" (actionClick)="openAddDialog()"></app-empty-state>
+  </ng-template>
+
+  <app-base-dialog [(open)]="dialogOpen" [mode]="dialogMode" [title]="dialogTitle" (confirmClick)="confirmDialog()">
+    <form *ngIf="dialogMode !== 'delete'" class="dialog-form">
+      <label>First Name <input name="firstName" [(ngModel)]="formUser.firstName" /></label>
+      <label>Last Name <input name="lastName" [(ngModel)]="formUser.lastName" /></label>
+      <label>Phone Number <input name="phoneNumber" [(ngModel)]="formUser.phoneNumber" /></label>
+      <label>Role <select name="role" [(ngModel)]="formUser.role"><option>ADMIN</option><option>CONSULTANT</option><option>PATIENT</option></select></label>
+      <label class="checkbox"><input type="checkbox" name="isActive" [(ngModel)]="formUser.isActive" /> Is Active</label>
+    </form>
+    <p *ngIf="dialogMode === 'delete'">Are you sure you want to delete {{ selectedUser?.firstName }} {{ selectedUser?.lastName }}?</p>
+  </app-base-dialog>
+</section>

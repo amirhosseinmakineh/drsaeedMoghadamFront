@@ -37,14 +37,14 @@ export interface TableActionClick<T = unknown> {
         <thead>
           <tr>
             <th *ngFor="let column of columns" scope="col">{{ column.label }}</th>
-            <th *ngIf="actions.length" scope="col">Actions</th>
+            <th *ngIf="actionItems.length" scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let row of paginatedData">
             <td *ngFor="let column of columns">{{ getCellValue(row, column) }}</td>
-            <td *ngIf="actions.length">
-              <ng-container *ngFor="let item of actions">
+            <td *ngIf="actionItems.length">
+              <ng-container *ngFor="let item of actionItems">
                 <button
                   *ngIf="isActionVisible(item, row)"
                   type="button"
@@ -67,16 +67,21 @@ export interface TableActionClick<T = unknown> {
     </section>
   `
 })
-export class TableComponent<T extends Record<string, unknown> = Record<string, unknown>> {
+export class TableComponent<T extends object = Record<string, unknown>> {
   @Input() columns: TableColumn<T>[] = [];
   @Input() data: T[] = [];
   @Input() actions: TableAction<T>[] = [];
+  @Input() customActions: TableAction<T>[] = [];
   @Input() pageSize = 10;
 
   @Output() actionClick = new EventEmitter<TableActionClick<T>>();
 
   searchTerm = '';
   currentPage = 1;
+
+  get actionItems(): TableAction<T>[] {
+    return this.customActions.length ? this.customActions : this.actions;
+  }
 
   get filteredData(): T[] {
     const term = this.searchTerm.trim().toLowerCase();
