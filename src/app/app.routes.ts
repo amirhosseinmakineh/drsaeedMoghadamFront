@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, dashboardRedirectGuard } from './auth/auth.guard';
+// Auth guards are disabled until the backend auth flow is ready.
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent) },
@@ -9,48 +9,34 @@ export const routes: Routes = [
   { path: 'booking', loadComponent: () => import('./pages/booking/booking.component').then(m => m.BookingComponent) },
   { path: 'gallery', loadComponent: () => import('./pages/gallery/gallery.component').then(m => m.GalleryComponent) },
   { path: 'faq', loadComponent: () => import('./pages/faq/faq.component').then(m => m.FaqComponent) },
-  { path: 'dashboard', canActivate: [dashboardRedirectGuard], children: [] },
+  { path: 'dashboard', redirectTo: 'dashboard/patient', pathMatch: 'full' },
   {
     path: 'dashboard/admin',
-    canActivate: [authGuard],
-    data: { roles: ['ADMIN'], role: 'ADMIN' },
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
   {
     path: 'dashboard/consultant',
-    canActivate: [authGuard],
-    data: { roles: ['CONSULTANT'], role: 'CONSULTANT' },
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
   {
     path: 'dashboard/patient',
-    canActivate: [authGuard],
-    data: { roles: ['PATIENT'], role: 'PATIENT' },
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
 
   {
     path: 'dashboard/users',
-    canActivate: [authGuard],
-    data: { roles: ['ADMIN'], role: 'ADMIN' },
     loadComponent: () => import('./pages/dashboard/user-management/user-management.component').then(m => m.UserManagementComponent)
   },
   {
     path: 'dashboard/consultants',
-    canActivate: [authGuard],
-    data: { roles: ['ADMIN'], role: 'ADMIN' },
     loadComponent: () => import('./pages/dashboard/consultant-management/consultant-management.component').then(m => m.ConsultantManagementComponent)
   },
   {
     path: 'dashboard/consultants/:consultantId/leads',
-    canActivate: [authGuard],
-    data: { roles: ['ADMIN'], role: 'ADMIN' },
     loadComponent: () => import('./pages/dashboard/consultant-leads/consultant-leads.component').then(m => m.ConsultantLeadsComponent)
   },
   {
     path: 'dashboard/consultants/:consultantId/attendance',
-    canActivate: [authGuard],
-    data: { roles: ['ADMIN'], role: 'ADMIN' },
     loadComponent: () => import('./pages/dashboard/consultant-attendance/consultant-attendance.component').then(m => m.ConsultantAttendanceComponent)
   },
   { path: '**', redirectTo: '' }

@@ -1,5 +1,6 @@
-import { Component, Input } from '@angular/core';
-import { AuthService, UserRole } from '../../services/auth.service';
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,13 +21,11 @@ import { AuthService, UserRole } from '../../services/auth.service';
   `]
 })
 export class DashboardComponent {
-  @Input() role: UserRole = 'PATIENT';
-
-  constructor(public auth: AuthService) {}
+  constructor(public auth: AuthService, private router: Router) {}
 
   get title() {
-    if (this.role === 'ADMIN') return 'داشبورد مدیر';
-    if (this.role === 'CONSULTANT') return 'داشبورد مشاور';
+    if (this.router.url.startsWith('/dashboard/admin')) return 'داشبورد مدیر';
+    if (this.router.url.startsWith('/dashboard/consultant')) return 'داشبورد مشاور';
     return 'داشبورد بیمار';
   }
 }
