@@ -18,8 +18,8 @@ export type DialogMode = 'create' | 'edit' | 'delete' | 'view';
       </main>
 
       <footer>
-        <button type="button" (click)="cancel()">Cancel</button>
-        <button type="button" (click)="confirm()">Confirm</button>
+        <button type="button" (click)="cancel()">انصراف</button>
+        <button type="button" (click)="confirm()">تایید</button>
       </footer>
     </section>
   `

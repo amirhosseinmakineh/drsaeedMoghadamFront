@@ -29,15 +29,15 @@ export interface TableActionClick<T = unknown> {
         type="search"
         [ngModel]="searchTerm"
         (ngModelChange)="onSearchChange($event)"
-        placeholder="Search"
-        aria-label="Search table"
+        placeholder="جستجو"
+        aria-label="جستجوی جدول"
       />
 
       <table>
         <thead>
           <tr>
             <th *ngFor="let column of columns" scope="col">{{ column.label }}</th>
-            <th *ngIf="actionItems.length" scope="col">Actions</th>
+            <th *ngIf="actionItems.length" scope="col">عملیات</th>
           </tr>
         </thead>
         <tbody>
@@ -60,9 +60,9 @@ export interface TableActionClick<T = unknown> {
       </table>
 
       <nav aria-label="Table pagination">
-        <button type="button" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
+        <button type="button" (click)="previousPage()" [disabled]="currentPage === 1">قبلی</button>
         <span>{{ currentPage }} / {{ totalPages }}</span>
-        <button type="button" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+        <button type="button" (click)="nextPage()" [disabled]="currentPage === totalPages">بعدی</button>
       </nav>
     </section>
   `
@@ -118,7 +118,13 @@ export class TableComponent<T extends object = Record<string, unknown>> {
   }
 
   getCellValue(row: T, column: TableColumn<T>): unknown {
-    return row[column.key as keyof T];
+    const value = row[column.key as keyof T];
+
+    if (typeof value === 'boolean') {
+      return value ? 'بله' : 'خیر';
+    }
+
+    return value;
   }
 
   emitAction(action: TableAction<T>, row: T): void {

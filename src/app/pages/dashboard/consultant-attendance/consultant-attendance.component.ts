@@ -17,11 +17,11 @@ export class ConsultantAttendanceComponent {
   attendanceItems: AttendanceDto[] = this.consultantService.getConsultantAttendance(this.consultantId);
 
   columns: TableColumn<AttendanceDto>[] = [
-    { key: 'attendanceDate', label: 'Attendance Date' },
-    { key: 'checkInTime', label: 'Check In Time' },
-    { key: 'checkOutTime', label: 'Check Out Time' },
-    { key: 'status', label: 'Status' },
-    { key: 'description', label: 'Description' }
+    { key: 'attendanceDate', label: 'تاریخ حضور' },
+    { key: 'checkInTime', label: 'زمان ورود' },
+    { key: 'checkOutTime', label: 'زمان خروج' },
+    { key: 'status', label: 'وضعیت' },
+    { key: 'description', label: 'توضیحات' }
   ];
 
   constructor(private route: ActivatedRoute, private consultantService: ConsultantService) {}

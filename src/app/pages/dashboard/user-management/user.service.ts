@@ -4,9 +4,9 @@ import { UserDto } from '../../../models/admin-dashboard.model';
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private users: UserDto[] = [
-    { id: 1, firstName: 'Sara', lastName: 'Ahmadi', phoneNumber: '09120000001', role: 'ADMIN', isActive: true },
-    { id: 2, firstName: 'Ali', lastName: 'Karimi', phoneNumber: '09120000002', role: 'CONSULTANT', isActive: true },
-    { id: 3, firstName: 'Mina', lastName: 'Moradi', phoneNumber: '09120000003', role: 'PATIENT', isActive: false }
+    { id: 1, firstName: 'سارا', lastName: 'احمدی', phoneNumber: '09120000001', role: 'مدیر', isActive: true },
+    { id: 2, firstName: 'علی', lastName: 'کریمی', phoneNumber: '09120000002', role: 'مشاور', isActive: true },
+    { id: 3, firstName: 'مینا', lastName: 'مرادی', phoneNumber: '09120000003', role: 'بیمار', isActive: false }
   ];
 
   getUsers(): UserDto[] {

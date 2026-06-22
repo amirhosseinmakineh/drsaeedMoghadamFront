@@ -21,18 +21,18 @@ export class ConsultantManagementComponent {
   scoreForm: ScoreCommand = this.getEmptyScoreCommand(0);
 
   columns: TableColumn<ConsultantDto>[] = [
-    { key: 'firstName', label: 'First Name' },
-    { key: 'lastName', label: 'Last Name' },
-    { key: 'phoneNumber', label: 'Phone Number' },
-    { key: 'isPresent', label: 'Is Present' },
-    { key: 'isOnline', label: 'Is Online' },
-    { key: 'totalScore', label: 'Total Score' }
+    { key: 'firstName', label: 'نام' },
+    { key: 'lastName', label: 'نام خانوادگی' },
+    { key: 'phoneNumber', label: 'شماره تلفن' },
+    { key: 'isPresent', label: 'حاضر است' },
+    { key: 'isOnline', label: 'آنلاین است' },
+    { key: 'totalScore', label: 'امتیاز کل' }
   ];
 
   customActions: TableAction<ConsultantDto>[] = [
-    { action: 'leads', label: 'View Assigned Leads' },
-    { action: 'score', label: 'Give Score' },
-    { action: 'attendance', label: 'View Attendance' }
+    { action: 'leads', label: 'مشاهده لیدهای اختصاص داده‌شده' },
+    { action: 'score', label: 'ثبت امتیاز' },
+    { action: 'attendance', label: 'مشاهده حضور و غیاب' }
   ];
 
   constructor(private consultantService: ConsultantService, private router: Router, private toast: ToastService) {
@@ -58,7 +58,7 @@ export class ConsultantManagementComponent {
   submitScore(): void {
     this.consultantService.submitScore(this.scoreForm);
     this.scoreDialogOpen = false;
-    this.toast.show('Score submitted successfully.');
+    this.toast.show('امتیاز با موفقیت ثبت شد');
     this.loadConsultants();
   }
 

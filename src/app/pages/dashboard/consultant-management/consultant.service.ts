@@ -4,32 +4,32 @@ import { AttendanceDto, ConsultantDto, LeadDto, ScoreCommand } from '../../../mo
 @Injectable({ providedIn: 'root' })
 export class ConsultantService {
   private consultants: ConsultantDto[] = [
-    { id: 1, firstName: 'Nima', lastName: 'Rahimi', phoneNumber: '09123330001', isPresent: true, isOnline: true, totalScore: 18 },
-    { id: 2, firstName: 'Leila', lastName: 'Shirazi', phoneNumber: '09123330002', isPresent: true, isOnline: false, totalScore: 12 },
-    { id: 3, firstName: 'Reza', lastName: 'Nouri', phoneNumber: '09123330003', isPresent: false, isOnline: false, totalScore: 7 }
+    { id: 1, firstName: 'نیما', lastName: 'رحیمی', phoneNumber: '09123330001', isPresent: true, isOnline: true, totalScore: 18 },
+    { id: 2, firstName: 'لیلا', lastName: 'شیرازی', phoneNumber: '09123330002', isPresent: true, isOnline: false, totalScore: 12 },
+    { id: 3, firstName: 'رضا', lastName: 'نوری', phoneNumber: '09123330003', isPresent: false, isOnline: false, totalScore: 7 }
   ];
 
   private leads: Record<number, LeadDto[]> = {
     1: [
-      { id: 1, customerName: 'Maryam Hasani', phoneNumber: '09124440001', leadStatus: 'New', assignmentDate: '2026-06-10', isConsultantOnline: true, hasCalled: false },
-      { id: 2, customerName: 'Omid Jafari', phoneNumber: '09124440002', leadStatus: 'Follow Up', assignmentDate: '2026-06-11', isConsultantOnline: true, hasCalled: true }
+      { id: 1, customerName: 'مریم حسنی', phoneNumber: '09124440001', leadStatus: 'جدید', assignmentDate: '2026-06-10', isConsultantOnline: true, hasCalled: false },
+      { id: 2, customerName: 'امید جعفری', phoneNumber: '09124440002', leadStatus: 'پیگیری', assignmentDate: '2026-06-11', isConsultantOnline: true, hasCalled: true }
     ],
     2: [
-      { id: 3, customerName: 'Parisa Sadeghi', phoneNumber: '09124440003', leadStatus: 'Interested', assignmentDate: '2026-06-12', isConsultantOnline: false, hasCalled: true }
+      { id: 3, customerName: 'پریسا صادقی', phoneNumber: '09124440003', leadStatus: 'علاقه‌مند', assignmentDate: '2026-06-12', isConsultantOnline: false, hasCalled: true }
     ],
     3: []
   };
 
   private attendance: Record<number, AttendanceDto[]> = {
     1: [
-      { id: 1, attendanceDate: '2026-06-17', checkInTime: '09:00', checkOutTime: '17:00', status: 'Present', description: 'Full day' },
-      { id: 2, attendanceDate: '2026-06-18', checkInTime: '09:15', checkOutTime: '17:00', status: 'Late', description: 'Traffic delay' }
+      { id: 1, attendanceDate: '2026-06-17', checkInTime: '09:00', checkOutTime: '17:00', status: 'حاضر', description: 'روز کامل' },
+      { id: 2, attendanceDate: '2026-06-18', checkInTime: '09:15', checkOutTime: '17:00', status: 'تاخیر', description: 'تاخیر به دلیل ترافیک' }
     ],
     2: [
-      { id: 3, attendanceDate: '2026-06-17', checkInTime: '08:55', checkOutTime: '16:45', status: 'Present', description: 'Full day' }
+      { id: 3, attendanceDate: '2026-06-17', checkInTime: '08:55', checkOutTime: '16:45', status: 'حاضر', description: 'روز کامل' }
     ],
     3: [
-      { id: 4, attendanceDate: '2026-06-17', checkInTime: '-', checkOutTime: '-', status: 'Absent', description: 'No check in' }
+      { id: 4, attendanceDate: '2026-06-17', checkInTime: '-', checkOutTime: '-', status: 'غایب', description: 'ورود ثبت نشده' }
     ]
   };
 

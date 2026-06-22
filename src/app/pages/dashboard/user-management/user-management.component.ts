@@ -22,16 +22,16 @@ export class UserManagementComponent {
   formUser: UserDto = this.getEmptyUser();
 
   columns: TableColumn<UserDto>[] = [
-    { key: 'firstName', label: 'First Name' },
-    { key: 'lastName', label: 'Last Name' },
-    { key: 'phoneNumber', label: 'Phone Number' },
-    { key: 'role', label: 'Role' },
-    { key: 'isActive', label: 'Is Active' }
+    { key: 'firstName', label: 'نام' },
+    { key: 'lastName', label: 'نام خانوادگی' },
+    { key: 'phoneNumber', label: 'شماره تلفن' },
+    { key: 'role', label: 'نقش' },
+    { key: 'isActive', label: 'فعال است' }
   ];
 
   actions: TableAction<UserDto>[] = [
-    { action: 'edit', label: 'Edit' },
-    { action: 'delete', label: 'Delete' }
+    { action: 'edit', label: 'ویرایش' },
+    { action: 'delete', label: 'حذف' }
   ];
 
   constructor(private userService: UserService, private toast: ToastService) {
@@ -70,7 +70,7 @@ export class UserManagementComponent {
   confirmDialog(): void {
     if (this.dialogMode === 'delete' && this.selectedUser) {
       this.userService.deleteUser(this.selectedUser.id);
-      this.toast.show('User deleted successfully.');
+      this.toast.show('کاربر با موفقیت حذف شد');
     }
 
     if (this.dialogMode === 'create') {
@@ -81,12 +81,12 @@ export class UserManagementComponent {
         role: this.formUser.role,
         isActive: this.formUser.isActive
       });
-      this.toast.show('User added successfully.');
+      this.toast.show('کاربر با موفقیت اضافه شد');
     }
 
     if (this.dialogMode === 'edit') {
       this.userService.updateUser(this.formUser);
-      this.toast.show('User updated successfully.');
+      this.toast.show('کاربر با موفقیت ویرایش شد');
     }
 
     this.dialogOpen = false;
@@ -94,12 +94,12 @@ export class UserManagementComponent {
   }
 
   get dialogTitle(): string {
-    if (this.dialogMode === 'create') return 'Add User';
-    if (this.dialogMode === 'edit') return 'Edit User';
-    return 'Delete User';
+    if (this.dialogMode === 'create') return 'افزودن کاربر';
+    if (this.dialogMode === 'edit') return 'ویرایش کاربر';
+    return 'حذف کاربر';
   }
 
   private getEmptyUser(): UserDto {
-    return { id: 0, firstName: '', lastName: '', phoneNumber: '', role: 'PATIENT', isActive: true };
+    return { id: 0, firstName: '', lastName: '', phoneNumber: '', role: 'بیمار', isActive: true };
   }
 }

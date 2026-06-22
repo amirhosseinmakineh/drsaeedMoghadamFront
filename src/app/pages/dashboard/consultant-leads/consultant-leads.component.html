@@ -1,15 +1,13 @@
-<section class="admin-page">
-  <header class="page-header">
-    <div>
-      <p class="eyebrow">Admin Dashboard</p>
-      <h1>Consultant Assigned Leads</h1>
-      <p>Consultant ID: {{ consultantId }}</p>
-    </div>
-    <a routerLink="/dashboard/consultants">Back to Consultants</a>
+<section>
+  <header>
+    <p>داشبورد مدیر</p>
+    <h1>لیدهای اختصاص داده‌شده</h1>
+    <p>شناسه مشاور: {{ consultantId }}</p>
+    <a routerLink="/dashboard/consultants">بازگشت به مشاوران</a>
   </header>
 
   <app-table *ngIf="leads.length; else noLeads" [columns]="columns" [data]="leads"></app-table>
   <ng-template #noLeads>
-    <app-empty-state title="No assigned leads" description="This consultant has no assigned leads yet."></app-empty-state>
+    <app-empty-state title="لیدی اختصاص داده نشده است" description="این مشاور هنوز لید اختصاص داده‌شده ندارد."></app-empty-state>
   </ng-template>
 </section>
