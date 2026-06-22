@@ -29,22 +29,22 @@ export interface TableActionClick<T = unknown> {
         type="search"
         [ngModel]="searchTerm"
         (ngModelChange)="onSearchChange($event)"
-        placeholder="Search"
-        aria-label="Search table"
+        placeholder="جستجو"
+        aria-label="جستجوی جدول"
       />
 
       <table>
         <thead>
           <tr>
             <th *ngFor="let column of columns" scope="col">{{ column.label }}</th>
-            <th *ngIf="actions.length" scope="col">Actions</th>
+            <th *ngIf="actionItems.length" scope="col">عملیات</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let row of paginatedData">
             <td *ngFor="let column of columns">{{ getCellValue(row, column) }}</td>
-            <td *ngIf="actions.length">
-              <ng-container *ngFor="let item of actions">
+            <td *ngIf="actionItems.length">
+              <ng-container *ngFor="let item of actionItems">
                 <button
                   *ngIf="isActionVisible(item, row)"
                   type="button"
@@ -60,23 +60,28 @@ export interface TableActionClick<T = unknown> {
       </table>
 
       <nav aria-label="Table pagination">
-        <button type="button" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
+        <button type="button" (click)="previousPage()" [disabled]="currentPage === 1">قبلی</button>
         <span>{{ currentPage }} / {{ totalPages }}</span>
-        <button type="button" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+        <button type="button" (click)="nextPage()" [disabled]="currentPage === totalPages">بعدی</button>
       </nav>
     </section>
   `
 })
-export class TableComponent<T extends Record<string, unknown> = Record<string, unknown>> {
+export class TableComponent<T extends object = Record<string, unknown>> {
   @Input() columns: TableColumn<T>[] = [];
   @Input() data: T[] = [];
   @Input() actions: TableAction<T>[] = [];
+  @Input() customActions: TableAction<T>[] = [];
   @Input() pageSize = 10;
 
   @Output() actionClick = new EventEmitter<TableActionClick<T>>();
 
   searchTerm = '';
   currentPage = 1;
+
+  get actionItems(): TableAction<T>[] {
+    return this.customActions.length ? this.customActions : this.actions;
+  }
 
   get filteredData(): T[] {
     const term = this.searchTerm.trim().toLowerCase();
@@ -113,7 +118,13 @@ export class TableComponent<T extends Record<string, unknown> = Record<string, u
   }
 
   getCellValue(row: T, column: TableColumn<T>): unknown {
-    return row[column.key as keyof T];
+    const value = row[column.key as keyof T];
+
+    if (typeof value === 'boolean') {
+      return value ? 'بله' : 'خیر';
+    }
+
+    return value;
   }
 
   emitAction(action: TableAction<T>, row: T): void {

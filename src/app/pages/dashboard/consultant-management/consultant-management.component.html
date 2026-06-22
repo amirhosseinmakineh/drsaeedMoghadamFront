@@ -1,0 +1,17 @@
+<section>
+  <header>
+    <p>داشبورد مدیر</p>
+    <h1>مدیریت مشاوران</h1>
+  </header>
+
+  <app-table [columns]="columns" [data]="consultants" [customActions]="customActions" (actionClick)="handleAction($event)"></app-table>
+
+  <app-base-dialog [(open)]="scoreDialogOpen" mode="create" title="ثبت امتیاز" (confirmClick)="submitScore()">
+    <form>
+      <p *ngIf="selectedConsultant">مشاور: {{ selectedConsultant.firstName }} {{ selectedConsultant.lastName }}</p>
+      <label>دلیل <select name="reason" [(ngModel)]="scoreForm.reason"><option value="ManagerReward">پاداش مدیر</option><option value="ManagerPenalty">جریمه مدیر</option></select></label>
+      <label>مقدار امتیاز <input type="number" name="scoreValue" [(ngModel)]="scoreForm.scoreValue" /></label>
+      <label>توضیحات <textarea name="description" [(ngModel)]="scoreForm.description" rows="3"></textarea></label>
+    </form>
+  </app-base-dialog>
+</section>

@@ -28,5 +28,30 @@ export const routes: Routes = [
     data: { roles: ['PATIENT'], role: 'PATIENT' },
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
+
+  {
+    path: 'dashboard/users',
+    canActivate: [authGuard],
+    data: { roles: ['ADMIN'], role: 'ADMIN' },
+    loadComponent: () => import('./pages/dashboard/user-management/user-management.component').then(m => m.UserManagementComponent)
+  },
+  {
+    path: 'dashboard/consultants',
+    canActivate: [authGuard],
+    data: { roles: ['ADMIN'], role: 'ADMIN' },
+    loadComponent: () => import('./pages/dashboard/consultant-management/consultant-management.component').then(m => m.ConsultantManagementComponent)
+  },
+  {
+    path: 'dashboard/consultants/:consultantId/leads',
+    canActivate: [authGuard],
+    data: { roles: ['ADMIN'], role: 'ADMIN' },
+    loadComponent: () => import('./pages/dashboard/consultant-leads/consultant-leads.component').then(m => m.ConsultantLeadsComponent)
+  },
+  {
+    path: 'dashboard/consultants/:consultantId/attendance',
+    canActivate: [authGuard],
+    data: { roles: ['ADMIN'], role: 'ADMIN' },
+    loadComponent: () => import('./pages/dashboard/consultant-attendance/consultant-attendance.component').then(m => m.ConsultantAttendanceComponent)
+  },
   { path: '**', redirectTo: '' }
 ];
