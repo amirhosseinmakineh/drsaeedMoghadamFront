@@ -4,11 +4,14 @@ import { RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { ClinicDataService } from '../../services/clinic-data.service';
 @Component({selector:'app-services',standalone:true,imports:[NgFor,RouterLink],template:`
-<section>
+<section class="surface-block">
+  <p class="eyebrow">همه خدمات</p>
   <h1>خدمات دندانپزشکی</h1>
   <p>در کلینیک دندانپزشکی دکتر سعید مقدم مجموعه‌ای از درمان‌های زیبایی، ترمیمی و تخصصی شامل ایمپلنت دندان، لمینت دندان، کامپوزیت دندان، ارتودنسی، سفید کردن دندان، درمان ریشه، دندانپزشکی کودکان و درمان لثه ارائه می‌شود.</p>
-  <div class="grid">
-    <article class="card" *ngFor="let s of services">
+</section>
+<section>
+  <div class="grid services-grid">
+    <article class="card icon-card" *ngFor="let s of services">
       <span class="service-icon">✦</span>
       <h2>{{s.title}}</h2>
       <p>{{s.description}}</p>

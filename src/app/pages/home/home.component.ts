@@ -4,8 +4,9 @@ import { RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { ClinicDataService } from '../../services/clinic-data.service';
 @Component({selector:'app-home',standalone:true,imports:[NgFor,RouterLink],template:`
-<section class="hero">
+<section class="hero home-hero">
   <div>
+    <p class="eyebrow">کلینیک تخصصی دندانپزشکی</p>
     <h1>لبخندی سالم، طبیعی و زیبا با دندانپزشکی مدرن</h1>
     <p>در کلینیک دندانپزشکی دکتر سعید مقدم، درمان‌های تخصصی و زیبایی دندان با تمرکز بر آرامش بیمار، دقت درمان و نتیجه‌ای طبیعی انجام می‌شود.</p>
     <a class="btn" routerLink="/contact">رزرو مشاوره</a>
@@ -16,25 +17,32 @@ import { ClinicDataService } from '../../services/clinic-data.service';
       <span class="trust-pill">۹۸٪ رضایت بیماران</span>
     </div>
   </div>
-  <img src="https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=900&q=80" alt="کلینیک دندانپزشکی مدرن">
+  <div class="hero-media">
+    <img src="https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=900&q=80" alt="کلینیک دندانپزشکی مدرن">
+    <span class="floating-card top">تجربه تخصصی</span>
+    <span class="floating-card middle">درمان بدون درد</span>
+    <span class="floating-card bottom">مشاوره دقیق</span>
+  </div>
 </section>
 
 <section>
+  <p class="eyebrow">خدمات منتخب</p>
   <h2>خدمات دندانپزشکی</h2>
   <p>درمان‌های ضروری و زیبایی، با توضیح شفاف و انتخاب روش مناسب برای هر بیمار.</p>
-  <div class="grid">
-    <article class="card" *ngFor="let s of services">
+  <div class="grid services-grid">
+    <article class="card icon-card" *ngFor="let s of services">
       <span class="service-icon">✦</span>
       <h3>{{s.title}}</h3>
       <p>{{s.description}}</p>
-      <a [routerLink]="'/services/'+s.id">مشاهده خدمت</a>
+      <a [routerLink]="'/services/'+s.id">مشاهده خدمت <span>←</span></a>
     </article>
   </div>
 </section>
 
-<section class="split">
-  <img [src]="doctor.image" alt="دکتر سعید مقدم">
+<section class="split doctor-panel">
+  <div class="doctor-image-wrap"><img [src]="doctor.image" alt="دکتر سعید مقدم"><span class="floating-card bottom">۱۵+ سال تجربه</span></div>
   <div>
+    <p class="eyebrow">درباره پزشک</p>
     <h2>دکتر سعید مقدم</h2>
     <p>{{doctor.bio}}</p>
     <span class="credential">دندانپزشکی زیبایی</span>
@@ -46,27 +54,32 @@ import { ClinicDataService } from '../../services/clinic-data.service';
 </section>
 
 <section>
+  <p class="eyebrow">مزیت کلینیک</p>
   <h2>چرا کلینیک ما؟</h2>
   <div class="grid mini">
-    <article class="card" *ngFor="let w of why"><h3>{{w.title}}</h3><p>{{w.description}}</p></article>
+    <article class="card icon-card" *ngFor="let w of why"><span class="service-icon">◇</span><h3>{{w.title}}</h3><p>{{w.description}}</p></article>
   </div>
 </section>
 
-<section class="split">
+<section class="split before-after-premium">
   <div>
+    <p class="eyebrow">نتیجه درمان</p>
     <h2>قبل و بعد درمان</h2>
     <p>نمونه نتایج درمان با تمرکز بر طبیعی بودن فرم لبخند و حفظ سلامت دهان.</p>
   </div>
-  <div class="split">
+  <div class="before-after-frame">
     <img src="https://placehold.co/700x460/f3e6d7/6d5440?text=قبل" alt="قبل از درمان">
     <img src="https://placehold.co/700x460/e7d0b8/6d5440?text=بعد" alt="بعد از درمان">
+    <span class="before-label">قبل</span><span class="after-label">بعد</span><span class="handle"></span>
   </div>
 </section>
 
 <section>
+  <p class="eyebrow">تجربه بیماران</p>
   <h2>نظرات بیماران</h2>
   <div class="testimonial-rail">
-    <article class="card" *ngFor="let t of testimonials">
+    <article class="card quote-card" *ngFor="let t of testimonials">
+      <span class="quote-mark">“</span>
       <h3>{{t.name}}</h3>
       <span class="credential">{{t.service}}</span>
       <p>«{{t.text}}»</p>
@@ -75,6 +88,7 @@ import { ClinicDataService } from '../../services/clinic-data.service';
 </section>
 
 <section>
+  <p class="eyebrow">پاسخ‌های کوتاه</p>
   <h2>سوالات متداول</h2>
   <details *ngFor="let f of faqs"><summary>{{f.question}}</summary><p>{{f.answer}}</p></details>
 </section>
