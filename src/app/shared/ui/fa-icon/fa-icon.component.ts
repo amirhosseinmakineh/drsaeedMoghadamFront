@@ -14,6 +14,7 @@ const paths: Record<string, string> = {
   arrowRight: 'M5 12h14m-7-7 7 7-7 7',
   chevronLeft: 'm15 18-6-6 6-6',
   chevronRight: 'm9 18 6-6-6-6',
+  chevronDown: 'm6 9 6 6 6-6',
   quote: 'M10 7H6a4 4 0 0 0-4 4v6h8v-8H6a2 2 0 0 1 2-2h2Zm12 0h-4a4 4 0 0 0-4 4v6h8v-8h-4a2 2 0 0 1 2-2h2Z',
   sparkle: 'M12 2l1.5 5L18 9l-4.5 2L12 16l-1.5-5L6 9l4.5-2L12 2Zm6 12 .8 2.7L22 18l-3.2 1.3L18 22l-.8-2.7L14 18l3.2-1.3L18 14Z'
 };
