@@ -20,7 +20,7 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
       </div>
       <div class="hero-pattern">
         <app-fa-icon name="sparkle"></app-fa-icon>
-        <span>{{ language() === 'fa' ? 'SEO + Mobile app UX' : 'SEO + Mobile app UX' }}</span>
+        <span>{{ language() === 'fa' ? 'انتخاب خدمت، توضیح درمان، درخواست تماس' : 'Choose service, understand care, request a call' }}</span>
       </div>
     </section>
 

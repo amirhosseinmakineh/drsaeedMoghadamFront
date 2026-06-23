@@ -15,6 +15,13 @@
       </a>
     </div>
 
+    <div class="hero-slide-controls" aria-label="Hero slider controls">
+      <button *ngFor="let slide of heroSlides; let i = index" type="button" [class.active]="i === activeSlide()" (click)="activeSlide.set(i)">
+        <span></span>
+        {{ pickText(slide.eyebrow, language()) }}
+      </button>
+    </div>
+
     <div class="stat-grid" aria-label="Clinic highlights">
       <article *ngFor="let stat of stats">
         <strong>{{ pickText(stat.value, language()) }}</strong>
@@ -50,9 +57,9 @@
 
 <section class="portfolio-slider page-section">
   <div class="section-heading">
-    <p class="eyebrow">{{ language() === 'fa' ? 'نمونه‌کارهای دکتر سعید مقدم' : 'Dr. Saeed Moghaddam work samples' }}</p>
-    <h2>{{ language() === 'fa' ? 'اسلایدر نمونه‌کارهای منتخب دندان‌پزشکی زیبایی و درمانی' : 'Selected cosmetic and restorative dentistry work samples' }}</h2>
-    <p>{{ language() === 'fa' ? 'این بخش برای نمایش قبل/بعدهای واقعی پروژه نهایی آماده شده و اکنون با تصاویر سبک و متن سئو محور پر شده است.' : 'This section is ready for real before-and-after cases in production and currently uses lightweight imagery with SEO-focused copy.' }}</p>
+    <p class="eyebrow">{{ language() === 'fa' ? 'درمان‌های شاخص کلینیک' : 'Highlighted clinic treatments' }}</p>
+    <h2>{{ language() === 'fa' ? 'از طراحی لبخند تا ایمپلنت، مسیر درمان با توضیح روشن نمایش داده می‌شود' : 'From smile design to implants, each care path is shown clearly' }}</h2>
+    <p>{{ language() === 'fa' ? 'این اسلایدر برای معرفی خدمات پرتقاضا و کمک به انتخاب مسیر مناسب طراحی شده است؛ تصاویر اختصاصی کلینیک می‌توانند در همین قاب نمایش داده شوند.' : 'This slider introduces high-demand services and helps users choose the right path; dedicated clinic imagery can be shown in the same frame.' }}</p>
   </div>
 
   <div class="portfolio-stage">
@@ -126,9 +133,9 @@
 
 <section class="page-section service-showcase" id="services">
   <div class="section-heading">
-    <p class="eyebrow">{{ language() === 'fa' ? 'صفحه اختصاصی برای هر خدمت' : 'Dedicated page for every service' }}</p>
-    <h2>{{ language() === 'fa' ? 'خدمات دندان‌پزشکی با متن آماده پروداکشن و SEO' : 'Dental services with production-ready SEO copy' }}</h2>
-    <p>{{ language() === 'fa' ? 'هر کارت به صفحه‌ی کامل همان خدمت می‌رود؛ شامل معرفی، مزایا، مراحل، مراقبت‌ها، FAQ و خدمات مرتبط.' : 'Each card links to a full service page with overview, benefits, steps, aftercare, FAQs and related services.' }}</p>
+    <p class="eyebrow">{{ language() === 'fa' ? 'خدمات دندان‌پزشکی' : 'Dental services' }}</p>
+    <h2>{{ language() === 'fa' ? 'برای هر نیاز، مسیر درمان و مراقبت جداگانه توضیح داده شده است' : 'Every need has its own treatment and care guide' }}</h2>
+    <p>{{ language() === 'fa' ? 'هر کارت به صفحه کامل همان خدمت می‌رود؛ شامل معرفی، مزایا، مراحل، مراقبت‌ها، سوالات پرتکرار و خدمات مرتبط.' : 'Each card opens a full service page with overview, benefits, steps, aftercare, FAQs and related services.' }}</p>
   </div>
 
   <div class="service-grid">
@@ -149,19 +156,42 @@
 
 <section class="page-section app-mobile-panel">
   <div>
-    <p class="eyebrow">{{ language() === 'fa' ? 'موبایل مهم‌ترین حالت است' : 'Mobile is the priority' }}</p>
-    <h2>{{ language() === 'fa' ? 'در نمایش موبایل، کاربر یک اپلیکیشن دندان‌پزشکی می‌بیند' : 'On mobile, users see a dental care app' }}</h2>
-    <p>{{ language() === 'fa' ? 'دکمه‌های مهم مثل خانه، خدمات، تماس و ورود در پایین صفحه قرار دارند. کارت‌ها بزرگ، لمس‌پذیر و خوانا هستند تا کاربر بدون پیچیدگی مسیر خود را پیدا کند.' : 'Important actions such as home, services, contact and sign in sit at the bottom. Cards are large, touch-friendly and readable so users can move without friction.' }}</p>
+    <p class="eyebrow">{{ language() === 'fa' ? 'تجربه موبایل کلینیک' : 'Mobile clinic experience' }}</p>
+    <h2>{{ language() === 'fa' ? 'موبایل مثل یک اپ دندان‌پزشکی سریع و قابل لمس طراحی شده است' : 'Mobile is designed like a fast touch-friendly dental app' }}</h2>
+    <p>{{ language() === 'fa' ? 'کاربر در پایین صفحه به خانه، خدمات، تماس و ورود دسترسی دارد و داخل صفحه با اسلایدرهای بزرگ، کارت‌های درمان و وضعیت تماس مشاور روبه‌رو می‌شود.' : 'Users reach home, services, contact and sign-in from the bottom bar, while large sliders, treatment cards and call-status panels guide them inside the page.' }}</p>
   </div>
   <div class="phone-mock">
     <div class="phone-notch"></div>
-    <article>
-      <span><app-fa-icon name="tooth"></app-fa-icon></span>
-      <h3>{{ language() === 'fa' ? 'مسیر درمان من' : 'My care path' }}</h3>
-      <p>{{ language() === 'fa' ? 'انتخاب خدمت، ثبت شماره، تماس مشاور' : 'Choose service, leave number, consultant call' }}</p>
-    </article>
-    <div class="mini-tabs">
-      <span></span><span></span><span></span>
+    <div class="phone-screen">
+      <div class="phone-hero-card">
+        <span><app-fa-icon name="tooth"></app-fa-icon></span>
+        <div>
+          <h3>{{ language() === 'fa' ? 'مسیر درمان من' : 'My care path' }}</h3>
+          <p>{{ language() === 'fa' ? 'انتخاب خدمت، ثبت شماره، تماس مشاور' : 'Choose service, leave number, consultant call' }}</p>
+        </div>
+      </div>
+      <div class="phone-carousel">
+        <article>
+          <app-fa-icon name="sparkle"></app-fa-icon>
+          <b>{{ language() === 'fa' ? 'طراحی لبخند' : 'Smile design' }}</b>
+          <small>{{ language() === 'fa' ? 'لمینت، کامپوزیت، بلیچینگ' : 'Veneer, composite, whitening' }}</small>
+        </article>
+        <article>
+          <app-fa-icon name="tooth"></app-fa-icon>
+          <b>{{ language() === 'fa' ? 'درمان ضروری' : 'Essential care' }}</b>
+          <small>{{ language() === 'fa' ? 'درد، ریشه، لثه' : 'Pain, root, gum' }}</small>
+        </article>
+        <article>
+          <app-fa-icon name="phone"></app-fa-icon>
+          <b>{{ language() === 'fa' ? 'تماس مشاور' : 'Consultant call' }}</b>
+          <small>{{ language() === 'fa' ? 'پیگیری درخواست شما' : 'Follow up your request' }}</small>
+        </article>
+      </div>
+      <div class="mobile-action-row">
+        <span><app-fa-icon name="home"></app-fa-icon>{{ language() === 'fa' ? 'خانه' : 'Home' }}</span>
+        <span><app-fa-icon name="sparkle"></app-fa-icon>{{ language() === 'fa' ? 'خدمات' : 'Services' }}</span>
+        <span><app-fa-icon name="phone"></app-fa-icon>{{ language() === 'fa' ? 'تماس' : 'Contact' }}</span>
+      </div>
     </div>
   </div>
 </section>
@@ -170,7 +200,7 @@
   <div>
     <p class="eyebrow">{{ language() === 'fa' ? 'ثبت شماره برای تماس مشاور' : 'Leave your number for a consultant call' }}</p>
     <h2>{{ language() === 'fa' ? 'شماره‌تان را ثبت کنید تا درباره بهترین مسیر درمان با شما تماس بگیریم' : 'Leave your number so we can call you about the best care path' }}</h2>
-    <p>{{ language() === 'fa' ? 'این فرم برای هماهنگی تماس است و رزرو نوبت محسوب نمی‌شود.' : 'This form is for coordinating a call and is not appointment booking.' }}</p>
+    <p>{{ language() === 'fa' ? 'این فرم برای دریافت راهنمایی اولیه درباره خدمات دندان‌پزشکی و هماهنگی تماس مشاور است.' : 'This form is for initial guidance about dental services and coordinating a consultant call.' }}</p>
     <app-base-datepicker [language]="language()" [selectedDate]="lead.preferredDate" (dateChange)="lead.preferredDate = $event"></app-base-datepicker>
   </div>
 
@@ -206,15 +236,26 @@
 <section class="page-section">
   <div class="section-heading">
     <p class="eyebrow">{{ language() === 'fa' ? 'تجربه بیماران' : 'Patient stories' }}</p>
-    <h2>{{ language() === 'fa' ? 'اسلایدر نظرها برای اعتمادسازی بدون اغراق' : 'Review slider for trust without exaggeration' }}</h2>
+    <h2>{{ language() === 'fa' ? 'نظرهای کوتاه درباره روند درمان و برخورد کلینیک' : 'Short reviews about care process and clinic communication' }}</h2>
   </div>
-  <div class="testimonial-rail">
-    <article *ngFor="let item of testimonials" class="quote-card">
+  <div class="testimonial-slider">
+    <article class="quote-card active-quote">
+      <span class="quote-icon"><app-fa-icon name="quote"></app-fa-icon></span>
       <span class="stars">★★★★★</span>
-      <p>“{{ pickText(item.text, language()) }}”</p>
-      <b>{{ pickText(item.name, language()) }}</b>
-      <small>{{ pickText(item.service, language()) }}</small>
+      <p>“{{ pickText(testimonials[activeTestimonial()].text, language()) }}”</p>
+      <b>{{ pickText(testimonials[activeTestimonial()].name, language()) }}</b>
+      <small>{{ pickText(testimonials[activeTestimonial()].service, language()) }}</small>
     </article>
+    <div class="testimonial-side">
+      <button *ngFor="let item of testimonials; let i = index" type="button" [class.active]="i === activeTestimonial()" (click)="activeTestimonial.set(i)">
+        <span>0{{ i + 1 }}</span>
+        {{ pickText(item.service, language()) }}
+      </button>
+      <div class="slider-controls">
+        <button type="button" (click)="nextTestimonial(-1)" aria-label="Previous review"><app-fa-icon name="arrowRight"></app-fa-icon></button>
+        <button type="button" (click)="nextTestimonial(1)" aria-label="Next review"><app-fa-icon name="arrowLeft"></app-fa-icon></button>
+      </div>
+    </div>
   </div>
 </section>
 

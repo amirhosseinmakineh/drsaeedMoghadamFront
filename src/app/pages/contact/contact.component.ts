@@ -16,11 +16,11 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
         <p class="eyebrow">{{ language() === 'fa' ? 'تماس با ما' : 'Contact us' }}</p>
         <h1>{{ language() === 'fa' ? 'برای مشاوره انسانی، شماره خود را بگذارید یا مستقیم تماس بگیرید' : 'For human guidance, leave your number or call directly' }}</h1>
         <p>{{ language() === 'fa'
-          ? 'در این پروژه رزرو نوبت نداریم. مسیر تماس برای راهنمایی، توضیح خدمات و هماهنگی مراجعه حضوری استفاده می‌شود.'
-          : 'This project does not include appointment booking. Contact paths are used for guidance, service explanation and coordinating an in-person visit.' }}</p>
+          ? 'برای راهنمایی درباره ایمپلنت، طراحی لبخند، درد دندان، درمان ریشه یا لثه، شماره خود را ثبت کنید تا مسیر مناسب مراجعه با شما هماهنگ شود.'
+          : 'For guidance on implants, smile design, tooth pain, root canal or gum care, leave your number so the suitable visit path can be coordinated.' }}</p>
       </div>
       <div class="contact-actions">
-        <a class="primary-btn" href="tel:02100000000"><app-fa-icon name="phone"></app-fa-icon>{{ language() === 'fa' ? 'تماس مستقیم' : 'Call directly' }}</a>
+        <a class="primary-btn" href="#contact-request"><app-fa-icon name="phone"></app-fa-icon>{{ language() === 'fa' ? 'ثبت درخواست تماس' : 'Request a call' }}</a>
         <button class="secondary-btn" type="button" (click)="openAuth()"><app-fa-icon name="user"></app-fa-icon>{{ language() === 'fa' ? 'ورود / عضویت' : 'Sign in / Join' }}</button>
       </div>
     </section>
@@ -36,12 +36,12 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
         </article>
         <div class="map-card">
           <app-fa-icon name="location"></app-fa-icon>
-          <strong>{{ language() === 'fa' ? 'جایگاه نقشه کلینیک' : 'Clinic map placeholder' }}</strong>
-          <span>{{ language() === 'fa' ? 'برای نسخه نهایی می‌توان نقشه سبک و lazy-load اضافه کرد.' : 'A lightweight lazy-loaded map can be added for production.' }}</span>
+          <strong>{{ language() === 'fa' ? 'هماهنگی مسیر مراجعه' : 'Visit coordination' }}</strong>
+          <span>{{ language() === 'fa' ? 'پس از ثبت درخواست، اطلاعات لازم برای مراجعه و راهنمای مسیر توسط کلینیک اعلام می‌شود.' : 'After submitting a request, the clinic shares visit details and directions.' }}</span>
         </div>
       </aside>
 
-      <form class="contact-form" (ngSubmit)="submit()">
+      <form id="contact-request" class="contact-form" (ngSubmit)="submit()">
         <h2>{{ language() === 'fa' ? 'فرم درخواست تماس مشاور' : 'Consultant call request form' }}</h2>
         <label>
           {{ language() === 'fa' ? 'نام و نام خانوادگی' : 'Full name' }}
@@ -180,8 +180,8 @@ export class ContactComponent {
   };
   protected readonly pickText = pickText;
   infoItems = [
-    { icon: 'phone', title: { fa: 'تلفن', en: 'Phone' }, text: { fa: '۰۲۱-۰۰۰۰۰۰۰۰', en: '+98 21 0000 0000' } },
-    { icon: 'location', title: { fa: 'آدرس', en: 'Address' }, text: { fa: 'تهران، خیابان نمونه، پلاک نمونه', en: 'Tehran, Sample St., Sample No.' } },
+    { icon: 'phone', title: { fa: 'تماس مشاور', en: 'Consultant call' }, text: { fa: 'شماره خود را ثبت کنید تا برای راهنمایی اولیه تماس گرفته شود.', en: 'Leave your number for an initial guidance call.' } },
+    { icon: 'location', title: { fa: 'مراجعه حضوری', en: 'In-person visit' }, text: { fa: 'مسیر مراجعه پس از هماهنگی با کلینیک اعلام می‌شود.', en: 'Visit directions are shared after clinic coordination.' } },
     { icon: 'clock', title: { fa: 'ساعات پاسخگویی', en: 'Response hours' }, text: { fa: 'شنبه تا پنجشنبه، ۹ تا ۲۰', en: 'Saturday to Thursday, 9:00 to 20:00' } }
   ];
 
@@ -209,8 +209,8 @@ export class ContactComponent {
     this.meta.updateTag({
       name: 'description',
       content: isFa
-        ? 'شماره تماس، آدرس، ساعات پاسخگویی و فرم درخواست تماس مشاور کلینیک دندان‌پزشکی دکتر سعید مقدم.'
-        : 'Phone number, address, response hours and consultant call request form for Dr. Saeed Moghaddam Dental Clinic.'
+        ? 'فرم درخواست تماس مشاور، ساعات پاسخگویی و راهنمای هماهنگی مراجعه کلینیک دندان‌پزشکی دکتر سعید مقدم.'
+        : 'Consultant call request form, response hours and visit coordination guidance for Dr. Saeed Moghaddam Dental Clinic.'
     });
   }
 }

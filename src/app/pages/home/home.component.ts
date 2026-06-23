@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
@@ -25,10 +25,11 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit, OnDestroy {
   language = signal<LanguageCode>('fa');
   activeSlide = signal(0);
   activeWorkSample = signal(0);
+  activeTestimonial = signal(0);
   leadSent = signal(false);
   services = DENTAL_SERVICES;
   featuredServices = DENTAL_SERVICES.slice(0, 6);
@@ -46,9 +47,24 @@ export class HomeComponent {
   };
 
   protected readonly pickText = pickText;
+  private carouselTimer?: ReturnType<typeof setInterval>;
 
   constructor(private title: Title, private meta: Meta) {
     this.updateSeo();
+  }
+
+  ngOnInit(): void {
+    this.carouselTimer = setInterval(() => {
+      this.nextSlide(1);
+      this.nextWorkSample(1);
+      this.nextTestimonial(1);
+    }, 6500);
+  }
+
+  ngOnDestroy(): void {
+    if (this.carouselTimer) {
+      clearInterval(this.carouselTimer);
+    }
   }
 
   setLanguage(language: LanguageCode): void {
@@ -64,6 +80,11 @@ export class HomeComponent {
   nextWorkSample(direction: number): void {
     const next = (this.activeWorkSample() + direction + this.workSamples.length) % this.workSamples.length;
     this.activeWorkSample.set(next);
+  }
+
+  nextTestimonial(direction: number): void {
+    const next = (this.activeTestimonial() + direction + this.testimonials.length) % this.testimonials.length;
+    this.activeTestimonial.set(next);
   }
 
   openAuth(): void {
@@ -83,8 +104,8 @@ export class HomeComponent {
     this.meta.updateTag({
       name: 'description',
       content: isFa
-        ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه، درمان لثه، نمونه‌کارهای زیبایی و درخواست تماس مشاور با تم سفید و کرم.'
-        : 'Dr. Saeed Moghaddam Dental Clinic for implants, veneers, composite, whitening, root canal, gum care, cosmetic work samples and consultant call requests with a white and cream theme.'
+        ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه، درمان لثه و درخواست تماس برای راهنمایی اولیه.'
+        : 'Dr. Saeed Moghaddam Dental Clinic for implants, veneers, composite, whitening, root canal, gum care and initial consultant call requests.'
     });
   }
 }
