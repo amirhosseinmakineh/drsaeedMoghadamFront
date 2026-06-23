@@ -39,30 +39,49 @@
     <img [src]="heroSlides[activeSlide()].image" [alt]="pickText(heroSlides[activeSlide()].title, language())" loading="eager" />
     <div class="floating-chip top">
       <app-fa-icon name="sparkle"></app-fa-icon>
-      {{ language() === 'fa' ? 'موشن طراحی لبخند' : 'Smile motion design' }}
+      {{ language() === 'fa' ? 'تحلیل دیجیتال لبخند' : 'Digital smile analysis' }}
     </div>
     <div class="floating-chip bottom">
-      <app-fa-icon name="mobile"></app-fa-icon>
-      {{ language() === 'fa' ? 'تجربه موبایل اپ‌مانند' : 'App-like mobile UX' }}
+      <app-fa-icon name="phone"></app-fa-icon>
+      {{ language() === 'fa' ? 'درخواست تماس مشاور' : 'Consultant call request' }}
     </div>
   </div>
 </section>
 
-<section class="slider-panel page-section">
+<section class="portfolio-slider page-section">
   <div class="section-heading">
-    <p class="eyebrow">{{ language() === 'fa' ? 'اسلایدرهای متنوع' : 'Rich sliders' }}</p>
-    <h2>{{ language() === 'fa' ? 'هر اسلاید یک بخش مهم از تجربه درمان را توضیح می‌دهد' : 'Each slide explains an important part of the care experience' }}</h2>
+    <p class="eyebrow">{{ language() === 'fa' ? 'نمونه‌کارهای دکتر سعید مقدم' : 'Dr. Saeed Moghaddam work samples' }}</p>
+    <h2>{{ language() === 'fa' ? 'اسلایدر نمونه‌کارهای منتخب دندان‌پزشکی زیبایی و درمانی' : 'Selected cosmetic and restorative dentistry work samples' }}</h2>
+    <p>{{ language() === 'fa' ? 'این بخش برای نمایش قبل/بعدهای واقعی پروژه نهایی آماده شده و اکنون با تصاویر سبک و متن سئو محور پر شده است.' : 'This section is ready for real before-and-after cases in production and currently uses lightweight imagery with SEO-focused copy.' }}</p>
   </div>
-  <div class="slider-copy">
-    <article *ngFor="let slide of heroSlides; let i = index" [class.active]="i === activeSlide()" (click)="activeSlide.set(i)">
-      <span>0{{ i + 1 }}</span>
-      <h3>{{ pickText(slide.eyebrow, language()) }}</h3>
-      <p>{{ pickText(slide.text, language()) }}</p>
+
+  <div class="portfolio-stage">
+    <div class="portfolio-image-card">
+      <img [src]="workSamples[activeWorkSample()].image" [alt]="pickText(workSamples[activeWorkSample()].title, language())" loading="lazy" />
+      <span class="portfolio-badge">
+        <app-fa-icon name="gallery"></app-fa-icon>
+        {{ pickText(workSamples[activeWorkSample()].service, language()) }}
+      </span>
+    </div>
+
+    <article class="portfolio-copy">
+      <span>0{{ activeWorkSample() + 1 }}</span>
+      <h3>{{ pickText(workSamples[activeWorkSample()].title, language()) }}</h3>
+      <p>{{ pickText(workSamples[activeWorkSample()].description, language()) }}</p>
+      <b>{{ pickText(workSamples[activeWorkSample()].result, language()) }}</b>
     </article>
   </div>
+
+  <div class="portfolio-thumbs">
+    <button *ngFor="let sample of workSamples; let i = index" type="button" [class.active]="i === activeWorkSample()" (click)="activeWorkSample.set(i)">
+      <span>0{{ i + 1 }}</span>
+      {{ pickText(sample.service, language()) }}
+    </button>
+  </div>
+
   <div class="slider-controls">
-    <button type="button" (click)="nextSlide(-1)" aria-label="Previous slide"><app-fa-icon name="arrowRight"></app-fa-icon></button>
-    <button type="button" (click)="nextSlide(1)" aria-label="Next slide"><app-fa-icon name="arrowLeft"></app-fa-icon></button>
+    <button type="button" (click)="nextWorkSample(-1)" aria-label="Previous work sample"><app-fa-icon name="arrowRight"></app-fa-icon></button>
+    <button type="button" (click)="nextWorkSample(1)" aria-label="Next work sample"><app-fa-icon name="arrowLeft"></app-fa-icon></button>
   </div>
 </section>
 
@@ -76,6 +95,31 @@
       <span class="icon-bubble"><app-fa-icon [name]="item.icon"></app-fa-icon></span>
       <h3>{{ pickText(item.title, language()) }}</h3>
       <p>{{ pickText(item.text, language()) }}</p>
+    </article>
+  </div>
+</section>
+
+<section class="page-section dental-graphics">
+  <div class="section-heading center">
+    <p class="eyebrow">{{ language() === 'fa' ? 'مسیر گرافیکی درمان' : 'Graphic care path' }}</p>
+    <h2>{{ language() === 'fa' ? 'از تشخیص تا لبخند نهایی، همه چیز ساده و قابل فهم است' : 'From diagnosis to the final smile, everything is simple to understand' }}</h2>
+  </div>
+
+  <div class="dental-map">
+    <article>
+      <span><app-fa-icon name="tooth"></app-fa-icon></span>
+      <h3>{{ language() === 'fa' ? 'معاینه و عکس' : 'Exam and imaging' }}</h3>
+      <p>{{ language() === 'fa' ? 'سلامت دندان، لثه، ریشه و استخوان پیش از تصمیم درمانی بررسی می‌شود.' : 'Tooth, gum, root and bone health are reviewed before treatment decisions.' }}</p>
+    </article>
+    <article>
+      <span><app-fa-icon name="smile"></app-fa-icon></span>
+      <h3>{{ language() === 'fa' ? 'طراحی لبخند' : 'Smile planning' }}</h3>
+      <p>{{ language() === 'fa' ? 'فرم، رنگ و تناسب دندان‌ها با چهره برای نتیجه طبیعی تحلیل می‌شود.' : 'Shape, shade and tooth proportions are analyzed for a natural result.' }}</p>
+    </article>
+    <article>
+      <span><app-fa-icon name="shield"></app-fa-icon></span>
+      <h3>{{ language() === 'fa' ? 'مراقبت و پیگیری' : 'Aftercare follow-up' }}</h3>
+      <p>{{ language() === 'fa' ? 'بعد از درمان، توصیه‌های ساده برای ماندگاری نتیجه و سلامت دهان ارائه می‌شود.' : 'After treatment, simple guidance supports lasting results and oral health.' }}</p>
     </article>
   </div>
 </section>

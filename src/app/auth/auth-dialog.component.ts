@@ -64,11 +64,11 @@ import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
   `,
   styles: [`
     .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px;border-radius:999px;background:var(--surface-muted,#eefafa)}
-    .tabs button{border:0;border-radius:999px;padding:11px;font:inherit;font-weight:900;background:transparent;color:var(--muted,#64748b);cursor:pointer}.tabs .active{background:var(--surface,#fff);color:var(--brand,#0ea5a5);box-shadow:0 10px 24px rgba(8,30,38,.08)}
-    label{display:grid;gap:8px;color:var(--muted,#64748b);font-weight:900}.check-row{grid-template-columns:auto 1fr;align-items:start}.check-row input{width:18px;height:18px;margin-top:4px;accent-color:var(--brand,#0ea5a5)}
+    .tabs button{border:0;border-radius:999px;padding:11px;font:inherit;font-weight:900;background:transparent;color:var(--muted,#786a59);cursor:pointer}.tabs .active{background:var(--surface,#fff);color:var(--brand,#a8793f);box-shadow:0 10px 24px rgba(91,64,38,.08)}
+    label{display:grid;gap:8px;color:var(--muted,#786a59);font-weight:900}.check-row{grid-template-columns:auto 1fr;align-items:start}.check-row input{width:18px;height:18px;margin-top:4px;accent-color:var(--brand,#a8793f)}
     input{width:100%;border:1px solid color-mix(in srgb,var(--line,#dbe6ee) 94%,transparent);border-radius:17px;padding:13px 14px;background:var(--surface,#fff);color:var(--text,#14222e);font:inherit}
-    .primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--brand,#0ea5a5),var(--brand-2,#2563eb));color:#fff;font:inherit;font-weight:950;cursor:pointer;box-shadow:0 16px 36px color-mix(in srgb,var(--brand,#0ea5a5) 24%,transparent)}
-    .full{width:100%}.success-card{display:grid;place-items:center;text-align:center;gap:10px;padding:10px}.success-card span{display:grid;place-items:center;width:58px;height:58px;border-radius:22px;background:color-mix(in srgb,var(--brand,#0ea5a5) 16%,transparent);color:var(--brand,#0ea5a5);font-size:1.6rem}.success-card h3{margin:0;color:var(--text,#14222e)}.success-card p{margin:0;color:var(--muted,#64748b);line-height:1.8}
+    .primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--brand,#a8793f),var(--brand-2,#d7b16d));color:#fff;font:inherit;font-weight:950;cursor:pointer;box-shadow:0 16px 36px color-mix(in srgb,var(--brand,#a8793f) 24%,transparent)}
+    .full{width:100%}.success-card{display:grid;place-items:center;text-align:center;gap:10px;padding:10px}.success-card span{display:grid;place-items:center;width:58px;height:58px;border-radius:22px;background:color-mix(in srgb,var(--brand,#a8793f) 16%,transparent);color:var(--brand,#a8793f);font-size:1.6rem}.success-card h3{margin:0;color:var(--text,#2c241b)}.success-card p{margin:0;color:var(--muted,#786a59);line-height:1.8}
   `]
 })
 export class AuthDialogComponent {
