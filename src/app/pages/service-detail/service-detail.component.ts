@@ -139,7 +139,7 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
         <div>
           <p class="eyebrow">{{ language() === 'fa' ? 'اسلایدر نتیجه' : 'Result slider' }}</p>
           <h2>{{ language() === 'fa' ? 'نمای قبل و بعد به صورت گرافیکی و سبک' : 'Lightweight graphic before and after view' }}</h2>
-          <p>{{ language() === 'fa' ? 'به جای تصاویر سنگین، از قاب گرافیکی سبک استفاده شده تا سرعت و تجربه موبایل بهتر بماند.' : 'Instead of heavy images, a lightweight graphic frame keeps speed and mobile experience smooth.' }}</p>
+          <p>{{ language() === 'fa' ? 'این قاب برای توضیح ساده تفاوت قبل و بعد درمان طراحی شده و به بیمار کمک می‌کند نتیجه احتمالی را بهتر تصور کند.' : 'This frame explains the before-and-after difference simply and helps patients picture the possible treatment result more clearly.' }}</p>
         </div>
         <div class="result-frame">
           <div class="before">{{ language() === 'fa' ? 'قبل' : 'Before' }}</div>

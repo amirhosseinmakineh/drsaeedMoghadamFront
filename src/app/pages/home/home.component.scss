@@ -12,11 +12,11 @@
 }
 
 .hero-copy h1 {
-  max-width: 780px;
-  margin: 12px 0 18px;
-  font-size: clamp(2.15rem, 4.7vw, 4.55rem);
-  line-height: 1.12;
-  letter-spacing: -.035em;
+  max-width: 720px;
+  margin: 10px 0 16px;
+  font-size: clamp(1.85rem, 3.6vw, 3.35rem);
+  line-height: 1.18;
+  letter-spacing: -.024em;
 }
 
 .hero-text {
@@ -179,12 +179,12 @@
   animation: drawSmile 3s ease-in-out infinite alternate;
 }
 
-.scan-dot {
+.focus-dot {
   fill: var(--brand-2);
   animation: pulseDot 1.8s ease-in-out infinite;
 }
 
-.scan-dot.delay {
+.focus-dot.delay {
   animation-delay: .6s;
 }
 
@@ -381,7 +381,7 @@
   font-size: 1.8rem;
 }
 
-.app-mobile-panel,
+.care-access-panel,
 .lead-section {
   display: grid;
   grid-template-columns: minmax(0, .95fr) minmax(320px, 1.05fr);
@@ -679,7 +679,7 @@
   .hero-section,
   .portfolio-stage,
   .testimonial-slider,
-  .app-mobile-panel,
+  .care-access-panel,
   .lead-section {
     grid-template-columns: 1fr;
   }
@@ -715,7 +715,7 @@
 
 @media (max-width: 640px) {
   .hero-copy h1 {
-    font-size: 2.25rem;
+    font-size: 1.85rem;
   }
 
   .hero-visual {
@@ -744,7 +744,7 @@
     font-size: .76rem;
   }
 
-  .app-mobile-panel,
+  .care-access-panel,
   .lead-section,
   .portfolio-slider {
     padding: 22px;

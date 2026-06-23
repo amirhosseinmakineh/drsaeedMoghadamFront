@@ -116,6 +116,8 @@ export interface DatePickerDay {
   iso: string;
   weekday: string;
   disabled: boolean;
+  outsideMonth?: boolean;
+  ariaLabel?: string;
 }
 
 export const text = (fa: string, en: string): LocalizedText => ({ fa, en });
@@ -123,6 +125,9 @@ export const pickText = (value: LocalizedText, language: LanguageCode): string =
 
 const image = (id: string): string =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=760&q=45`;
+
+const portfolioImage = (path: string): string =>
+  `https://labkhanddental.com/wp-content/uploads/${path}`;
 
 export const NAV_ITEMS: NavItem[] = [
   { label: text('خانه', 'Home'), href: '/', icon: 'home' },
@@ -173,36 +178,36 @@ export const STATS: StatItem[] = [
 export const WORK_SAMPLES: WorkSample[] = [
   {
     id: 'natural-veneer',
-    title: text('اصلاح طرح لبخند طبیعی', 'Natural smile makeover'),
-    service: text('لمینت سرامیکی و طراحی لبخند', 'Porcelain veneers and smile design'),
+    title: text('نمونه لمینت سرامیکی', 'Porcelain veneer sample'),
+    service: text('لمینت دندان', 'Dental veneers'),
     description: text(
-      'در طراحی لبخند، رنگ، فرم، خط لبخند و سلامت دندان‌ها کنار هم بررسی می‌شود تا نتیجه طبیعی و هماهنگ با چهره باشد.',
-      'In smile design, shade, shape, smile line and tooth health are reviewed together so the result looks natural and facially balanced.'
+      'برای اصلاح رنگ و فرم دندان‌های جلو، انتخاب رنگ، تناسب خط لبخند و سلامت بافت لثه قبل از شروع درمان بررسی می‌شود.',
+      'For front-tooth shade and shape correction, color choice, smile-line proportion and gum health are reviewed before treatment starts.'
     ),
-    result: text('لبخند روشن‌تر، طبیعی و بدون اغراق', 'Brighter, natural and balanced smile'),
-    image: image('photo-1609840114035-3c981b782dfe')
+    result: text('ظاهر روشن‌تر و هماهنگ‌تر با فرم طبیعی دندان‌ها', 'A brighter look aligned with natural tooth form'),
+    image: portfolioImage('2025/05/laminet-1.webp')
   },
   {
     id: 'implant-rehab',
-    title: text('بازسازی دندان از دست رفته', 'Missing tooth rehabilitation'),
-    service: text('ایمپلنت دندان', 'Dental implant'),
+    title: text('نمونه ایمپلنت دندان', 'Dental implant sample'),
+    service: text('ایمپلنت دندان', 'Dental implants'),
     description: text(
-      'تمرکز روی بازگرداندن قدرت جویدن، فرم لبخند و حفظ سلامت دندان‌های اطراف با طرح درمان مرحله‌ای.',
-      'Focused on restoring chewing strength, smile form and neighboring tooth health with a staged treatment plan.'
+      'در درمان ایمپلنت، وضعیت استخوان، لثه و فضای دندان از دست رفته بررسی می‌شود تا جایگزینی ثابت و قابل اتکا انجام شود.',
+      'For implant treatment, bone, gum and missing-tooth space are reviewed so the fixed replacement is reliable.'
     ),
-    result: text('جایگزینی ثابت و هماهنگ با دندان‌های طبیعی', 'A fixed replacement matched to natural teeth'),
-    image: image('photo-1606811841689-23dfddce3e95')
+    result: text('بازگرداندن عملکرد جویدن و فرم لبخند', 'Restored chewing function and smile form'),
+    image: portfolioImage('2025/11/implant-portfolio-3.webp')
   },
   {
     id: 'composite-shape',
-    title: text('اصلاح فرم و فاصله دندان‌ها', 'Tooth shape and gap refinement'),
-    service: text('کامپوزیت ونیر', 'Composite veneers'),
+    title: text('نمونه کامپوزیت دندان', 'Dental composite sample'),
+    service: text('کامپوزیت ونیر', 'Composite veneer'),
     description: text(
-      'بهبود محافظه‌کارانه فرم دندان‌های جلو با کمترین پیچیدگی و توضیح شفاف مراقبت‌های بعد از درمان.',
-      'Conservative improvement of front-tooth shape with clear aftercare guidance and minimal complexity.'
+      'کامپوزیت برای اصلاح محافظه‌کارانه فرم، فاصله یا شکستگی‌های محدود دندان‌های جلو استفاده می‌شود و مراقبت بعد از آن اهمیت زیادی دارد.',
+      'Composite is used for conservative correction of front-tooth shape, gaps or limited chips, with aftercare playing an important role.'
     ),
-    result: text('فرم منظم‌تر با حفظ حس طبیعی لبخند', 'Cleaner shape while keeping a natural smile feel'),
-    image: image('photo-1600170311833-c2cf5280ce49')
+    result: text('فرم منظم‌تر بدون تغییر اغراق‌آمیز لبخند', 'Cleaner shape without an exaggerated smile change'),
+    image: portfolioImage('2025/09/photo_2025-09-24_20-04-56.webp')
   }
 ];
 
@@ -634,10 +639,10 @@ export const BENEFIT_CARDS: BenefitCard[] = [
     text: text('در درمان‌های زیبایی مثل لمینت و کامپوزیت، سلامت دندان و هماهنگی لبخند با چهره همزمان در نظر گرفته می‌شود.', 'For cosmetic treatments such as veneers and composite, tooth health and smile harmony are considered together.')
   },
   {
-    id: 'mobile-care',
-    icon: 'mobile',
-    title: text('دسترسی سریع در موبایل', 'Fast access on mobile'),
-    text: text('کاربر در موبایل به خدمات، تماس، ورود و اطلاعات مهم درمان با کارت‌های بزرگ و لمس‌پذیر دسترسی دارد.', 'On mobile, users reach services, contact, sign-in and key treatment information through large touch-friendly cards.')
+    id: 'care-access',
+    icon: 'tooth',
+    title: text('دسترسی ساده به مسیر درمان', 'Simple access to care paths'),
+    text: text('اطلاعات هر خدمت، نمونه درمان‌ها و فرم درخواست تماس کنار هم قرار گرفته‌اند تا بیمار سریع‌تر مسیر مناسب را پیدا کند.', 'Service information, treatment samples and the call request form sit together so patients can find the right path faster.')
   },
   {
     id: 'phone-lead',
