@@ -43,6 +43,15 @@ export interface HeroSlide {
   image: string;
 }
 
+export interface WorkSample {
+  id: string;
+  title: LocalizedText;
+  service: LocalizedText;
+  description: LocalizedText;
+  result: LocalizedText;
+  image: string;
+}
+
 export interface DentalService {
   id: string;
   icon: string;
@@ -125,40 +134,76 @@ export const NAV_ITEMS: NavItem[] = [
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 'digital-smile',
-    eyebrow: text('طراحی لبخند دیجیتال', 'Digital smile design'),
-    title: text('لبخندی تمیز، طبیعی و مطمئن با تجربه‌ای شبیه اپلیکیشن موبایل', 'A clean, natural and confident smile with a mobile-app-like experience'),
+    eyebrow: text('کلینیک دندان‌پزشکی زیبایی و درمانی', 'Cosmetic and restorative dental clinic'),
+    title: text('دندان‌پزشکی دقیق برای لبخندی سالم، طبیعی و قابل اعتماد', 'Precise dentistry for a healthy, natural and confident smile'),
     text: text(
-      'در کلینیک دندان‌پزشکی دکتر سعید مقدم، مسیر درمان با توضیح شفاف، تحلیل چهره، عکس‌های تشخیصی و پیگیری انسانی آغاز می‌شود؛ بدون رزرو نوبت آنلاین و با تمرکز روی ورود، عضویت و تماس مستقیم.',
-      'At Dr. Saeed Moghaddam Dental Clinic, care starts with transparent consultation, facial analysis, diagnostic imagery and human follow-up; no online appointment booking, just sign in, membership and direct contact.'
+      'در کلینیک دندان‌پزشکی دکتر سعید مقدم، خدمات ایمپلنت دندان، لمینت سرامیکی، کامپوزیت، بلیچینگ، درمان ریشه و درمان لثه با معاینه دقیق، توضیح ساده و برنامه مراقبت شخصی‌سازی‌شده ارائه می‌شود.',
+      'At Dr. Saeed Moghaddam Dental Clinic, dental implants, porcelain veneers, composite veneers, whitening, root canal therapy and gum treatment are planned with careful exams, simple guidance and personalized aftercare.'
     ),
     image: image('photo-1606811971618-4486d14f3f99')
   },
   {
     id: 'calm-suite',
-    eyebrow: text('درمان آرام و دقیق', 'Calm precise care'),
-    title: text('فضای آرام، تجهیزات مدرن و نتیجه‌ای هماهنگ با چهره', 'A calm space, modern equipment and results that fit your face'),
+    eyebrow: text('مشاوره دندان‌پزشکی شفاف', 'Clear dental consultation'),
+    title: text('قبل از هر درمان، علت مشکل و مسیر درست مراقبت را می‌دانید', 'Before treatment, you understand the cause and the right care path'),
     text: text(
-      'هر بخش سایت به تصمیم بهتر کاربر کمک می‌کند: مزایا، مراحل، مراقبت‌ها، سوالات پرتکرار، هزینه‌های وابسته به معاینه و درخواست تماس مشاور.',
-      'Every section helps users decide better: benefits, steps, aftercare, FAQs, exam-based cost factors and a consultant call request.'
+      'صفحه اصلی برای جست‌وجوهای مهم دندان‌پزشکی آماده شده است: طراحی لبخند طبیعی، کاشت ایمپلنت، اصلاح طرح لبخند، درمان درد دندان، مراقبت لثه و درخواست تماس مشاور.',
+      'The landing page is ready for key dental searches: natural smile design, implant placement, smile makeover, tooth pain care, gum health and consultant call requests.'
     ),
     image: image('photo-1629909615184-74f495363b67')
   },
   {
     id: 'mobile-first',
-    eyebrow: text('موبایل فرست واقعی', 'True mobile first'),
-    title: text('در موبایل، سایت مثل یک اپ درمانی سریع و روان دیده می‌شود', 'On mobile, the website feels like a fast and polished care app'),
+    eyebrow: text('تجربه آرام بیمار', 'Calm patient experience'),
+    title: text('از بررسی لبخند تا پیگیری بعد از درمان، مسیر ساده و انسانی است', 'From smile analysis to aftercare, the path is simple and human'),
     text: text(
-      'دسترسی‌های مهم مثل خانه، خدمات، تماس و ورود در نوار پایین قرار گرفته‌اند تا کاربر با یک دست به مسیرهای اصلی برسد.',
-      'Key actions such as home, services, contact and sign in sit in the bottom bar so users can reach core paths with one hand.'
+      'دسترسی سریع به خدمات دندان‌پزشکی، نمونه‌کارها، سوالات پرتکرار و فرم درخواست تماس کمک می‌کند بیمار بدون سردرگمی تصمیم بگیرد.',
+      'Quick access to dental services, work samples, FAQs and the consultant call form helps patients decide without confusion.'
     ),
     image: image('photo-1588776814546-1ffcf47267a5')
   }
 ];
 
 export const STATS: StatItem[] = [
-  { value: text('+۱۲۰۰', '+1200'), label: text('پرونده موفق درمانی و زیبایی', 'Successful cosmetic and restorative cases') },
-  { value: text('۲ زبانه', 'Bilingual'), label: text('فارسی و انگلیسی برای کاربران بیشتر', 'Persian and English for more users') },
-  { value: text('Mobile first', 'Mobile first'), label: text('تجربه موبایل شبیه اپلیکیشن', 'App-like mobile experience') }
+  { value: text('+۱۲۰۰', '+1200'), label: text('پرونده درمانی و زیبایی بررسی‌شده', 'Reviewed cosmetic and restorative cases') },
+  { value: text('۸ خدمت', '8 services'), label: text('از ایمپلنت تا درمان لثه و کودکان', 'From implants to gum and pediatric care') },
+  { value: text('SEO ready', 'SEO ready'), label: text('محتوای آماده برای جست‌وجوهای دندان‌پزشکی', 'Content ready for dental search intent') }
+];
+
+export const WORK_SAMPLES: WorkSample[] = [
+  {
+    id: 'natural-veneer',
+    title: text('اصلاح طرح لبخند طبیعی', 'Natural smile makeover'),
+    service: text('لمینت سرامیکی و طراحی لبخند', 'Porcelain veneers and smile design'),
+    description: text(
+      'هماهنگی رنگ، فرم و خط لبخند با چهره بیمار؛ مناسب برای نمایش نمونه‌کارهای زیبایی دکتر سعید مقدم.',
+      'Shade, shape and smile-line harmony with the patient face; suitable for showcasing Dr. Saeed Moghaddam cosmetic dentistry work.'
+    ),
+    result: text('لبخند روشن‌تر، طبیعی و بدون اغراق', 'Brighter, natural and balanced smile'),
+    image: image('photo-1609840114035-3c981b782dfe')
+  },
+  {
+    id: 'implant-rehab',
+    title: text('بازسازی دندان از دست رفته', 'Missing tooth rehabilitation'),
+    service: text('ایمپلنت دندان', 'Dental implant'),
+    description: text(
+      'تمرکز روی بازگرداندن قدرت جویدن، فرم لبخند و حفظ سلامت دندان‌های اطراف با طرح درمان مرحله‌ای.',
+      'Focused on restoring chewing strength, smile form and neighboring tooth health with a staged treatment plan.'
+    ),
+    result: text('جایگزینی ثابت و هماهنگ با دندان‌های طبیعی', 'A fixed replacement matched to natural teeth'),
+    image: image('photo-1606811841689-23dfddce3e95')
+  },
+  {
+    id: 'composite-shape',
+    title: text('اصلاح فرم و فاصله دندان‌ها', 'Tooth shape and gap refinement'),
+    service: text('کامپوزیت ونیر', 'Composite veneers'),
+    description: text(
+      'بهبود محافظه‌کارانه فرم دندان‌های جلو با کمترین پیچیدگی و توضیح شفاف مراقبت‌های بعد از درمان.',
+      'Conservative improvement of front-tooth shape with clear aftercare guidance and minimal complexity.'
+    ),
+    result: text('فرم منظم‌تر با حفظ حس طبیعی لبخند', 'Cleaner shape while keeping a natural smile feel'),
+    image: image('photo-1600170311833-c2cf5280ce49')
+  }
 ];
 
 export const DENTAL_SERVICES: DentalService[] = [
@@ -166,7 +211,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     id: 'implant',
     icon: 'tooth',
     image: image('photo-1606811841689-23dfddce3e95'),
-    accent: '#0ea5a5',
+    accent: '#b88a44',
     title: text('ایمپلنت دندان', 'Dental implants'),
     subtitle: text('جایگزینی پایدار دندان از دست رفته', 'Stable replacement for missing teeth'),
     summary: text(
@@ -220,7 +265,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     id: 'laminate',
     icon: 'sparkle',
     image: image('photo-1609840114035-3c981b782dfe'),
-    accent: '#c084fc',
+    accent: '#c9a26a',
     title: text('لمینت سرامیکی', 'Porcelain veneers'),
     subtitle: text('طراحی لبخند ظریف و طبیعی', 'Delicate natural smile design'),
     summary: text('لمینت برای اصلاح رنگ، فرم، اندازه و هماهنگی دندان‌های جلویی با حداقل اغراق ظاهری استفاده می‌شود.', 'Veneers improve color, shape, size and harmony of front teeth without an overdone look.'),
@@ -271,7 +316,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     id: 'composite',
     icon: 'brush',
     image: image('photo-1600170311833-c2cf5280ce49'),
-    accent: '#f59e0b',
+    accent: '#d7a85d',
     title: text('کامپوزیت ونیر', 'Composite veneers'),
     subtitle: text('اصلاح سریع فرم و رنگ دندان', 'Fast shape and color enhancement'),
     summary: text('کامپوزیت برای اصلاح محافظه‌کارانه لب‌پریدگی، فاصله‌های کوچک، بدفرمی و رنگ نامطلوب دندان‌ها کاربرد دارد.', 'Composite veneers conservatively improve chips, small gaps, shape issues and unwanted tooth color.'),
@@ -322,7 +367,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     id: 'orthodontics',
     icon: 'align',
     image: image('photo-1609840114035-3c981b782dfe'),
-    accent: '#3b82f6',
+    accent: '#9f8565',
     title: text('ارتودنسی و نظم لبخند', 'Orthodontics and smile alignment'),
     subtitle: text('مرتب‌سازی دندان‌ها با برنامه مرحله‌ای', 'Step-by-step teeth alignment'),
     summary: text('ارتودنسی به بهبود نظم دندان‌ها، تماس‌های فکی، تمیز شدن راحت‌تر و زیبایی لبخند کمک می‌کند.', 'Orthodontics improves tooth alignment, bite contacts, easier cleaning and smile appearance.'),
@@ -373,7 +418,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     id: 'whitening',
     icon: 'sun',
     image: image('photo-1588776814546-1ffcf47267a5'),
-    accent: '#22c55e',
+    accent: '#c6a15b',
     title: text('سفید کردن دندان', 'Teeth whitening'),
     subtitle: text('روشن‌تر شدن کنترل‌شده لبخند', 'Controlled smile brightening'),
     summary: text('بلیچینگ حرفه‌ای رنگ دندان را با پروتکل ایمن‌تر و کنترل حساسیت، چند درجه روشن‌تر می‌کند.', 'Professional whitening brightens teeth by several shades using a safer sensitivity-controlled protocol.'),
@@ -424,7 +469,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     id: 'root-canal',
     icon: 'shield',
     image: image('photo-1606811971618-4486d14f3f99'),
-    accent: '#ef4444',
+    accent: '#b96f52',
     title: text('درمان ریشه', 'Root canal therapy'),
     subtitle: text('حفظ دندان طبیعی و کنترل درد', 'Saving the natural tooth and controlling pain'),
     summary: text('درمان ریشه برای پاک‌سازی عفونت داخل دندان، کاهش درد و جلوگیری از کشیدن دندان انجام می‌شود.', 'Root canal therapy cleans infection inside the tooth, reduces pain and helps avoid extraction.'),
@@ -475,7 +520,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     id: 'pediatric',
     icon: 'heart',
     image: image('photo-1629909613654-28e377c37b09'),
-    accent: '#ec4899',
+    accent: '#c58d73',
     title: text('دندان‌پزشکی کودکان', 'Pediatric dentistry'),
     subtitle: text('تجربه آرام برای کودک و والدین', 'A calm experience for children and parents'),
     summary: text('درمان و پیشگیری کودکان با زبان ساده، کنترل اضطراب و آموزش به والدین انجام می‌شود.', 'Children receive preventive and restorative care with simple communication, anxiety control and parent education.'),
@@ -526,7 +571,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     id: 'gum-treatment',
     icon: 'leaf',
     image: image('photo-1629909615184-74f495363b67'),
-    accent: '#14b8a6',
+    accent: '#8f9d74',
     title: text('درمان لثه', 'Gum treatment'),
     subtitle: text('کنترل التهاب، خونریزی و بوی دهان', 'Managing inflammation, bleeding and breath concerns'),
     summary: text('سلامت لثه پایه ماندگاری درمان‌های زیبایی، ایمپلنت و دندان‌های طبیعی است.', 'Gum health is the foundation for long-lasting cosmetic work, implants and natural teeth.'),
@@ -585,8 +630,8 @@ export const BENEFIT_CARDS: BenefitCard[] = [
   {
     id: 'graphic-ui',
     icon: 'sparkle',
-    title: text('تجربه بصری لوکس', 'Premium visual experience'),
-    text: text('سکشن‌ها با کارت‌های شیشه‌ای، موشن نرم، تصویر سبک و فرم‌های گرافیکی طراحی شده‌اند.', 'Sections use glass cards, soft motion, lightweight imagery and graphic shapes.')
+    title: text('گرافیک سفید و کرم', 'White and cream visuals'),
+    text: text('سکشن‌ها با کارت‌های مینیمال، فرم‌های دندانی، موشن نرم و تصویرهای سبک طراحی شده‌اند.', 'Sections use minimal cards, dental shapes, soft motion and lightweight imagery.')
   },
   {
     id: 'mobile-care',
@@ -644,7 +689,7 @@ export const GLOBAL_FAQS: FaqItem[] = [
   },
   {
     id: 'dark',
-    question: text('حالت تاریک و روشن وجود دارد؟', 'Are dark and light modes available?'),
-    answer: text('بله. کاربر می‌تواند از هدر یا نوار موبایل بین حالت روشن و تاریک جابه‌جا شود.', 'Yes. Users can switch between light and dark modes from the header or mobile bar.')
+    question: text('تم سایت چه رنگی است؟', 'What is the site theme?'),
+    answer: text('تم اصلی سایت سفید و کرم است تا حس تمیزی، آرامش و اعتماد در فضای دندان‌پزشکی ایجاد شود.', 'The main theme is white and cream to create a clean, calm and trustworthy dental feel.')
   }
 ];

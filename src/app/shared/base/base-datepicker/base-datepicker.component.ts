@@ -37,10 +37,10 @@ import { DatePickerDay, LanguageCode, LocalizedText, pickText, text } from '../.
     </section>
   `,
   styles: [`
-    .base-datepicker{display:grid;gap:14px;padding:16px;border:1px solid color-mix(in srgb,var(--brand,#0ea5a5) 18%,transparent);border-radius:26px;background:color-mix(in srgb,var(--surface,#fff) 82%,transparent);box-shadow:0 18px 48px rgba(6,25,35,.08)}
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px}header span{color:var(--brand,#0ea5a5);font-weight:900}header strong{color:var(--text,#14222e)}
+    .base-datepicker{display:grid;gap:14px;padding:16px;border:1px solid color-mix(in srgb,var(--brand,#a8793f) 18%,transparent);border-radius:26px;background:color-mix(in srgb,var(--surface,#fff) 82%,transparent);box-shadow:0 18px 48px rgba(91,64,38,.08)}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}header span{color:var(--brand,#a8793f);font-weight:900}header strong{color:var(--text,#2c241b)}
     .week-row,.day-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}.week-row span{text-align:center;color:var(--muted,#64748b);font-size:.74rem;font-weight:800}
-    .day-grid button{display:grid;place-items:center;gap:2px;min-height:58px;border:0;border-radius:17px;background:var(--surface-muted,#eefafa);color:var(--text,#14222e);font:inherit;cursor:pointer;transition:transform .2s ease,background .2s ease,color .2s ease}.day-grid button:hover:not(:disabled){transform:translateY(-2px)}.day-grid button.active{background:linear-gradient(135deg,var(--brand,#0ea5a5),var(--brand-2,#2563eb));color:#fff;box-shadow:0 16px 32px color-mix(in srgb,var(--brand,#0ea5a5) 24%,transparent)}.day-grid button:disabled{opacity:.36;cursor:not-allowed}.day-grid small{font-size:.66rem}.day-grid b{font-size:1rem}
+    .day-grid button{display:grid;place-items:center;gap:2px;min-height:58px;border:0;border-radius:17px;background:var(--surface-muted,#efe2d0);color:var(--text,#2c241b);font:inherit;cursor:pointer;transition:transform .2s ease,background .2s ease,color .2s ease}.day-grid button:hover:not(:disabled){transform:translateY(-2px)}.day-grid button.active{background:linear-gradient(135deg,var(--brand,#a8793f),var(--brand-2,#d7b16d));color:#fff;box-shadow:0 16px 32px color-mix(in srgb,var(--brand,#a8793f) 24%,transparent)}.day-grid button:disabled{opacity:.36;cursor:not-allowed}.day-grid small{font-size:.66rem}.day-grid b{font-size:1rem}
     .native-date{display:grid;gap:8px;color:var(--muted,#64748b);font-size:.88rem;font-weight:800}input{width:100%;border:1px solid color-mix(in srgb,var(--line,#dbe6ee) 92%,transparent);border-radius:16px;padding:12px;background:var(--surface,#fff);color:var(--text,#14222e);font:inherit}
   `]
 })

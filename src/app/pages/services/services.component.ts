@@ -42,7 +42,56 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
     </section>
   `,
   styles: [`
-    .page-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.45fr);gap:24px;align-items:center;padding-top:140px}.page-hero h1{font-size:clamp(2.4rem,5vw,4.8rem);margin:0 0 16px}.hero-pattern{display:grid;place-items:center;min-height:280px;border:1px solid var(--line);border-radius:42px;background:radial-gradient(circle,color-mix(in srgb,var(--brand) 18%,transparent),transparent 62%),color-mix(in srgb,var(--surface) 76%,transparent);box-shadow:var(--shadow);font-weight:950;color:var(--brand);text-align:center}.hero-pattern app-fa-icon{font-size:5rem;animation:pulse 2.4s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.08);opacity:.7}}@media(max-width:820px){.page-hero{grid-template-columns:1fr;padding-top:112px}.hero-pattern{min-height:180px}}
+    .page-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, .45fr);
+      gap: 24px;
+      align-items: center;
+      padding-top: 140px;
+    }
+
+    .page-hero h1 {
+      margin: 0 0 16px;
+      font-size: clamp(2rem, 3.8vw, 3.55rem);
+    }
+
+    .hero-pattern {
+      display: grid;
+      place-items: center;
+      min-height: 280px;
+      border: 1px solid var(--line);
+      border-radius: 42px;
+      background:
+        radial-gradient(circle, color-mix(in srgb, var(--brand) 14%, transparent), transparent 62%),
+        color-mix(in srgb, var(--surface) 82%, transparent);
+      box-shadow: var(--shadow);
+      color: var(--brand);
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .hero-pattern app-fa-icon {
+      font-size: 4rem;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: .7;
+        transform: scale(1.08);
+      }
+    }
+
+    @media (max-width: 820px) {
+      .page-hero {
+        grid-template-columns: 1fr;
+        padding-top: 112px;
+      }
+
+      .hero-pattern {
+        min-height: 180px;
+      }
+    }
   `]
 })
 export class ServicesComponent {

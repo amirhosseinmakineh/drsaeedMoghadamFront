@@ -70,7 +70,102 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
     </section>
   `,
   styles: [`
-    .contact-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:end;padding-top:140px}.contact-hero h1{font-size:clamp(2.35rem,5vw,4.8rem);margin:0 0 16px}.contact-actions{display:flex;flex-wrap:wrap;gap:12px}.contact-layout{display:grid;grid-template-columns:minmax(290px,.8fr) minmax(0,1.2fr);gap:24px}.info-panel,.contact-form{display:grid;gap:14px}.info-panel article,.map-card,.contact-form{padding:22px;border:1px solid var(--line);border-radius:30px;background:color-mix(in srgb,var(--surface) 78%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(18px)}.info-panel article{display:grid;grid-template-columns:auto 1fr;gap:14px}.info-panel h3,.info-panel p{margin:0}.map-card{display:grid;place-items:center;min-height:230px;text-align:center;color:var(--muted)}.map-card app-fa-icon{font-size:3rem;color:var(--brand)}.map-card strong{color:var(--text)}.contact-form label{display:grid;gap:8px;color:var(--muted);font-weight:900}.success-message{margin:0;padding:12px 14px;border-radius:18px;background:color-mix(in srgb,#22c55e 14%,var(--surface));color:var(--text);font-weight:800}@media(max-width:860px){.contact-hero,.contact-layout{grid-template-columns:1fr}.contact-hero{padding-top:112px}}
+    .contact-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 22px;
+      align-items: end;
+      padding-top: 140px;
+    }
+
+    .contact-hero h1 {
+      margin: 0 0 16px;
+      font-size: clamp(2rem, 3.8vw, 3.55rem);
+    }
+
+    .contact-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .contact-layout {
+      display: grid;
+      grid-template-columns: minmax(290px, .8fr) minmax(0, 1.2fr);
+      gap: 24px;
+    }
+
+    .info-panel,
+    .contact-form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .info-panel article,
+    .map-card,
+    .contact-form {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: color-mix(in srgb, var(--surface) 82%, transparent);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .info-panel article {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+    }
+
+    .info-panel h3,
+    .info-panel p {
+      margin: 0;
+    }
+
+    .map-card {
+      display: grid;
+      place-items: center;
+      min-height: 230px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .map-card app-fa-icon {
+      color: var(--brand);
+      font-size: 3rem;
+    }
+
+    .map-card strong {
+      color: var(--text);
+    }
+
+    .contact-form label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .success-message {
+      margin: 0;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: color-mix(in srgb, #22c55e 14%, var(--surface));
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    @media (max-width: 860px) {
+      .contact-hero,
+      .contact-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-hero {
+        padding-top: 112px;
+      }
+    }
   `]
 })
 export class ContactComponent {

@@ -34,9 +34,6 @@ interface LanguageAwarePage {
           <button class="icon-btn" type="button" (click)="toggleLanguage()" [attr.aria-label]="language() === 'fa' ? 'English' : 'فارسی'">
             {{ language() === 'fa' ? 'EN' : 'فا' }}
           </button>
-          <button class="icon-btn" type="button" (click)="toggleTheme()" [attr.aria-label]="language() === 'fa' ? 'تغییر تم' : 'Change theme'">
-            <app-fa-icon [name]="theme() === 'light' ? 'moon' : 'sun'"></app-fa-icon>
-          </button>
           <button class="primary-btn small" type="button" (click)="authOpen.set(true)">
             <app-fa-icon name="user"></app-fa-icon>
             {{ language() === 'fa' ? 'ورود / عضویت' : 'Sign in / Join' }}
@@ -49,17 +46,38 @@ interface LanguageAwarePage {
       </main>
 
       <footer class="site-footer">
-        <section>
-          <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
-          <div>
-            <h2>{{ language() === 'fa' ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Dr. Saeed Moghaddam Dental Clinic' }}</h2>
-            <p>{{ language() === 'fa' ? 'تهران، خیابان نمونه، پلاک نمونه | ۰۲۱-۰۰۰۰۰۰۰۰' : 'Tehran, Sample St., Sample No. | +98 21 0000 0000' }}</p>
-          </div>
+        <section class="footer-brand-area">
+          <a class="brand" routerLink="/" [attr.aria-label]="language() === 'fa' ? 'صفحه اصلی' : 'Homepage'">
+            <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
+            <span>
+              <b>{{ language() === 'fa' ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Dr. Saeed Moghaddam Dental Clinic' }}</b>
+              <small>{{ language() === 'fa' ? 'طراحی لبخند، ایمپلنت و درمان‌های دقیق دندان' : 'Smile design, implants and precise dental care' }}</small>
+            </span>
+          </a>
+          <p>{{ language() === 'fa' ? 'فوتر جدید برای دسترسی سریع به خدمات، تماس، ساعات پاسخگویی و مسیرهای مهم دندان‌پزشکی طراحی شده است.' : 'The new footer gives quick access to services, contact details, response hours and key dental paths.' }}</p>
         </section>
-        <div>
-          <a routerLink="/services">{{ language() === 'fa' ? 'خدمات' : 'Services' }}</a>
-          <a routerLink="/about">{{ language() === 'fa' ? 'درباره ما' : 'About' }}</a>
-          <a routerLink="/contact">{{ language() === 'fa' ? 'تماس با ما' : 'Contact' }}</a>
+
+        <div class="footer-grid">
+          <section>
+            <h2>{{ language() === 'fa' ? 'دسترسی سریع' : 'Quick links' }}</h2>
+            <a routerLink="/services">{{ language() === 'fa' ? 'خدمات دندان‌پزشکی' : 'Dental services' }}</a>
+            <a routerLink="/about">{{ language() === 'fa' ? 'درباره دکتر سعید مقدم' : 'About Dr. Moghaddam' }}</a>
+            <a routerLink="/contact">{{ language() === 'fa' ? 'تماس با کلینیک' : 'Contact clinic' }}</a>
+          </section>
+
+          <section>
+            <h2>{{ language() === 'fa' ? 'خدمات محبوب' : 'Popular services' }}</h2>
+            <a routerLink="/services/implant">{{ language() === 'fa' ? 'ایمپلنت دندان' : 'Dental implants' }}</a>
+            <a routerLink="/services/laminate">{{ language() === 'fa' ? 'لمینت سرامیکی' : 'Porcelain veneers' }}</a>
+            <a routerLink="/services/composite">{{ language() === 'fa' ? 'کامپوزیت ونیر' : 'Composite veneers' }}</a>
+          </section>
+
+          <section class="footer-contact-card">
+            <h2>{{ language() === 'fa' ? 'تماس و پاسخگویی' : 'Contact and hours' }}</h2>
+            <p><app-fa-icon name="phone"></app-fa-icon>{{ language() === 'fa' ? '۰۲۱-۰۰۰۰۰۰۰۰' : '+98 21 0000 0000' }}</p>
+            <p><app-fa-icon name="location"></app-fa-icon>{{ language() === 'fa' ? 'تهران، خیابان نمونه، پلاک نمونه' : 'Tehran, Sample St., Sample No.' }}</p>
+            <p><app-fa-icon name="clock"></app-fa-icon>{{ language() === 'fa' ? 'شنبه تا پنجشنبه، ۹ تا ۲۰' : 'Saturday to Thursday, 9:00 to 20:00' }}</p>
+          </section>
         </div>
       </footer>
 

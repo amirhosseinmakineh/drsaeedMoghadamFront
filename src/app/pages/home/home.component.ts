@@ -12,6 +12,7 @@ import {
   LanguageCode,
   STATS,
   TESTIMONIALS,
+  WORK_SAMPLES,
   pickText
 } from '../../models/clinic.model';
 import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-datepicker.component';
@@ -27,10 +28,12 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 export class HomeComponent {
   language = signal<LanguageCode>('fa');
   activeSlide = signal(0);
+  activeWorkSample = signal(0);
   leadSent = signal(false);
   services = DENTAL_SERVICES;
   featuredServices = DENTAL_SERVICES.slice(0, 6);
   heroSlides = HERO_SLIDES;
+  workSamples = WORK_SAMPLES;
   benefits = BENEFIT_CARDS;
   stats = STATS;
   testimonials = TESTIMONIALS;
@@ -58,6 +61,11 @@ export class HomeComponent {
     this.activeSlide.set(next);
   }
 
+  nextWorkSample(direction: number): void {
+    const next = (this.activeWorkSample() + direction + this.workSamples.length) % this.workSamples.length;
+    this.activeWorkSample.set(next);
+  }
+
   openAuth(): void {
     window.dispatchEvent(new CustomEvent('open-auth-dialog'));
   }
@@ -75,8 +83,8 @@ export class HomeComponent {
     this.meta.updateTag({
       name: 'description',
       content: isFa
-        ? 'سایت دوزبانه و موبایل‌فرست کلینیک دندان‌پزشکی با خدمات اختصاصی، ورود و عضویت، درخواست تماس مشاور، تم روشن و تاریک و سکشن‌های مفید برای SEO.'
-        : 'Bilingual mobile-first dental clinic website with service pages, sign in and membership, consultant call request, light and dark mode and SEO-focused user sections.'
+        ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه، درمان لثه، نمونه‌کارهای زیبایی و درخواست تماس مشاور با تم سفید و کرم.'
+        : 'Dr. Saeed Moghaddam Dental Clinic for implants, veneers, composite, whitening, root canal, gum care, cosmetic work samples and consultant call requests with a white and cream theme.'
     });
   }
 }

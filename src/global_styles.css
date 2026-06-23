@@ -4,33 +4,35 @@
 
 :root {
   color-scheme: light;
-  --bg: #f4fbff;
+  --bg: #fbf8f1;
+  --cream: #f3eadc;
   --surface: #ffffff;
-  --surface-soft: #eef8fb;
-  --surface-muted: #e6f5f6;
-  --text: #10212d;
-  --muted: #637587;
-  --line: rgba(53, 91, 110, .16);
-  --brand: #0ea5a5;
-  --brand-2: #2563eb;
-  --gold: #d5a456;
+  --surface-soft: #f7efe4;
+  --surface-muted: #efe2d0;
+  --text: #2c241b;
+  --muted: #786a59;
+  --line: rgba(128, 98, 63, .18);
+  --brand: #a8793f;
+  --brand-2: #d7b16d;
+  --gold: #c59449;
   --danger: #ef4444;
-  --shadow: 0 26px 80px rgba(10, 35, 48, .10);
+  --shadow: 0 24px 70px rgba(91, 64, 38, .10);
 }
 
 body[data-theme='dark'] {
-  color-scheme: dark;
-  --bg: #071118;
-  --surface: #0d1a22;
-  --surface-soft: #101f2a;
-  --surface-muted: #172a35;
-  --text: #ecfeff;
-  --muted: #9fb3c1;
-  --line: rgba(196, 232, 239, .14);
-  --brand: #38d8d3;
-  --brand-2: #8bb8ff;
-  --gold: #f4c979;
-  --shadow: 0 28px 90px rgba(0, 0, 0, .34);
+  color-scheme: light;
+  --bg: #fbf8f1;
+  --cream: #f3eadc;
+  --surface: #ffffff;
+  --surface-soft: #f7efe4;
+  --surface-muted: #efe2d0;
+  --text: #2c241b;
+  --muted: #786a59;
+  --line: rgba(128, 98, 63, .18);
+  --brand: #a8793f;
+  --brand-2: #d7b16d;
+  --gold: #c59449;
+  --shadow: 0 24px 70px rgba(91, 64, 38, .10);
 }
 
 html {
@@ -45,8 +47,8 @@ body {
   min-width: 320px;
   color: var(--text);
   background:
-    radial-gradient(circle at 10% 4%, color-mix(in srgb, var(--brand) 18%, transparent), transparent 28rem),
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--brand-2) 14%, transparent), transparent 30rem),
+    radial-gradient(circle at 10% 4%, color-mix(in srgb, var(--brand) 12%, transparent), transparent 26rem),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--brand-2) 16%, transparent), transparent 30rem),
     linear-gradient(180deg, var(--bg), var(--surface-soft) 48%, var(--bg));
   font-family: "Vazirmatn", "Inter", "Segoe UI", Tahoma, Arial, sans-serif;
   line-height: 1.8;
@@ -123,7 +125,7 @@ textarea:focus {
   width: 360px;
   height: 360px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--brand) 18%, transparent);
+  background: color-mix(in srgb, var(--brand-2) 18%, transparent);
   filter: blur(70px);
   pointer-events: none;
 }
@@ -140,7 +142,7 @@ textarea:focus {
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 30px;
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
   box-shadow: var(--shadow);
   backdrop-filter: blur(22px);
   transform: translateX(-50%);
@@ -237,9 +239,9 @@ textarea:focus {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  background: linear-gradient(135deg, var(--brand), #c79b5a);
   color: #fff;
-  box-shadow: 0 18px 42px color-mix(in srgb, var(--brand) 28%, transparent);
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--brand) 24%, transparent);
 }
 
 .primary-btn.small {
@@ -288,8 +290,8 @@ h1,
 h2,
 h3 {
   color: var(--text);
-  line-height: 1.22;
-  letter-spacing: -.035em;
+  line-height: 1.28;
+  letter-spacing: -.018em;
 }
 
 h1,
@@ -318,7 +320,7 @@ summary {
 .section-heading h1,
 .section-heading h2 {
   margin: 0 0 14px;
-  font-size: clamp(2rem, 4vw, 3.7rem);
+  font-size: clamp(1.7rem, 3vw, 2.9rem);
 }
 
 .section-heading p {
@@ -343,8 +345,8 @@ summary {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 30px;
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
-  box-shadow: 0 18px 54px rgba(5, 20, 30, .08);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  box-shadow: 0 18px 54px rgba(91, 64, 38, .08);
   backdrop-filter: blur(18px);
 }
 
@@ -364,15 +366,20 @@ summary {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--brand) 12%, transparent);
+  background: color-mix(in srgb, var(--brand-2) 16%, transparent);
   filter: blur(10px);
   pointer-events: none;
 }
 
 .glass-card h3,
+.service-card h2,
 .service-card h3,
 .info-card h3 {
   margin: 16px 0 8px;
+}
+
+.service-card h2 {
+  font-size: 1.35rem;
 }
 
 .service-grid {
@@ -454,30 +461,54 @@ summary {
 }
 
 .site-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(260px, .8fr) minmax(0, 1.2fr);
   gap: 20px;
   width: min(1180px, calc(100% - 36px));
   margin: 40px auto 34px;
-  padding: 24px;
+  padding: clamp(22px, 4vw, 34px);
   border: 1px solid var(--line);
-  border-radius: 34px;
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  border-radius: 38px;
+  background:
+    radial-gradient(circle at 8% 0, color-mix(in srgb, var(--brand-2) 20%, transparent), transparent 42%),
+    linear-gradient(135deg, color-mix(in srgb, var(--surface) 88%, transparent), var(--cream));
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
 }
 
-.site-footer section,
-.site-footer div {
-  display: flex;
-  align-items: center;
+.footer-brand-area {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.footer-brand-area .brand {
+  min-width: 0;
+}
+
+.footer-brand-area p {
+  max-width: 420px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.footer-grid section {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
 }
 
 .site-footer h2 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .site-footer p {
@@ -487,6 +518,16 @@ summary {
 .site-footer a {
   color: var(--brand);
   font-weight: 900;
+}
+
+.footer-contact-card p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-contact-card app-fa-icon {
+  color: var(--brand);
 }
 
 .mobile-bottom-nav {
@@ -532,7 +573,12 @@ summary {
 
   .site-footer {
     display: grid;
+    grid-template-columns: 1fr;
     margin-bottom: 104px;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
   }
 
   .mobile-bottom-nav {
@@ -579,7 +625,7 @@ summary {
 @media (max-width: 640px) {
   body {
     background:
-      radial-gradient(circle at 50% 0, color-mix(in srgb, var(--brand) 20%, transparent), transparent 20rem),
+      radial-gradient(circle at 50% 0, color-mix(in srgb, var(--brand) 14%, transparent), transparent 20rem),
       linear-gradient(180deg, var(--bg), var(--surface-soft));
   }
 
@@ -617,9 +663,7 @@ summary {
     height: 170px;
   }
 
-  .site-footer section,
-  .site-footer div {
-    align-items: flex-start;
-    flex-wrap: wrap;
+  .site-footer {
+    border-radius: 28px;
   }
 }
