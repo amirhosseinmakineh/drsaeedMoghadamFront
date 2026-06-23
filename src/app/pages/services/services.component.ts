@@ -3,7 +3,8 @@ import { NgFor } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { ClinicDataService } from '../../services/clinic-data.service';
-@Component({selector:'app-services',standalone:true,imports:[NgFor,RouterLink],template:`
+import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
+@Component({selector:'app-services',standalone:true,imports:[NgFor,RouterLink,FaIconComponent],template:`
 <section class="surface-block">
   <p class="eyebrow">همه خدمات</p>
   <h1>خدمات دندانپزشکی</h1>
@@ -12,7 +13,7 @@ import { ClinicDataService } from '../../services/clinic-data.service';
 <section>
   <div class="grid services-grid">
     <article class="card icon-card" *ngFor="let s of services">
-      <span class="service-icon">✦</span>
+      <span class="service-icon"><app-fa-icon name="tooth"></app-fa-icon></span>
       <h2>{{s.title}}</h2>
       <p>{{s.description}}</p>
       <a class="btn ghost" [routerLink]="'/services/'+s.id">اطلاعات کامل</a>
