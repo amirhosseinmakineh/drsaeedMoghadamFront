@@ -12,15 +12,15 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
   template: `
     <section class="page-section page-hero">
       <div class="section-heading">
-        <p class="eyebrow">{{ language() === 'fa' ? 'همه خدمات' : 'All services' }}</p>
-        <h1>{{ language() === 'fa' ? 'خدمات دندان‌پزشکی با صفحه اختصاصی برای هر نیاز' : 'Dental services with a dedicated page for every need' }}</h1>
+        <p class="eyebrow">{{ language() === 'fa' ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Dr. Saeed Moghaddam Dental Clinic' }}</p>
+        <h1>{{ language() === 'fa' ? 'خدمات دندان‌پزشکی دکتر سعید مقدم' : 'Dental services by Dr. Saeed Moghaddam' }}</h1>
         <p>{{ language() === 'fa'
-          ? 'هر خدمت در این ساختار صفحه‌ی کامل خود را دارد تا کاربر پیش از تماس، مزایا، مراحل، مراقبت‌ها و محدودیت‌های درمان را بفهمد.'
-          : 'Every service has a complete page so users understand benefits, steps, care and limits before contacting the clinic.' }}</p>
+          ? 'در این صفحه مسیرهای اصلی درمان، زیبایی و پیشگیری دندان‌پزشکی را می‌بینید و برای هر درمان توضیح دقیق، مراحل، مراقبت‌ها و سوالات پرتکرار در دسترس است.'
+          : 'This page presents the main restorative, cosmetic and preventive dental care paths with focused explanations, steps, aftercare and common questions for each treatment.' }}</p>
       </div>
       <div class="hero-pattern">
         <app-fa-icon name="sparkle"></app-fa-icon>
-        <span>{{ language() === 'fa' ? 'انتخاب خدمت، توضیح درمان، درخواست تماس' : 'Choose service, understand care, request a call' }}</span>
+        <span>{{ language() === 'fa' ? 'مشاهده درمان‌های کلینیک دکتر سعید مقدم' : 'View Dr. Saeed Moghaddam treatment paths' }}</span>
       </div>
     </section>
 
@@ -34,7 +34,7 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
           <p>{{ pickText(service.summary, language()) }}</p>
           <small>{{ pickText(service.cost, language()) }}</small>
           <a [routerLink]="['/services', service.id]">
-            {{ language() === 'fa' ? 'اطلاعات کامل خدمت' : 'Full service guide' }}
+            {{ language() === 'fa' ? 'مشاهده ' + pickText(service.title, language()) : 'View ' + pickText(service.title, language()) }}
             <app-fa-icon name="arrowLeft"></app-fa-icon>
           </a>
         </article>
@@ -52,7 +52,7 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
     .page-hero h1 {
       margin: 0 0 16px;
-      font-size: clamp(2rem, 3.8vw, 3.55rem);
+      font-size: clamp(1.7rem, 3vw, 2.8rem);
     }
 
     .hero-pattern {
@@ -110,11 +110,11 @@ export class ServicesComponent {
 
   private updateSeo(): void {
     const isFa = this.language() === 'fa';
-    this.title.setTitle(isFa ? 'خدمات دندان‌پزشکی | کلینیک دکتر سعید مقدم' : 'Dental services | Dr. Saeed Moghaddam Clinic');
+    this.title.setTitle(isFa ? 'خدمات دندان‌پزشکی | کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Dental services | Dr. Saeed Moghaddam Dental Clinic');
     this.meta.updateTag({
       name: 'description',
       content: isFa
-        ? 'لیست کامل خدمات دندان‌پزشکی شامل ایمپلنت، لمینت، کامپوزیت، ارتودنسی، سفید کردن دندان، درمان ریشه، کودکان و درمان لثه.'
+        ? 'معرفی درمان‌های دندان‌پزشکی در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمپلنت، لمینت، کامپوزیت، ارتودنسی، بلیچینگ، درمان ریشه، کودکان و درمان لثه.'
         : 'Complete dental service list including implants, veneers, composite, orthodontics, whitening, root canal, pediatric care and gum treatment.'
     });
   }

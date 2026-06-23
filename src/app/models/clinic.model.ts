@@ -64,7 +64,6 @@ export interface DentalService {
   cost: LocalizedText;
   idealFor: LocalizedText[];
   benefits: LocalizedText[];
-  userValue: LocalizedText[];
   steps: TreatmentStep[];
   care: LocalizedText[];
   faqs: FaqItem[];
@@ -161,7 +160,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     eyebrow: text('تجربه آرام مراجعه‌کننده', 'Calm patient experience'),
     title: text('از تماس اولیه تا پیگیری بعد از درمان، مسیر ساده است', 'From first call to aftercare, the path stays simple'),
     text: text(
-      'خدمات، توضیحات درمان، سوالات پرتکرار و فرم درخواست تماس کنار هم آمده‌اند تا مراجعه‌کننده سریع‌تر بداند برای چه خدمتی باید راهنمایی بگیرد.',
+      'درمان‌ها، توضیحات تخصصی، سوالات پرتکرار و فرم درخواست تماس کنار هم آمده‌اند تا مراجعه‌کننده سریع‌تر بداند برای کدام مسیر درمانی باید راهنمایی بگیرد.',
       'Services, treatment explanations, FAQs and the call request form are grouped together so patients quickly know which service they need guidance for.'
     ),
     image: image('photo-1588776814546-1ffcf47267a5')
@@ -219,11 +218,11 @@ export const DENTAL_SERVICES: DentalService[] = [
     title: text('ایمپلنت دندان', 'Dental implants'),
     subtitle: text('جایگزینی پایدار دندان از دست رفته', 'Stable replacement for missing teeth'),
     summary: text(
-      'ایمپلنت برای بازگرداندن قدرت جویدن، زیبایی لبخند و جلوگیری از جابه‌جایی دندان‌های اطراف طراحی می‌شود.',
+      'ایمپلنت دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم برای جایگزینی ریشه از دست رفته، بازگرداندن جویدن و حفظ فرم لبخند بررسی می‌شود.',
       'Implants restore chewing strength, smile aesthetics and help prevent neighboring teeth from shifting.'
     ),
     longIntro: text(
-      'ایمپلنت دندان زمانی پیشنهاد می‌شود که ریشه طبیعی از دست رفته باشد و بیمار به راهکاری ثابت، قابل اعتماد و شبیه دندان طبیعی نیاز داشته باشد. پیش از شروع، وضعیت لثه، استخوان، عادت‌های بهداشتی، داروهای مصرفی و عکس‌های تشخیصی بررسی می‌شود تا طرح درمان برای همان بیمار نوشته شود. هدف ما فقط پر کردن جای خالی دندان نیست؛ باید جویدن، تلفظ، فرم صورت و آرامش بیمار هم بهتر شود.',
+      'ایمپلنت دندان زمانی پیشنهاد می‌شود که ریشه طبیعی از دست رفته باشد و بیمار به جایگزینی ثابت، قابل تمیز کردن و نزدیک به عملکرد دندان طبیعی نیاز داشته باشد. در کلینیک دندان‌پزشکی دکتر سعید مقدم، قبل از کاشت ایمپلنت وضعیت لثه، حجم و کیفیت استخوان، فاصله تا سینوس یا عصب، عادت‌های بهداشتی، مصرف دخانیات، داروهای مهم و عکس‌های تشخیصی بررسی می‌شود. هدف درمان فقط پر کردن جای خالی نیست؛ ایمپلنت باید با روکش نهایی، خط لثه، قدرت جویدن و برنامه نگهداری بیمار هماهنگ باشد.',
       'Dental implants are recommended when the natural root is missing and the patient needs a fixed, reliable and natural-looking solution. Before treatment, gum health, bone volume, hygiene habits, medications and diagnostic images are reviewed so the plan fits the individual. The goal is not only to fill a gap; chewing, speech, facial support and patient confidence should improve too.'
     ),
     duration: text('از چند هفته تا چند ماه، بسته به استخوان و نیاز درمانی', 'From a few weeks to several months depending on bone and clinical needs'),
@@ -234,35 +233,34 @@ export const DENTAL_SERVICES: DentalService[] = [
       text('افرادی که به دنبال راهکاری ثابت و طولانی‌مدت هستند', 'People looking for a fixed long-term solution')
     ],
     benefits: [
-      text('کمک به جویدن طبیعی‌تر', 'Helps restore natural chewing'),
-      text('حفظ فرم صورت و لبخند', 'Supports facial shape and smile'),
-      text('عدم تراش دندان‌های سالم مجاور', 'Avoids shaving healthy neighboring teeth'),
-      text('پایداری بالا با مراقبت درست', 'High stability with proper care')
-    ],
-    userValue: [
-      text('می‌دانید چرا ایمپلنت برای شما مناسب یا نامناسب است.', 'You understand why implants are or are not suitable for you.'),
-      text('مراحل درمان، فاصله جلسات و مراقبت‌ها شفاف توضیح داده می‌شود.', 'Treatment stages, visit intervals and care instructions are explained clearly.'),
-      text('نتیجه نهایی برای عملکرد و زیبایی همزمان طراحی می‌شود.', 'The final result is designed for both function and aesthetics.')
+      text('جایگزینی ثابت دندان از دست رفته بدون وابستگی به دندان‌های سالم کناری', 'Fixed missing-tooth replacement without relying on healthy neighboring teeth'),
+      text('کمک به حفظ استخوان فک و فرم بافت نرم در ناحیه بی‌دندانی', 'Helps support jawbone and soft-tissue form in the missing-tooth area'),
+      text('بازگرداندن قدرت جویدن با روکش طراحی‌شده بر اساس تماس‌های دندانی', 'Restores chewing with a crown designed around bite contacts'),
+      text('قابل نگهداری بودن درمان با رعایت بهداشت اطراف ایمپلنت و مراجعات دوره‌ای', 'Maintainable treatment with implant hygiene and periodic reviews')
     ],
     steps: [
-      { step: 1, title: text('معاینه و عکس', 'Exam and imaging'), description: text('لثه، استخوان و فضای دندان از دست رفته بررسی می‌شود.', 'Gums, bone and the missing tooth space are evaluated.') },
-      { step: 2, title: text('طرح درمان اختصاصی', 'Personal plan'), description: text('نوع ایمپلنت، زمان‌بندی و نیاز به درمان‌های مکمل مشخص می‌شود.', 'Implant system, timing and any supporting treatments are defined.') },
-      { step: 3, title: text('جراحی کنترل‌شده', 'Controlled surgery'), description: text('کاشت با بی‌حسی مناسب و پروتکل استریل انجام می‌شود.', 'Placement is done with proper anesthesia and sterile protocol.') },
-      { step: 4, title: text('روکش و پیگیری', 'Crown and follow-up'), description: text('پس از آماده شدن پایه، روکش و مراقبت دوره‌ای انجام می‌شود.', 'After integration, the crown and maintenance visits are completed.') }
+      { step: 1, title: text('معاینه، عکس و ارزیابی لثه', 'Exam, imaging and gum assessment'), description: text('فضای دندان از دست رفته، حجم استخوان، سلامت لثه و فاصله با ساختارهای حساس مثل سینوس یا عصب بررسی می‌شود.', 'The missing-tooth space, bone volume, gum health and distance from structures such as the sinus or nerve are evaluated.') },
+      { step: 2, title: text('طرح درمان و آماده‌سازی', 'Treatment planning and preparation'), description: text('نیاز به کشیدن باقی‌مانده ریشه، پیوند استخوان، درمان لثه یا اصلاح بهداشت پیش از جراحی مشخص می‌شود.', 'Needs such as root removal, bone grafting, gum therapy or hygiene improvement are defined before surgery.') },
+      { step: 3, title: text('کاشت ایمپلنت با پروتکل استریل', 'Implant placement with sterile protocol'), description: text('پایه ایمپلنت با بی‌حسی موضعی، کنترل خونریزی و رعایت اصول جراحی در موقعیت برنامه‌ریزی‌شده قرار می‌گیرد.', 'The implant fixture is placed under local anesthesia with bleeding control and surgical protocol in the planned position.') },
+      { step: 4, title: text('دوره جوش خوردن و کنترل', 'Healing and integration review'), description: text('در زمان ترمیم، فشار مستقیم روی ایمپلنت کنترل می‌شود و روند جوش خوردن پایه با استخوان پایش می‌شود.', 'During healing, direct pressure on the implant is controlled and osseointegration is monitored.') },
+      { step: 5, title: text('قالب‌گیری، روکش و نگهداری', 'Impression, crown and maintenance'), description: text('پس از آماده شدن پایه، اباتمنت و روکش متناسب با لثه و تماس دندانی ساخته و برنامه نگهداری دوره‌ای توضیح داده می‌شود.', 'After integration, the abutment and crown are made to fit gum form and bite contacts, followed by maintenance guidance.') }
     ],
     care: [
-      text('مسواک و نخ دندان مخصوص اطراف ایمپلنت را منظم انجام دهید.', 'Clean around the implant regularly with suitable brush and floss.'),
-      text('در صورت درد، التهاب یا لق شدن قطعه سریع تماس بگیرید.', 'Call promptly if you notice pain, swelling or looseness.'),
-      text('معاینه دوره‌ای برای حفظ سلامت لثه ضروری است.', 'Regular checkups are essential for gum health.')
+      text('در ۲۴ ساعت اول از دستکاری محل جراحی، شست‌وشوی شدید و غذای داغ خودداری کنید و داروها را طبق نسخه مصرف کنید.', 'For the first 24 hours, avoid manipulating the surgical area, vigorous rinsing and hot foods; take medications as prescribed.'),
+      text('تا زمان اجازه دندان‌پزشک، روی ناحیه ایمپلنت فشار جویدن سنگین وارد نکنید و از دخانیات پرهیز کنید.', 'Avoid heavy chewing on the implant area until cleared by the dentist and avoid smoking.'),
+      text('بعد از نصب روکش، مسواک، نخ یا برس بین‌دندانی مناسب اطراف ایمپلنت را روزانه انجام دهید.', 'After crown delivery, clean around the implant daily with the appropriate brush, floss or interdental brush.'),
+      text('درد رو به افزایش، تورم، ترشح، بوی بد یا لق شدن هر قطعه نیاز به تماس و بررسی سریع دارد.', 'Increasing pain, swelling, discharge, bad odor or looseness of any component needs prompt review.')
     ],
     faqs: [
-      { id: 'implant-1', question: text('آیا ایمپلنت درد دارد؟', 'Is implant treatment painful?'), answer: text('با بی‌حسی مناسب، درد حین کار کنترل می‌شود و ناراحتی بعد از آن معمولاً با مراقبت و دارو قابل مدیریت است.', 'With proper anesthesia, treatment pain is controlled and post-care discomfort is usually manageable.') },
-      { id: 'implant-2', question: text('همه افراد می‌توانند ایمپلنت انجام دهند؟', 'Can everyone get implants?'), answer: text('خیر. سلامت لثه، حجم استخوان، دیابت کنترل‌شده، مصرف دخانیات و همکاری بیمار در تصمیم نهایی مهم است.', 'No. Gum health, bone volume, controlled diabetes, smoking and patient cooperation matter.') }
+      { id: 'implant-1', question: text('آیا کاشت ایمپلنت دندان درد دارد؟', 'Is implant placement painful?'), answer: text('حین جراحی با بی‌حسی موضعی درد کنترل می‌شود. ناراحتی، تورم یا حساسیت خفیف تا چند روز طبیعی است، اما درد شدید یا رو به افزایش باید بررسی شود.', 'Local anesthesia controls pain during surgery. Mild discomfort, swelling or soreness for a few days is common, but severe or increasing pain needs review.') },
+      { id: 'implant-2', question: text('ایمپلنت چند ماه طول می‌کشد تا به استخوان جوش بخورد؟', 'How long does implant integration take?'), answer: text('در بسیاری از موارد چند ماه زمان لازم است و این مدت به فک بالا یا پایین، کیفیت استخوان، پیوند استخوان، سلامت عمومی و رعایت مراقبت‌ها بستگی دارد.', 'Integration often takes several months and depends on jaw location, bone quality, grafting, general health and aftercare.') },
+      { id: 'implant-3', question: text('چه کسانی قبل از ایمپلنت نیاز به پیوند استخوان دارند؟', 'Who may need bone grafting before implants?'), answer: text('اگر ارتفاع یا عرض استخوان کافی نباشد، دندان مدت طولانی از دست رفته باشد یا عفونت قبلی باعث تحلیل استخوان شده باشد، پیوند استخوان ممکن است در طرح درمان قرار بگیرد.', 'Bone grafting may be planned when bone height or width is insufficient, the tooth has been missing for a long time or previous infection caused bone loss.') },
+      { id: 'implant-4', question: text('بعد از ایمپلنت چه علائمی هشداردهنده است؟', 'What warning signs should be checked after implants?'), answer: text('تب، تورم رو به افزایش، ترشح چرکی، بوی بد، درد شدید ماندگار یا لق شدن پایه، پیچ یا روکش باید سریع به کلینیک اطلاع داده شود.', 'Fever, increasing swelling, pus discharge, bad odor, persistent severe pain or looseness of the fixture, screw or crown should be reported promptly.') }
     ],
     relatedIds: ['root-canal', 'gum-treatment', 'laminate'],
     seo: {
-      title: text('ایمپلنت دندان | کاشت دندان در کلینیک دکتر سعید مقدم', 'Dental implants | Dr. Saeed Moghaddam Dental Clinic'),
-      description: text('راهنمای کامل ایمپلنت دندان، مراحل کاشت، مزایا، مراقبت‌ها و عوامل موثر بر هزینه.', 'Complete guide to dental implants, placement steps, benefits, aftercare and cost factors.')
+      title: text('ایمپلنت دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Dental implants | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای ایمپلنت دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ مراحل کاشت، مدت جوش خوردن، مراقبت‌ها، علائم هشدار و عوامل موثر بر هزینه.', 'Dental implant guide at Dr. Saeed Moghaddam Dental Clinic: placement steps, healing time, aftercare, warning signs and cost factors.')
     }
   },
   {
@@ -272,9 +270,9 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#c9a26a',
     title: text('لمینت سرامیکی', 'Porcelain veneers'),
     subtitle: text('طراحی لبخند ظریف و طبیعی', 'Delicate natural smile design'),
-    summary: text('لمینت برای اصلاح رنگ، فرم، اندازه و هماهنگی دندان‌های جلویی با حداقل اغراق ظاهری استفاده می‌شود.', 'Veneers improve color, shape, size and harmony of front teeth without an overdone look.'),
+    summary: text('لمینت سرامیکی در کلینیک دندان‌پزشکی دکتر سعید مقدم برای اصلاح رنگ، فرم و تناسب دندان‌های جلو با طراحی طبیعی لبخند بررسی می‌شود.', 'Veneers improve color, shape, size and harmony of front teeth without an overdone look.'),
     longIntro: text(
-      'لمینت سرامیکی برای افرادی مناسب است که لبخندی روشن‌تر، مرتب‌تر و هماهنگ‌تر می‌خواهند اما ظاهر مصنوعی را دوست ندارند. در طراحی لمینت، فرم لب، رنگ پوست، خط لبخند، میزان نمایش لثه و سلامت دندان‌ها بررسی می‌شود. ما قبل از درمان درباره محدودیت‌ها، نیاز به تراش، انتخاب رنگ و مراقبت‌های بعدی شفاف صحبت می‌کنیم.',
+      'لمینت سرامیکی برای افرادی مناسب است که می‌خواهند رنگ، فرم، اندازه یا هماهنگی دندان‌های جلویی اصلاح شود اما نتیجه مصنوعی و اغراق‌آمیز نباشد. در کلینیک دندان‌پزشکی دکتر سعید مقدم، قبل از لمینت وضعیت پوسیدگی، مینای دندان، سلامت لثه، خط لبخند، فرم لب، رنگ پوست، عادت دندان‌قروچه و نیاز احتمالی به ارتودنسی بررسی می‌شود. انتخاب رنگ و میزان آماده‌سازی باید محافظه‌کارانه و قابل توضیح باشد، چون لمینت درمانی دقیق و معمولاً برگشت‌ناپذیر است.',
       'Porcelain veneers suit people who want a brighter, more balanced smile without an artificial look. Lip shape, skin tone, smile line, gum display and tooth health are considered. Before treatment, preparation limits, shade selection and aftercare are explained clearly.'
     ),
     duration: text('معمولاً ۱۰ تا ۱۴ روز پس از آماده‌سازی', 'Usually 10 to 14 days after preparation'),
@@ -285,35 +283,34 @@ export const DENTAL_SERVICES: DentalService[] = [
       text('افراد با انتظار زیبایی طبیعی', 'People expecting natural aesthetics')
     ],
     benefits: [
-      text('رنگ پایدارتر نسبت به درمان‌های مستقیم', 'More stable shade than direct options'),
-      text('فرم‌دهی دقیق لبخند', 'Precise smile shaping'),
-      text('سطح صاف و درخشان', 'Smooth glossy surface'),
-      text('هماهنگی با چهره', 'Facial harmony')
-    ],
-    userValue: [
-      text('قبل از انتخاب رنگ، نتیجه با چهره شما سنجیده می‌شود.', 'Shade selection is checked against your face.'),
-      text('هدف لبخند طبیعی است، نه دندان‌های یکدست و غیرواقعی.', 'The goal is a natural smile, not unrealistic uniform teeth.'),
-      text('مراقبت‌ها برای ماندگاری نتیجه به زبان ساده گفته می‌شود.', 'Care rules are explained simply for long-term results.')
+      text('اصلاح همزمان رنگ، فرم، طول و تناسب دندان‌های جلویی در طراحی لبخند', 'Improves color, shape, length and proportion of front teeth together'),
+      text('مقاومت رنگی بالاتر سرامیک نسبت به کامپوزیت در مراقبت درست', 'Higher ceramic shade stability than composite with proper care'),
+      text('امکان طراحی طبیعی بر اساس خط لبخند، فرم لب و نمایش لثه', 'Supports natural design based on smile line, lip form and gum display'),
+      text('سطح صیقلی و قابل تمیز کردن که به سلامت لثه در حاشیه‌ها کمک می‌کند', 'Smooth cleanable surface that supports gum health around margins')
     ],
     steps: [
-      { step: 1, title: text('تحلیل لبخند', 'Smile analysis'), description: text('عکس، فرم صورت و انتظار شما بررسی می‌شود.', 'Photos, facial form and expectations are reviewed.') },
-      { step: 2, title: text('طراحی و آماده‌سازی', 'Design and preparation'), description: text('در صورت نیاز آماده‌سازی محافظه‌کارانه انجام می‌شود.', 'Conservative preparation is done if needed.') },
-      { step: 3, title: text('ساخت سرامیک', 'Ceramic fabrication'), description: text('رنگ و فرم نهایی با لابراتوار هماهنگ می‌شود.', 'Final shade and shape are coordinated with the lab.') },
-      { step: 4, title: text('نصب و آموزش مراقبت', 'Bonding and care'), description: text('لمینت‌ها نصب و نکات نگهداری توضیح داده می‌شود.', 'Veneers are bonded and care guidance is provided.') }
+      { step: 1, title: text('معاینه زیبایی و سلامت دندان', 'Aesthetic and dental health exam'), description: text('پوسیدگی، ترمیم‌های قبلی، وضعیت لثه، ضخامت مینا، بایت و انتظار زیبایی بیمار بررسی می‌شود.', 'Decay, existing restorations, gum condition, enamel thickness, bite and aesthetic expectations are reviewed.') },
+      { step: 2, title: text('طراحی لبخند و انتخاب رنگ', 'Smile design and shade selection'), description: text('رنگ نهایی با رنگ پوست، فرم صورت، خط لبخند و طبیعی بودن دندان‌ها مقایسه می‌شود.', 'Final shade is compared with skin tone, facial form, smile line and natural tooth appearance.') },
+      { step: 3, title: text('آماده‌سازی محافظه‌کارانه', 'Conservative preparation'), description: text('در صورت نیاز، مقدار محدودی از مینا برای جاگیری سرامیک آماده می‌شود و قالب یا اسکن تهیه می‌شود.', 'If needed, limited enamel preparation is performed for ceramic fit and an impression or scan is taken.') },
+      { step: 4, title: text('ساخت لابراتواری و بررسی تناسب', 'Lab fabrication and fit review'), description: text('لمینت‌ها با فرم و رنگ هماهنگ ساخته و قبل از چسباندن از نظر حاشیه، رنگ و تماس بررسی می‌شوند.', 'Veneers are fabricated with planned form and shade, then checked for margins, color and contacts before bonding.') },
+      { step: 5, title: text('باندینگ و کنترل نهایی', 'Bonding and final control'), description: text('نصب با پروتکل چسباندن انجام می‌شود و تماس‌های دندانی، نخ‌پذیری و مراقبت‌های بعدی توضیح داده می‌شود.', 'Bonding follows adhesive protocol, then bite contacts, floss access and aftercare are explained.') }
     ],
     care: [
-      text('از شکستن اجسام سخت با دندان خودداری کنید.', 'Avoid biting hard objects.'),
-      text('در صورت دندان‌قروچه، نایت‌گارد می‌تواند لازم باشد.', 'A night guard may be needed for grinding.'),
-      text('معاینه و پولیش دوره‌ای به حفظ ظاهر کمک می‌کند.', 'Regular checks and polishing help maintain appearance.')
+      text('از گاز زدن اجسام سخت، باز کردن بسته با دندان و شکستن آجیل یا یخ با دندان‌های لمینت‌شده خودداری کنید.', 'Avoid biting hard objects, opening packages with teeth and cracking nuts or ice with veneered teeth.'),
+      text('اگر دندان‌قروچه یا فشار فکی دارید، نایت‌گارد طبق تشخیص دندان‌پزشک برای محافظت از سرامیک ضروری است.', 'If you grind or clench, a dentist-prescribed night guard is important to protect the ceramic.'),
+      text('مسواک، نخ دندان و تمیز کردن حاشیه لثه باید دقیق انجام شود؛ لمینت جای بهداشت روزانه را نمی‌گیرد.', 'Brush, floss and clean gum margins carefully; veneers do not replace daily hygiene.'),
+      text('حساسیت، گیر کردن نخ، شکستگی لبه یا تغییر رنگ حاشیه‌ها باید در معاینه دوره‌ای بررسی شود.', 'Sensitivity, floss catching, edge chipping or margin discoloration should be reviewed during checkups.')
     ],
     faqs: [
-      { id: 'laminate-1', question: text('آیا لمینت باعث پوسیدگی می‌شود؟', 'Do veneers cause decay?'), answer: text('خود لمینت باعث پوسیدگی نیست؛ بهداشت نامناسب و چسبندگی آسیب‌دیده می‌تواند مشکل ایجاد کند.', 'Veneers do not cause decay by themselves; poor hygiene or damaged margins can create problems.') },
-      { id: 'laminate-2', question: text('رنگ لمینت قابل تغییر است؟', 'Can veneer color be changed?'), answer: text('پس از نصب، رنگ سرامیک تغییر جدی نمی‌کند؛ انتخاب رنگ باید قبل از ساخت دقیق انجام شود.', 'After bonding, ceramic shade does not significantly change, so selection must be careful before fabrication.') }
+      { id: 'laminate-1', question: text('آیا لمینت دندان باعث پوسیدگی می‌شود؟', 'Do veneers cause tooth decay?'), answer: text('خود لمینت باعث پوسیدگی نیست. پوسیدگی زمانی خطرساز می‌شود که حاشیه‌ها درست بسته نشده باشند، بهداشت ضعیف باشد یا پوسیدگی قبلی درمان نشده باقی بماند.', 'Veneers do not cause decay by themselves. Risk rises when margins are poor, hygiene is weak or existing decay is not treated.') },
+      { id: 'laminate-2', question: text('برای لمینت دندان چقدر تراش لازم است؟', 'How much preparation is needed for veneers?'), answer: text('میزان آماده‌سازی به فرم دندان، نامرتبی، رنگ پایه و نوع سرامیک بستگی دارد و باید تا حد ممکن در مینا و محافظه‌کارانه انجام شود.', 'Preparation depends on tooth form, alignment, base shade and ceramic type, and should be as conservative as possible within enamel.') },
+      { id: 'laminate-3', question: text('آیا رنگ لمینت بعد از نصب تغییر می‌کند؟', 'Can veneer shade change after bonding?'), answer: text('سرامیک باکیفیت رنگ‌پذیری کمی دارد، اما انتخاب رنگ پس از چسباندن به‌سادگی قابل تغییر نیست؛ به همین دلیل انتخاب رنگ قبل از ساخت اهمیت زیادی دارد.', 'Quality ceramic has low staining, but shade is not easily changed after bonding, so pre-fabrication shade selection matters.') },
+      { id: 'laminate-4', question: text('لمینت برای دندان‌قروچه مناسب است؟', 'Are veneers suitable for teeth grinding?'), answer: text('دندان‌قروچه کنترل‌نشده خطر لب‌پریدگی یا شکستگی را بالا می‌برد. در این شرایط ابتدا شدت فشار فکی بررسی و معمولاً نایت‌گارد توصیه می‌شود.', 'Uncontrolled grinding increases chipping or fracture risk. Bite force is assessed first and a night guard is often recommended.') }
     ],
     relatedIds: ['composite', 'whitening', 'orthodontics'],
     seo: {
-      title: text('لمینت دندان | طراحی لبخند طبیعی', 'Porcelain veneers | Natural smile design'),
-      description: text('همه چیز درباره لمینت دندان، طراحی لبخند، انتخاب رنگ، مراقبت‌ها و هزینه‌های وابسته به معاینه.', 'Everything about veneers, smile design, shade selection, aftercare and exam-based costs.')
+      title: text('لمینت دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Porcelain veneers | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای لمینت دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ طراحی لبخند طبیعی، میزان تراش، انتخاب رنگ، مراقبت و ماندگاری.', 'Porcelain veneer guide at Dr. Saeed Moghaddam Dental Clinic: natural smile design, preparation, shade selection, care and longevity.')
     }
   },
   {
@@ -323,9 +320,9 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#d7a85d',
     title: text('کامپوزیت ونیر', 'Composite veneers'),
     subtitle: text('اصلاح سریع فرم و رنگ دندان', 'Fast shape and color enhancement'),
-    summary: text('کامپوزیت برای اصلاح محافظه‌کارانه لب‌پریدگی، فاصله‌های کوچک، بدفرمی و رنگ نامطلوب دندان‌ها کاربرد دارد.', 'Composite veneers conservatively improve chips, small gaps, shape issues and unwanted tooth color.'),
+    summary: text('کامپوزیت ونیر در کلینیک دندان‌پزشکی دکتر سعید مقدم برای اصلاح محافظه‌کارانه لب‌پریدگی، فاصله‌های کوچک و فرم دندان بررسی می‌شود.', 'Composite veneers conservatively improve chips, small gaps, shape issues and unwanted tooth color.'),
     longIntro: text(
-      'کامپوزیت ونیر راهکاری مستقیم و نسبتاً سریع برای بهتر شدن لبخند است. در این درمان، ماده هم‌رنگ دندان روی سطح دندان شکل داده و پولیش می‌شود. نتیجه خوب به انتخاب کیس، مهارت فرم‌دهی، کیفیت پولیش و مراقبت بیمار وابسته است. این درمان برای همه مشکلات جایگزین ارتودنسی یا لمینت نیست، اما در موارد مناسب می‌تواند تغییر چشمگیر و محافظه‌کارانه ایجاد کند.',
+      'کامپوزیت ونیر راهکاری مستقیم و کم‌تهاجمی برای اصلاح برخی مشکلات فرم و رنگ دندان است؛ مثل لب‌پریدگی محدود، فاصله کوچک، نامنظمی خفیف یا نیاز به بازسازی ظریف لبه دندان. در کلینیک دندان‌پزشکی دکتر سعید مقدم، پیش از شروع درمان، بایت، سلامت لثه، پوسیدگی، کیفیت مینای دندان، رنگ پایه و عادت‌هایی مثل دندان‌قروچه بررسی می‌شود. کامپوزیت برای همه موارد جایگزین ارتودنسی یا لمینت نیست، اما در کیس مناسب می‌تواند نتیجه طبیعی، قابل ترمیم و محافظه‌کارانه ایجاد کند.',
       'Composite veneers are a direct and relatively fast way to improve a smile. Tooth-colored resin is shaped and polished on the tooth surface. Good results depend on case selection, artistic shaping, polish quality and patient care. It is not a replacement for orthodontics or porcelain veneers in every case, but it can create meaningful conservative change.'
     ),
     duration: text('اغلب ۱ تا ۲ جلسه', 'Often 1 to 2 visits'),
@@ -336,35 +333,34 @@ export const DENTAL_SERVICES: DentalService[] = [
       text('افرادی که درمان کم‌تهاجمی می‌خواهند', 'People wanting a minimally invasive option')
     ],
     benefits: [
-      text('سرعت بالای اجرا', 'Fast delivery'),
-      text('حفظ بیشتر بافت دندان', 'Preserves more tooth structure'),
-      text('قابلیت ترمیم در آینده', 'Repairable in the future'),
-      text('هزینه منعطف‌تر نسبت به سرامیک', 'More flexible cost than ceramic')
-    ],
-    userValue: [
-      text('پیش از شروع می‌دانید کامپوزیت برای مشکل شما کافی هست یا نه.', 'You know whether composite is enough for your case before starting.'),
-      text('فرم نهایی با لبخند و صورت هماهنگ می‌شود.', 'Final shape is matched to your smile and face.'),
-      text('محدودیت‌های رنگ‌پذیری و مراقبت صادقانه توضیح داده می‌شود.', 'Staining limits and care needs are explained honestly.')
+      text('اصلاح فرم و لب‌پریدگی دندان معمولاً با حداقل تراش یا بدون تراش گسترده', 'Corrects shape and chips often with minimal or no extensive preparation'),
+      text('قابل ترمیم بودن در صورت لب‌پریدگی محدود یا نیاز به پولیش مجدد', 'Repairable if limited chipping or repolishing is needed'),
+      text('امکان اجرای مرحله‌ای و هماهنگ کردن فرم دندان با لبخند طبیعی', 'Can be delivered in stages and shaped to match a natural smile'),
+      text('گزینه‌ای محافظه‌کارانه برای بعضی فاصله‌ها و بدفرمی‌های خفیف تا متوسط', 'A conservative option for selected gaps and mild to moderate shape issues')
     ],
     steps: [
-      { step: 1, title: text('بررسی لبخند', 'Smile review'), description: text('رنگ، فرم و تماس دندان‌ها ارزیابی می‌شود.', 'Color, shape and bite contacts are evaluated.') },
-      { step: 2, title: text('انتخاب رنگ', 'Shade selection'), description: text('رنگ مناسب با دندان‌ها و چهره انتخاب می‌شود.', 'A matching shade is selected.') },
-      { step: 3, title: text('فرم‌دهی', 'Layering and shaping'), description: text('کامپوزیت مرحله‌ای شکل داده می‌شود.', 'Composite is layered and shaped step by step.') },
-      { step: 4, title: text('پولیش', 'Polishing'), description: text('سطح نهایی برای درخشندگی و تمیز شدن بهتر پولیش می‌شود.', 'The final surface is polished for shine and easier cleaning.') }
+      { step: 1, title: text('انتخاب کیس و بررسی بایت', 'Case selection and bite review'), description: text('فشارهای دندانی، دندان‌قروچه، سلامت لثه، پوسیدگی و مقدار اصلاح مورد نیاز بررسی می‌شود.', 'Bite forces, grinding, gum health, decay and the amount of needed correction are reviewed.') },
+      { step: 2, title: text('انتخاب رنگ و طراحی فرم', 'Shade selection and form design'), description: text('رنگ کامپوزیت با دندان‌های طبیعی و هدف زیبایی هماهنگ می‌شود تا نتیجه بیش از حد سفید یا مصنوعی نباشد.', 'Composite shade is matched to natural teeth and aesthetic goals so the result is not overly white or artificial.') },
+      { step: 3, title: text('آماده‌سازی سطح و لایه‌گذاری', 'Surface preparation and layering'), description: text('سطح دندان آماده و رزین کامپوزیت به صورت لایه‌ای فرم داده می‌شود تا ضخامت و تماس‌ها کنترل شوند.', 'The tooth surface is prepared and composite resin is layered to control thickness and contacts.') },
+      { step: 4, title: text('تنظیم بایت و پولیش نهایی', 'Bite adjustment and final polish'), description: text('تماس‌های دندانی، لبه‌ها و سطح کامپوزیت تنظیم و پولیش می‌شود تا تمیز کردن و ماندگاری بهتر شود.', 'Bite contacts, edges and composite surface are adjusted and polished to improve cleaning and longevity.') },
+      { step: 5, title: text('برنامه نگهداری و پولیش دوره‌ای', 'Maintenance and periodic polish'), description: text('مراقبت غذایی، بهداشت، زمان پولیش و علائم نیاز به ترمیم به بیمار توضیح داده می‌شود.', 'Diet, hygiene, polishing intervals and signs that need repair are explained.') }
     ],
     care: [
-      text('مصرف زیاد چای، قهوه و دخانیات می‌تواند روی رنگ اثر بگذارد.', 'Heavy tea, coffee and smoking can affect color.'),
-      text('پولیش دوره‌ای ظاهر کامپوزیت را بهتر نگه می‌دارد.', 'Periodic polishing keeps composite looking better.'),
-      text('از فشارهای شدید روی لبه‌ها پرهیز کنید.', 'Avoid heavy pressure on edges.')
+      text('روزانه مسواک نرم و نخ دندان استفاده کنید و از خمیر دندان‌های بسیار ساینده یا سفیدکننده قوی پرهیز کنید.', 'Use a soft toothbrush and floss daily, and avoid highly abrasive or strong whitening toothpastes.'),
+      text('مصرف مکرر چای، قهوه، دخانیات و مواد رنگی می‌تواند سطح کامپوزیت را کدر یا رنگ‌پذیر کند.', 'Frequent tea, coffee, smoking and pigments can dull or stain the composite surface.'),
+      text('از گاز زدن اجسام سخت، جویدن یخ و فشار دادن لبه‌های کامپوزیت خودداری کنید.', 'Avoid biting hard objects, chewing ice and putting heavy force on composite edges.'),
+      text('پولیش دوره‌ای هر چند ماه تا یک سال، بسته به شرایط دهان، به حفظ درخشندگی و تشخیص لب‌پریدگی کمک می‌کند.', 'Periodic polishing every few months to a year, depending on oral condition, helps maintain shine and detect chips.')
     ],
     faqs: [
-      { id: 'composite-1', question: text('کامپوزیت چند سال دوام دارد؟', 'How long do composite veneers last?'), answer: text('ماندگاری به بهداشت، رژیم غذایی، فشار دندان‌ها و پولیش دوره‌ای بستگی دارد.', 'Longevity depends on hygiene, diet, bite forces and maintenance polishing.') },
-      { id: 'composite-2', question: text('آیا کامپوزیت برگشت‌پذیر است؟', 'Is composite reversible?'), answer: text('در بسیاری موارد تراش کم یا بدون تراش است، اما تصمیم دقیق پس از معاینه مشخص می‌شود.', 'Many cases need little or no preparation, but the exact decision follows examination.') }
+      { id: 'composite-1', question: text('کامپوزیت دندان چند سال دوام دارد؟', 'How long do composite veneers last?'), answer: text('ماندگاری عدد ثابت ندارد و به کیفیت اجرا، بهداشت، رژیم غذایی، دندان‌قروچه، فشارهای جویدن و پولیش دوره‌ای وابسته است.', 'Longevity is not fixed and depends on execution quality, hygiene, diet, grinding, bite forces and maintenance polishing.') },
+      { id: 'composite-2', question: text('چرا کامپوزیت زرد یا کدر می‌شود؟', 'Why does composite stain or become dull?'), answer: text('تجمع پلاک، مصرف زیاد چای و قهوه، دخانیات، خمیر دندان ساینده و از بین رفتن پولیش سطحی می‌تواند باعث تغییر ظاهر شود؛ گاهی با پولیش تخصصی بهتر می‌شود.', 'Plaque, heavy tea and coffee, smoking, abrasive toothpaste and surface polish loss can change appearance; professional polishing may improve it.') },
+      { id: 'composite-3', question: text('اگر کامپوزیت لب‌پر شود باید کامل تعویض شود؟', 'Does chipped composite need full replacement?'), answer: text('در بسیاری از موارد لب‌پریدگی محدود قابل ترمیم است، اما علت آن مثل بایت بلند یا دندان‌قروچه باید بررسی شود تا تکرار نشود.', 'Limited chips are often repairable, but the cause such as high bite or grinding should be checked to prevent recurrence.') },
+      { id: 'composite-4', question: text('کامپوزیت بهتر است یا لمینت سرامیکی؟', 'Is composite better than porcelain veneers?'), answer: text('پاسخ به وضعیت دندان، هدف زیبایی، بودجه، میزان تغییر رنگ، بایت و انتظار ماندگاری بستگی دارد. در معاینه مشخص می‌شود کدام انتخاب منطقی‌تر است.', 'The answer depends on tooth condition, aesthetic goals, budget, discoloration, bite and longevity expectations. Examination defines the more logical option.') }
     ],
     relatedIds: ['laminate', 'whitening', 'orthodontics'],
     seo: {
-      title: text('کامپوزیت دندان | اصلاح طرح لبخند سریع', 'Composite veneers | Fast smile enhancement'),
-      description: text('مزایا، مراحل، مراقبت و محدودیت‌های کامپوزیت دندان برای اصلاح فرم و رنگ لبخند.', 'Benefits, steps, care and limits of composite veneers for smile shape and color.')
+      title: text('کامپوزیت دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Composite veneers | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای کامپوزیت دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ مزایا، مراحل، مراقبت، زرد شدن، ترمیم لب‌پریدگی و محدودیت‌ها.', 'Composite veneer guide at Dr. Saeed Moghaddam Dental Clinic: benefits, steps, care, staining, chip repair and limitations.')
     }
   },
   {
@@ -374,12 +370,12 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#9f8565',
     title: text('ارتودنسی و نظم لبخند', 'Orthodontics and smile alignment'),
     subtitle: text('مرتب‌سازی دندان‌ها با برنامه مرحله‌ای', 'Step-by-step teeth alignment'),
-    summary: text('ارتودنسی به بهبود نظم دندان‌ها، تماس‌های فکی، تمیز شدن راحت‌تر و زیبایی لبخند کمک می‌کند.', 'Orthodontics improves tooth alignment, bite contacts, easier cleaning and smile appearance.'),
+    summary: text('ارتودنسی در کلینیک دندان‌پزشکی دکتر سعید مقدم برای مرتب‌سازی دندان‌ها، بهبود تماس‌های فکی و حفظ نتیجه با نگهدارنده بررسی می‌شود.', 'Orthodontics improves tooth alignment, bite contacts, easier cleaning and smile appearance.'),
     longIntro: text(
-      'وقتی دندان‌ها نامرتب باشند، فقط ظاهر لبخند تحت تاثیر قرار نمی‌گیرد؛ تمیز کردن سخت‌تر، فشار روی بعضی دندان‌ها بیشتر و احتمال پوسیدگی یا التهاب لثه بالاتر می‌شود. در ارتودنسی، ابتدا شدت نامرتبی، روابط فکی، سن، سلامت لثه و هدف زیبایی بررسی می‌شود. سپس روش مناسب و مسیر مرحله‌ای برای بیمار توضیح داده می‌شود.',
+      'نامرتبی دندان‌ها فقط مسئله زیبایی نیست؛ تمیز کردن دندان‌ها سخت‌تر می‌شود، فشار جویدن می‌تواند روی بعضی دندان‌ها بیشتر شود و ریسک پوسیدگی یا التهاب لثه بالا برود. در کلینیک دندان‌پزشکی دکتر سعید مقدم، پیش از ارتودنسی شدت نامرتبی، روابط فکی، سلامت لثه، پوسیدگی‌های درمان‌نشده، سن، همکاری بیمار و هدف زیبایی بررسی می‌شود. درمان می‌تواند با روش ثابت، متحرک یا پلاک شفاف مطرح شود و بخش مهم آن نگهدارنده بعد از پایان درمان است.',
       'Crowded or misaligned teeth affect more than appearance; cleaning becomes harder, some teeth take more pressure and decay or gum inflammation risks increase. Orthodontic planning reviews crowding severity, jaw relationships, age, gum health and aesthetic goals before explaining the best method and stages.'
     ),
-    duration: text('حدود ۶ تا ۱۸ ماه، بسته به شدت نامرتبی', 'About 6 to 18 months depending on complexity'),
+    duration: text('معمولاً چند ماه تا بیش از یک سال، بسته به شدت نامرتبی، نوع روش و همکاری بیمار', 'From several months to more than a year depending on complexity, method and patient cooperation'),
     cost: text('وابسته به نوع درمان، مدت و نیازهای جانبی', 'Depends on treatment type, duration and supporting needs'),
     idealFor: [
       text('نامرتبی، فاصله یا چرخش دندان‌ها', 'Crowding, gaps or rotated teeth'),
@@ -387,35 +383,34 @@ export const DENTAL_SERVICES: DentalService[] = [
       text('افراد آماده همکاری و مراجعات منظم', 'Patients ready for cooperation and regular visits')
     ],
     benefits: [
-      text('تمیز کردن راحت‌تر دندان‌ها', 'Easier cleaning'),
-      text('بهبود زیبایی لبخند', 'Improved smile aesthetics'),
-      text('کاهش فشار نامتعادل', 'Reduced uneven pressure'),
-      text('کمک به درمان‌های زیبایی بعدی', 'Supports later cosmetic treatments')
-    ],
-    userValue: [
-      text('می‌فهمید چرا گاهی قبل از لمینت یا کامپوزیت، نظم دندان مهم است.', 'You learn why alignment can matter before veneers or composite.'),
-      text('در هر مرحله هدف و تغییرات قابل انتظار مشخص است.', 'Goals and expected changes are clear at every stage.'),
-      text('مسیر درمان با سبک زندگی شما هماهنگ می‌شود.', 'The plan is matched to your lifestyle.')
+      text('مرتب‌تر شدن دندان‌ها و ساده‌تر شدن مسواک و نخ دندان در نواحی شلوغ', 'Better alignment and easier brushing and flossing in crowded areas'),
+      text('بهبود تماس‌های دندانی و کاهش فشارهای نامتعادل روی بعضی دندان‌ها', 'Improves bite contacts and reduces uneven pressure on selected teeth'),
+      text('کمک به طراحی دقیق‌تر لمینت، کامپوزیت یا درمان‌های ترمیمی بعدی', 'Supports more precise veneer, composite or restorative planning later'),
+      text('حفظ نتیجه با نگهدارنده و پیگیری منظم پس از پایان درمان', 'Maintains results with retainers and regular post-treatment follow-up')
     ],
     steps: [
-      { step: 1, title: text('بررسی فک و دندان', 'Bite and tooth review'), description: text('عکس‌ها، تماس دندان‌ها و میزان نامرتبی بررسی می‌شود.', 'Images, bite contacts and crowding are reviewed.') },
-      { step: 2, title: text('انتخاب روش', 'Method selection'), description: text('روش ثابت، متحرک یا شفاف بر اساس شرایط بررسی می‌شود.', 'Fixed, removable or clear options are considered.') },
-      { step: 3, title: text('شروع حرکت کنترل‌شده', 'Controlled movement'), description: text('حرکت دندان‌ها به شکل مرحله‌ای پایش می‌شود.', 'Tooth movement is monitored in stages.') },
-      { step: 4, title: text('نگهدارنده', 'Retention'), description: text('پس از پایان، نگهدارنده برای حفظ نتیجه توصیه می‌شود.', 'After completion, retainers help maintain the result.') }
+      { step: 1, title: text('تشخیص و عکس‌های ارتودنسی', 'Diagnosis and orthodontic records'), description: text('عکس، قالب یا اسکن، روابط فکی، سلامت لثه و پوسیدگی‌های احتمالی برای شروع ایمن بررسی می‌شود.', 'Images, impressions or scans, jaw relationships, gum health and possible decay are reviewed for safe start.') },
+      { step: 2, title: text('انتخاب روش و توضیح محدودیت‌ها', 'Method selection and limits'), description: text('ثابت، متحرک یا شفاف بودن درمان، نیاز به کشیدن دندان یا درمان‌های جانبی و نقش همکاری بیمار مشخص می‌شود.', 'Fixed, removable or clear treatment, extraction or supporting needs and the role of cooperation are defined.') },
+      { step: 3, title: text('نصب دستگاه یا تحویل پلاک', 'Appliance placement or aligner delivery'), description: text('براکت‌ها یا پلاک‌ها آماده می‌شوند و روش تمیز کردن، تغذیه و کنترل درد اولیه آموزش داده می‌شود.', 'Braces or aligners are prepared and cleaning, diet and early discomfort control are explained.') },
+      { step: 4, title: text('تنظیم‌های دوره‌ای و پایش حرکت', 'Periodic adjustment and movement tracking'), description: text('حرکت دندان‌ها در جلسات منظم کنترل می‌شود و در صورت نیاز نیروها یا پلاک‌ها اصلاح می‌شوند.', 'Tooth movement is checked at regular visits and forces or aligners are adjusted if needed.') },
+      { step: 5, title: text('نگهدارنده و تثبیت نتیجه', 'Retention and stability'), description: text('پس از پایان حرکت دندان‌ها، نگهدارنده برای کاهش احتمال برگشت نتیجه طبق دستور استفاده می‌شود.', 'After tooth movement ends, retainers are used as instructed to reduce relapse risk.') }
     ],
     care: [
-      text('بهداشت اطراف براکت یا پلاک را دقیق انجام دهید.', 'Clean carefully around braces or aligners.'),
-      text('مراجعات منظم روی کیفیت نتیجه اثر مستقیم دارد.', 'Regular visits directly affect quality.'),
-      text('پس از درمان، نگهدارنده را طبق دستور استفاده کنید.', 'Use retainers as instructed.')
+      text('اطراف براکت، سیم یا پلاک شفاف را با مسواک، نخ مخصوص یا ابزار بین‌دندانی دقیق تمیز کنید.', 'Clean around brackets, wires or clear aligners carefully with toothbrush, special floss or interdental tools.'),
+      text('غذاهای سفت و چسبنده می‌تواند باعث شکستگی براکت یا تغییر شکل سیم شود و روند درمان را عقب بیندازد.', 'Hard and sticky foods can break brackets or distort wires and delay treatment.'),
+      text('جلسات تنظیم و کنترل را منظم انجام دهید؛ فاصله طولانی بین مراجعات کیفیت حرکت دندان را کم می‌کند.', 'Attend adjustment and review visits regularly; long gaps reduce tooth-movement quality.'),
+      text('پس از پایان درمان، نگهدارنده را طبق دستور استفاده کنید چون برگشت دندان‌ها بدون ریتینر ممکن است.', 'Use retainers as instructed after treatment because relapse can happen without retention.')
     ],
     faqs: [
-      { id: 'ortho-1', question: text('آیا ارتودنسی فقط برای کودکان است؟', 'Is orthodontics only for children?'), answer: text('خیر. بزرگسالان هم در صورت سلامت لثه و شرایط مناسب می‌توانند از ارتودنسی سود ببرند.', 'No. Adults can benefit if gum health and clinical conditions are suitable.') },
-      { id: 'ortho-2', question: text('آیا بعد از ارتودنسی دندان‌ها برمی‌گردند؟', 'Can teeth shift back?'), answer: text('بدون نگهدارنده احتمال برگشت وجود دارد؛ نگهداری بخش مهم درمان است.', 'Without retainers, relapse can happen; retention is an essential part of treatment.') }
+      { id: 'ortho-1', question: text('آیا ارتودنسی برای بزرگسالان هم انجام می‌شود؟', 'Can adults have orthodontic treatment?'), answer: text('بله، در صورت سلامت لثه، کنترل پوسیدگی‌ها و شرایط مناسب استخوان و دندان، بزرگسالان هم می‌توانند ارتودنسی انجام دهند.', 'Yes. Adults can have orthodontics when gum health, decay control and tooth-bone conditions are suitable.') },
+      { id: 'ortho-2', question: text('ارتودنسی چقدر طول می‌کشد؟', 'How long does orthodontics take?'), answer: text('مدت درمان به شدت نامرتبی، نوع روش، سن، سلامت لثه و همکاری بیمار بستگی دارد و پس از معاینه دقیق‌تر توضیح داده می‌شود.', 'Duration depends on complexity, method, age, gum health and cooperation, and is explained more accurately after examination.') },
+      { id: 'ortho-3', question: text('آیا ارتودنسی درد دارد؟', 'Is orthodontics painful?'), answer: text('در روزهای اول یا بعد از تنظیم‌ها احساس فشار و حساسیت طبیعی است و معمولاً با توصیه‌های ساده کنترل می‌شود؛ درد شدید یا زخم ماندگار باید بررسی شود.', 'Pressure and soreness in the first days or after adjustments are common and usually manageable; severe pain or persistent ulcers need review.') },
+      { id: 'ortho-4', question: text('آیا دندان‌ها بعد از ارتودنسی برمی‌گردند؟', 'Can teeth shift back after orthodontics?'), answer: text('بله، اگر نگهدارنده طبق دستور استفاده نشود، برگشت بخشی از نتیجه ممکن است. ریتینر و پیگیری دوره‌ای بخش اصلی درمان است.', 'Yes. If retainers are not used as instructed, some relapse can occur. Retention and follow-up are an essential part of treatment.') }
     ],
     relatedIds: ['laminate', 'composite', 'pediatric'],
     seo: {
-      title: text('ارتودنسی دندان | نظم لبخند و اصلاح تماس‌ها', 'Orthodontics | Smile alignment and bite correction'),
-      description: text('راهنمای ارتودنسی، مراحل مرتب‌سازی دندان‌ها، مراقبت و نقش نگهدارنده پس از درمان.', 'Orthodontic guide, alignment stages, care and the role of retainers after treatment.')
+      title: text('ارتودنسی دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Orthodontics | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای ارتودنسی در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ مدت درمان، مراحل، مراقبت، درد اولیه و نقش نگهدارنده پس از درمان.', 'Orthodontic guide at Dr. Saeed Moghaddam Dental Clinic: duration, steps, care, early discomfort and retention.')
     }
   },
   {
@@ -425,9 +420,9 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#c6a15b',
     title: text('سفید کردن دندان', 'Teeth whitening'),
     subtitle: text('روشن‌تر شدن کنترل‌شده لبخند', 'Controlled smile brightening'),
-    summary: text('بلیچینگ حرفه‌ای رنگ دندان را با پروتکل ایمن‌تر و کنترل حساسیت، چند درجه روشن‌تر می‌کند.', 'Professional whitening brightens teeth by several shades using a safer sensitivity-controlled protocol.'),
+    summary: text('سفید کردن دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم با ارزیابی پوسیدگی، ترمیم‌ها و حساسیت انجام می‌شود تا روشن شدن رنگ کنترل‌شده باشد.', 'Professional whitening brightens teeth by several shades using a safer sensitivity-controlled protocol.'),
     longIntro: text(
-      'سفید کردن دندان برای تغییر رنگ‌های سطحی و برخی رنگ‌رفتگی‌های داخلی کاربرد دارد. قبل از شروع، پوسیدگی، ترک، حساسیت، ترمیم‌های قدیمی و سلامت لثه بررسی می‌شود. باید بدانید بلیچینگ رنگ روکش، لمینت یا کامپوزیت را روشن نمی‌کند و نتیجه نهایی به جنس دندان و سبک زندگی بستگی دارد.',
+      'سفید کردن دندان یا بلیچینگ برای روشن‌تر کردن رنگ دندان طبیعی استفاده می‌شود، نه برای تغییر رنگ روکش، لمینت یا کامپوزیت. در کلینیک دندان‌پزشکی دکتر سعید مقدم، پیش از بلیچینگ پوسیدگی، ترک دندان، حساسیت قبلی، التهاب لثه، جرم و رنگ ترمیم‌های قدیمی بررسی می‌شود. نتیجه درمان به جنس دندان، رنگ پایه، رژیم غذایی، مصرف دخانیات و مراقبت بعد از درمان وابسته است؛ بنابراین وعده سفید شدن غیرواقعی داده نمی‌شود و هدف روشن‌تر شدن ایمن و قابل کنترل است.',
       'Whitening treats surface stains and some internal discoloration. Before starting, decay, cracks, sensitivity, old restorations and gum health are checked. It is important to know that whitening does not lighten crowns, veneers or composite, and the result depends on tooth structure and lifestyle.'
     ),
     duration: text('اغلب ۱ جلسه یا برنامه خانگی کنترل‌شده', 'Often 1 visit or a controlled home plan'),
@@ -438,35 +433,34 @@ export const DENTAL_SERVICES: DentalService[] = [
       text('کسانی که تغییر طبیعی و کنترل‌شده می‌خواهند', 'Those wanting a natural controlled change')
     ],
     benefits: [
-      text('افزایش درخشندگی لبخند', 'Brighter smile'),
-      text('درمان غیرتهاجمی', 'Non-invasive treatment'),
-      text('قابل تکرار با فاصله مناسب', 'Repeatable with proper intervals'),
-      text('آمادگی بهتر برای طراحی لبخند', 'Useful before smile design')
-    ],
-    userValue: [
-      text('قبل از درمان می‌فهمید آیا رنگ دندان شما به بلیچینگ پاسخ می‌دهد.', 'You know whether your tooth color is likely to respond.'),
-      text('حساسیت احتمالی و راه کنترل آن توضیح داده می‌شود.', 'Possible sensitivity and control methods are explained.'),
-      text('انتظار واقع‌بینانه از میزان روشن شدن دارید.', 'You get realistic expectations for brightness change.')
+      text('روشن‌تر شدن رنگ دندان طبیعی بدون تراش یا اضافه کردن ماده روی دندان', 'Brightens natural tooth shade without preparation or adding material'),
+      text('بررسی پوسیدگی و حساسیت پیش از شروع برای کاهش عوارض قابل پیشگیری', 'Pre-treatment decay and sensitivity checks reduce preventable side effects'),
+      text('کمک به انتخاب رنگ دقیق‌تر قبل از لمینت، کامپوزیت یا ترمیم‌های زیبایی', 'Helps with shade planning before veneers, composite or aesthetic restorations'),
+      text('امکان برنامه‌ریزی نگهداری نتیجه با توصیه غذایی و بهداشتی متناسب با بیمار', 'Supports result maintenance with diet and hygiene guidance matched to the patient')
     ],
     steps: [
-      { step: 1, title: text('ارزیابی رنگ و سلامت', 'Shade and health check'), description: text('رنگ پایه و مشکلات احتمالی بررسی می‌شود.', 'Base shade and possible issues are checked.') },
-      { step: 2, title: text('آماده‌سازی', 'Preparation'), description: text('در صورت نیاز جرم‌گیری یا اصلاح التهاب انجام می‌شود.', 'Cleaning or gum care is done if needed.') },
-      { step: 3, title: text('اجرای بلیچینگ', 'Whitening'), description: text('مواد سفیدکننده با پروتکل کنترل‌شده استفاده می‌شود.', 'Whitening material is used with a controlled protocol.') },
-      { step: 4, title: text('راهنمای تثبیت رنگ', 'Shade maintenance'), description: text('توصیه‌های غذایی و مراقبتی برای حفظ نتیجه داده می‌شود.', 'Diet and care guidance helps maintain the result.') }
+      { step: 1, title: text('ثبت رنگ پایه و معاینه', 'Baseline shade and exam'), description: text('رنگ فعلی دندان، پوسیدگی، ترک، حساسیت، ترمیم‌های قدیمی و التهاب لثه بررسی می‌شود.', 'Current shade, decay, cracks, sensitivity, old restorations and gum inflammation are checked.') },
+      { step: 2, title: text('آماده‌سازی دهان', 'Oral preparation'), description: text('در صورت نیاز جرم‌گیری، اصلاح التهاب یا درمان پوسیدگی قبل از بلیچینگ انجام می‌شود.', 'Cleaning, gum care or decay treatment is completed before whitening if needed.') },
+      { step: 3, title: text('محافظت لثه و اجرای کنترل‌شده', 'Gum protection and controlled whitening'), description: text('لثه محافظت می‌شود و ماده سفیدکننده با زمان و غلظت مناسب تحت کنترل استفاده می‌شود.', 'Gums are protected and whitening material is used with controlled timing and concentration.') },
+      { step: 4, title: text('کنترل حساسیت و نتیجه', 'Sensitivity and result review'), description: text('حساسیت احتمالی، میزان روشن شدن و تفاوت رنگ با ترمیم‌های موجود بررسی می‌شود.', 'Possible sensitivity, brightness change and shade differences with existing restorations are reviewed.') },
+      { step: 5, title: text('برنامه نگهداری رنگ', 'Shade maintenance plan'), description: text('توصیه‌های غذایی، بهداشتی و زمان مناسب تکرار درمان بر اساس شرایط بیمار توضیح داده می‌شود.', 'Diet, hygiene and suitable retreatment timing are explained based on the patient condition.') }
     ],
     care: [
-      text('تا مدت کوتاهی مصرف رنگدانه‌های قوی را محدود کنید.', 'Limit strong pigments for a short period.'),
-      text('خمیر دندان ضد حساسیت می‌تواند کمک کند.', 'Desensitizing toothpaste can help.'),
-      text('نتیجه با سبک زندگی و بهداشت بهتر ماندگارتر می‌شود.', 'Results last longer with better lifestyle and hygiene.')
+      text('در روزهای اول مصرف چای، قهوه، نوشابه رنگی، دخانیات و غذاهای پررنگ را محدود کنید.', 'In the first days, limit tea, coffee, colored soda, smoking and strong pigments.'),
+      text('حساسیت گذرا ممکن است رخ دهد؛ خمیر دندان ضدحساسیت یا توصیه دارویی فقط طبق نظر دندان‌پزشک استفاده شود.', 'Temporary sensitivity can occur; use desensitizing toothpaste or medication only as advised by the dentist.'),
+      text('بلیچینگ رنگ روکش، لمینت، کامپوزیت یا پرکردگی را روشن نمی‌کند و ممکن است بعداً تعویض ترمیم لازم شود.', 'Whitening does not lighten crowns, veneers, composite or fillings, and restoration replacement may be needed later.'),
+      text('تکرار بی‌رویه بلیچینگ یا محصولات خانگی نامطمئن می‌تواند به لثه و حساسیت دندان آسیب بزند.', 'Excessive whitening or unsafe home products can harm gums and increase tooth sensitivity.')
     ],
     faqs: [
-      { id: 'white-1', question: text('بلیچینگ به مینای دندان آسیب می‌زند؟', 'Does whitening damage enamel?'), answer: text('اگر با تشخیص درست و پروتکل استاندارد انجام شود، درمانی کنترل‌شده و کم‌تهاجمی است.', 'With proper diagnosis and standard protocol, it is controlled and minimally invasive.') },
-      { id: 'white-2', question: text('چرا رنگ روکش‌ها روشن نمی‌شود؟', 'Why do crowns not whiten?'), answer: text('مواد ترمیمی و سرامیکی به مواد بلیچینگ مثل مینای طبیعی پاسخ نمی‌دهند.', 'Restorative and ceramic materials do not respond like natural enamel.') }
+      { id: 'white-1', question: text('آیا بلیچینگ به مینای دندان آسیب می‌زند؟', 'Does whitening damage enamel?'), answer: text('بلیچینگ استاندارد تحت نظر دندان‌پزشک معمولاً به مینای سالم آسیب نمی‌زند؛ استفاده خودسرانه، غلظت نامناسب یا تکرار زیاد می‌تواند خطر حساسیت و آسیب لثه را بالا ببرد.', 'Professional whitening under dental supervision usually does not damage healthy enamel; unsafe products, wrong concentration or overuse can increase sensitivity and gum risk.') },
+      { id: 'white-2', question: text('ماندگاری سفید کردن دندان چقدر است؟', 'How long does whitening last?'), answer: text('ماندگاری به رنگ پایه دندان، مصرف چای و قهوه، دخانیات، بهداشت و رژیم غذایی بستگی دارد و برای هر فرد متفاوت است.', 'Longevity depends on baseline shade, tea and coffee, smoking, hygiene and diet, and varies by person.') },
+      { id: 'white-3', question: text('آیا بلیچینگ رنگ کامپوزیت یا روکش را روشن می‌کند؟', 'Does whitening lighten composite or crowns?'), answer: text('خیر. مواد بلیچینگ فقط روی ساختار دندان طبیعی اثر دارند و رنگ ترمیم‌ها، روکش‌ها، لمینت یا کامپوزیت را تغییر نمی‌دهند.', 'No. Whitening materials affect natural tooth structure, not fillings, crowns, veneers or composite.') },
+      { id: 'white-4', question: text('حساسیت بعد از بلیچینگ طبیعی است؟', 'Is sensitivity after whitening normal?'), answer: text('حساسیت موقت در برخی افراد طبیعی است و معمولاً کاهش می‌یابد. اگر درد شدید، سوختگی لثه یا حساسیت طولانی داشتید باید بررسی شوید.', 'Temporary sensitivity can be normal and usually decreases. Severe pain, gum burns or prolonged sensitivity should be checked.') }
     ],
     relatedIds: ['laminate', 'composite', 'gum-treatment'],
     seo: {
-      title: text('سفید کردن دندان | بلیچینگ حرفه‌ای', 'Teeth whitening | Professional bleaching'),
-      description: text('اطلاعات کامل سفید کردن دندان، بلیچینگ، مراقبت بعد درمان و کنترل حساسیت.', 'Complete information on whitening, bleaching, aftercare and sensitivity control.')
+      title: text('سفید کردن دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Teeth whitening | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای بلیچینگ و سفید کردن دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمنی مینا، حساسیت، ماندگاری و مراقبت بعد درمان.', 'Teeth whitening guide at Dr. Saeed Moghaddam Dental Clinic: enamel safety, sensitivity, longevity and aftercare.')
     }
   },
   {
@@ -476,9 +470,9 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#b96f52',
     title: text('درمان ریشه', 'Root canal therapy'),
     subtitle: text('حفظ دندان طبیعی و کنترل درد', 'Saving the natural tooth and controlling pain'),
-    summary: text('درمان ریشه برای پاک‌سازی عفونت داخل دندان، کاهش درد و جلوگیری از کشیدن دندان انجام می‌شود.', 'Root canal therapy cleans infection inside the tooth, reduces pain and helps avoid extraction.'),
+    summary: text('درمان ریشه در کلینیک دندان‌پزشکی دکتر سعید مقدم برای پاک‌سازی عفونت داخل دندان، کنترل درد و حفظ دندان طبیعی انجام می‌شود.', 'Root canal therapy cleans infection inside the tooth, reduces pain and helps avoid extraction.'),
     longIntro: text(
-      'وقتی عصب دندان درگیر عفونت یا التهاب شدید می‌شود، درد، حساسیت طولانی، تورم یا آبسه ممکن است ایجاد شود. درمان ریشه با هدف پاک‌سازی کانال‌ها، ضدعفونی و پر کردن فضای داخلی انجام می‌شود تا دندان طبیعی حفظ شود. بعد از درمان، گاهی روکش یا ترمیم مقاوم برای جلوگیری از شکستگی لازم است.',
+      'وقتی پالپ یا عصب داخل دندان به دلیل پوسیدگی عمیق، ترک، ضربه یا ترمیم قدیمی دچار التهاب یا عفونت شود، درد شبانه، حساسیت طولانی به سرما و گرما، تورم یا آبسه ممکن است ایجاد شود. در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان ریشه با تشخیص دقیق، عکس، پاک‌سازی کانال‌ها، ضدعفونی و پر کردن فضای داخلی انجام می‌شود تا دندان طبیعی تا حد امکان حفظ شود. بخش مهم درمان، ترمیم نهایی یا روکش مناسب است چون دندان عصب‌کشی‌شده بدون بازسازی مقاوم در معرض شکستگی قرار می‌گیرد.',
       'When the tooth pulp becomes infected or severely inflamed, pain, lingering sensitivity, swelling or abscess can occur. Root canal therapy cleans, disinfects and seals the inner space so the natural tooth can be saved. A strong restoration or crown may be needed afterwards to prevent fracture.'
     ),
     duration: text('معمولاً ۱ تا ۲ جلسه', 'Usually 1 to 2 visits'),
@@ -489,35 +483,34 @@ export const DENTAL_SERVICES: DentalService[] = [
       text('دندان قابل نگهداری با ساختار کافی', 'Teeth with enough structure to save')
     ],
     benefits: [
-      text('حفظ دندان طبیعی', 'Saves the natural tooth'),
-      text('کنترل درد و عفونت', 'Controls pain and infection'),
-      text('جلوگیری از جابه‌جایی دندان‌ها', 'Helps prevent shifting'),
-      text('امکان بازسازی عملکرد', 'Allows functional restoration')
-    ],
-    userValue: [
-      text('علت درد و نیاز واقعی به درمان توضیح داده می‌شود.', 'The reason for pain and real treatment need are explained.'),
-      text('می‌دانید بعد از درمان چه ترمیمی لازم است.', 'You know what restoration is needed afterwards.'),
-      text('مراقبت‌های هشداردهنده برای عفونت یا شکستگی را می‌شناسید.', 'You recognize warning care points for infection or fracture.')
+      text('حفظ دندان طبیعی به جای کشیدن، در صورتی که ساختار دندان قابل نگهداری باشد', 'Saves the natural tooth instead of extraction when tooth structure is restorable'),
+      text('کاهش درد و کنترل عفونت داخل کانال‌های ریشه با پاک‌سازی و ضدعفونی', 'Reduces pain and controls infection inside root canals through cleaning and disinfection'),
+      text('حفظ تماس‌های دندانی و جلوگیری از خالی ماندن فضای دندان کشیده‌شده', 'Preserves bite contacts and prevents an extraction gap from remaining'),
+      text('آماده‌سازی دندان برای ترمیم یا روکش مقاوم و برگشت عملکرد جویدن', 'Prepares the tooth for a strong restoration or crown and functional chewing')
     ],
     steps: [
-      { step: 1, title: text('تشخیص', 'Diagnosis'), description: text('تست دندان و عکس برای تعیین منبع درد انجام می‌شود.', 'Tooth tests and imaging identify the pain source.') },
-      { step: 2, title: text('پاک‌سازی کانال', 'Canal cleaning'), description: text('فضای داخلی دندان پاک‌سازی و ضدعفونی می‌شود.', 'The inner canal space is cleaned and disinfected.') },
-      { step: 3, title: text('پر کردن ریشه', 'Sealing'), description: text('کانال‌ها با ماده مناسب پر می‌شوند.', 'Canals are filled with suitable material.') },
-      { step: 4, title: text('ترمیم نهایی', 'Final restoration'), description: text('برای جلوگیری از شکستگی، ترمیم یا روکش بررسی می‌شود.', 'A filling or crown is considered to prevent fracture.') }
+      { step: 1, title: text('تشخیص منبع درد', 'Pain source diagnosis'), description: text('شرح حال، تست‌های دندانی، بررسی لثه و عکس رادیوگرافی برای تشخیص دندان درگیر انجام می‌شود.', 'History, tooth tests, gum review and radiographs are used to identify the involved tooth.') },
+      { step: 2, title: text('بی‌حسی و دسترسی به کانال‌ها', 'Anesthesia and canal access'), description: text('پس از بی‌حسی، پوسیدگی یا ترمیم معیوب برداشته و مسیر ورود به کانال‌های ریشه آماده می‌شود.', 'After anesthesia, decay or failed restoration is removed and access to root canals is prepared.') },
+      { step: 3, title: text('پاک‌سازی، شکل‌دهی و ضدعفونی', 'Cleaning, shaping and disinfection'), description: text('کانال‌ها با ابزار و محلول‌های مناسب پاک‌سازی و شکل‌دهی می‌شوند تا بار میکروبی کاهش یابد.', 'Canals are cleaned, shaped and disinfected with suitable instruments and irrigants to reduce microbial load.') },
+      { step: 4, title: text('پر کردن کانال ریشه', 'Root canal filling'), description: text('پس از کنترل علائم و خشک بودن کانال‌ها، فضای داخلی ریشه با ماده استاندارد پر و سیل می‌شود.', 'After symptom control and dry canals, the canal space is filled and sealed with standard material.') },
+      { step: 5, title: text('ترمیم نهایی یا روکش', 'Final restoration or crown'), description: text('برای جلوگیری از نشت میکروبی و شکستگی، ترمیم مقاوم یا روکش بر اساس مقدار بافت باقی‌مانده برنامه‌ریزی می‌شود.', 'To prevent leakage and fracture, a strong restoration or crown is planned based on remaining tooth structure.') }
     ],
     care: [
-      text('تا ترمیم نهایی، فشار زیاد روی دندان وارد نکنید.', 'Avoid heavy pressure until the final restoration.'),
-      text('درد شدید، تورم یا تب را سریع اطلاع دهید.', 'Report severe pain, swelling or fever promptly.'),
-      text('ترمیم نهایی را به تعویق نیندازید.', 'Do not delay the final restoration.')
+      text('تا قبل از ترمیم نهایی یا روکش، با دندان درمان‌شده غذای سفت نجوید چون احتمال شکستگی وجود دارد.', 'Avoid chewing hard food on the treated tooth before final restoration or crown because fracture risk exists.'),
+      text('درد خفیف چند روز اول می‌تواند طبیعی باشد، اما درد شدید، تورم، تب یا ترشح باید سریع اطلاع داده شود.', 'Mild soreness for a few days can be normal, but severe pain, swelling, fever or discharge should be reported quickly.'),
+      text('اگر هنگام جویدن احساس بلندی یا ضربه روی دندان دارید، تنظیم ترمیم یا روکش باید بررسی شود.', 'If the tooth feels high or painful on chewing, restoration or crown adjustment should be checked.'),
+      text('ترمیم نهایی را عقب نیندازید؛ نشت میکروبی یا شکستگی می‌تواند نتیجه درمان ریشه را تهدید کند.', 'Do not delay final restoration; microbial leakage or fracture can compromise root canal therapy.')
     ],
     faqs: [
-      { id: 'root-1', question: text('آیا درمان ریشه یعنی دندان مرده است؟', 'Does root canal mean the tooth is dead?'), answer: text('دندان عصب داخلی را از دست می‌دهد، اما با ترمیم مناسب می‌تواند همچنان عملکرد داشته باشد.', 'The inner pulp is removed, but with proper restoration the tooth can still function.') },
-      { id: 'root-2', question: text('بعد از درمان درد طبیعی است؟', 'Is pain after treatment normal?'), answer: text('حساسیت خفیف تا چند روز ممکن است رخ دهد؛ درد شدید یا تورم نیاز به تماس سریع دارد.', 'Mild soreness for a few days can happen; severe pain or swelling needs prompt contact.') }
+      { id: 'root-1', question: text('آیا عصب‌کشی درد دارد؟', 'Is root canal therapy painful?'), answer: text('با بی‌حسی مناسب، درد حین درمان کنترل می‌شود. درد یا حساسیت بعد از درمان بیشتر به التهاب اطراف ریشه مربوط است و معمولاً کاهش می‌یابد.', 'With proper anesthesia, treatment pain is controlled. Post-treatment soreness is often related to inflammation around the root and usually decreases.') },
+      { id: 'root-2', question: text('درد بعد از درمان ریشه چند روز طبیعی است؟', 'How long is pain after root canal normal?'), answer: text('حساسیت خفیف تا چند روز می‌تواند طبیعی باشد. درد شدید، درد رو به افزایش، تورم، تب یا ترشح نشانه نیاز به بررسی است.', 'Mild soreness for a few days can be normal. Severe or increasing pain, swelling, fever or discharge needs review.') },
+      { id: 'root-3', question: text('آیا بعد از عصب‌کشی حتماً روکش لازم است؟', 'Is a crown always needed after root canal?'), answer: text('همیشه نه؛ اما دندان‌های عقب، دندان با تخریب زیاد یا دیواره‌های ضعیف معمولاً برای جلوگیری از شکستگی به روکش یا ترمیم مقاوم نیاز دارند.', 'Not always; back teeth, heavily damaged teeth or weak walls often need a crown or strong restoration to prevent fracture.') },
+      { id: 'root-4', question: text('چرا دندان عصب‌کشی‌شده دوباره درد می‌گیرد؟', 'Why can a root-treated tooth hurt again?'), answer: text('بلند بودن ترمیم یا روکش، ترک دندان، عفونت باقی‌مانده یا نشت ترمیم می‌تواند علت باشد و با معاینه و عکس باید مشخص شود.', 'High restoration or crown, tooth crack, remaining infection or restoration leakage can be causes and need exam and imaging.') }
     ],
     relatedIds: ['implant', 'gum-treatment', 'whitening'],
     seo: {
-      title: text('درمان ریشه دندان | کنترل درد و عفونت', 'Root canal therapy | Pain and infection control'),
-      description: text('علائم نیاز به درمان ریشه، مراحل عصب‌کشی، مراقبت‌ها و ترمیم نهایی دندان.', 'Signs, root canal steps, care and final restoration guidance.')
+      title: text('درمان ریشه دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Root canal therapy | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای درمان ریشه و عصب‌کشی در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ علائم، مراحل، درد بعد درمان، روکش و مراقبت.', 'Root canal guide at Dr. Saeed Moghaddam Dental Clinic: signs, steps, post-treatment pain, crown and care.')
     }
   },
   {
@@ -527,9 +520,9 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#c58d73',
     title: text('دندان‌پزشکی کودکان', 'Pediatric dentistry'),
     subtitle: text('تجربه آرام برای کودک و والدین', 'A calm experience for children and parents'),
-    summary: text('درمان و پیشگیری کودکان با زبان ساده، کنترل اضطراب و آموزش به والدین انجام می‌شود.', 'Children receive preventive and restorative care with simple communication, anxiety control and parent education.'),
+    summary: text('دندان‌پزشکی کودکان در کلینیک دندان‌پزشکی دکتر سعید مقدم با تمرکز بر پیشگیری، درمان پوسیدگی و تجربه آرام کودک انجام می‌شود.', 'Children receive preventive and restorative care with simple communication, anxiety control and parent education.'),
     longIntro: text(
-      'اولین تجربه‌های دندان‌پزشکی می‌تواند نگاه کودک به درمان را برای سال‌ها شکل دهد. در بخش کودکان، تلاش می‌شود معاینه، آموزش مسواک، فلورایدتراپی، فیشورسیلانت و درمان پوسیدگی با آرامش و توضیح قابل فهم انجام شود. والدین نیز درباره تغذیه، عادت‌های دهانی و زمان مراجعات راهنمایی می‌شوند.',
+      'اولین تجربه‌های دندان‌پزشکی می‌تواند نگاه کودک به درمان را برای سال‌ها شکل دهد. در کلینیک دندان‌پزشکی دکتر سعید مقدم، معاینه کودک، آموزش مسواک و تغذیه، فلورایدتراپی، فیشورسیلانت، درمان پوسیدگی دندان شیری و پیگیری رشد دندان‌ها با زبان ساده و محیط آرام انجام می‌شود. والدین هم درباره اهمیت دندان شیری، زمان اولین مراجعه، مقدار مناسب خمیر دندان فلورایددار، عادت‌های دهانی و علائم درد یا عفونت راهنمایی می‌شوند.',
       'Early dental experiences can shape a child’s attitude for years. Pediatric care focuses on calm exams, brushing education, fluoride, fissure sealants and cavity treatment with child-friendly explanations. Parents receive guidance on diet, oral habits and checkup timing.'
     ),
     duration: text('بر اساس سن کودک و نوع درمان', 'Based on child age and treatment type'),
@@ -540,35 +533,34 @@ export const DENTAL_SERVICES: DentalService[] = [
       text('والدینی که آموزش مراقبت خانگی می‌خواهند', 'Parents wanting home-care guidance')
     ],
     benefits: [
-      text('کاهش ترس کودک از درمان', 'Reduces dental fear'),
-      text('پیشگیری از پوسیدگی‌های عمیق‌تر', 'Prevents deeper decay'),
-      text('آموزش بهداشت متناسب با سن', 'Age-based hygiene education'),
-      text('حفظ دندان‌های شیری تا زمان مناسب', 'Maintains baby teeth until the right time')
-    ],
-    userValue: [
-      text('والدین دقیق می‌دانند در خانه چه کاری انجام دهند.', 'Parents know exactly what to do at home.'),
-      text('درمان با زبان قابل فهم برای کودک توضیح داده می‌شود.', 'Treatment is explained in child-friendly language.'),
-      text('هدف ساختن تجربه مثبت و پیشگیری از درمان‌های سخت‌تر است.', 'The goal is a positive experience and prevention of harder treatments.')
+      text('ایجاد تجربه آرام و قابل فهم برای کودک به جای شروع درمان در شرایط درد و اضطراب', 'Creates a calm, understandable experience instead of starting care during pain and anxiety'),
+      text('پیشگیری از پوسیدگی با آموزش والدین، فلورایدتراپی و فیشورسیلانت در موارد مناسب', 'Prevents decay with parent education, fluoride and sealants when suitable'),
+      text('حفظ دندان‌های شیری برای جویدن، تکلم و نگهداری فضا تا رویش دندان دائمی', 'Preserves baby teeth for chewing, speech and space maintenance until permanent teeth erupt'),
+      text('تشخیص زودهنگام عادت‌های دهانی، پوسیدگی‌های پنهان و نیاز احتمالی به پیگیری ارتودنسی', 'Early detection of oral habits, hidden cavities and possible orthodontic follow-up needs')
     ],
     steps: [
-      { step: 1, title: text('آشنایی و معاینه', 'Friendly exam'), description: text('کودک با محیط آشنا می‌شود و دندان‌ها بررسی می‌شوند.', 'The child meets the environment and teeth are checked.') },
-      { step: 2, title: text('آموزش والد و کودک', 'Parent and child education'), description: text('روش مسواک، تغذیه و عادت‌ها توضیح داده می‌شود.', 'Brushing, diet and habits are explained.') },
-      { step: 3, title: text('پیشگیری یا درمان', 'Prevention or treatment'), description: text('فلوراید، سیلانت یا درمان پوسیدگی انجام می‌شود.', 'Fluoride, sealants or cavity care are completed.') },
-      { step: 4, title: text('پیگیری', 'Follow-up'), description: text('زمان مراجعات بعدی بر اساس ریسک پوسیدگی تعیین می‌شود.', 'Next visits are set based on decay risk.') }
+      { step: 1, title: text('آشنایی کودک و گرفتن شرح حال', 'Child introduction and history'), description: text('کودک با محیط آشنا می‌شود و والدین درباره درد، تغذیه، بهداشت، داروها و تجربه‌های قبلی توضیح می‌دهند.', 'The child becomes familiar with the environment and parents explain pain, diet, hygiene, medications and previous experiences.') },
+      { step: 2, title: text('معاینه و ارزیابی ریسک پوسیدگی', 'Exam and decay-risk assessment'), description: text('دندان‌های شیری و دائمی، لثه، بهداشت، عادت‌ها و نیاز احتمالی به عکس بررسی می‌شود.', 'Baby and permanent teeth, gums, hygiene, habits and possible imaging needs are reviewed.') },
+      { step: 3, title: text('آموزش به والدین و کودک', 'Parent and child education'), description: text('روش مسواک، مقدار خمیر دندان فلورایددار، کنترل خوراکی شیرین و زمان مراجعات توضیح داده می‌شود.', 'Brushing method, fluoride toothpaste amount, sugar control and visit timing are explained.') },
+      { step: 4, title: text('پیشگیری یا درمان محافظه‌کارانه', 'Prevention or conservative care'), description: text('فلورایدتراپی، فیشورسیلانت یا درمان پوسیدگی بر اساس سن، همکاری کودک و شدت مشکل انجام می‌شود.', 'Fluoride, sealants or cavity care are completed based on age, cooperation and severity.') },
+      { step: 5, title: text('پیگیری دوره‌ای', 'Periodic follow-up'), description: text('فاصله مراجعات با توجه به ریسک پوسیدگی، سن کودک و نیاز به آموزش دوباره تعیین می‌شود.', 'Follow-up interval is set by decay risk, child age and need for repeated education.') }
     ],
     care: [
-      text('مصرف خوراکی شیرین را محدود و زمان‌بندی کنید.', 'Limit and schedule sugary snacks.'),
-      text('مسواک کودک تا سن مناسب با نظارت والدین باشد.', 'Brushing should be supervised until the right age.'),
-      text('درد یا تورم دندان شیری را جدی بگیرید.', 'Take baby-tooth pain or swelling seriously.')
+      text('مسواک کودک باید با نظارت والدین انجام شود؛ مقدار خمیر دندان فلورایددار برای سن کودک طبق توصیه دندان‌پزشک باشد.', 'Children should brush under parent supervision; fluoride toothpaste amount should match dental advice for age.'),
+      text('مصرف خوراکی شیرین، نوشیدنی شیرین و میان‌وعده‌های چسبنده را زمان‌بندی و محدود کنید.', 'Schedule and limit sugary foods, sweet drinks and sticky snacks.'),
+      text('درد، تورم، آبسه یا تغییر رنگ دندان شیری را جدی بگیرید چون می‌تواند روی تغذیه و دندان دائمی اثر بگذارد.', 'Take pain, swelling, abscess or discoloration of baby teeth seriously because it can affect eating and permanent teeth.'),
+      text('معاینه دوره‌ای حتی بدون درد، فرصت پیشگیری با فلوراید، سیلانت و آموزش دوباره را فراهم می‌کند.', 'Periodic exams even without pain allow prevention with fluoride, sealants and repeated education.')
     ],
     faqs: [
-      { id: 'kid-1', question: text('دندان شیری هم نیاز به درمان دارد؟', 'Do baby teeth need treatment?'), answer: text('بله. دندان شیری در جویدن، صحبت کردن و حفظ فضا برای دندان دائمی نقش دارد.', 'Yes. Baby teeth help chewing, speech and maintaining space for permanent teeth.') },
-      { id: 'kid-2', question: text('اولین مراجعه کودک چه زمانی باشد؟', 'When should the first dental visit happen?'), answer: text('بهتر است از سن پایین و قبل از درد، معاینه و آموزش پیشگیرانه انجام شود.', 'Early visits before pain are best for prevention and education.') }
+      { id: 'kid-1', question: text('اولین مراجعه کودک به دندان‌پزشکی چه زمانی باشد؟', 'When should the first child dental visit happen?'), answer: text('بهتر است اولین مراجعه حداکثر تا یک‌سالگی یا نزدیک زمان رویش اولین دندان انجام شود تا پیشگیری، تغذیه و روش بهداشت زودتر آموزش داده شود.', 'The first visit is best by age one or around first-tooth eruption so prevention, diet and hygiene can be taught early.') },
+      { id: 'kid-2', question: text('آیا دندان شیری هم باید درمان شود؟', 'Do baby teeth need treatment?'), answer: text('بله. دندان شیری در جویدن، تکلم، رشد فک و حفظ فضا برای دندان دائمی نقش دارد و عفونت آن می‌تواند برای کودک درد و مشکل ایجاد کند.', 'Yes. Baby teeth support chewing, speech, jaw growth and space for permanent teeth, and infection can cause pain and problems.') },
+      { id: 'kid-3', question: text('فلورایدتراپی کودکان از چه سنی لازم است؟', 'When is fluoride recommended for children?'), answer: text('زمان و فاصله فلورایدتراپی به سن، ریسک پوسیدگی، تغذیه و بهداشت کودک بستگی دارد و در معاینه مشخص می‌شود.', 'Fluoride timing and interval depend on age, decay risk, diet and hygiene, and are defined during examination.') },
+      { id: 'kid-4', question: text('فیشورسیلانت برای کدام دندان کودک انجام می‌شود؟', 'Which teeth may need sealants?'), answer: text('فیشورسیلانت معمولاً برای شیارهای عمیق دندان‌های آسیای دائمی تازه رویش‌یافته و گاهی با تشخیص دندان‌پزشک برای دندان‌های شیری پرخطر استفاده می‌شود.', 'Sealants are usually used on deep grooves of newly erupted permanent molars and sometimes on high-risk baby teeth when indicated.') }
     ],
     relatedIds: ['orthodontics', 'root-canal', 'gum-treatment'],
     seo: {
-      title: text('دندان‌پزشکی کودکان | درمان آرام و پیشگیری', 'Pediatric dentistry | Calm care and prevention'),
-      description: text('خدمات دندان‌پزشکی کودکان، پیشگیری، فلوراید، درمان پوسیدگی و آموزش والدین.', 'Pediatric dental services, prevention, fluoride, cavity care and parent education.')
+      title: text('دندان‌پزشکی کودکان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Pediatric dentistry | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای دندان‌پزشکی کودکان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ اولین مراجعه، دندان شیری، فلوراید، فیشورسیلانت و پیشگیری.', 'Pediatric dentistry guide at Dr. Saeed Moghaddam Dental Clinic: first visit, baby teeth, fluoride, sealants and prevention.')
     }
   },
   {
@@ -578,9 +570,9 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#8f9d74',
     title: text('درمان لثه', 'Gum treatment'),
     subtitle: text('کنترل التهاب، خونریزی و بوی دهان', 'Managing inflammation, bleeding and breath concerns'),
-    summary: text('سلامت لثه پایه ماندگاری درمان‌های زیبایی، ایمپلنت و دندان‌های طبیعی است.', 'Gum health is the foundation for long-lasting cosmetic work, implants and natural teeth.'),
+    summary: text('درمان لثه در کلینیک دندان‌پزشکی دکتر سعید مقدم برای کنترل خونریزی، التهاب، جرم زیر لثه و حفظ پایه سالم دندان‌ها انجام می‌شود.', 'Gum health is the foundation for long-lasting cosmetic work, implants and natural teeth.'),
     longIntro: text(
-      'خونریزی، بوی بد دهان، تحلیل لثه یا لق شدن دندان‌ها نشانه‌هایی هستند که نباید نادیده گرفته شوند. درمان لثه از آموزش بهداشت و جرم‌گیری تخصصی تا درمان‌های عمیق‌تر متفاوت است. اگر لثه سالم نباشد، نتیجه لمینت، کامپوزیت، ایمپلنت و حتی ترمیم‌های ساده هم قابل پیش‌بینی نخواهد بود.',
+      'خونریزی هنگام مسواک یا نخ دندان، بوی بد دهان، التهاب، تحلیل لثه، حساسیت ریشه یا لق شدن دندان‌ها نشانه‌هایی هستند که نباید نادیده گرفته شوند. در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان لثه با اندازه‌گیری وضعیت لثه، بررسی جرم و پلاک، آموزش بهداشت، جرم‌گیری و در صورت نیاز پاک‌سازی عمیق یا ارجاع تخصصی برنامه‌ریزی می‌شود. سلامت لثه پایه ماندگاری دندان طبیعی، ایمپلنت، لمینت، کامپوزیت و ترمیم‌های ساده است.',
       'Bleeding, bad breath, recession or loose teeth should not be ignored. Gum care ranges from hygiene coaching and professional cleaning to deeper treatments. Without healthy gums, veneers, composite, implants and even simple restorations become less predictable.'
     ),
     duration: text('از یک جلسه تا چند مرحله درمانی', 'From one visit to several treatment stages'),
@@ -591,35 +583,34 @@ export const DENTAL_SERVICES: DentalService[] = [
       text('افراد پیش از ایمپلنت یا درمان زیبایی', 'People before implants or cosmetic care')
     ],
     benefits: [
-      text('کاهش التهاب و خونریزی', 'Less inflammation and bleeding'),
-      text('افزایش پیش‌بینی‌پذیری درمان‌ها', 'More predictable treatments'),
-      text('کمک به حفظ دندان‌ها', 'Helps preserve teeth'),
-      text('بهبود بوی دهان', 'Improves breath concerns')
-    ],
-    userValue: [
-      text('علت خونریزی یا التهاب به زبان ساده مشخص می‌شود.', 'The cause of bleeding or inflammation is explained simply.'),
-      text('می‌آموزید چطور در خانه از برگشت مشکل پیشگیری کنید.', 'You learn how to prevent recurrence at home.'),
-      text('پیش از درمان‌های زیبایی، پایه سلامت دهان محکم می‌شود.', 'The health foundation is strengthened before cosmetic care.')
+      text('کاهش التهاب، خونریزی و بوی بد دهان با کنترل پلاک و جرم زیر لثه', 'Reduces inflammation, bleeding and bad breath by controlling plaque and deep calculus'),
+      text('کمک به حفظ استخوان و بافت نگهدارنده دندان در مراحل قابل کنترل', 'Helps preserve bone and tooth-supporting tissue in controllable stages'),
+      text('افزایش پیش‌بینی‌پذیری درمان‌های ایمپلنت، لمینت، کامپوزیت و ترمیم', 'Improves predictability of implants, veneers, composite and restorative care'),
+      text('آموزش ابزار مناسب خانگی برای جلوگیری از برگشت التهاب لثه', 'Teaches suitable home tools to reduce gum inflammation recurrence')
     ],
     steps: [
-      { step: 1, title: text('اندازه‌گیری و بررسی', 'Assessment'), description: text('عمق پاکت، خونریزی و جرم بررسی می‌شود.', 'Pocket depth, bleeding and calculus are reviewed.') },
-      { step: 2, title: text('آموزش بهداشت', 'Hygiene coaching'), description: text('ابزار و روش مناسب برای خانه توضیح داده می‌شود.', 'Suitable tools and home techniques are explained.') },
-      { step: 3, title: text('پاک‌سازی تخصصی', 'Professional cleaning'), description: text('جرم و التهاب با روش مناسب کنترل می‌شود.', 'Calculus and inflammation are managed with the right method.') },
-      { step: 4, title: text('نگهداری', 'Maintenance'), description: text('برنامه پیگیری بر اساس ریسک فرد تنظیم می‌شود.', 'Maintenance timing is set by individual risk.') }
+      { step: 1, title: text('معاینه لثه و اندازه‌گیری پاکت', 'Gum exam and pocket measurement'), description: text('خونریزی، عمق پاکت، تحلیل لثه، جرم، لق شدن دندان و نیاز به عکس بررسی می‌شود.', 'Bleeding, pocket depth, recession, calculus, tooth mobility and imaging needs are reviewed.') },
+      { step: 2, title: text('تشخیص شدت التهاب یا بیماری لثه', 'Inflammation or gum disease staging'), description: text('مشخص می‌شود مشکل در حد التهاب سطحی است یا به درمان عمیق‌تر و پیگیری جدی‌تر نیاز دارد.', 'It is defined whether the problem is superficial inflammation or needs deeper treatment and closer follow-up.') },
+      { step: 3, title: text('آموزش بهداشت و ابزار خانگی', 'Hygiene coaching and home tools'), description: text('مسواک، نخ، برس بین‌دندانی یا دهان‌شویه مناسب بر اساس فرم دندان و لثه آموزش داده می‌شود.', 'Toothbrush, floss, interdental brush or mouthwash guidance is matched to tooth and gum form.') },
+      { step: 4, title: text('جرم‌گیری یا پاک‌سازی عمیق', 'Scaling or deep cleaning'), description: text('پلاک و جرم بالا و زیر لثه با روش مناسب حذف می‌شود تا التهاب کنترل شود.', 'Plaque and calculus above and below the gumline are removed with the suitable method to control inflammation.') },
+      { step: 5, title: text('ارزیابی مجدد و نگهداری', 'Re-evaluation and maintenance'), description: text('پاسخ لثه بررسی و فاصله مراجعات نگهدارنده با توجه به ریسک بیمار تعیین می‌شود.', 'Gum response is reviewed and maintenance intervals are set based on patient risk.') }
     ],
     care: [
-      text('نخ دندان یا ابزار بین‌دندانی را روزانه استفاده کنید.', 'Use floss or interdental tools daily.'),
-      text('سیگار و قلیان روند بهبود لثه را مختل می‌کند.', 'Smoking can compromise gum healing.'),
-      text('مراجعات نگهدارنده را حتی بدون درد انجام دهید.', 'Attend maintenance visits even without pain.')
+      text('نخ دندان یا برس بین‌دندانی را روزانه و با روش درست استفاده کنید؛ خونریزی اولیه دلیل قطع بهداشت نیست.', 'Use floss or interdental brushes daily with proper technique; initial bleeding is not a reason to stop cleaning.'),
+      text('مسواک نرم، فشار کنترل‌شده و تمیز کردن خط لثه برای کاهش پلاک ضروری است.', 'A soft toothbrush, controlled pressure and gumline cleaning are essential for plaque reduction.'),
+      text('سیگار و قلیان روند بهبود لثه را مختل می‌کند و احتمال عود التهاب را بالا می‌برد.', 'Smoking compromises gum healing and increases inflammation recurrence risk.'),
+      text('مراجعات نگهدارنده را حتی بدون درد انجام دهید، چون بیماری لثه همیشه با درد واضح همراه نیست.', 'Attend maintenance visits even without pain because gum disease is not always clearly painful.')
     ],
     faqs: [
-      { id: 'gum-1', question: text('خونریزی لثه طبیعی است؟', 'Is gum bleeding normal?'), answer: text('خیر. خونریزی تکرارشونده معمولاً نشانه التهاب یا مشکل بهداشتی است و باید بررسی شود.', 'No. Repeated bleeding usually signals inflammation or hygiene problems and should be checked.') },
-      { id: 'gum-2', question: text('جرم‌گیری به دندان آسیب می‌زند؟', 'Does cleaning damage teeth?'), answer: text('جرم‌گیری اصولی به دندان سالم آسیب نمی‌زند و برای کنترل التهاب ضروری است.', 'Proper cleaning does not damage healthy teeth and is essential for inflammation control.') }
+      { id: 'gum-1', question: text('آیا خونریزی لثه هنگام مسواک طبیعی است؟', 'Is gum bleeding during brushing normal?'), answer: text('خونریزی تکرارشونده معمولاً طبیعی نیست و اغلب به التهاب ناشی از پلاک، جرم، روش غلط مسواک یا بیماری لثه مربوط است.', 'Repeated bleeding is usually not normal and is often related to plaque inflammation, calculus, incorrect brushing or gum disease.') },
+      { id: 'gum-2', question: text('آیا جرم‌گیری باعث لق شدن یا تحلیل لثه می‌شود؟', 'Does scaling loosen teeth or cause gum recession?'), answer: text('جرم‌گیری اصولی دندان سالم را لق نمی‌کند. گاهی بعد از برداشتن جرم‌های زیاد، مشکل قبلی مثل تحلیل یا لقی واضح‌تر دیده می‌شود.', 'Proper scaling does not loosen healthy teeth. After heavy calculus removal, pre-existing recession or mobility may become more visible.') },
+      { id: 'gum-3', question: text('تحلیل لثه قابل درمان است؟', 'Can gum recession be treated?'), answer: text('بسته به علت و شدت، می‌توان پیشرفت تحلیل را کنترل کرد و در بعضی موارد درمان‌های تخصصی مثل پیوند لثه مطرح می‌شود.', 'Depending on cause and severity, progression can be controlled and specialist treatments such as gum grafting may be considered.') },
+      { id: 'gum-4', question: text('بیماری لثه چه زمانی خطرناک می‌شود؟', 'When does gum disease become serious?'), answer: text('لق شدن دندان، چرک، بوی بد مداوم، پاکت عمیق، تحلیل شدید یا خونریزی مکرر نشانه نیاز به بررسی جدی و پیگیری منظم است.', 'Tooth mobility, pus, persistent bad breath, deep pockets, severe recession or repeated bleeding indicate the need for serious review and maintenance.') }
     ],
     relatedIds: ['implant', 'whitening', 'root-canal'],
     seo: {
-      title: text('درمان لثه | کنترل خونریزی و التهاب', 'Gum treatment | Bleeding and inflammation control'),
-      description: text('علائم بیماری لثه، مراحل درمان، مراقبت خانگی و نقش سلامت لثه در درمان‌های دندان‌پزشکی.', 'Gum disease signs, treatment steps, home care and the role of gum health in dentistry.')
+      title: text('درمان لثه | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Gum treatment | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای درمان لثه در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ خونریزی، جرم‌گیری، تحلیل لثه، مراقبت خانگی و مراجعات نگهدارنده.', 'Gum treatment guide at Dr. Saeed Moghaddam Dental Clinic: bleeding, scaling, recession, home care and maintenance visits.')
     }
   }
 ];
@@ -641,7 +632,7 @@ export const BENEFIT_CARDS: BenefitCard[] = [
     id: 'care-access',
     icon: 'tooth',
     title: text('دسترسی ساده به مسیر درمان', 'Simple access to care paths'),
-    text: text('اطلاعات هر خدمت، نمونه درمان‌ها و فرم درخواست تماس کنار هم قرار گرفته‌اند تا بیمار سریع‌تر مسیر مناسب را پیدا کند.', 'Service information, treatment samples and the call request form sit together so patients can find the right path faster.')
+    text: text('اطلاعات هر درمان، نمونه‌ها و فرم درخواست تماس کنار هم قرار گرفته‌اند تا بیمار سریع‌تر مسیر مناسب را پیدا کند.', 'Service information, treatment samples and the call request form sit together so patients can find the right path faster.')
   },
   {
     id: 'phone-lead',
@@ -703,11 +694,11 @@ export const GLOBAL_FAQS: FaqItem[] = [
   {
     id: 'call-back',
     question: text('بعد از ثبت شماره چه اتفاقی می‌افتد؟', 'What happens after I submit my number?'),
-    answer: text('نام، شماره تماس و خدمت مورد نظر شما ثبت می‌شود و مشاور کلینیک برای شنیدن توضیح کوتاه، پاسخ به سوال اولیه و هماهنگی مراجعه با شما تماس می‌گیرد.', 'Your name, phone number and selected service are saved, and a clinic consultant calls to hear your concern, answer initial questions and coordinate the visit.')
+    answer: text('نام، شماره تماس و درمان مورد نظر شما ثبت می‌شود و مشاور کلینیک برای شنیدن توضیح کوتاه، پاسخ به سوال اولیه و هماهنگی مراجعه با شما تماس می‌گیرد.', 'Your name, phone number and selected service are saved, and a clinic consultant calls to hear your concern, answer initial questions and coordinate the visit.')
   },
   {
     id: 'urgent-pain',
     question: text('اگر درد دندان یا ورم داشته باشم کدام گزینه را انتخاب کنم؟', 'Which option should I choose for tooth pain or swelling?'),
-    answer: text('در فرم، خدمت درمان ریشه یا درمان لثه را انتخاب کنید و در توضیح کوتاه شدت درد، ورم یا زمان شروع مشکل را بنویسید تا تماس اولیه دقیق‌تر انجام شود.', 'Select root canal or gum treatment in the form and describe pain severity, swelling or when it started so the first call can be more accurate.')
+    answer: text('در فرم، درمان ریشه یا درمان لثه را انتخاب کنید و در توضیح کوتاه شدت درد، ورم یا زمان شروع مشکل را بنویسید تا تماس اولیه دقیق‌تر انجام شود.', 'Select root canal or gum treatment in the form and describe pain severity, swelling or when it started so the first call can be more accurate.')
   }
 ];
