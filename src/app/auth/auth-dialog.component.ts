@@ -1,38 +1,118 @@
-import { Component, EventEmitter, Output, computed, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AuthService, UserRole } from '../services/auth.service';
+import { AuthDialogMode, AuthDialogModel, LanguageCode, pickText, text } from '../models/clinic.model';
 import { BaseDialogComponent } from '../shared/base/base-dialog/base-dialog.component';
+import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
 
 @Component({
   selector: 'app-auth-dialog',
   standalone: true,
-  imports: [FormsModule, BaseDialogComponent],
+  imports: [FormsModule, BaseDialogComponent, FaIconComponent],
   template: `
-    <app-base-dialog [open]="true" mode="auth" [showFooter]="false" title="ورود و عضویت" subtitle="حساب کاربری کلینیک" (cancelClick)="close.emit()">
-      @if (user()) {
-        <p class="user-name">{{ user()?.firstName }} {{ user()?.lastName }}</p>
-        <button class="primary full" type="button" (click)="logout()">خروج از حساب</button>
+    <app-base-dialog
+      [open]="open"
+      [language]="language"
+      [showFooter]="false"
+      [eyebrow]="copy.eyebrow[language]"
+      [title]="copy.title[language]"
+      [subtitle]="copy.subtitle[language]"
+      (closed)="closed.emit()"
+    >
+      @if (submitted()) {
+        <div class="success-card">
+          <span><app-fa-icon name="check"></app-fa-icon></span>
+          <h3>{{ copy.successTitle[language] }}</h3>
+          <p>{{ copy.successText[language] }}</p>
+          <button class="primary full" type="button" (click)="resetAndClose()">{{ copy.done[language] }}</button>
+        </div>
       } @else {
-        <div class="tabs"><button [class.active]="!isRegister()" (click)="isRegister.set(false)">ورود</button><button [class.active]="isRegister()" (click)="isRegister.set(true)">عضویت</button></div>
-        @if (isRegister()) {
-          <label>نام <input [(ngModel)]="firstName" name="firstName" autocomplete="given-name" /></label>
-          <label>نام خانوادگی <input [(ngModel)]="lastName" name="lastName" autocomplete="family-name" /></label>
-          <label>نقش <select [(ngModel)]="role" name="role"><option value="PATIENT">Patient</option><option value="CONSULTANT">Consultant</option><option value="ADMIN">Admin</option></select></label>
+        <div class="tabs">
+          <button type="button" [class.active]="mode() === 'login'" (click)="mode.set('login')">{{ copy.login[language] }}</button>
+          <button type="button" [class.active]="mode() === 'register'" (click)="mode.set('register')">{{ copy.register[language] }}</button>
+        </div>
+
+        @if (mode() === 'register') {
+          <label>
+            {{ copy.fullName[language] }}
+            <input [(ngModel)]="form.fullName" name="authFullName" autocomplete="name" />
+          </label>
         }
-        <label>شماره تلفن <input [(ngModel)]="phoneNumber" name="phoneNumber" inputmode="tel" autocomplete="tel" placeholder="09xxxxxxxxx" /></label>
-        <label>رمز عبور <input [(ngModel)]="password" name="password" type="password" autocomplete="current-password" /></label>
-        <button class="primary full" type="button" (click)="isRegister() ? register() : login()">{{ isRegister() ? 'ساخت حساب' : 'ورود به حساب' }}</button>
+
+        <label>
+          {{ copy.phone[language] }}
+          <input [(ngModel)]="form.phone" name="authPhone" inputmode="tel" autocomplete="tel" [placeholder]="language === 'fa' ? '09xxxxxxxxx' : '+98 9xx xxx xxxx'" />
+        </label>
+
+        <label>
+          {{ copy.password[language] }}
+          <input [(ngModel)]="form.password" name="authPassword" type="password" [autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'" />
+        </label>
+
+        @if (mode() === 'register') {
+          <label class="check-row">
+            <input [(ngModel)]="form.acceptCarePolicy" name="acceptCarePolicy" type="checkbox" />
+            <span>{{ copy.policy[language] }}</span>
+          </label>
+        }
+
+        <button class="primary full" type="button" (click)="submit()">
+          <app-fa-icon name="user"></app-fa-icon>
+          {{ mode() === 'login' ? copy.loginAction[language] : copy.registerAction[language] }}
+        </button>
       }
     </app-base-dialog>
   `,
-  styles: [`label{display:grid;gap:7px;color:#6f6254;font-weight:800}input,select{border:1px solid #eadfce;border-radius:15px;padding:12px;background:#fff;font:inherit}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px;border-radius:999px;background:#f7efe4}.tabs button{border:0;border-radius:999px;padding:10px;font-weight:900;background:transparent}.tabs .active,.primary{background:#0e7c86!important;color:#fff}.full{width:100%;border:0;border-radius:999px;padding:13px 18px;font-weight:900;cursor:pointer}.user-name{font-size:1.2rem;font-weight:900}`]
+  styles: [`
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px;border-radius:999px;background:var(--surface-muted,#eefafa)}
+    .tabs button{border:0;border-radius:999px;padding:11px;font:inherit;font-weight:900;background:transparent;color:var(--muted,#64748b);cursor:pointer}.tabs .active{background:var(--surface,#fff);color:var(--brand,#0ea5a5);box-shadow:0 10px 24px rgba(8,30,38,.08)}
+    label{display:grid;gap:8px;color:var(--muted,#64748b);font-weight:900}.check-row{grid-template-columns:auto 1fr;align-items:start}.check-row input{width:18px;height:18px;margin-top:4px;accent-color:var(--brand,#0ea5a5)}
+    input{width:100%;border:1px solid color-mix(in srgb,var(--line,#dbe6ee) 94%,transparent);border-radius:17px;padding:13px 14px;background:var(--surface,#fff);color:var(--text,#14222e);font:inherit}
+    .primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--brand,#0ea5a5),var(--brand-2,#2563eb));color:#fff;font:inherit;font-weight:950;cursor:pointer;box-shadow:0 16px 36px color-mix(in srgb,var(--brand,#0ea5a5) 24%,transparent)}
+    .full{width:100%}.success-card{display:grid;place-items:center;text-align:center;gap:10px;padding:10px}.success-card span{display:grid;place-items:center;width:58px;height:58px;border-radius:22px;background:color-mix(in srgb,var(--brand,#0ea5a5) 16%,transparent);color:var(--brand,#0ea5a5);font-size:1.6rem}.success-card h3{margin:0;color:var(--text,#14222e)}.success-card p{margin:0;color:var(--muted,#64748b);line-height:1.8}
+  `]
 })
 export class AuthDialogComponent {
-  @Output() close = new EventEmitter<void>();
-  firstName = ''; lastName = ''; phoneNumber = ''; password = ''; role: UserRole = 'PATIENT';
-  isRegister = signal(false); user = computed(() => this.auth.currentUser());
-  constructor(private auth: AuthService) {}
-  login() { if (this.auth.login(this.phoneNumber, this.password)) this.close.emit(); }
-  register() { if (this.auth.register({ firstName: this.firstName, lastName: this.lastName, phoneNumber: this.phoneNumber, password: this.password, role: this.role })) this.close.emit(); }
-  logout() { this.auth.logout(); this.close.emit(); }
+  @Input() open = false;
+  @Input() language: LanguageCode = 'fa';
+  @Output() closed = new EventEmitter<void>();
+
+  mode = signal<AuthDialogMode>('login');
+  submitted = signal(false);
+  form: AuthDialogModel = {
+    fullName: '',
+    phone: '',
+    password: '',
+    acceptCarePolicy: false
+  };
+
+  copy = {
+    eyebrow: text('حساب کاربری کلینیک', 'Clinic account'),
+    title: text('ورود و عضویت', 'Sign in and membership'),
+    subtitle: text('برای پیگیری درخواست تماس، ذخیره خدمات مورد علاقه و دریافت راهنمای درمان وارد شوید.', 'Sign in to follow consultant calls, save favorite services and receive care guidance.'),
+    login: text('ورود', 'Sign in'),
+    register: text('عضویت', 'Join'),
+    fullName: text('نام و نام خانوادگی', 'Full name'),
+    phone: text('شماره موبایل', 'Mobile number'),
+    password: text('رمز عبور', 'Password'),
+    policy: text('می‌پذیرم اطلاعات تماس من فقط برای ارتباط کلینیک و راهنمای درمان استفاده شود.', 'I accept that my contact details are used only for clinic communication and care guidance.'),
+    loginAction: text('ورود به حساب', 'Sign in'),
+    registerAction: text('ساخت حساب', 'Create account'),
+    successTitle: text('درخواست شما آماده پیگیری است', 'Your request is ready for follow-up'),
+    successText: text('در نسخه نهایی، این فرم به API احراز هویت متصل می‌شود. در این UI، رفتار فرم داخل کامپوننت مدیریت شده است.', 'In production, this form connects to the authentication API. In this UI, form behavior is handled inside the component.'),
+    done: text('متوجه شدم', 'Got it')
+  };
+
+  submit(): void {
+    if (!this.form.phone || !this.form.password) return;
+    if (this.mode() === 'register' && (!this.form.fullName || !this.form.acceptCarePolicy)) return;
+
+    this.submitted.set(true);
+  }
+
+  resetAndClose(): void {
+    this.submitted.set(false);
+    this.closed.emit();
+  }
+
+  protected readonly pickText = pickText;
 }

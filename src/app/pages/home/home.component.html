@@ -1,30 +1,188 @@
-<div class="landing" [class.dark]="theme() === 'dark'" [attr.dir]="lang() === 'fa' ? 'rtl' : 'ltr'">
-  <header class="premium-header">
-    <a class="brand" href="#home"><span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span><b>Dr. Moghaddam Dental</b></a>
-    <nav class="desktop-nav"><a *ngFor="let item of t().nav" [href]="item.href">{{ item.label }}</a></nav>
-    <button class="pill ghost" type="button" (click)="toggleLang()">{{ lang() === 'fa' ? 'EN' : 'فا' }}</button>
-    <button class="pill ghost" type="button" (click)="toggleTheme()">{{ theme() === 'light' ? 'Dark' : 'Light' }}</button>
-    <button class="pill solid" type="button" (click)="showAuth = true">{{ t().primary }}</button>
-    <button class="menu-toggle" type="button" (click)="menuOpen = !menuOpen"><span></span><span></span></button>
-    <div class="mobile-menu" *ngIf="menuOpen"><a *ngFor="let item of t().nav" [href]="item.href" (click)="menuOpen=false">{{ item.label }}</a><button class="pill solid" (click)="showAuth=true;menuOpen=false">{{ t().primary }}</button></div>
-  </header>
+<section class="hero-section page-section">
+  <div class="hero-copy">
+    <p class="eyebrow">{{ pickText(heroSlides[activeSlide()].eyebrow, language()) }}</p>
+    <h1>{{ pickText(heroSlides[activeSlide()].title, language()) }}</h1>
+    <p class="hero-text">{{ pickText(heroSlides[activeSlide()].text, language()) }}</p>
 
-  <section id="home" class="hero section-shell">
-    <div class="hero-copy reveal"><p class="eyebrow">{{ t().badge }}</p><h1>{{ t().title }}</h1><p class="hero-text">{{ t().text }}</p><div class="hero-actions"><button class="btn primary" (click)="showAuth = true"><app-fa-icon name="doctor"></app-fa-icon>{{ t().primary }}</button><a class="btn secondary" href="#services">{{ t().secondary }}</a></div><div class="stats"><span><b>+۱۲۰۰</b>پرونده موفق</span><span><b>۲ زبانه</b>فارسی و انگلیسی</span><span><b>Mobile first</b>تجربه شبیه اپ</span></div></div>
-    <div class="hero-visual reveal"><div class="orbit"></div><img [src]="slides[activeSlide].image" alt="premium dental clinic"><span class="float-badge top">{{ slides[activeSlide].badge }}</span><span class="float-badge bottom">Motion smile care</span></div>
-  </section>
+    <div class="hero-actions">
+      <button class="primary-btn" type="button" (click)="openAuth()">
+        <app-fa-icon name="user"></app-fa-icon>
+        {{ language() === 'fa' ? 'ورود / عضویت' : 'Sign in / Join' }}
+      </button>
+      <a class="secondary-btn" routerLink="/services">
+        {{ language() === 'fa' ? 'مشاهده خدمات' : 'Explore services' }}
+        <app-fa-icon name="arrowLeft"></app-fa-icon>
+      </a>
+    </div>
 
-  <section class="section-shell showcase"><div class="section-head"><div><p class="eyebrow">Animated clinic slider</p><h2>{{ slides[activeSlide].title }}</h2><p>{{ slides[activeSlide].text }}</p></div><div class="controls"><button (click)="nextSlide(-1)"><app-fa-icon name="arrowRight"></app-fa-icon></button><button (click)="nextSlide(1)"><app-fa-icon name="arrowLeft"></app-fa-icon></button></div></div><div class="motion-strip"><span *ngFor="let s of slides; let i = index" [class.active]="i === activeSlide"></span></div></section>
+    <div class="stat-grid" aria-label="Clinic highlights">
+      <article *ngFor="let stat of stats">
+        <strong>{{ pickText(stat.value, language()) }}</strong>
+        <span>{{ pickText(stat.label, language()) }}</span>
+      </article>
+    </div>
+  </div>
 
-  <section id="services" class="section-shell services"><p class="eyebrow">SEO service pages</p><h2>خدمات تخصصی با صفحه اختصاصی</h2><div class="service-grid"><article class="service-card" *ngFor="let s of services"><img [src]="s.image" [alt]="s.title"><span class="service-icon"><app-fa-icon [name]="s.icon"></app-fa-icon></span><h3>{{ s.title }}</h3><b>{{ s.subtitle }}</b><p>{{ s.description }}</p><small>مدت تقریبی: {{ s.duration }}</small><a [routerLink]="['/services', s.id]">مشاهده صفحه خدمت <app-fa-icon name="arrowLeft"></app-fa-icon></a></article></div></section>
+  <div class="hero-visual" aria-label="Animated dental care graphic">
+    <div class="motion-orbit"></div>
+    <div class="smile-motion">
+      <span></span>
+      <span></span>
+      <span></span>
+      <svg viewBox="0 0 420 260" role="img" aria-label="Smile motion graphic">
+        <path class="face-line" d="M74 116c28-62 102-86 171-62 47 16 82 53 103 101" />
+        <path class="smile-line" d="M112 147c45 58 143 67 204 5" />
+        <circle class="scan-dot" cx="118" cy="145" r="8" />
+        <circle class="scan-dot delay" cx="298" cy="148" r="8" />
+      </svg>
+    </div>
+    <img [src]="heroSlides[activeSlide()].image" [alt]="pickText(heroSlides[activeSlide()].title, language())" loading="eager" />
+    <div class="floating-chip top">
+      <app-fa-icon name="sparkle"></app-fa-icon>
+      {{ language() === 'fa' ? 'موشن طراحی لبخند' : 'Smile motion design' }}
+    </div>
+    <div class="floating-chip bottom">
+      <app-fa-icon name="mobile"></app-fa-icon>
+      {{ language() === 'fa' ? 'تجربه موبایل اپ‌مانند' : 'App-like mobile UX' }}
+    </div>
+  </div>
+</section>
 
-  <section id="gallery" class="section-shell seo-blocks"><article><app-fa-icon name="sparkle"></app-fa-icon><h3>طراحی گرافیکی سفید ـ کرم</h3><p>کارت‌های شیشه‌ای، فرم‌های نرم و پس‌زمینه‌های کرمی برای حس لوکس و آرام دندانپزشکی.</p></article><article><app-fa-icon name="shield"></app-fa-icon><h3>سکشن‌های مفید برای کاربر</h3><p>مسیر درمان، مزایا، پرسش‌های پرتکرار، نمونه‌های بصری و تماس مشاور در صفحه اصلی قرار گرفته‌اند.</p></article><article><app-fa-icon name="calendar"></app-fa-icon><h3>بیس Datepicker</h3><p>انتخاب تاریخ تماس بدون رزرو نوبت؛ فقط برای هماهنگی تماس مشاور.</p></article></section>
+<section class="slider-panel page-section">
+  <div class="section-heading">
+    <p class="eyebrow">{{ language() === 'fa' ? 'اسلایدرهای متنوع' : 'Rich sliders' }}</p>
+    <h2>{{ language() === 'fa' ? 'هر اسلاید یک بخش مهم از تجربه درمان را توضیح می‌دهد' : 'Each slide explains an important part of the care experience' }}</h2>
+  </div>
+  <div class="slider-copy">
+    <article *ngFor="let slide of heroSlides; let i = index" [class.active]="i === activeSlide()" (click)="activeSlide.set(i)">
+      <span>0{{ i + 1 }}</span>
+      <h3>{{ pickText(slide.eyebrow, language()) }}</h3>
+      <p>{{ pickText(slide.text, language()) }}</p>
+    </article>
+  </div>
+  <div class="slider-controls">
+    <button type="button" (click)="nextSlide(-1)" aria-label="Previous slide"><app-fa-icon name="arrowRight"></app-fa-icon></button>
+    <button type="button" (click)="nextSlide(1)" aria-label="Next slide"><app-fa-icon name="arrowLeft"></app-fa-icon></button>
+  </div>
+</section>
 
-  <section class="section-shell lead-section"><div><p class="eyebrow">{{ t().phoneTitle }}</p><h2>{{ t().phoneText }}</h2><app-persian-date-picker [selectedDate]="lead.preferredDate" (dateChange)="lead.preferredDate = $event"></app-persian-date-picker></div><form class="lead-form" (ngSubmit)="submitLead()"><label>نام و نام خانوادگی<input [(ngModel)]="lead.fullName" name="fullName" required></label><label>شماره تماس<input [(ngModel)]="lead.phone" name="phone" inputmode="tel" required></label><label>خدمت مورد نظر<select [(ngModel)]="lead.serviceId" name="serviceId"><option *ngFor="let s of services" [value]="s.id">{{ s.title }}</option></select></label><label>توضیح کوتاه<textarea [(ngModel)]="lead.message" name="message" rows="3"></textarea></label><button class="btn primary" type="submit"><app-fa-icon name="phone"></app-fa-icon>ثبت درخواست تماس</button></form></section>
+<section class="page-section">
+  <div class="section-heading center">
+    <p class="eyebrow">{{ language() === 'fa' ? 'سکشن‌های مفید برای کاربر' : 'Useful user-first sections' }}</p>
+    <h2>{{ language() === 'fa' ? 'هر بخش به تصمیم بهتر بیمار کمک می‌کند' : 'Every section helps patients make better decisions' }}</h2>
+  </div>
+  <div class="benefit-grid">
+    <article *ngFor="let item of benefits" class="glass-card">
+      <span class="icon-bubble"><app-fa-icon [name]="item.icon"></app-fa-icon></span>
+      <h3>{{ pickText(item.title, language()) }}</h3>
+      <p>{{ pickText(item.text, language()) }}</p>
+    </article>
+  </div>
+</section>
 
-  <section class="section-shell faq"><p class="eyebrow">FAQ</p><h2>پرسش‌های پرتکرار</h2><div class="faq-list"><article *ngFor="let f of faqs; let i = index"><b>{{ f }}</b><p>{{ i === 1 ? 'خیر؛ رزرو نوبت نداریم و به جای آن ورود/عضویت و درخواست تماس مستقیم فعال است.' : 'پاسخ این بخش با متن تولیدی مناسب پروداکشن نوشته شده و برای تصمیم‌گیری سریع کاربر طراحی شده است.' }}</p></article></div></section>
+<section class="page-section service-showcase" id="services">
+  <div class="section-heading">
+    <p class="eyebrow">{{ language() === 'fa' ? 'صفحه اختصاصی برای هر خدمت' : 'Dedicated page for every service' }}</p>
+    <h2>{{ language() === 'fa' ? 'خدمات دندان‌پزشکی با متن آماده پروداکشن و SEO' : 'Dental services with production-ready SEO copy' }}</h2>
+    <p>{{ language() === 'fa' ? 'هر کارت به صفحه‌ی کامل همان خدمت می‌رود؛ شامل معرفی، مزایا، مراحل، مراقبت‌ها، FAQ و خدمات مرتبط.' : 'Each card links to a full service page with overview, benefits, steps, aftercare, FAQs and related services.' }}</p>
+  </div>
 
-  <footer class="footer"><div><b>کلینیک دندانپزشکی دکتر سعید مقدم</b><p>تهران، آدرس کلینیک | ۰۲۱-۰۰۰۰۰۰۰۰</p></div><div><a href="/about">درباره ما</a><a href="/contact">تماس با ما</a></div></footer>
-  <nav class="mobile-bottom"><a *ngFor="let item of t().nav" [href]="item.href"><app-fa-icon [name]="item.icon"></app-fa-icon><span>{{ item.label }}</span></a><button (click)="showAuth=true"><app-fa-icon name="doctor"></app-fa-icon><span>ورود</span></button></nav>
-  <app-auth-dialog *ngIf="showAuth" (close)="showAuth = false"></app-auth-dialog>
-</div>
+  <div class="service-grid">
+    <article class="service-card" *ngFor="let service of featuredServices" [style.--accent]="service.accent">
+      <img [src]="service.image" [alt]="pickText(service.title, language())" loading="lazy" />
+      <span class="icon-bubble"><app-fa-icon [name]="service.icon"></app-fa-icon></span>
+      <h3>{{ pickText(service.title, language()) }}</h3>
+      <b>{{ pickText(service.subtitle, language()) }}</b>
+      <p>{{ pickText(service.summary, language()) }}</p>
+      <small>{{ pickText(service.duration, language()) }}</small>
+      <a [routerLink]="['/services', service.id]">
+        {{ language() === 'fa' ? 'مشاهده صفحه خدمت' : 'View service page' }}
+        <app-fa-icon name="arrowLeft"></app-fa-icon>
+      </a>
+    </article>
+  </div>
+</section>
+
+<section class="page-section app-mobile-panel">
+  <div>
+    <p class="eyebrow">{{ language() === 'fa' ? 'موبایل مهم‌ترین حالت است' : 'Mobile is the priority' }}</p>
+    <h2>{{ language() === 'fa' ? 'در نمایش موبایل، کاربر یک اپلیکیشن دندان‌پزشکی می‌بیند' : 'On mobile, users see a dental care app' }}</h2>
+    <p>{{ language() === 'fa' ? 'دکمه‌های مهم مثل خانه، خدمات، تماس و ورود در پایین صفحه قرار دارند. کارت‌ها بزرگ، لمس‌پذیر و خوانا هستند تا کاربر بدون پیچیدگی مسیر خود را پیدا کند.' : 'Important actions such as home, services, contact and sign in sit at the bottom. Cards are large, touch-friendly and readable so users can move without friction.' }}</p>
+  </div>
+  <div class="phone-mock">
+    <div class="phone-notch"></div>
+    <article>
+      <span><app-fa-icon name="tooth"></app-fa-icon></span>
+      <h3>{{ language() === 'fa' ? 'مسیر درمان من' : 'My care path' }}</h3>
+      <p>{{ language() === 'fa' ? 'انتخاب خدمت، ثبت شماره، تماس مشاور' : 'Choose service, leave number, consultant call' }}</p>
+    </article>
+    <div class="mini-tabs">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</section>
+
+<section class="page-section lead-section">
+  <div>
+    <p class="eyebrow">{{ language() === 'fa' ? 'ثبت شماره برای تماس مشاور' : 'Leave your number for a consultant call' }}</p>
+    <h2>{{ language() === 'fa' ? 'شماره‌تان را ثبت کنید تا درباره بهترین مسیر درمان با شما تماس بگیریم' : 'Leave your number so we can call you about the best care path' }}</h2>
+    <p>{{ language() === 'fa' ? 'این فرم برای هماهنگی تماس است و رزرو نوبت محسوب نمی‌شود.' : 'This form is for coordinating a call and is not appointment booking.' }}</p>
+    <app-base-datepicker [language]="language()" [selectedDate]="lead.preferredDate" (dateChange)="lead.preferredDate = $event"></app-base-datepicker>
+  </div>
+
+  <form class="lead-form" (ngSubmit)="submitLead()">
+    <label>
+      {{ language() === 'fa' ? 'نام و نام خانوادگی' : 'Full name' }}
+      <input [(ngModel)]="lead.fullName" name="leadFullName" required autocomplete="name" />
+    </label>
+    <label>
+      {{ language() === 'fa' ? 'شماره تماس' : 'Phone number' }}
+      <input [(ngModel)]="lead.phone" name="leadPhone" required inputmode="tel" autocomplete="tel" />
+    </label>
+    <label>
+      {{ language() === 'fa' ? 'خدمت مورد نظر' : 'Service of interest' }}
+      <select [(ngModel)]="lead.serviceId" name="leadService">
+        <option *ngFor="let service of services" [value]="service.id">{{ pickText(service.title, language()) }}</option>
+      </select>
+    </label>
+    <label>
+      {{ language() === 'fa' ? 'توضیح کوتاه' : 'Short note' }}
+      <textarea [(ngModel)]="lead.message" name="leadMessage" rows="4"></textarea>
+    </label>
+    <button class="primary-btn" type="submit">
+      <app-fa-icon name="phone"></app-fa-icon>
+      {{ language() === 'fa' ? 'ثبت درخواست تماس' : 'Submit call request' }}
+    </button>
+    <p *ngIf="leadSent()" class="success-message">
+      {{ language() === 'fa' ? 'درخواست تماس شما ثبت شد. مشاور کلینیک برای راهنمایی با شما تماس می‌گیرد.' : 'Your call request has been recorded. A clinic consultant will contact you for guidance.' }}
+    </p>
+  </form>
+</section>
+
+<section class="page-section">
+  <div class="section-heading">
+    <p class="eyebrow">{{ language() === 'fa' ? 'تجربه بیماران' : 'Patient stories' }}</p>
+    <h2>{{ language() === 'fa' ? 'اسلایدر نظرها برای اعتمادسازی بدون اغراق' : 'Review slider for trust without exaggeration' }}</h2>
+  </div>
+  <div class="testimonial-rail">
+    <article *ngFor="let item of testimonials" class="quote-card">
+      <span class="stars">★★★★★</span>
+      <p>“{{ pickText(item.text, language()) }}”</p>
+      <b>{{ pickText(item.name, language()) }}</b>
+      <small>{{ pickText(item.service, language()) }}</small>
+    </article>
+  </div>
+</section>
+
+<section class="page-section faq-section">
+  <div class="section-heading center">
+    <p class="eyebrow">FAQ</p>
+    <h2>{{ language() === 'fa' ? 'پرسش‌های پرتکرار پیش از تماس' : 'Common questions before contacting us' }}</h2>
+  </div>
+  <div class="faq-list">
+    <details *ngFor="let item of faqs">
+      <summary>{{ pickText(item.question, language()) }}</summary>
+      <p>{{ pickText(item.answer, language()) }}</p>
+    </details>
+  </div>
+</section>
