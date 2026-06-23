@@ -1,23 +1,72 @@
-import { Component, inject } from '@angular/core';
 import { NgFor } from '@angular/common';
+import { Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
-import { ClinicDataService } from '../../services/clinic-data.service';
+import { DENTAL_SERVICES, LanguageCode, pickText } from '../../models/clinic.model';
 import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
-@Component({selector:'app-services',standalone:true,imports:[NgFor,RouterLink,FaIconComponent],template:`
-<section class="surface-block">
-  <p class="eyebrow">همه خدمات</p>
-  <h1>خدمات دندانپزشکی</h1>
-  <p>در کلینیک دندانپزشکی دکتر سعید مقدم مجموعه‌ای از درمان‌های زیبایی، ترمیمی و تخصصی شامل ایمپلنت دندان، لمینت دندان، کامپوزیت دندان، ارتودنسی، سفید کردن دندان، درمان ریشه، دندانپزشکی کودکان و درمان لثه ارائه می‌شود.</p>
-</section>
-<section>
-  <div class="grid services-grid">
-    <article class="card icon-card" *ngFor="let s of services">
-      <span class="service-icon"><app-fa-icon name="tooth"></app-fa-icon></span>
-      <h2>{{s.title}}</h2>
-      <p>{{s.description}}</p>
-      <a class="btn ghost" [routerLink]="'/services/'+s.id">اطلاعات کامل</a>
-    </article>
-  </div>
-</section>`,styleUrls:['../../public-pages.css']})
-export class ServicesComponent{services=inject(ClinicDataService).getServices();constructor(t:Title,m:Meta){t.setTitle('خدمات دندانپزشکی | کلینیک دکتر سعید مقدم');m.updateTag({name:'description',content:'لیست کامل خدمات کلینیک دندانپزشکی دکتر سعید مقدم شامل ایمپلنت، لمینت، کامپوزیت، ارتودنسی، سفید کردن دندان و درمان ریشه.'});}}
+
+@Component({
+  selector: 'app-services',
+  standalone: true,
+  imports: [NgFor, RouterLink, FaIconComponent],
+  template: `
+    <section class="page-section page-hero">
+      <div class="section-heading">
+        <p class="eyebrow">{{ language() === 'fa' ? 'همه خدمات' : 'All services' }}</p>
+        <h1>{{ language() === 'fa' ? 'خدمات دندان‌پزشکی با صفحه اختصاصی برای هر نیاز' : 'Dental services with a dedicated page for every need' }}</h1>
+        <p>{{ language() === 'fa'
+          ? 'هر خدمت در این ساختار صفحه‌ی کامل خود را دارد تا کاربر پیش از تماس، مزایا، مراحل، مراقبت‌ها و محدودیت‌های درمان را بفهمد.'
+          : 'Every service has a complete page so users understand benefits, steps, care and limits before contacting the clinic.' }}</p>
+      </div>
+      <div class="hero-pattern">
+        <app-fa-icon name="sparkle"></app-fa-icon>
+        <span>{{ language() === 'fa' ? 'SEO + Mobile app UX' : 'SEO + Mobile app UX' }}</span>
+      </div>
+    </section>
+
+    <section class="page-section">
+      <div class="service-grid">
+        <article class="service-card" *ngFor="let service of services" [style.--accent]="service.accent">
+          <img [src]="service.image" [alt]="pickText(service.title, language())" loading="lazy" />
+          <span class="icon-bubble"><app-fa-icon [name]="service.icon"></app-fa-icon></span>
+          <h2>{{ pickText(service.title, language()) }}</h2>
+          <b>{{ pickText(service.subtitle, language()) }}</b>
+          <p>{{ pickText(service.summary, language()) }}</p>
+          <small>{{ pickText(service.cost, language()) }}</small>
+          <a [routerLink]="['/services', service.id]">
+            {{ language() === 'fa' ? 'اطلاعات کامل خدمت' : 'Full service guide' }}
+            <app-fa-icon name="arrowLeft"></app-fa-icon>
+          </a>
+        </article>
+      </div>
+    </section>
+  `,
+  styles: [`
+    .page-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.45fr);gap:24px;align-items:center;padding-top:140px}.page-hero h1{font-size:clamp(2.4rem,5vw,4.8rem);margin:0 0 16px}.hero-pattern{display:grid;place-items:center;min-height:280px;border:1px solid var(--line);border-radius:42px;background:radial-gradient(circle,color-mix(in srgb,var(--brand) 18%,transparent),transparent 62%),color-mix(in srgb,var(--surface) 76%,transparent);box-shadow:var(--shadow);font-weight:950;color:var(--brand);text-align:center}.hero-pattern app-fa-icon{font-size:5rem;animation:pulse 2.4s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.08);opacity:.7}}@media(max-width:820px){.page-hero{grid-template-columns:1fr;padding-top:112px}.hero-pattern{min-height:180px}}
+  `]
+})
+export class ServicesComponent {
+  language = signal<LanguageCode>('fa');
+  services = DENTAL_SERVICES;
+  protected readonly pickText = pickText;
+
+  constructor(private title: Title, private meta: Meta) {
+    this.updateSeo();
+  }
+
+  setLanguage(language: LanguageCode): void {
+    this.language.set(language);
+    this.updateSeo();
+  }
+
+  private updateSeo(): void {
+    const isFa = this.language() === 'fa';
+    this.title.setTitle(isFa ? 'خدمات دندان‌پزشکی | کلینیک دکتر سعید مقدم' : 'Dental services | Dr. Saeed Moghaddam Clinic');
+    this.meta.updateTag({
+      name: 'description',
+      content: isFa
+        ? 'لیست کامل خدمات دندان‌پزشکی شامل ایمپلنت، لمینت، کامپوزیت، ارتودنسی، سفید کردن دندان، درمان ریشه، کودکان و درمان لثه.'
+        : 'Complete dental service list including implants, veneers, composite, orthodontics, whitening, root canal, pediatric care and gum treatment.'
+    });
+  }
+}
