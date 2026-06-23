@@ -1,5 +1,4 @@
 export type LanguageCode = 'fa' | 'en';
-export type ThemeMode = 'light' | 'dark';
 export type AuthDialogMode = 'login' | 'register';
 
 export interface LocalizedText {
@@ -655,37 +654,37 @@ export const BENEFIT_CARDS: BenefitCard[] = [
 export const TESTIMONIALS: Testimonial[] = [
   {
     id: 'maryam',
-    name: text('مریم احمدی', 'Maryam Ahmadi'),
+    name: text('مریم ا.', 'Maryam A.'),
     service: text('لمینت سرامیکی', 'Porcelain veneers'),
-    text: text('قبل از شروع درباره رنگ، فرم و محدودیت‌های لمینت کامل صحبت شد. نتیجه برای من طبیعی و هماهنگ با صورتم است.', 'Before starting, shade, shape and veneer limitations were explained clearly. The result feels natural and fits my face.'),
+    text: text('برای لمینت نگران رنگ خیلی سفید بودم. اول عکس دندان‌ها بررسی شد، چند نمونه رنگ دیدم و در نهایت نتیجه طبیعی‌تر از چیزی شد که تصور می‌کردم.', 'I was worried veneers would look too white. My photos were reviewed first, I saw shade samples, and the final result looked more natural than I expected.'),
     rating: 5
   },
   {
     id: 'reza',
-    name: text('رضا کاظمی', 'Reza Kazemi'),
+    name: text('رضا ک.', 'Reza K.'),
     service: text('ایمپلنت دندان', 'Dental implants'),
-    text: text('برای ایمپلنت اول شرایط استخوان و لثه بررسی شد و بعد مراحل درمان را توضیح دادند. همین باعث شد با آرامش تصمیم بگیرم.', 'For my implant, bone and gum condition were checked first and the steps were explained, which helped me decide calmly.'),
+    text: text('قبل از ایمپلنت نمی‌دانستم چند مرحله لازم است. بعد از بررسی عکس، زمان‌بندی و مراقبت‌ها را دقیق گفتند و همین باعث شد با خیال راحت‌تر شروع کنم.', 'Before my implant, I did not know how many steps were needed. After imaging, the timing and aftercare were explained clearly, which made it easier to start.'),
     rating: 5
   },
   {
     id: 'sara',
-    name: text('سارا محمدی', 'Sara Mohammadi'),
+    name: text('سارا م.', 'Sara M.'),
     service: text('کامپوزیت ونیر', 'Composite veneers'),
-    text: text('کامپوزیت برای اصلاح فرم چند دندان انجام شد، نه تغییر اغراق‌آمیز. توضیح مراقبت‌ها بعد از درمان هم خیلی کمک کرد.', 'Composite was done to refine a few tooth shapes, not create an exaggerated change. The aftercare guidance was very helpful.'),
+    text: text('برای فاصله و فرم چند دندان مراجعه کردم. قبل از کار توضیح دادند کامپوزیت برای کدام دندان‌ها مناسب است و بعد از درمان هم روش مراقبت را یاد گرفتم.', 'I visited for gaps and shape correction on a few teeth. Before treatment, they explained which teeth were suitable for composite and taught me the care routine afterward.'),
     rating: 5
   },
   {
     id: 'hamid',
-    name: text('حمید رضایی', 'Hamid Rezaei'),
+    name: text('حمید ر.', 'Hamid R.'),
     service: text('درمان ریشه', 'Root canal therapy'),
-    text: text('با درد مراجعه کردم و بعد از معاینه علت درد مشخص شد. مرحله‌های درمان ریشه ساده و قابل فهم توضیح داده شد.', 'I came in with pain and the cause was identified after examination. The root canal steps were explained simply and clearly.'),
+    text: text('با درد شبانه تماس گرفتم. در مراجعه اول علت درد مشخص شد و مرحله‌های درمان ریشه را ساده توضیح دادند، برای همین از روند کار نترسیدم.', 'I called because of night pain. At the first visit, the cause was found and the root canal steps were explained simply, so the process felt less stressful.'),
     rating: 5
   },
   {
     id: 'niloofar',
-    name: text('نیلوفر کریمی', 'Niloofar Karimi'),
+    name: text('نیلوفر ک.', 'Niloofar K.'),
     service: text('درمان لثه', 'Gum treatment'),
-    text: text('برای خونریزی لثه مراجعه کردم. روش صحیح مراقبت روزانه و نیاز به جرم‌گیری تخصصی بدون ترساندن توضیح داده شد.', 'I visited for gum bleeding. Daily care technique and the need for professional cleaning were explained without fear-based messaging.'),
+    text: text('خونریزی لثه را جدی نگرفته بودم. بعد از معاینه فهمیدم مشکل از التهاب است و روش مسواک، نخ دندان و زمان پیگیری را واضح گفتند.', 'I had not taken gum bleeding seriously. After the exam, I learned it was inflammation and got clear brushing, flossing and follow-up guidance.'),
     rating: 5
   }
 ];
@@ -693,22 +692,22 @@ export const TESTIMONIALS: Testimonial[] = [
 export const GLOBAL_FAQS: FaqItem[] = [
   {
     id: 'first-step',
-    question: text('برای انتخاب خدمت از کجا شروع کنم؟', 'Where should I start when choosing a service?'),
-    answer: text('اگر مطمئن نیستید به کدام درمان نیاز دارید، فرم درخواست تماس را پر کنید تا درباره علائم، هدف درمان و مسیر مراجعه راهنمایی اولیه بگیرید.', 'If you are unsure which treatment you need, submit the call request form for initial guidance about symptoms, treatment goals and visit path.')
+    question: text('اگر ندانم دقیقاً چه درمانی لازم دارم چه کنم؟', 'What if I do not know which treatment I need?'),
+    answer: text('در فرم درخواست تماس، مشکل اصلی خود را کوتاه بنویسید؛ مثل درد، جای خالی دندان، تغییر رنگ یا اصلاح لبخند. مشاور برای راهنمایی اولیه و انتخاب مسیر مراجعه با شما تماس می‌گیرد.', 'Briefly describe your main concern in the call request form, such as pain, missing teeth, discoloration or smile correction. A consultant will call to guide the first step.')
   },
   {
     id: 'cost',
-    question: text('هزینه خدمات چطور مشخص می‌شود؟', 'How are costs defined?'),
-    answer: text('هزینه دقیق فقط بعد از معاینه، بررسی عکس، تعداد دندان‌ها و نوع مواد قابل اعلام است.', 'Exact cost is defined only after exam, imaging, tooth count and material selection.')
+    question: text('هزینه درمان قبل از مراجعه مشخص می‌شود؟', 'Can treatment cost be defined before the visit?'),
+    answer: text('برای بعضی خدمات می‌توان بازه حدودی گفت، اما هزینه دقیق بعد از معاینه، بررسی عکس، تعداد دندان‌ها و نوع درمان مشخص می‌شود.', 'A rough range may be possible for some services, but exact cost depends on exam, imaging, tooth count and treatment type.')
   },
   {
-    id: 'language',
-    question: text('سایت دو زبانه است؟', 'Is the website bilingual?'),
-    answer: text('بله. محتوای اصلی، ناوبری و فرم‌ها به فارسی و انگلیسی قابل مشاهده هستند.', 'Yes. Main content, navigation and forms are available in Persian and English.')
+    id: 'call-back',
+    question: text('بعد از ثبت شماره چه اتفاقی می‌افتد؟', 'What happens after I submit my number?'),
+    answer: text('نام، شماره تماس و خدمت مورد نظر شما ثبت می‌شود و مشاور کلینیک برای شنیدن توضیح کوتاه، پاسخ به سوال اولیه و هماهنگی مراجعه با شما تماس می‌گیرد.', 'Your name, phone number and selected service are saved, and a clinic consultant calls to hear your concern, answer initial questions and coordinate the visit.')
   },
   {
-    id: 'dark',
-    question: text('تم سایت چه رنگی است؟', 'What is the site theme?'),
-    answer: text('سایت هم حالت روشن با رنگ‌های تمیز و آرام دارد و هم حالت تاریک برای خوانایی بهتر در محیط کم‌نور.', 'The site supports both a clean calm light mode and a dark mode for better readability in low light.')
+    id: 'urgent-pain',
+    question: text('اگر درد دندان یا ورم داشته باشم کدام گزینه را انتخاب کنم؟', 'Which option should I choose for tooth pain or swelling?'),
+    answer: text('در فرم، خدمت درمان ریشه یا درمان لثه را انتخاب کنید و در توضیح کوتاه شدت درد، ورم یا زمان شروع مشکل را بنویسید تا تماس اولیه دقیق‌تر انجام شود.', 'Select root canal or gum treatment in the form and describe pain severity, swelling or when it started so the first call can be more accurate.')
   }
 ];

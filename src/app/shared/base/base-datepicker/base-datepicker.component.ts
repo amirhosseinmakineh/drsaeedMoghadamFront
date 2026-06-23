@@ -42,8 +42,8 @@ import { DatePickerDay, LanguageCode, LocalizedText, pickText, text } from '../.
         </button>
       </div>
 
-      <p *ngIf="language === 'fa'" class="calendar-note">
-        {{ selectedDate ? 'تاریخ انتخاب‌شده: ' + selectedDateLabel : 'تاریخ‌ها بر اساس تقویم شمسی نمایش داده می‌شوند.' }}
+      <p *ngIf="language === 'fa' && selectedDate" class="calendar-note">
+        {{ 'تاریخ انتخاب‌شده: ' + selectedDateLabel }}
       </p>
 
       <label *ngIf="language !== 'fa'" class="native-date">

@@ -3,20 +3,20 @@
 }
 
 :root {
-  color-scheme: light;
-  --bg: #fbf8f1;
-  --cream: #f3eadc;
-  --surface: #ffffff;
-  --surface-soft: #f7efe4;
-  --surface-muted: #efe2d0;
-  --text: #2c241b;
-  --muted: #786a59;
-  --line: rgba(128, 98, 63, .18);
-  --brand: #a8793f;
-  --brand-2: #d7b16d;
-  --gold: #c59449;
+  color-scheme: dark;
+  --bg: #11100e;
+  --cream: #211b16;
+  --surface: #191714;
+  --surface-soft: #151311;
+  --surface-muted: #2b241c;
+  --text: #f7efe4;
+  --muted: #c8b8a3;
+  --line: rgba(239, 218, 188, .16);
+  --brand: #d9ad6c;
+  --brand-2: #f1c981;
+  --gold: #f3c76d;
   --danger: #ef4444;
-  --shadow: 0 24px 70px rgba(91, 64, 38, .10);
+  --shadow: 0 24px 80px rgba(0, 0, 0, .38);
 }
 
 body[data-theme='dark'] {
