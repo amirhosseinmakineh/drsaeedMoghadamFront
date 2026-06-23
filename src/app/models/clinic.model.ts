@@ -134,40 +134,40 @@ export const NAV_ITEMS: NavItem[] = [
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 'digital-smile',
-    eyebrow: text('کلینیک دندان‌پزشکی زیبایی و درمانی', 'Cosmetic and restorative dental clinic'),
-    title: text('دندان‌پزشکی دقیق برای لبخندی سالم، طبیعی و قابل اعتماد', 'Precise dentistry for a healthy, natural and confident smile'),
+    eyebrow: text('کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Dr. Saeed Moghaddam Dental Clinic'),
+    title: text('درمان دقیق، طراحی لبخند طبیعی و مراقبت قابل اعتماد', 'Precise care, natural smile design and trustworthy dentistry'),
     text: text(
-      'در کلینیک دندان‌پزشکی دکتر سعید مقدم، خدمات ایمپلنت دندان، لمینت سرامیکی، کامپوزیت، بلیچینگ، درمان ریشه و درمان لثه با معاینه دقیق، توضیح ساده و برنامه مراقبت شخصی‌سازی‌شده ارائه می‌شود.',
-      'At Dr. Saeed Moghaddam Dental Clinic, dental implants, porcelain veneers, composite veneers, whitening, root canal therapy and gum treatment are planned with careful exams, simple guidance and personalized aftercare.'
+      'در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان‌های زیبایی و عمومی مثل ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه و مراقبت لثه با معاینه دقیق و توضیح شفاف انجام می‌شود.',
+      'At Dr. Saeed Moghaddam Dental Clinic, cosmetic and general dental treatments such as implants, veneers, composite, whitening, root canal therapy and gum care are planned with careful exams and clear guidance.'
     ),
     image: image('photo-1606811971618-4486d14f3f99')
   },
   {
     id: 'calm-suite',
-    eyebrow: text('مشاوره دندان‌پزشکی شفاف', 'Clear dental consultation'),
-    title: text('قبل از هر درمان، علت مشکل و مسیر درست مراقبت را می‌دانید', 'Before treatment, you understand the cause and the right care path'),
+    eyebrow: text('مشاوره قبل از درمان', 'Pre-treatment consultation'),
+    title: text('قبل از تصمیم، مشکل، گزینه‌ها و مراقبت‌ها روشن می‌شود', 'Before any decision, the problem, options and care are clear'),
     text: text(
-      'صفحه اصلی برای جست‌وجوهای مهم دندان‌پزشکی آماده شده است: طراحی لبخند طبیعی، کاشت ایمپلنت، اصلاح طرح لبخند، درمان درد دندان، مراقبت لثه و درخواست تماس مشاور.',
-      'The landing page is ready for key dental searches: natural smile design, implant placement, smile makeover, tooth pain care, gum health and consultant call requests.'
+      'اگر درد دندان، نیاز به ایمپلنت، اصلاح طرح لبخند یا درمان لثه دارید، ابتدا شرایط دهان و دندان بررسی می‌شود و مسیر مناسب بدون وعده اغراق‌آمیز توضیح داده می‌شود.',
+      'Whether you have tooth pain, need implants, want a smile makeover or require gum care, your oral condition is reviewed first and the suitable path is explained without exaggerated promises.'
     ),
     image: image('photo-1629909615184-74f495363b67')
   },
   {
     id: 'mobile-first',
-    eyebrow: text('تجربه آرام بیمار', 'Calm patient experience'),
-    title: text('از بررسی لبخند تا پیگیری بعد از درمان، مسیر ساده و انسانی است', 'From smile analysis to aftercare, the path is simple and human'),
+    eyebrow: text('تجربه آرام مراجعه‌کننده', 'Calm patient experience'),
+    title: text('از تماس اولیه تا پیگیری بعد از درمان، مسیر ساده است', 'From first call to aftercare, the path stays simple'),
     text: text(
-      'دسترسی سریع به خدمات دندان‌پزشکی، نمونه‌کارها، سوالات پرتکرار و فرم درخواست تماس کمک می‌کند بیمار بدون سردرگمی تصمیم بگیرد.',
-      'Quick access to dental services, work samples, FAQs and the consultant call form helps patients decide without confusion.'
+      'خدمات، توضیحات درمان، سوالات پرتکرار و فرم درخواست تماس کنار هم آمده‌اند تا مراجعه‌کننده سریع‌تر بداند برای چه خدمتی باید راهنمایی بگیرد.',
+      'Services, treatment explanations, FAQs and the call request form are grouped together so patients quickly know which service they need guidance for.'
     ),
     image: image('photo-1588776814546-1ffcf47267a5')
   }
 ];
 
 export const STATS: StatItem[] = [
-  { value: text('+۱۲۰۰', '+1200'), label: text('پرونده درمانی و زیبایی بررسی‌شده', 'Reviewed cosmetic and restorative cases') },
-  { value: text('۸ خدمت', '8 services'), label: text('از ایمپلنت تا درمان لثه و کودکان', 'From implants to gum and pediatric care') },
-  { value: text('SEO ready', 'SEO ready'), label: text('محتوای آماده برای جست‌وجوهای دندان‌پزشکی', 'Content ready for dental search intent') }
+  { value: text('زیبایی و درمان', 'Cosmetic and care'), label: text('طراحی لبخند، ترمیم و درمان‌های ضروری دندان', 'Smile design, restorative and essential dental treatments') },
+  { value: text('۸ مسیر درمان', '8 care paths'), label: text('از ایمپلنت و لمینت تا درمان ریشه و لثه', 'From implants and veneers to root canal and gum care') },
+  { value: text('پاسخگویی', 'Call back'), label: text('ثبت شماره برای تماس مشاور و راهنمایی اولیه', 'Leave your number for an initial consultant call') }
 ];
 
 export const WORK_SAMPLES: WorkSample[] = [
@@ -176,8 +176,8 @@ export const WORK_SAMPLES: WorkSample[] = [
     title: text('اصلاح طرح لبخند طبیعی', 'Natural smile makeover'),
     service: text('لمینت سرامیکی و طراحی لبخند', 'Porcelain veneers and smile design'),
     description: text(
-      'هماهنگی رنگ، فرم و خط لبخند با چهره بیمار؛ مناسب برای نمایش نمونه‌کارهای زیبایی دکتر سعید مقدم.',
-      'Shade, shape and smile-line harmony with the patient face; suitable for showcasing Dr. Saeed Moghaddam cosmetic dentistry work.'
+      'در طراحی لبخند، رنگ، فرم، خط لبخند و سلامت دندان‌ها کنار هم بررسی می‌شود تا نتیجه طبیعی و هماهنگ با چهره باشد.',
+      'In smile design, shade, shape, smile line and tooth health are reviewed together so the result looks natural and facially balanced.'
     ),
     result: text('لبخند روشن‌تر، طبیعی و بدون اغراق', 'Brighter, natural and balanced smile'),
     image: image('photo-1609840114035-3c981b782dfe')
@@ -624,26 +624,26 @@ export const BENEFIT_CARDS: BenefitCard[] = [
   {
     id: 'honest-plan',
     icon: 'shield',
-    title: text('طرح درمان شفاف', 'Transparent treatment plan'),
-    text: text('قبل از هر تصمیم، مزایا، محدودیت‌ها، هزینه وابسته به معاینه و مسیر مراقبت توضیح داده می‌شود.', 'Before any decision, benefits, limits, exam-based cost and care path are explained.')
+    title: text('تشخیص و توضیح شفاف', 'Clear diagnosis and guidance'),
+    text: text('پیش از شروع درمان، دلیل مشکل، گزینه‌های ممکن، محدودیت‌ها و مراقبت‌های لازم به زبان ساده توضیح داده می‌شود.', 'Before treatment starts, the problem, possible options, limitations and care needs are explained in simple language.')
   },
   {
     id: 'graphic-ui',
     icon: 'sparkle',
-    title: text('گرافیک سفید و کرم', 'White and cream visuals'),
-    text: text('سکشن‌ها با کارت‌های مینیمال، فرم‌های دندانی، موشن نرم و تصویرهای سبک طراحی شده‌اند.', 'Sections use minimal cards, dental shapes, soft motion and lightweight imagery.')
+    title: text('تمرکز روی سلامت و زیبایی طبیعی', 'Focused on health and natural aesthetics'),
+    text: text('در درمان‌های زیبایی مثل لمینت و کامپوزیت، سلامت دندان و هماهنگی لبخند با چهره همزمان در نظر گرفته می‌شود.', 'For cosmetic treatments such as veneers and composite, tooth health and smile harmony are considered together.')
   },
   {
     id: 'mobile-care',
     icon: 'mobile',
-    title: text('موبایل مثل اپلیکیشن', 'Mobile like an app'),
-    text: text('در موبایل، مسیرهای مهم در نوار پایین قرار دارند و محتوا برای لمس و خواندن سریع بهینه شده است.', 'On mobile, key paths live in the bottom bar and content is optimized for touch and quick reading.')
+    title: text('دسترسی سریع در موبایل', 'Fast access on mobile'),
+    text: text('کاربر در موبایل به خدمات، تماس، ورود و اطلاعات مهم درمان با کارت‌های بزرگ و لمس‌پذیر دسترسی دارد.', 'On mobile, users reach services, contact, sign-in and key treatment information through large touch-friendly cards.')
   },
   {
     id: 'phone-lead',
     icon: 'phone',
-    title: text('درخواست تماس مشاور', 'Consultant call request'),
-    text: text('کاربر شماره خود را ثبت می‌کند تا مشاور درباره خدمت مناسب و مسیر مراجعه با او تماس بگیرد.', 'Users leave their number so a consultant can call about the right service and next step.')
+    title: text('درخواست تماس برای راهنمایی', 'Call request for guidance'),
+    text: text('اگر درباره ایمپلنت، زیبایی، درد دندان یا درمان لثه سؤال دارید، شماره خود را ثبت می‌کنید تا برای راهنمایی اولیه تماس گرفته شود.', 'If you have questions about implants, cosmetic care, tooth pain or gum treatment, leave your number for an initial guidance call.')
   }
 ];
 
@@ -652,30 +652,44 @@ export const TESTIMONIALS: Testimonial[] = [
     id: 'maryam',
     name: text('مریم احمدی', 'Maryam Ahmadi'),
     service: text('لمینت سرامیکی', 'Porcelain veneers'),
-    text: text('قبل از شروع درمان همه چیز واضح توضیح داده شد. نتیجه لبخندم طبیعی است و حس مصنوعی ندارد.', 'Everything was explained clearly before treatment. My smile looks natural, not artificial.'),
+    text: text('قبل از شروع درباره رنگ، فرم و محدودیت‌های لمینت کامل صحبت شد. نتیجه برای من طبیعی و هماهنگ با صورتم است.', 'Before starting, shade, shape and veneer limitations were explained clearly. The result feels natural and fits my face.'),
     rating: 5
   },
   {
     id: 'reza',
     name: text('رضا کاظمی', 'Reza Kazemi'),
     service: text('ایمپلنت دندان', 'Dental implants'),
-    text: text('از بخش مشاوره تا پیگیری بعد از درمان، روند آرام و قابل اعتماد بود.', 'From consultation to follow-up, the process felt calm and trustworthy.'),
+    text: text('برای ایمپلنت اول شرایط استخوان و لثه بررسی شد و بعد مراحل درمان را توضیح دادند. همین باعث شد با آرامش تصمیم بگیرم.', 'For my implant, bone and gum condition were checked first and the steps were explained, which helped me decide calmly.'),
     rating: 5
   },
   {
     id: 'sara',
     name: text('سارا محمدی', 'Sara Mohammadi'),
     service: text('کامپوزیت ونیر', 'Composite veneers'),
-    text: text('فرم دندان‌ها اصلاح شد اما لبخندم هنوز شبیه خودم است؛ دقیقاً همان چیزی که می‌خواستم.', 'My tooth shape improved while my smile still feels like me; exactly what I wanted.'),
+    text: text('کامپوزیت برای اصلاح فرم چند دندان انجام شد، نه تغییر اغراق‌آمیز. توضیح مراقبت‌ها بعد از درمان هم خیلی کمک کرد.', 'Composite was done to refine a few tooth shapes, not create an exaggerated change. The aftercare guidance was very helpful.'),
+    rating: 5
+  },
+  {
+    id: 'hamid',
+    name: text('حمید رضایی', 'Hamid Rezaei'),
+    service: text('درمان ریشه', 'Root canal therapy'),
+    text: text('با درد مراجعه کردم و بعد از معاینه علت درد مشخص شد. مرحله‌های درمان ریشه ساده و قابل فهم توضیح داده شد.', 'I came in with pain and the cause was identified after examination. The root canal steps were explained simply and clearly.'),
+    rating: 5
+  },
+  {
+    id: 'niloofar',
+    name: text('نیلوفر کریمی', 'Niloofar Karimi'),
+    service: text('درمان لثه', 'Gum treatment'),
+    text: text('برای خونریزی لثه مراجعه کردم. روش صحیح مراقبت روزانه و نیاز به جرم‌گیری تخصصی بدون ترساندن توضیح داده شد.', 'I visited for gum bleeding. Daily care technique and the need for professional cleaning were explained without fear-based messaging.'),
     rating: 5
   }
 ];
 
 export const GLOBAL_FAQS: FaqItem[] = [
   {
-    id: 'no-booking',
-    question: text('آیا در سایت رزرو نوبت آنلاین داریم؟', 'Is there online appointment booking?'),
-    answer: text('خیر. مسیر اصلی سایت ورود، عضویت، تماس مستقیم و ثبت درخواست تماس مشاور است.', 'No. The main actions are sign in, membership, direct contact and consultant call request.')
+    id: 'first-step',
+    question: text('برای انتخاب خدمت از کجا شروع کنم؟', 'Where should I start when choosing a service?'),
+    answer: text('اگر مطمئن نیستید به کدام درمان نیاز دارید، فرم درخواست تماس را پر کنید تا درباره علائم، هدف درمان و مسیر مراجعه راهنمایی اولیه بگیرید.', 'If you are unsure which treatment you need, submit the call request form for initial guidance about symptoms, treatment goals and visit path.')
   },
   {
     id: 'cost',
@@ -690,6 +704,6 @@ export const GLOBAL_FAQS: FaqItem[] = [
   {
     id: 'dark',
     question: text('تم سایت چه رنگی است؟', 'What is the site theme?'),
-    answer: text('تم اصلی سایت سفید و کرم است تا حس تمیزی، آرامش و اعتماد در فضای دندان‌پزشکی ایجاد شود.', 'The main theme is white and cream to create a clean, calm and trustworthy dental feel.')
+    answer: text('سایت هم حالت روشن با رنگ‌های تمیز و آرام دارد و هم حالت تاریک برای خوانایی بهتر در محیط کم‌نور.', 'The site supports both a clean calm light mode and a dark mode for better readability in low light.')
   }
 ];

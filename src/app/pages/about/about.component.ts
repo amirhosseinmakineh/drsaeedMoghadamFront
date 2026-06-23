@@ -119,7 +119,7 @@ export class AboutComponent {
   values = [
     { icon: 'shield', title: text('صداقت درمانی', 'Clinical honesty'), text: text('اگر درمانی برای بیمار مناسب نباشد، به همان شفافیت توضیح داده می‌شود.', 'If a treatment is not suitable, it is explained with the same clarity.') },
     { icon: 'sparkle', title: text('زیبایی طبیعی', 'Natural aesthetics'), text: text('هدف، لبخندی هماهنگ با چهره است؛ نه نتیجه اغراق‌آمیز و مصنوعی.', 'The goal is a smile that fits the face, not an exaggerated artificial result.') },
-    { icon: 'mobile', title: text('تجربه مدرن', 'Modern experience'), text: text('از UI سایت تا مسیر تماس مشاور، تجربه باید سریع، واضح و موبایل‌پسند باشد.', 'From the website UI to consultant calls, the experience should be fast, clear and mobile friendly.') },
+    { icon: 'mobile', title: text('تجربه مدرن', 'Modern experience'), text: text('از مشاهده خدمات تا ثبت درخواست تماس مشاور، تجربه باید سریع، واضح و موبایل‌پسند باشد.', 'From viewing services to submitting a consultant call request, the experience should be fast, clear and mobile friendly.') },
     { icon: 'heart', title: text('آرامش بیمار', 'Patient calm'), text: text('توضیح مرحله‌ها و کنترل اضطراب بخش مهمی از درمان است.', 'Explaining steps and managing anxiety is an important part of care.') }
   ];
 

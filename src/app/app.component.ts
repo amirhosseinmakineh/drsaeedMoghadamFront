@@ -19,7 +19,7 @@ interface LanguageAwarePage {
         <a class="brand" routerLink="/" [attr.aria-label]="language() === 'fa' ? 'صفحه اصلی' : 'Homepage'">
           <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
           <span>
-            <b>{{ language() === 'fa' ? 'کلینیک دندان‌پزشکی دکتر مقدم' : 'Dr. Moghaddam Dental' }}</b>
+            <b>{{ language() === 'fa' ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Dr. Saeed Moghaddam Dental' }}</b>
             <small>{{ language() === 'fa' ? 'زیبایی، ایمپلنت و درمان دقیق' : 'Cosmetic, implant and precise care' }}</small>
           </span>
         </a>
@@ -31,6 +31,9 @@ interface LanguageAwarePage {
         </nav>
 
         <div class="header-actions">
+          <button class="icon-btn" type="button" (click)="toggleTheme()" [attr.aria-label]="theme() === 'dark' ? (language() === 'fa' ? 'حالت روشن' : 'Light mode') : (language() === 'fa' ? 'حالت تاریک' : 'Dark mode')">
+            <app-fa-icon [name]="theme() === 'dark' ? 'sun' : 'moon'"></app-fa-icon>
+          </button>
           <button class="icon-btn" type="button" (click)="toggleLanguage()" [attr.aria-label]="language() === 'fa' ? 'English' : 'فارسی'">
             {{ language() === 'fa' ? 'EN' : 'فا' }}
           </button>
@@ -54,7 +57,7 @@ interface LanguageAwarePage {
               <small>{{ language() === 'fa' ? 'طراحی لبخند، ایمپلنت و درمان‌های دقیق دندان' : 'Smile design, implants and precise dental care' }}</small>
             </span>
           </a>
-          <p>{{ language() === 'fa' ? 'فوتر جدید برای دسترسی سریع به خدمات، تماس، ساعات پاسخگویی و مسیرهای مهم دندان‌پزشکی طراحی شده است.' : 'The new footer gives quick access to services, contact details, response hours and key dental paths.' }}</p>
+          <p>{{ language() === 'fa' ? 'دسترسی سریع به خدمات، تماس، ساعات پاسخگویی و مسیرهای مهم کلینیک دندان‌پزشکی دکتر سعید مقدم.' : 'Quick access to services, contact details, response hours and key paths for Dr. Saeed Moghaddam Dental Clinic.' }}</p>
         </section>
 
         <div class="footer-grid">
@@ -74,8 +77,8 @@ interface LanguageAwarePage {
 
           <section class="footer-contact-card">
             <h2>{{ language() === 'fa' ? 'تماس و پاسخگویی' : 'Contact and hours' }}</h2>
-            <p><app-fa-icon name="phone"></app-fa-icon>{{ language() === 'fa' ? '۰۲۱-۰۰۰۰۰۰۰۰' : '+98 21 0000 0000' }}</p>
-            <p><app-fa-icon name="location"></app-fa-icon>{{ language() === 'fa' ? 'تهران، خیابان نمونه، پلاک نمونه' : 'Tehran, Sample St., Sample No.' }}</p>
+            <p><app-fa-icon name="phone"></app-fa-icon>{{ language() === 'fa' ? 'ثبت درخواست تماس از فرم سایت' : 'Call request through the website form' }}</p>
+            <p><app-fa-icon name="location"></app-fa-icon>{{ language() === 'fa' ? 'اطلاعات مسیر مراجعه هنگام هماهنگی اعلام می‌شود' : 'Visit directions are shared during coordination' }}</p>
             <p><app-fa-icon name="clock"></app-fa-icon>{{ language() === 'fa' ? 'شنبه تا پنجشنبه، ۹ تا ۲۰' : 'Saturday to Thursday, 9:00 to 20:00' }}</p>
           </section>
         </div>

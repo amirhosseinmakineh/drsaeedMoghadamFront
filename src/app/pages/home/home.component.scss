@@ -32,6 +32,52 @@
   margin-top: 26px;
 }
 
+.hero-slide-controls {
+  display: grid;
+  gap: 8px;
+  max-width: 680px;
+  margin-top: 24px;
+}
+
+.hero-slide-controls button {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 900;
+  text-align: start;
+}
+
+.hero-slide-controls button span {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand) 16%, var(--surface-muted));
+}
+
+.hero-slide-controls button.active {
+  border-color: color-mix(in srgb, var(--brand) 42%, transparent);
+  color: var(--text);
+}
+
+.hero-slide-controls button.active span::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  animation: sliderProgress 6.5s linear infinite;
+  transform-origin: right center;
+}
+
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -375,15 +421,25 @@
   transform: translateX(-50%);
 }
 
-.phone-mock article {
-  min-height: 310px;
-  padding: 22px;
+.phone-screen {
+  display: grid;
+  gap: 14px;
+}
+
+.phone-hero-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  min-height: 150px;
+  padding: 20px;
   border-radius: 32px;
-  background: color-mix(in srgb, var(--surface) 76%, transparent);
+  background:
+    radial-gradient(circle at 18% 0, color-mix(in srgb, var(--brand-2) 28%, transparent), transparent 58%),
+    color-mix(in srgb, var(--surface) 76%, transparent);
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.phone-mock article span {
+.phone-hero-card > span {
   display: grid;
   place-items: center;
   width: 64px;
@@ -392,19 +448,82 @@
   background: var(--brand);
   color: #fff;
   font-size: 2rem;
+  animation: pulseDot 2.2s ease-in-out infinite;
 }
 
-.mini-tabs {
+.phone-hero-card h3,
+.phone-hero-card p {
+  margin: 0;
+}
+
+.phone-carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 82%;
+  gap: 10px;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, #000 84%, transparent);
+}
+
+.phone-carousel article {
+  display: grid;
+  gap: 8px;
+  min-height: 128px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  box-shadow: 0 14px 34px rgba(5, 20, 30, .08);
+  animation: phoneSlide 7s ease-in-out infinite alternate;
+}
+
+.phone-carousel article:nth-child(2) {
+  animation-delay: .35s;
+}
+
+.phone-carousel article:nth-child(3) {
+  animation-delay: .7s;
+}
+
+.phone-carousel app-fa-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--brand) 14%, var(--surface));
+  color: var(--brand);
+}
+
+.phone-carousel b,
+.phone-carousel small {
+  display: block;
+}
+
+.phone-carousel small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.mobile-action-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 18px;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
 }
 
-.mini-tabs span {
-  height: 64px;
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--brand) 12%, var(--surface-muted));
+.mobile-action-row span {
+  display: grid;
+  place-items: center;
+  min-height: 62px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--brand) 10%, var(--surface-muted));
+  color: var(--text);
+  font-size: .72rem;
+  font-weight: 900;
 }
 
 .lead-form {
@@ -446,6 +565,71 @@
   scroll-snap-align: start;
 }
 
+.testimonial-slider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, .48fr);
+  gap: 18px;
+  align-items: stretch;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid var(--line);
+  border-radius: 42px;
+  background:
+    radial-gradient(circle at 14% 0, color-mix(in srgb, var(--brand-2) 18%, transparent), transparent 44%),
+    color-mix(in srgb, var(--surface) 82%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.active-quote {
+  display: grid;
+  align-content: center;
+  min-height: 330px;
+  padding: clamp(24px, 5vw, 44px);
+  animation: quoteEnter .42s ease both;
+}
+
+.active-quote p {
+  margin: 18px 0 22px;
+  color: var(--text);
+  font-size: clamp(1.15rem, 2.3vw, 1.75rem);
+  font-weight: 850;
+  line-height: 1.9;
+}
+
+.quote-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--brand) 14%, var(--surface));
+  color: var(--brand);
+}
+
+.testimonial-side {
+  display: grid;
+  gap: 10px;
+}
+
+.testimonial-side button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.testimonial-side button.active {
+  border-color: color-mix(in srgb, var(--brand) 44%, transparent);
+  background: color-mix(in srgb, var(--brand) 12%, var(--surface));
+  color: var(--text);
+}
+
 @keyframes imageFloat {
   to { transform: translateY(-18px) scale(1.015); }
 }
@@ -471,9 +655,30 @@
   50% { transform: translateY(-12px); }
 }
 
+@keyframes sliderProgress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes phoneSlide {
+  to { transform: translateX(-34%); }
+}
+
+@keyframes quoteEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (max-width: 980px) {
   .hero-section,
   .portfolio-stage,
+  .testimonial-slider,
   .app-mobile-panel,
   .lead-section {
     grid-template-columns: 1fr;
@@ -497,6 +702,14 @@
   .dental-map,
   .stat-grid {
     grid-template-columns: 1fr;
+  }
+
+  .testimonial-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .testimonial-side .slider-controls {
+    grid-column: 1 / -1;
   }
 }
 
@@ -526,6 +739,11 @@
     font-size: .78rem;
   }
 
+  .hero-slide-controls button {
+    grid-template-columns: 32px 1fr;
+    font-size: .76rem;
+  }
+
   .app-mobile-panel,
   .lead-section,
   .portfolio-slider {
@@ -535,5 +753,22 @@
 
   .portfolio-image-card {
     min-height: 300px;
+  }
+
+  .phone-mock {
+    min-height: 500px;
+    padding-inline: 14px;
+  }
+
+  .phone-carousel {
+    grid-auto-columns: 88%;
+  }
+
+  .testimonial-side {
+    grid-template-columns: 1fr;
+  }
+
+  .active-quote {
+    min-height: 280px;
   }
 }

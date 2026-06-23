@@ -98,7 +98,7 @@ export class AuthDialogComponent {
     loginAction: text('ورود به حساب', 'Sign in'),
     registerAction: text('ساخت حساب', 'Create account'),
     successTitle: text('درخواست شما آماده پیگیری است', 'Your request is ready for follow-up'),
-    successText: text('در نسخه نهایی، این فرم به API احراز هویت متصل می‌شود. در این UI، رفتار فرم داخل کامپوننت مدیریت شده است.', 'In production, this form connects to the authentication API. In this UI, form behavior is handled inside the component.'),
+    successText: text('اطلاعات شما ثبت شد و می‌توانید پیگیری خدمات، درخواست تماس و راهنمای درمان را از مسیر حساب کاربری دنبال کنید.', 'Your information has been recorded so you can follow services, call requests and care guidance through your account path.'),
     done: text('متوجه شدم', 'Got it')
   };
 

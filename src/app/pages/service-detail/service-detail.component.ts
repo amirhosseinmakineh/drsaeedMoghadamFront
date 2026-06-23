@@ -176,8 +176,8 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
       </section>
 
       <section class="page-section final-cta">
-        <h2>{{ language() === 'fa' ? 'برای پیگیری این خدمت وارد شوید یا عضو شوید' : 'Sign in or join to follow this service' }}</h2>
-        <p>{{ language() === 'fa' ? 'رزرو نوبت آنلاین نداریم؛ دکمه اصلی برای ورود/عضویت و مسیر جایگزین برای تماس مستقیم است.' : 'There is no online appointment booking; the main action is sign in/join with direct contact as the next path.' }}</p>
+        <h2>{{ language() === 'fa' ? 'برای پیگیری این خدمت وارد شوید یا درخواست تماس ثبت کنید' : 'Sign in or request a call to follow this service' }}</h2>
+        <p>{{ language() === 'fa' ? 'اگر این درمان به شرایط شما نزدیک است، از حساب کاربری یا صفحه تماس مسیر راهنمایی و هماهنگی مراجعه را دنبال کنید.' : 'If this treatment seems relevant to your condition, use your account or the contact page to follow guidance and visit coordination.' }}</p>
         <button class="primary-btn" type="button" (click)="openAuth()">
           <app-fa-icon name="user"></app-fa-icon>
           {{ language() === 'fa' ? 'ورود / عضویت' : 'Sign in / Join' }}
