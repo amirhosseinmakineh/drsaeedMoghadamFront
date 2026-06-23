@@ -1,420 +1,105 @@
-import { Component, OnInit } from '@angular/core';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { Component, inject } from '@angular/core';
 import { NgFor } from '@angular/common';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Meta, Title } from '@angular/platform-browser';
+import { DOCUMENT } from '@angular/common';
 import { ClinicDataService } from '../../services/clinic-data.service';
-import { Service } from '../../models/clinic.model';
-import { BeforeAfterSliderComponent } from '../../shared/ui/before-after-slider/before-after-slider.component';
-import { trigger, transition, style, animate } from '@angular/animations';
+import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
-@Component({
-  selector: 'app-service-detail',
-  standalone: true,
-  imports: [RouterLink, NgFor, BeforeAfterSliderComponent],
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('0.6s ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ])
-  ],
-  template: `
-    @if (service) {
-      <div class="detail-hero" @fadeIn>
-        <img [src]="service.heroImage" [alt]="service.title" />
-        <div class="detail-hero-overlay">
-          <span class="detail-label">خدمات</span>
-          <h1 class="detail-title">{{ service.title }}</h1>
-          <p class="detail-desc">{{ service.subtitle }}</p>
-        </div>
+@Component({selector:'app-service-detail',standalone:true,imports:[NgFor,RouterLink,FaIconComponent],template:`
+@if(service){
+<article>
+  <section class="hero detail-hero">
+    <div>
+      <p class="eyebrow"><a routerLink="/">خانه</a> / <a routerLink="/services">خدمات</a></p>
+      <h1>{{service.title}}</h1>
+      <p>{{service.subtitle}}</p>
+      <p>{{service.description}}</p>
+      <a class="btn" routerLink="/contact">رزرو مشاوره برای این خدمت</a>
+      <div class="trust-row">
+        <span class="trust-pill"><app-fa-icon name="calendar"></app-fa-icon> طرح درمان اختصاصی</span>
+        <span class="trust-pill"><app-fa-icon name="shield"></app-fa-icon> مراقبت پس از درمان</span>
+        <span class="trust-pill"><app-fa-icon name="star"></app-fa-icon> نتیجه طبیعی</span>
       </div>
+    </div>
+    <div class="hero-media">
+      <img [src]="service.heroImage" [alt]="service.title">
+      <span class="floating-card top"><app-fa-icon name="doctor"></app-fa-icon> مشاوره دقیق</span>
+      <span class="floating-card bottom"><app-fa-icon name="calendar"></app-fa-icon> درمان مرحله‌ای</span>
+    </div>
+  </section>
 
-      <section class="detail-body" @fadeIn>
-        <div class="detail-grid">
-          <div class="detail-main">
-            <h2>توضیحات کامل</h2>
-            <p class="detail-full">{{ service.fullDescription }}</p>
+  <section class="surface-block">
+    <h2>معرفی کامل خدمت</h2>
+    <p class="long columns-text">{{service.fullDescription}}</p>
+  </section>
 
-            <h2>مراحل درمان</h2>
-            <div class="timeline">
-              <div class="timeline-item" *ngFor="let step of service.steps">
-                <span class="timeline-step">{{ step.step }}</span>
-                <div class="timeline-content">
-                  <h4>{{ step.title }}</h4>
-                  <p>{{ step.description }}</p>
-                </div>
-              </div>
-            </div>
+  <section>
+    <h2>علائم و مشکلاتی که نیاز به درمان دارند</h2>
+    <div class="grid mini">
+      <div class="card icon-card" *ngFor="let p of service.problems"><span class="service-icon"><app-fa-icon name="tooth"></app-fa-icon></span><h3>{{p}}</h3><p>در صورت مشاهده این مشکل، معاینه تخصصی کمک می‌کند علت اصلی مشخص و درمان مناسب انتخاب شود.</p></div>
+    </div>
+  </section>
 
-            <h2>نمونه قبل و بعد</h2>
-            <app-before-after-slider
-              [beforeImage]="service.beforeImage"
-              [afterImage]="service.afterImage"
-              [title]="service.title">
-            </app-before-after-slider>
+  <section class="split surface-block">
+    <div><h2>چرا این درمان لازم است؟</h2><ul><li *ngFor="let n of service.needed">{{n}}</li></ul></div>
+    <div class="info-grid">
+      <div class="mini-info"><strong>مدت درمان</strong><span>{{service.duration}}</span></div>
+      <div class="mini-info"><strong>برآورد هزینه</strong><span>{{service.price}}</span></div>
+      <div class="mini-info"><strong>پیگیری</strong><span>طبق طرح درمان</span></div>
+    </div>
+  </section>
 
-            <h2>سوالات متداول</h2>
-            <div class="faq-list">
-              <div class="faq-item" *ngFor="let faq of service.faqs">
-                <span class="faq-q">{{ faq.question }}</span>
-                <p class="faq-a">{{ faq.answer }}</p>
-              </div>
-            </div>
-          </div>
+  <section>
+    <h2>مزایای {{service.title}}</h2>
+    <div class="grid mini"><div class="card icon-card" *ngFor="let f of service.features"><span class="service-icon"><app-fa-icon name="check"></app-fa-icon></span><h3>{{f}}</h3></div></div>
+  </section>
 
-          <aside class="detail-sidebar">
-            <div class="sidebar-card">
-              <h3>اطلاعات سرویس</h3>
-              <div class="sidebar-row">
-                <span class="sidebar-label">هزینه</span>
-                <span class="sidebar-value">{{ service.price }}</span>
-              </div>
-              <div class="sidebar-row">
-                <span class="sidebar-label">مدت زمان</span>
-                <span class="sidebar-value">{{ service.duration }}</span>
-              </div>
-              <div class="sidebar-row">
-                <span class="sidebar-label">نرخ موفقیت</span>
-                <span class="sidebar-value">۹۸٪</span>
-              </div>
-              <a class="sidebar-cta" routerLink="/booking">رزرو مشاوره رایگان</a>
-            </div>
+  <section>
+    <h2>مراحل درمان</h2>
+    <div class="timeline">
+      <div class="timeline-item" *ngFor="let st of service.steps"><span>{{st.step}}</span><div><h3>{{st.title}}</h3><p>{{st.description}}</p></div></div>
+    </div>
+  </section>
 
-            <div class="sidebar-card features-card">
-              <h3>ویژگی‌ها</h3>
-              <ul class="feature-list">
-                <li *ngFor="let f of service.features">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  {{ f }}
-                </li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-      </section>
-    }
+  <section class="split">
+    <div class="card"><h2>چه کسانی مناسب هستند؟</h2><ul><li *ngFor="let s of service.suitable">{{s}}</li></ul></div>
+    <div class="card"><h2>چه کسانی فعلاً مناسب نیستند؟</h2><ul><li *ngFor="let s of service.notSuitable">{{s}}</li></ul></div>
+  </section>
 
-    @if (relatedServices.length) {
-      <section class="related-section" @fadeIn>
-        <div class="section-header">
-          <h2>خدمات دیگر</h2>
-          <p>درمان‌های تخصصی دیگر کلینیک دکتر مقدم</p>
-        </div>
-        <div class="related-grid">
-          <a class="related-card" *ngFor="let s of relatedServices" [routerLink]="'/services/' + s.id">
-            <div class="related-image">
-              <img [src]="s.image" [alt]="s.title" loading="lazy" />
-            </div>
-            <span class="related-title">{{ s.title }}</span>
-            <span class="related-price">{{ s.price }}</span>
-          </a>
-        </div>
-      </section>
-    }
-  `,
-  styles: [`
-    .detail-hero {
-      position: relative;
-      height: 480px;
-      overflow: hidden;
-    }
-    .detail-hero img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .detail-hero-overlay {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      padding: 48px 24px 40px;
-      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
-      color: #fff;
-      text-align: center;
-    }
-    .detail-label {
-      display: inline-block;
-      background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
-      padding: 6px 14px;
-      border-radius: 16px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 14px;
-    }
-    .detail-title {
-      font-size: clamp(28px, 5vw, 44px);
-      font-weight: 800;
-      margin: 0 0 12px;
-      line-height: 1.2;
-    }
-    .detail-desc {
-      font-size: 16px;
-      color: rgba(255,255,255,0.85);
-      max-width: 600px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-    .detail-body {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 48px 24px;
-    }
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 40px;
-    }
-    .detail-main h2 {
-      font-size: 24px;
-      font-weight: 800;
-      color: #2c2c2c;
-      margin: 40px 0 16px;
-    }
-    .detail-main h2:first-child {
-      margin-top: 0;
-    }
-    .detail-full {
-      font-size: 15px;
-      color: #555;
-      line-height: 1.8;
-      margin: 0 0 24px;
-    }
-    .timeline {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      position: relative;
-      margin-bottom: 24px;
-    }
-    .timeline::before {
-      content: '';
-      position: absolute;
-      right: 19px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: #eee;
-    }
-    .timeline-item {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-      position: relative;
-      z-index: 1;
-    }
-    .timeline-step {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #0066cc;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-    .timeline-content h4 {
-      font-size: 16px;
-      font-weight: 700;
-      color: #2c2c2c;
-      margin: 0 0 6px;
-    }
-    .timeline-content p {
-      font-size: 14px;
-      color: #777;
-      line-height: 1.6;
-      margin: 0;
-    }
-    .faq-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .faq-item {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    }
-    .faq-q {
-      display: block;
-      font-size: 15px;
-      font-weight: 700;
-      color: #2c2c2c;
-      margin-bottom: 8px;
-    }
-    .faq-a {
-      font-size: 14px;
-      color: #666;
-      line-height: 1.7;
-      margin: 0;
-    }
-    .detail-sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .sidebar-card {
-      background: #fff;
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.05);
-    }
-    .sidebar-card h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: #2c2c2c;
-      margin: 0 0 18px;
-    }
-    .sidebar-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #f5f5f5;
-    }
-    .sidebar-row:last-child {
-      border-bottom: none;
-    }
-    .sidebar-label {
-      font-size: 13px;
-      color: #888;
-    }
-    .sidebar-value {
-      font-size: 14px;
-      font-weight: 700;
-      color: #2c2c2c;
-    }
-    .sidebar-cta {
-      display: block;
-      background: #0066cc;
-      color: #fff;
-      text-align: center;
-      padding: 14px;
-      border-radius: 14px;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 700;
-      margin-top: 16px;
-      transition: all 0.25s ease;
-    }
-    .sidebar-cta:hover {
-      background: #0055aa;
-      transform: translateY(-1px);
-    }
-    .feature-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .feature-list li {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      font-size: 14px;
-      color: #555;
-      line-height: 1.5;
-    }
-    .feature-list li svg {
-      width: 18px;
-      height: 18px;
-      color: #4a8b5a;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .related-section {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 24px 80px;
-    }
-    .related-section .section-header {
-      text-align: center;
-      margin-bottom: 36px;
-    }
-    .related-section h2 {
-      font-size: 24px;
-      font-weight: 800;
-      color: #2c2c2c;
-      margin: 0 0 8px;
-    }
-    .related-section p {
-      font-size: 15px;
-      color: #888;
-      margin: 0;
-    }
-    .related-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-    .related-card {
-      background: #fff;
-      border-radius: 16px;
-      overflow: hidden;
-      text-decoration: none;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-      transition: all 0.3s ease;
-    }
-    .related-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 28px rgba(0,0,0,0.1);
-    }
-    .related-image {
-      height: 140px;
-      overflow: hidden;
-    }
-    .related-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .related-title {
-      display: block;
-      font-size: 15px;
-      font-weight: 700;
-      color: #2c2c2c;
-      padding: 14px 16px 4px;
-    }
-    .related-price {
-      display: block;
-      font-size: 13px;
-      color: #888;
-      padding: 0 16px 16px;
-    }
-    @media (max-width: 768px) {
-      .detail-hero { height: 360px; }
-      .detail-grid { grid-template-columns: 1fr; }
-      .timeline::before { right: 15px; }
-      .timeline-step { width: 32px; height: 32px; font-size: 12px; }
-      .related-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-  `]
-})
-export class ServiceDetailComponent implements OnInit {
-  service: Service | null = null;
-  relatedServices: Service[] = [];
+  <section class="split before-after-premium">
+    <div><h2>نتایج قبل و بعد</h2><p>نتیجه درمان به شرایط اولیه، دقت اجرا و مراقبت بیمار وابسته است. هدف، لبخندی سالم، طبیعی و هماهنگ است.</p></div>
+    <div class="before-after-frame"><img [src]="service.beforeImage" alt="قبل از درمان"><img [src]="service.afterImage" alt="بعد از درمان"><span class="before-label">قبل</span><span class="after-label">بعد</span><span class="handle"></span></div>
+  </section>
 
-  constructor(
-    private data: ClinicDataService,
-    private route: ActivatedRoute
-  ) {}
+  <section class="info-grid three">
+    <div class="mini-info"><h2>مدت درمان و پیگیری</h2><p>تعداد جلسات و زمان بهبود برای هر بیمار متفاوت است. پس از درمان، زمان مراجعه پیگیری و مراقبت خانگی به‌صورت روشن توضیح داده می‌شود.</p></div>
+    <div class="mini-info"><h2>عوامل مؤثر بر هزینه</h2><p>در این صفحه قیمت دقیق اعلام نمی‌شود، زیرا هزینه فقط پس از معاینه قابل تعیین است.</p><ul><li *ngFor="let c of service.costFactors">{{c}}</li></ul></div>
+    <div class="mini-info"><h2>مراقبت‌های بعد از درمان</h2><ul><li *ngFor="let a of service.aftercare">{{a}}</li></ul></div>
+  </section>
 
-  ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.service = this.data.getServiceById(id) || null;
-        this.relatedServices = this.data.getServices().filter(s => s.id !== id).slice(0, 3);
-      }
-    });
-  }
-}
+  <section class="split">
+    <div>
+      <h2>مراقبت‌های قبل از درمان</h2>
+      <details *ngFor="let item of beforeCare"><summary>{{item.title}}</summary><p>{{item.text}}</p></details>
+    </div>
+    <div>
+      <h2>اشتباهات رایج و باورهای غلط</h2>
+      <details *ngFor="let item of myths"><summary>{{item.title}}</summary><p>{{item.text}}</p></details>
+    </div>
+  </section>
+
+  <section class="surface-block"><h2>ریسک‌ها و محدودیت‌ها</h2><ul><li *ngFor="let r of service.risks">{{r}}</li></ul></section>
+
+  <section><h2>سوالات متداول {{service.title}}</h2><details *ngFor="let f of service.faqs"><summary>{{f.question}}</summary><p>{{f.answer}}</p></details></section>
+
+  <section><div class="section-title-row"><div><h2>خدمات مرتبط</h2></div><div class="slider-controls"><button type="button" (click)="scroll(relatedRail,1)" aria-label="بعدی"><app-fa-icon name="chevronRight"></app-fa-icon></button><button type="button" (click)="scroll(relatedRail,-1)" aria-label="قبلی"><app-fa-icon name="chevronLeft"></app-fa-icon></button></div></div><div class="testimonial-rail" #relatedRail><a class="card related-card" *ngFor="let r of related" [routerLink]="'/services/'+r.id"><span class="service-icon"><app-fa-icon name="arrowLeft"></app-fa-icon></span><h3>{{r.title}}</h3><p>{{r.description}}</p></a></div></section>
+
+  <section class="split doctor-panel"><div><h2>توصیه دکتر سعید مقدم</h2><p>مشاوره قبل از درمان باعث می‌شود انتخاب نهایی بر اساس سلامت دهان، بودجه، زمان و انتظار واقعی بیمار باشد؛ نه تبلیغات یا تصمیم عجولانه.</p></div><span class="floating-card top">ارزیابی تخصصی</span></section>
+
+  <section><div class="section-title-row"><div><h2>تجربه بیماران</h2></div><div class="slider-controls"><button type="button" (click)="scroll(reviewRail,1)" aria-label="بعدی"><app-fa-icon name="chevronRight"></app-fa-icon></button><button type="button" (click)="scroll(reviewRail,-1)" aria-label="قبلی"><app-fa-icon name="chevronLeft"></app-fa-icon></button></div></div><div class="testimonial-rail" #reviewRail><div class="card quote-card" *ngFor="let t of testimonials.slice(0,3)"><span class="quote-mark"><app-fa-icon name="quote"></app-fa-icon></span><p>«{{t.text}}»</p><b>{{t.name}}</b><span class="credential">{{t.service}}</span></div></div></section>
+
+  <section class="cta"><h2>برای شروع درمان {{service.title}} آماده‌اید؟</h2><p>تلفن: ۰۲۱-۰۰۰۰۰۰۰۰ | آدرس: تهران، خیابان نمونه، پلاک نمونه</p><a class="btn" routerLink="/contact">رزرو مشاوره</a></section>
+</article>}`,
+styleUrls:['../../public-pages.css']})
+export class ServiceDetailComponent{data=inject(ClinicDataService);doc=inject(DOCUMENT);beforeCare=[{title:'معاینه را عقب نیندازید',text:'قبل از شروع درمان، بهتر است وضعیت لثه، پوسیدگی‌ها، عکس‌ها و داروهای مصرفی دقیق بررسی شود تا طرح درمان ایمن‌تر باشد.'},{title:'انتظار خود را واضح بیان کنید',text:'اگر هدف شما زیبایی، کاهش درد، جایگزینی دندان یا اصلاح عملکرد جویدن است، بیان دقیق آن به انتخاب روش درست کمک می‌کند.'},{title:'بهداشت دهان را جدی بگیرید',text:'مسواک، نخ دندان و کنترل التهاب لثه قبل از درمان باعث افزایش کیفیت و ماندگاری نتیجه می‌شود.'}];myths=[{title:'هر درمانی برای همه مناسب است',text:'انتخاب درمان به وضعیت دندان، لثه، استخوان، سن، عادت‌های دهانی و انتظار بیمار بستگی دارد.'},{title:'نتیجه فقط به جنس مواد وابسته است',text:'کیفیت اجرا، تشخیص درست و مراقبت بیمار به اندازه مواد مصرفی در نتیجه نهایی اهمیت دارد.'},{title:'اگر درد ندارم نیاز به مراجعه نیست',text:'بسیاری از مشکلات دندانپزشکی در مراحل اولیه بدون درد هستند و معاینه دوره‌ای از درمان‌های پیچیده‌تر پیشگیری می‌کند.'}];scroll(el:HTMLElement,dir:number){el.scrollBy({left:dir*360,behavior:'smooth'});}service=this.data.getServiceById(inject(ActivatedRoute).snapshot.paramMap.get('id')||'');related=this.service?this.data.getRelatedServices(this.service.id):[];testimonials=this.data.getTestimonials();constructor(t:Title,m:Meta){if(this.service){t.setTitle(this.service.metaTitle!);m.updateTag({name:'description',content:this.service.metaDescription!});let link=this.doc.querySelector('link[rel="canonical"]') as HTMLLinkElement|null;if(!link){link=this.doc.createElement('link');link.setAttribute('rel','canonical');this.doc.head.appendChild(link);}link.setAttribute('href',location.href);m.updateTag({property:'og:title',content:this.service.metaTitle!});m.updateTag({property:'og:description',content:this.service.metaDescription!});}}}
