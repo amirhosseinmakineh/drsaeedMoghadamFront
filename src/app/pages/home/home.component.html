@@ -39,8 +39,8 @@
       <svg viewBox="0 0 420 260" role="img" aria-label="Smile motion graphic">
         <path class="face-line" d="M74 116c28-62 102-86 171-62 47 16 82 53 103 101" />
         <path class="smile-line" d="M112 147c45 58 143 67 204 5" />
-        <circle class="scan-dot" cx="118" cy="145" r="8" />
-        <circle class="scan-dot delay" cx="298" cy="148" r="8" />
+        <circle class="focus-dot" cx="118" cy="145" r="8" />
+        <circle class="focus-dot delay" cx="298" cy="148" r="8" />
       </svg>
     </div>
     <img [src]="heroSlides[activeSlide()].image" [alt]="pickText(heroSlides[activeSlide()].title, language())" loading="eager" />
@@ -57,9 +57,9 @@
 
 <section class="portfolio-slider page-section">
   <div class="section-heading">
-    <p class="eyebrow">{{ language() === 'fa' ? 'درمان‌های شاخص کلینیک' : 'Highlighted clinic treatments' }}</p>
-    <h2>{{ language() === 'fa' ? 'از طراحی لبخند تا ایمپلنت، مسیر درمان با توضیح روشن نمایش داده می‌شود' : 'From smile design to implants, each care path is shown clearly' }}</h2>
-    <p>{{ language() === 'fa' ? 'این اسلایدر برای معرفی خدمات پرتقاضا و کمک به انتخاب مسیر مناسب طراحی شده است؛ تصاویر اختصاصی کلینیک می‌توانند در همین قاب نمایش داده شوند.' : 'This slider introduces high-demand services and helps users choose the right path; dedicated clinic imagery can be shown in the same frame.' }}</p>
+    <p class="eyebrow">{{ language() === 'fa' ? 'نمونه‌کارهای واقعی دندان‌پزشکی' : 'Real dental work samples' }}</p>
+    <h2>{{ language() === 'fa' ? 'تصاویر نمونه‌کارهای درمانی برای انتخاب آگاهانه‌تر' : 'Treatment sample images for a clearer decision' }}</h2>
+    <p>{{ language() === 'fa' ? 'در این بخش از تصاویر نمونه‌کارهای منتشرشده کلینیک استفاده شده تا بیمار نتیجه درمان‌هایی مثل لمینت، ایمپلنت و کامپوزیت را واقعی‌تر ببیند.' : 'This section uses published clinic work-sample images so patients can better review results such as veneers, implants and composite veneers.' }}</p>
   </div>
 
   <div class="portfolio-stage">
@@ -94,7 +94,7 @@
 
 <section class="page-section">
   <div class="section-heading center">
-    <p class="eyebrow">{{ language() === 'fa' ? 'سکشن‌های مفید برای کاربر' : 'Useful user-first sections' }}</p>
+    <p class="eyebrow">{{ language() === 'fa' ? 'راهنمای انتخاب درمان' : 'Treatment decision guide' }}</p>
     <h2>{{ language() === 'fa' ? 'هر بخش به تصمیم بهتر بیمار کمک می‌کند' : 'Every section helps patients make better decisions' }}</h2>
   </div>
   <div class="benefit-grid">
@@ -154,11 +154,11 @@
   </div>
 </section>
 
-<section class="page-section app-mobile-panel">
+<section class="page-section care-access-panel">
   <div>
-    <p class="eyebrow">{{ language() === 'fa' ? 'تجربه موبایل کلینیک' : 'Mobile clinic experience' }}</p>
-    <h2>{{ language() === 'fa' ? 'موبایل مثل یک اپ دندان‌پزشکی سریع و قابل لمس طراحی شده است' : 'Mobile is designed like a fast touch-friendly dental app' }}</h2>
-    <p>{{ language() === 'fa' ? 'کاربر در پایین صفحه به خانه، خدمات، تماس و ورود دسترسی دارد و داخل صفحه با اسلایدرهای بزرگ، کارت‌های درمان و وضعیت تماس مشاور روبه‌رو می‌شود.' : 'Users reach home, services, contact and sign-in from the bottom bar, while large sliders, treatment cards and call-status panels guide them inside the page.' }}</p>
+    <p class="eyebrow">{{ language() === 'fa' ? 'مسیر سریع مشاوره درمان' : 'Fast care consultation path' }}</p>
+    <h2>{{ language() === 'fa' ? 'بیمار سریع‌تر خدمت مناسب و راه تماس با کلینیک را پیدا می‌کند' : 'Patients find the right service and clinic contact path faster' }}</h2>
+    <p>{{ language() === 'fa' ? 'خدمات اصلی، نمونه‌کارها، توضیح مراحل درمان و فرم درخواست تماس کنار هم قرار گرفته‌اند تا بیمار قبل از مراجعه بداند برای چه درمانی نیاز به راهنمایی دارد.' : 'Core services, work samples, treatment steps and the call request form are grouped together so patients know which care path needs guidance before visiting.' }}</p>
   </div>
   <div class="phone-mock">
     <div class="phone-notch"></div>
@@ -166,8 +166,8 @@
       <div class="phone-hero-card">
         <span><app-fa-icon name="tooth"></app-fa-icon></span>
         <div>
-          <h3>{{ language() === 'fa' ? 'مسیر درمان من' : 'My care path' }}</h3>
-          <p>{{ language() === 'fa' ? 'انتخاب خدمت، ثبت شماره، تماس مشاور' : 'Choose service, leave number, consultant call' }}</p>
+          <h3>{{ language() === 'fa' ? 'انتخاب مسیر درمان' : 'Choose a care path' }}</h3>
+          <p>{{ language() === 'fa' ? 'مشاهده نمونه‌کار، انتخاب خدمت، ثبت درخواست تماس' : 'Review samples, choose a service, request a call' }}</p>
         </div>
       </div>
       <div class="phone-carousel">
