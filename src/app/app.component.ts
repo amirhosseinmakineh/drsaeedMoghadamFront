@@ -2,7 +2,7 @@ import { NgFor } from '@angular/common';
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthDialogComponent } from './auth/auth-dialog.component';
-import { LanguageCode, NAV_ITEMS, ThemeMode, pickText } from './models/clinic.model';
+import { LanguageCode, NAV_ITEMS, pickText } from './models/clinic.model';
 import { FaIconComponent } from './shared/ui/fa-icon/fa-icon.component';
 
 interface LanguageAwarePage {
@@ -14,7 +14,7 @@ interface LanguageAwarePage {
   standalone: true,
   imports: [NgFor, RouterLink, RouterLinkActive, RouterOutlet, AuthDialogComponent, FaIconComponent],
   template: `
-    <div class="app-shell" [class.dark]="theme() === 'dark'" [attr.dir]="direction">
+    <div class="app-shell dark" [attr.dir]="direction">
       <header class="site-header">
         <a class="brand" routerLink="/" [attr.aria-label]="language() === 'fa' ? 'صفحه اصلی' : 'Homepage'">
           <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
@@ -31,9 +31,6 @@ interface LanguageAwarePage {
         </nav>
 
         <div class="header-actions">
-          <button class="icon-btn" type="button" (click)="toggleTheme()" [attr.aria-label]="theme() === 'dark' ? (language() === 'fa' ? 'حالت روشن' : 'Light mode') : (language() === 'fa' ? 'حالت تاریک' : 'Dark mode')">
-            <app-fa-icon [name]="theme() === 'dark' ? 'sun' : 'moon'"></app-fa-icon>
-          </button>
           <button class="icon-btn" type="button" (click)="toggleLanguage()" [attr.aria-label]="language() === 'fa' ? 'English' : 'فارسی'">
             {{ language() === 'fa' ? 'EN' : 'فا' }}
           </button>
@@ -102,7 +99,6 @@ interface LanguageAwarePage {
 export class AppComponent implements OnInit, OnDestroy {
   navItems = NAV_ITEMS;
   language = signal<LanguageCode>(this.readSetting<LanguageCode>('language', 'fa'));
-  theme = signal<ThemeMode>(this.readSetting<ThemeMode>('theme', 'light'));
   authOpen = signal(false);
   activePage: LanguageAwarePage | null = null;
   protected readonly pickText = pickText;
@@ -134,16 +130,10 @@ export class AppComponent implements OnInit, OnDestroy {
     this.applyDocumentState();
   }
 
-  toggleTheme(): void {
-    this.theme.set(this.theme() === 'light' ? 'dark' : 'light');
-    this.saveSetting('theme', this.theme());
-    this.applyDocumentState();
-  }
-
   private applyDocumentState(): void {
     document.documentElement.lang = this.language();
     document.documentElement.dir = this.direction;
-    document.body.dataset['theme'] = this.theme();
+    document.body.dataset['theme'] = 'dark';
   }
 
   private readSetting<T extends string>(key: string, fallback: T): T {
