@@ -52,7 +52,7 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
           <input [(ngModel)]="form.phone" name="contactPhone" required inputmode="tel" autocomplete="tel" />
         </label>
         <label>
-          {{ language() === 'fa' ? 'خدمت مورد نظر' : 'Service of interest' }}
+          {{ language() === 'fa' ? 'درمان مورد نظر' : 'Service of interest' }}
           <select [(ngModel)]="form.serviceId" name="contactService">
             <option *ngFor="let service of services" [value]="service.id">{{ pickText(service.title, language()) }}</option>
           </select>

@@ -48,7 +48,7 @@
 <section class="page-section care-access-panel consultation-demo">
   <div>
     <h2>{{ language() === 'fa' ? 'شماره تماس را ثبت کنید؛ مشاوران برای راهنمایی با شما تماس می‌گیرند' : 'Submit your phone number and consultants will call to guide you' }}</h2>
-    <p>{{ language() === 'fa' ? 'در فرم پایین، نام، شماره تماس و خدمت مورد نظر را وارد می‌کنید. اگر خدمت را دقیق نمی‌دانید، فقط مشکل اصلی را در توضیح کوتاه بنویسید.' : 'In the form below, enter your name, phone number and service of interest. If you are unsure about the exact service, describe your main concern in the short note.' }}</p>
+    <p>{{ language() === 'fa' ? 'در فرم پایین، نام، شماره تماس و درمان مورد نظر را وارد می‌کنید. اگر درمان دقیق را نمی‌دانید، فقط مشکل اصلی را در توضیح کوتاه بنویسید.' : 'In the form below, enter your name, phone number and service of interest. If you are unsure about the exact service, describe your main concern in the short note.' }}</p>
     <div class="consultation-steps">
       <article>
         <strong>01</strong>
@@ -56,7 +56,7 @@
       </article>
       <article>
         <strong>02</strong>
-        <span>{{ language() === 'fa' ? 'خدمت یا مشکل دندان را انتخاب کنید' : 'Choose the service or dental concern' }}</span>
+        <span>{{ language() === 'fa' ? 'درمان یا مشکل دندان را انتخاب کنید' : 'Choose the service or dental concern' }}</span>
       </article>
       <article>
         <strong>03</strong>
@@ -92,7 +92,7 @@
         <div class="demo-field service-field">
           <app-fa-icon name="tooth"></app-fa-icon>
           <div>
-            <span>{{ language() === 'fa' ? 'خدمت مورد نظر' : 'Service of interest' }}</span>
+            <span>{{ language() === 'fa' ? 'درمان مورد نظر' : 'Service of interest' }}</span>
             <b>{{ language() === 'fa' ? 'ایمپلنت دندان' : 'Dental implants' }}</b>
           </div>
         </div>
@@ -119,7 +119,7 @@
       <b>{{ pickText(service.subtitle, language()) }}</b>
       <p>{{ pickText(service.summary, language()) }}</p>
       <a [routerLink]="['/services', service.id]">
-        {{ language() === 'fa' ? 'مشاهده صفحه خدمت' : 'View service page' }}
+        {{ language() === 'fa' ? 'مشاهده ' + pickText(service.title, language()) : 'View ' + pickText(service.title, language()) }}
         <app-fa-icon name="arrowLeft"></app-fa-icon>
       </a>
     </article>
@@ -212,7 +212,7 @@
       <input [(ngModel)]="lead.phone" name="leadPhone" required inputmode="tel" autocomplete="tel" />
     </label>
     <label>
-      {{ language() === 'fa' ? 'خدمت مورد نظر' : 'Service of interest' }}
+      {{ language() === 'fa' ? 'درمان مورد نظر' : 'Service of interest' }}
       <select [(ngModel)]="lead.serviceId" name="leadService">
         <option *ngFor="let service of services" [value]="service.id">{{ pickText(service.title, language()) }}</option>
       </select>

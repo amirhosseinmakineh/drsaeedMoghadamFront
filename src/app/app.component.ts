@@ -1,6 +1,6 @@
-import { NgFor } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthDialogComponent } from './auth/auth-dialog.component';
 import { LanguageCode, NAV_ITEMS, pickText } from './models/clinic.model';
 import { FaIconComponent } from './shared/ui/fa-icon/fa-icon.component';
@@ -12,7 +12,7 @@ interface LanguageAwarePage {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [NgFor, RouterLink, RouterLinkActive, RouterOutlet, AuthDialogComponent, FaIconComponent],
+  imports: [NgFor, NgIf, RouterLink, RouterLinkActive, RouterOutlet, AuthDialogComponent, FaIconComponent],
   template: `
     <div class="app-shell dark" [attr.dir]="direction">
       <header class="site-header">
@@ -34,7 +34,7 @@ interface LanguageAwarePage {
           <button class="icon-btn" type="button" (click)="toggleLanguage()" [attr.aria-label]="language() === 'fa' ? 'English' : 'فارسی'">
             {{ language() === 'fa' ? 'EN' : 'فا' }}
           </button>
-          <button class="primary-btn small" type="button" (click)="authOpen.set(true)">
+          <button *ngIf="showAuthActions()" class="primary-btn small" type="button" (click)="authOpen.set(true)">
             <app-fa-icon name="user"></app-fa-icon>
             {{ language() === 'fa' ? 'ورود / عضویت' : 'Sign in / Join' }}
           </button>
@@ -86,7 +86,7 @@ interface LanguageAwarePage {
           <app-fa-icon [name]="item.icon"></app-fa-icon>
           <span>{{ pickText(item.label, language()) }}</span>
         </a>
-        <button type="button" (click)="authOpen.set(true)">
+        <button *ngIf="showAuthActions()" type="button" (click)="authOpen.set(true)">
           <app-fa-icon name="user"></app-fa-icon>
           <span>{{ language() === 'fa' ? 'ورود' : 'Sign in' }}</span>
         </button>
@@ -105,8 +105,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private readonly openAuthFromPage = (): void => this.authOpen.set(true);
 
+  constructor(private router: Router) {}
+
   get direction(): 'rtl' | 'ltr' {
     return this.language() === 'fa' ? 'rtl' : 'ltr';
+  }
+
+  showAuthActions(): boolean {
+    return !this.router.url.startsWith('/services');
   }
 
   ngOnInit(): void {
