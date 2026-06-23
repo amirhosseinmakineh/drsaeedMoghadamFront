@@ -47,7 +47,7 @@ import { DatePickerDay, LanguageCode, LocalizedText, pickText, text } from '../.
       </p>
 
       <label *ngIf="language !== 'fa'" class="native-date">
-        {{ language === 'fa' ? 'انتخاب دقیق با تقویم دستگاه' : 'Pick exact date from device calendar' }}
+        Pick exact date from device calendar
         <input type="date" [value]="dateValue" (change)="select($any($event.target).value)" />
       </label>
     </section>
