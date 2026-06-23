@@ -49,17 +49,26 @@ interface LanguageAwarePage {
       </main>
 
       <footer class="site-footer">
-        <section>
+        <div class="footer-brand">
           <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
           <div>
             <h2>{{ language() === 'fa' ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Dr. Saeed Moghaddam Dental Clinic' }}</h2>
-            <p>{{ language() === 'fa' ? 'تهران، خیابان نمونه، پلاک نمونه | ۰۲۱-۰۰۰۰۰۰۰۰' : 'Tehran, Sample St., Sample No. | +98 21 0000 0000' }}</p>
+            <p>{{ language() === 'fa' ? 'طراحی لبخند، ایمپلنت دندان، لمینت، کامپوزیت و درمان‌های دقیق با رویکرد طبیعی.' : 'Smile design, dental implants, veneers, composite and precise care with a natural approach.' }}</p>
           </div>
-        </section>
-        <div>
-          <a routerLink="/services">{{ language() === 'fa' ? 'خدمات' : 'Services' }}</a>
-          <a routerLink="/about">{{ language() === 'fa' ? 'درباره ما' : 'About' }}</a>
-          <a routerLink="/contact">{{ language() === 'fa' ? 'تماس با ما' : 'Contact' }}</a>
+        </div>
+
+        <nav class="footer-links" [attr.aria-label]="language() === 'fa' ? 'لینک‌های فوتر' : 'Footer links'">
+          <a routerLink="/services">{{ language() === 'fa' ? 'خدمات دندان‌پزشکی' : 'Dental services' }}</a>
+          <a routerLink="/about">{{ language() === 'fa' ? 'درباره دکتر مقدم' : 'About Dr. Moghaddam' }}</a>
+          <a routerLink="/contact">{{ language() === 'fa' ? 'درخواست تماس مشاور' : 'Consultant call request' }}</a>
+        </nav>
+
+        <div class="footer-contact-card">
+          <span><app-fa-icon name="phone"></app-fa-icon></span>
+          <div>
+            <strong>{{ language() === 'fa' ? '۰۲۱-۰۰۰۰۰۰۰۰' : '+98 21 0000 0000' }}</strong>
+            <small>{{ language() === 'fa' ? 'تهران، خیابان نمونه، پلاک نمونه' : 'Tehran, Sample St., Sample No.' }}</small>
+          </div>
         </div>
       </footer>
 

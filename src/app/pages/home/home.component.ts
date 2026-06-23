@@ -5,6 +5,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import {
   BENEFIT_CARDS,
+  CASE_STUDIES,
   DENTAL_SERVICES,
   GLOBAL_FAQS,
   HERO_SLIDES,
@@ -27,10 +28,12 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 export class HomeComponent {
   language = signal<LanguageCode>('fa');
   activeSlide = signal(0);
+  activeCase = signal(0);
   leadSent = signal(false);
   services = DENTAL_SERVICES;
   featuredServices = DENTAL_SERVICES.slice(0, 6);
   heroSlides = HERO_SLIDES;
+  caseStudies = CASE_STUDIES;
   benefits = BENEFIT_CARDS;
   stats = STATS;
   testimonials = TESTIMONIALS;
@@ -58,6 +61,11 @@ export class HomeComponent {
     this.activeSlide.set(next);
   }
 
+  nextCase(direction: number): void {
+    const next = (this.activeCase() + direction + this.caseStudies.length) % this.caseStudies.length;
+    this.activeCase.set(next);
+  }
+
   openAuth(): void {
     window.dispatchEvent(new CustomEvent('open-auth-dialog'));
   }
@@ -75,8 +83,8 @@ export class HomeComponent {
     this.meta.updateTag({
       name: 'description',
       content: isFa
-        ? 'سایت دوزبانه و موبایل‌فرست کلینیک دندان‌پزشکی با خدمات اختصاصی، ورود و عضویت، درخواست تماس مشاور، تم روشن و تاریک و سکشن‌های مفید برای SEO.'
-        : 'Bilingual mobile-first dental clinic website with service pages, sign in and membership, consultant call request, light and dark mode and SEO-focused user sections.'
+        ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمپلنت دندان، لمینت سرامیکی، کامپوزیت ونیر، طراحی لبخند، درمان ریشه و درخواست تماس مشاور.'
+        : 'Dr. Saeed Moghaddam Dental Clinic; dental implants, porcelain veneers, composite veneers, smile design, root canal therapy and consultant call request.'
     });
   }
 }

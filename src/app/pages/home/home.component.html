@@ -39,19 +39,19 @@
     <img [src]="heroSlides[activeSlide()].image" [alt]="pickText(heroSlides[activeSlide()].title, language())" loading="eager" />
     <div class="floating-chip top">
       <app-fa-icon name="sparkle"></app-fa-icon>
-      {{ language() === 'fa' ? 'موشن طراحی لبخند' : 'Smile motion design' }}
+      {{ language() === 'fa' ? 'تحلیل زیبایی لبخند' : 'Smile aesthetic analysis' }}
     </div>
     <div class="floating-chip bottom">
-      <app-fa-icon name="mobile"></app-fa-icon>
-      {{ language() === 'fa' ? 'تجربه موبایل اپ‌مانند' : 'App-like mobile UX' }}
+      <app-fa-icon name="shield"></app-fa-icon>
+      {{ language() === 'fa' ? 'درمان محافظه‌کارانه دندان' : 'Conservative dental care' }}
     </div>
   </div>
 </section>
 
 <section class="slider-panel page-section">
   <div class="section-heading">
-    <p class="eyebrow">{{ language() === 'fa' ? 'اسلایدرهای متنوع' : 'Rich sliders' }}</p>
-    <h2>{{ language() === 'fa' ? 'هر اسلاید یک بخش مهم از تجربه درمان را توضیح می‌دهد' : 'Each slide explains an important part of the care experience' }}</h2>
+    <p class="eyebrow">{{ language() === 'fa' ? 'راهنمای انتخاب درمان' : 'Treatment selection guide' }}</p>
+    <h2>{{ language() === 'fa' ? 'قبل از تماس، مسیر خدمات دندان‌پزشکی را دقیق‌تر بشناسید' : 'Understand dental service paths before contacting the clinic' }}</h2>
   </div>
   <div class="slider-copy">
     <article *ngFor="let slide of heroSlides; let i = index" [class.active]="i === activeSlide()" (click)="activeSlide.set(i)">
@@ -68,8 +68,8 @@
 
 <section class="page-section">
   <div class="section-heading center">
-    <p class="eyebrow">{{ language() === 'fa' ? 'سکشن‌های مفید برای کاربر' : 'Useful user-first sections' }}</p>
-    <h2>{{ language() === 'fa' ? 'هر بخش به تصمیم بهتر بیمار کمک می‌کند' : 'Every section helps patients make better decisions' }}</h2>
+    <p class="eyebrow">{{ language() === 'fa' ? 'اطلاعات مفید برای بیمار' : 'Helpful patient information' }}</p>
+    <h2>{{ language() === 'fa' ? 'هر بخش برای تصمیم بهتر درباره سلامت و زیبایی دندان نوشته شده است' : 'Every section is written to support better dental health and smile decisions' }}</h2>
   </div>
   <div class="benefit-grid">
     <article *ngFor="let item of benefits" class="glass-card">
@@ -103,11 +103,77 @@
   </div>
 </section>
 
+<section class="page-section case-slider-section">
+  <div class="section-heading">
+    <p class="eyebrow">{{ language() === 'fa' ? 'نمونه‌کارهای دکتر سعید مقدم' : 'Dr. Saeed Moghaddam cases' }}</p>
+    <h2>{{ language() === 'fa' ? 'نمونه‌هایی از مسیر درمان، تصمیم‌گیری و نتیجه طبیعی' : 'Examples of treatment path, decision making and natural outcomes' }}</h2>
+    <p>{{ language() === 'fa' ? 'این بخش برای کمک به درک بهتر نوع نگاه کلینیک به طراحی لبخند، ایمپلنت، کامپوزیت و سلامت لثه نوشته شده است.' : 'This section helps users understand the clinic approach to smile design, implants, composite and gum health.' }}</p>
+  </div>
+
+  <div class="case-slider">
+    <div class="case-visual">
+      <img [src]="caseStudies[activeCase()].image" [alt]="pickText(caseStudies[activeCase()].title, language())" loading="lazy" />
+      <div class="case-before-after">
+        <span>{{ language() === 'fa' ? 'قبل' : 'Before' }}</span>
+        <strong></strong>
+        <span>{{ language() === 'fa' ? 'بعد' : 'After' }}</span>
+      </div>
+    </div>
+
+    <article class="case-copy">
+      <small>0{{ activeCase() + 1 }} / 0{{ caseStudies.length }}</small>
+      <h3>{{ pickText(caseStudies[activeCase()].title, language()) }}</h3>
+      <dl>
+        <div>
+          <dt>{{ language() === 'fa' ? 'نیاز بیمار' : 'Patient need' }}</dt>
+          <dd>{{ pickText(caseStudies[activeCase()].patientNeed, language()) }}</dd>
+        </div>
+        <div>
+          <dt>{{ language() === 'fa' ? 'درمان انجام‌شده' : 'Treatment' }}</dt>
+          <dd>{{ pickText(caseStudies[activeCase()].treatment, language()) }}</dd>
+        </div>
+        <div>
+          <dt>{{ language() === 'fa' ? 'نتیجه' : 'Result' }}</dt>
+          <dd>{{ pickText(caseStudies[activeCase()].result, language()) }}</dd>
+        </div>
+      </dl>
+      <div class="case-controls">
+        <button type="button" (click)="nextCase(-1)" aria-label="Previous case"><app-fa-icon name="arrowRight"></app-fa-icon></button>
+        <button type="button" (click)="nextCase(1)" aria-label="Next case"><app-fa-icon name="arrowLeft"></app-fa-icon></button>
+      </div>
+    </article>
+  </div>
+
+  <div class="case-dots">
+    <button *ngFor="let item of caseStudies; let i = index" type="button" [class.active]="i === activeCase()" (click)="activeCase.set(i)">
+      {{ pickText(item.title, language()) }}
+    </button>
+  </div>
+</section>
+
+<section class="page-section dental-graphic-band">
+  <article>
+    <app-fa-icon name="tooth"></app-fa-icon>
+    <h3>{{ language() === 'fa' ? 'معاینه دقیق' : 'Precise exam' }}</h3>
+    <p>{{ language() === 'fa' ? 'بررسی دندان، لثه، عکس و انتظار بیمار پیش از شروع درمان.' : 'Reviewing teeth, gums, images and expectations before care.' }}</p>
+  </article>
+  <article>
+    <app-fa-icon name="brush"></app-fa-icon>
+    <h3>{{ language() === 'fa' ? 'طراحی لبخند' : 'Smile design' }}</h3>
+    <p>{{ language() === 'fa' ? 'انتخاب فرم و رنگ طبیعی، متناسب با چهره و سلامت دهان.' : 'Selecting natural shape and shade matched to face and oral health.' }}</p>
+  </article>
+  <article>
+    <app-fa-icon name="shield"></app-fa-icon>
+    <h3>{{ language() === 'fa' ? 'مراقبت بعد درمان' : 'Aftercare' }}</h3>
+    <p>{{ language() === 'fa' ? 'آموزش مراقبت، پیگیری و هشدارهای مهم برای ماندگاری نتیجه.' : 'Care guidance, follow-up and key warnings for long-lasting results.' }}</p>
+  </article>
+</section>
+
 <section class="page-section app-mobile-panel">
   <div>
-    <p class="eyebrow">{{ language() === 'fa' ? 'موبایل مهم‌ترین حالت است' : 'Mobile is the priority' }}</p>
-    <h2>{{ language() === 'fa' ? 'در نمایش موبایل، کاربر یک اپلیکیشن دندان‌پزشکی می‌بیند' : 'On mobile, users see a dental care app' }}</h2>
-    <p>{{ language() === 'fa' ? 'دکمه‌های مهم مثل خانه، خدمات، تماس و ورود در پایین صفحه قرار دارند. کارت‌ها بزرگ، لمس‌پذیر و خوانا هستند تا کاربر بدون پیچیدگی مسیر خود را پیدا کند.' : 'Important actions such as home, services, contact and sign in sit at the bottom. Cards are large, touch-friendly and readable so users can move without friction.' }}</p>
+    <p class="eyebrow">{{ language() === 'fa' ? 'مسیر سریع برای بیمار' : 'Fast patient path' }}</p>
+    <h2>{{ language() === 'fa' ? 'در موبایل، بیمار سریع به خدمات، تماس و ورود دسترسی دارد' : 'On mobile, patients quickly reach services, contact and sign in' }}</h2>
+    <p>{{ language() === 'fa' ? 'چیدمان موبایل برای بیمارانی طراحی شده که می‌خواهند سریع خدمت مناسب را ببینند، شماره تماس ثبت کنند و درباره درمان دندان‌پزشکی راهنمایی بگیرند.' : 'The mobile layout is built for patients who want to quickly view the right service, leave a phone number and receive dental care guidance.' }}</p>
   </div>
   <div class="phone-mock">
     <div class="phone-notch"></div>

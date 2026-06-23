@@ -79,6 +79,16 @@ export interface Testimonial {
   rating: number;
 }
 
+export interface CaseStudy {
+  id: string;
+  serviceId: string;
+  title: LocalizedText;
+  patientNeed: LocalizedText;
+  treatment: LocalizedText;
+  result: LocalizedText;
+  image: string;
+}
+
 export interface LeadFormModel {
   fullName: string;
   phone: string;
@@ -125,31 +135,31 @@ export const NAV_ITEMS: NavItem[] = [
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 'digital-smile',
-    eyebrow: text('طراحی لبخند دیجیتال', 'Digital smile design'),
-    title: text('لبخندی تمیز، طبیعی و مطمئن با تجربه‌ای شبیه اپلیکیشن موبایل', 'A clean, natural and confident smile with a mobile-app-like experience'),
+    eyebrow: text('کلینیک دندان‌پزشکی زیبایی و درمانی', 'Cosmetic and restorative dental clinic'),
+    title: text('طراحی لبخند طبیعی، ایمپلنت دندان و درمان‌های دقیق زیر نظر دکتر سعید مقدم', 'Natural smile design, dental implants and precise care by Dr. Saeed Moghaddam'),
     text: text(
-      'در کلینیک دندان‌پزشکی دکتر سعید مقدم، مسیر درمان با توضیح شفاف، تحلیل چهره، عکس‌های تشخیصی و پیگیری انسانی آغاز می‌شود؛ بدون رزرو نوبت آنلاین و با تمرکز روی ورود، عضویت و تماس مستقیم.',
-      'At Dr. Saeed Moghaddam Dental Clinic, care starts with transparent consultation, facial analysis, diagnostic imagery and human follow-up; no online appointment booking, just sign in, membership and direct contact.'
+      'اگر برای ایمپلنت دندان، لمینت سرامیکی، کامپوزیت ونیر، سفید کردن دندان یا درمان ریشه به دنبال نتیجه‌ای سالم و هماهنگ با چهره هستید، این صفحه مسیر خدمات، مراقبت‌ها و درخواست تماس مشاور را شفاف توضیح می‌دهد.',
+      'If you are looking for dental implants, porcelain veneers, composite veneers, teeth whitening or root canal therapy with a healthy face-matched result, this page clearly explains services, care and consultant call requests.'
     ),
     image: image('photo-1606811971618-4486d14f3f99')
   },
   {
     id: 'calm-suite',
-    eyebrow: text('درمان آرام و دقیق', 'Calm precise care'),
-    title: text('فضای آرام، تجهیزات مدرن و نتیجه‌ای هماهنگ با چهره', 'A calm space, modern equipment and results that fit your face'),
+    eyebrow: text('درمان آرام و مرحله‌ای دندان', 'Calm step-by-step dental care'),
+    title: text('از معاینه تا مراقبت بعد درمان، همه چیز با زبان ساده توضیح داده می‌شود', 'From exam to aftercare, everything is explained in simple language'),
     text: text(
-      'هر بخش سایت به تصمیم بهتر کاربر کمک می‌کند: مزایا، مراحل، مراقبت‌ها، سوالات پرتکرار، هزینه‌های وابسته به معاینه و درخواست تماس مشاور.',
-      'Every section helps users decide better: benefits, steps, aftercare, FAQs, exam-based cost factors and a consultant call request.'
+      'برای هر خدمت دندان‌پزشکی، مزایا، مراحل درمان، مراقبت‌های بعد از درمان، سوالات پرتکرار و عوامل موثر بر هزینه به‌صورت جداگانه نوشته شده تا تصمیم بیمار آگاهانه باشد.',
+      'For every dental service, benefits, treatment steps, aftercare, FAQs and exam-based cost factors are written separately so patients can decide with confidence.'
     ),
     image: image('photo-1629909615184-74f495363b67')
   },
   {
-    id: 'mobile-first',
-    eyebrow: text('موبایل فرست واقعی', 'True mobile first'),
-    title: text('در موبایل، سایت مثل یک اپ درمانی سریع و روان دیده می‌شود', 'On mobile, the website feels like a fast and polished care app'),
+    id: 'consultant-call',
+    eyebrow: text('درخواست تماس مشاور دندان‌پزشکی', 'Dental consultant call request'),
+    title: text('شماره خود را بگذارید تا درباره مناسب‌ترین درمان دندان با شما تماس بگیریم', 'Leave your number so we can call you about the right dental treatment'),
     text: text(
-      'دسترسی‌های مهم مثل خانه، خدمات، تماس و ورود در نوار پایین قرار گرفته‌اند تا کاربر با یک دست به مسیرهای اصلی برسد.',
-      'Key actions such as home, services, contact and sign in sit in the bottom bar so users can reach core paths with one hand.'
+      'رزرو نوبت آنلاین نداریم؛ مسیر اصلی، ورود یا عضویت و ثبت درخواست تماس است تا مشاور کلینیک درباره خدمت مناسب، مدارک لازم و زمان مراجعه حضوری شما را راهنمایی کند.',
+      'There is no online appointment booking; the main path is sign in or membership plus a call request so the clinic consultant can guide you about suitable care, needed records and in-person visit timing.'
     ),
     image: image('photo-1588776814546-1ffcf47267a5')
   }
@@ -158,7 +168,7 @@ export const HERO_SLIDES: HeroSlide[] = [
 export const STATS: StatItem[] = [
   { value: text('+۱۲۰۰', '+1200'), label: text('پرونده موفق درمانی و زیبایی', 'Successful cosmetic and restorative cases') },
   { value: text('۲ زبانه', 'Bilingual'), label: text('فارسی و انگلیسی برای کاربران بیشتر', 'Persian and English for more users') },
-  { value: text('Mobile first', 'Mobile first'), label: text('تجربه موبایل شبیه اپلیکیشن', 'App-like mobile experience') }
+  { value: text('۸ خدمت', '8 services'), label: text('صفحه اختصاصی برای هر خدمت دندان‌پزشکی', 'Dedicated page for each dental service') }
 ];
 
 export const DENTAL_SERVICES: DentalService[] = [
@@ -585,14 +595,14 @@ export const BENEFIT_CARDS: BenefitCard[] = [
   {
     id: 'graphic-ui',
     icon: 'sparkle',
-    title: text('تجربه بصری لوکس', 'Premium visual experience'),
-    text: text('سکشن‌ها با کارت‌های شیشه‌ای، موشن نرم، تصویر سبک و فرم‌های گرافیکی طراحی شده‌اند.', 'Sections use glass cards, soft motion, lightweight imagery and graphic shapes.')
+    title: text('توضیح تصویری مسیر درمان', 'Visual treatment explanation'),
+    text: text('فرم‌ها، کارت‌ها و موشن‌های سبک کمک می‌کنند مسیر ایمپلنت، لمینت یا طراحی لبخند قابل فهم‌تر باشد.', 'Light forms, cards and motion help make implants, veneers and smile design paths easier to understand.')
   },
   {
     id: 'mobile-care',
     icon: 'mobile',
-    title: text('موبایل مثل اپلیکیشن', 'Mobile like an app'),
-    text: text('در موبایل، مسیرهای مهم در نوار پایین قرار دارند و محتوا برای لمس و خواندن سریع بهینه شده است.', 'On mobile, key paths live in the bottom bar and content is optimized for touch and quick reading.')
+    title: text('دسترسی سریع بیمار', 'Fast patient access'),
+    text: text('در موبایل، بیمار سریع به خدمات دندان‌پزشکی، تماس با کلینیک و ورود یا عضویت دسترسی دارد.', 'On mobile, patients quickly reach dental services, clinic contact and sign in or membership.')
   },
   {
     id: 'phone-lead',
@@ -623,6 +633,45 @@ export const TESTIMONIALS: Testimonial[] = [
     service: text('کامپوزیت ونیر', 'Composite veneers'),
     text: text('فرم دندان‌ها اصلاح شد اما لبخندم هنوز شبیه خودم است؛ دقیقاً همان چیزی که می‌خواستم.', 'My tooth shape improved while my smile still feels like me; exactly what I wanted.'),
     rating: 5
+  }
+];
+
+export const CASE_STUDIES: CaseStudy[] = [
+  {
+    id: 'smile-design-natural',
+    serviceId: 'laminate',
+    title: text('بازسازی لبخند طبیعی با لمینت سرامیکی', 'Natural smile makeover with porcelain veneers'),
+    patientNeed: text('ناهماهنگی رنگ و فرم دندان‌های جلو باعث شده بود لبخند بیمار خسته و نامتقارن دیده شود.', 'Uneven shade and front-tooth shape made the patient smile look tired and asymmetrical.'),
+    treatment: text('طراحی لبخند محافظه‌کارانه، انتخاب رنگ طبیعی و ساخت لمینت‌های ظریف متناسب با فرم صورت انجام شد.', 'A conservative smile design, natural shade selection and delicate veneers matched to facial form were completed.'),
+    result: text('لبخند روشن‌تر، هماهنگ‌تر و طبیعی‌تر شد؛ بدون ظاهر اغراق‌آمیز یا مصنوعی.', 'The smile became brighter, more balanced and natural without an exaggerated look.'),
+    image: image('photo-1609840114035-3c981b782dfe')
+  },
+  {
+    id: 'implant-back-to-chewing',
+    serviceId: 'implant',
+    title: text('جایگزینی دندان از دست رفته با ایمپلنت', 'Replacing a missing tooth with an implant'),
+    patientNeed: text('نبود یک دندان خلفی، جویدن را سخت کرده و باعث نگرانی از جابه‌جایی دندان‌های اطراف شده بود.', 'A missing back tooth made chewing difficult and raised concern about neighboring teeth shifting.'),
+    treatment: text('پس از بررسی استخوان و لثه، کاشت ایمپلنت و طراحی روکش هماهنگ با دندان‌های مجاور انجام شد.', 'After bone and gum review, implant placement and a crown matched to neighboring teeth were planned.'),
+    result: text('عملکرد جویدن بهتر شد و فضای خالی با ظاهری طبیعی و پایدار بازسازی شد.', 'Chewing improved and the missing space was restored with a natural stable result.'),
+    image: image('photo-1606811841689-23dfddce3e95')
+  },
+  {
+    id: 'composite-shape-correction',
+    serviceId: 'composite',
+    title: text('اصلاح فرم دندان‌ها با کامپوزیت ونیر', 'Tooth shape correction with composite veneers'),
+    patientNeed: text('لب‌پریدگی و فاصله‌های کوچک بین دندان‌ها باعث کاهش اعتماد به نفس بیمار شده بود.', 'Small chips and gaps between teeth reduced the patient confidence.'),
+    treatment: text('کامپوزیت ونیر مستقیم با فرم‌دهی لایه‌ای، پولیش دقیق و حفظ بافت سالم دندان انجام شد.', 'Direct composite veneers were shaped in layers, polished carefully and kept tooth structure conservative.'),
+    result: text('فرم دندان‌ها منظم‌تر شد و لبخند در یک مسیر کم‌تهاجمی ظاهر تمیزتری پیدا کرد.', 'Tooth shape became more balanced and the smile looked cleaner through a minimally invasive path.'),
+    image: image('photo-1600170311833-c2cf5280ce49')
+  },
+  {
+    id: 'gum-health-before-cosmetic',
+    serviceId: 'gum-treatment',
+    title: text('کنترل التهاب لثه پیش از درمان زیبایی', 'Gum inflammation control before cosmetic care'),
+    patientNeed: text('خونریزی لثه و التهاب باعث می‌شد نتیجه درمان زیبایی قابل پیش‌بینی نباشد.', 'Bleeding and inflammation made cosmetic treatment less predictable.'),
+    treatment: text('آموزش بهداشت، پاک‌سازی تخصصی و برنامه نگهداری لثه پیش از شروع درمان زیبایی انجام شد.', 'Hygiene coaching, professional cleaning and gum maintenance planning were done before cosmetic care.'),
+    result: text('لثه سالم‌تر شد و شرایط برای تصمیم‌گیری دقیق‌تر درباره طراحی لبخند آماده شد.', 'Gums became healthier and conditions were ready for more accurate smile design planning.'),
+    image: image('photo-1629909615184-74f495363b67')
   }
 ];
 
