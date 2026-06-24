@@ -78,7 +78,7 @@ interface ConsultantDashboardLink {
 
         <nav class="dashboard-nav" aria-label="داشبورد مشاور">
           <button
-            *ngFor="let item of dashboardLinks"
+            *ngFor="let item of visibleLinks"
             type="button"
             [class.active]="activeSection === item.id"
             (click)="setSection(item.id)"
@@ -99,7 +99,7 @@ interface ConsultantDashboardLink {
           <header class="dashboard-hero consultant-hero">
             <span>داشبورد مشاور</span>
             <h2>مدیریت مشاوره، {{ displayName() }}</h2>
-            <p>پروفایل، حضور، وضعیت آنلاین، لیدها و رزروهای مشاور از همین فضای مشابه داشبورد ادمین مدیریت می‌شوند.</p>
+            <p>حضور، وضعیت آنلاین، لیدها و رزروهای مشاور از همین فضای مشابه داشبورد ادمین مدیریت می‌شوند.</p>
           </header>
 
           @if (feedbackMessage) {
@@ -110,10 +110,10 @@ interface ConsultantDashboardLink {
 
           @if (activeSection === 'overview') {
             <section class="consultant-overview">
-              <button type="button" (click)="setSection('profile')">
-                <span><app-fa-icon name="shield"></app-fa-icon></span>
-                <strong>پروفایل و وضعیت</strong>
-                <small>{{ isProfileReady() ? 'پروفایل کامل است؛ حضور و آنلاین بودن را مدیریت کنید.' : 'برای فعال شدن لیدها، تکمیل پروفایل ضروری است.' }}</small>
+              <button type="button" (click)="isProfileReady() ? setSection('overview') : setSection('profile')">
+                <span><app-fa-icon name="mobile"></app-fa-icon></span>
+                <strong>وضعیت دریافت لید</strong>
+                <small>{{ isProfileReady() ? 'حضور و آنلاین بودن را همین‌جا مدیریت کنید.' : 'برای فعال شدن لیدها، تکمیل پروفایل ضروری است.' }}</small>
               </button>
               <button type="button" (click)="setSection('leads')">
                 <span><app-fa-icon name="clipboard"></app-fa-icon></span>
@@ -152,6 +152,31 @@ interface ConsultantDashboardLink {
                     <strong [class.good]="isOnline" [class.bad]="!isOnline">{{ isOnline ? 'آنلاین' : 'آفلاین' }}</strong>
                   </div>
                 </div>
+
+                <div class="action-grid">
+                  <button class="primary-action" type="button" [disabled]="availabilitySaving || isAvailable" (click)="setAvailability(true)">
+                    <app-fa-icon name="check"></app-fa-icon>
+                    ثبت حضور
+                  </button>
+                  <button class="secondary-action danger" type="button" [disabled]="availabilitySaving || !isAvailable" (click)="setAvailability(false)">
+                    <app-fa-icon name="moon"></app-fa-icon>
+                    عدم حضور
+                  </button>
+                  <button class="primary-action" type="button" [disabled]="onlineSaving || !canGoOnline()" (click)="setOnlineStatus(true)">
+                    <app-fa-icon name="mobile"></app-fa-icon>
+                    آنلاین
+                  </button>
+                  <button class="secondary-action" type="button" [disabled]="onlineSaving || !isOnline" (click)="setOnlineStatus(false)">
+                    <app-fa-icon name="close"></app-fa-icon>
+                    آفلاین
+                  </button>
+                </div>
+
+                @if (pendingOfflineCount > 0) {
+                  <p class="queue-warning">
+                    {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
+                  </p>
+                }
               </section>
             }
           }
@@ -458,7 +483,7 @@ interface ConsultantDashboardLink {
     .dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     @media (max-width:980px){.dashboard-layout{grid-template-columns:1fr;width:min(100% - 24px,760px);padding-top:14px}.dashboard-sidebar{position:relative;top:0;min-height:0}.consultant-overview{grid-template-columns:1fr}.lead-filters{grid-template-columns:1fr 1fr auto}.locked-panel{grid-template-columns:1fr}}
     @media (max-width:760px){
-      .dashboard-layout.consultant-mode{width:100%;padding:0 10px 96px}.dashboard-layout.consultant-mode .dashboard-sidebar{position:fixed;z-index:80;inset-inline:10px;bottom:10px;top:auto;min-height:0;padding:8px;border-radius:28px}.consultant-mode .dashboard-brand,.consultant-mode .dashboard-user-card,.consultant-mode .logout-btn{display:none}.consultant-mode .dashboard-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.consultant-mode .dashboard-nav button{display:grid;place-items:center;gap:3px;min-height:58px;padding:7px;border-radius:20px;text-align:center;font-size:.72rem}.consultant-mode .dashboard-nav app-fa-icon{font-size:1.1rem;color:var(--brand)}
+      .dashboard-layout.consultant-mode{width:100%;padding:0 10px 96px}.dashboard-layout.consultant-mode .dashboard-sidebar{position:fixed;z-index:80;inset-inline:10px;bottom:10px;top:auto;min-height:0;padding:8px;border-radius:28px}.consultant-mode .dashboard-brand,.consultant-mode .dashboard-user-card,.consultant-mode .logout-btn{display:none}.consultant-mode .dashboard-nav{grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px}.consultant-mode .dashboard-nav button{display:grid;place-items:center;gap:3px;min-height:58px;padding:7px;border-radius:20px;text-align:center;font-size:.72rem}.consultant-mode .dashboard-nav app-fa-icon{font-size:1.1rem;color:var(--brand)}
       .dashboard-content{padding-top:10px}.dashboard-hero,.profile-lock-card,.status-card,.lead-panel,.reservation-panel,.consultant-panel{border-radius:24px;padding:14px}.status-summary,.action-grid,.lead-filters,.lead-actions{grid-template-columns:1fr}.panel-heading{display:grid}.dialog-actions{grid-template-columns:1fr 1fr}
     }
   `]
@@ -467,11 +492,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   readonly user = this.auth.user;
   activeSection: ConsultantDashboardSection = 'overview';
 
-  readonly dashboardLinks: ConsultantDashboardLink[] = [
+  private readonly completedDashboardLinks: ConsultantDashboardLink[] = [
     { id: 'overview', label: 'نمای کلی', icon: 'dashboard' },
-    { id: 'profile', label: 'پروفایل', icon: 'shield' },
     { id: 'leads', label: 'لیدها', icon: 'clipboard' },
     { id: 'reservations', label: 'رزروها', icon: 'calendar' }
+  ];
+  private readonly incompleteDashboardLinks: ConsultantDashboardLink[] = [
+    { id: 'profile', label: 'تکمیل پروفایل', icon: 'shield' }
   ];
 
   readonly displayName = computed(() => {
@@ -577,7 +604,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return this.isAvailable && this.pendingOfflineCount === 0;
   }
 
+  get visibleLinks(): ConsultantDashboardLink[] {
+    return this.isProfileReady() ? this.completedDashboardLinks : this.incompleteDashboardLinks;
+  }
+
   setSection(section: ConsultantDashboardSection): void {
+    if (this.isProfileReady() && section === 'profile') {
+      this.activeSection = 'overview';
+      return;
+    }
+
+    if (!this.isProfileReady() && section !== 'profile') {
+      this.activeSection = 'profile';
+      return;
+    }
+
     this.activeSection = section;
   }
 
@@ -598,7 +639,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       isCompleteProfile: true
     }).pipe(finalize(() => this.profileSaving = false)).subscribe({
       next: response => {
-        const profileId = Number(response.data || this.currentProfileId() || 0);
+        const profileId = this.completedProfileId(response.data) ?? this.currentProfileId() ?? 0;
         if (profileId > 0) {
           this.profileId = profileId;
           this.auth.updateConsultantProfile(profileId, true);
@@ -1117,6 +1158,29 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const code = this.profileForm.nationalityCode.trim();
     if (!/^\d{10}$/.test(code)) return 'کد ملی باید ۱۰ رقم باشد';
     if (!this.profileForm.address.trim() || this.profileForm.address.trim().length < 5) return 'آدرس مشاور الزامی است';
+    return null;
+  }
+
+  private completedProfileId(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
+    if (typeof value === 'string') {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      const data = value as Record<string, unknown>;
+      for (const key of ['profileId', 'consultantProfileId', 'id']) {
+        const nestedValue = data[key];
+        const numeric = typeof nestedValue === 'number'
+          ? nestedValue
+          : typeof nestedValue === 'string'
+            ? Number(nestedValue)
+            : NaN;
+        if (Number.isFinite(numeric) && numeric > 0) return numeric;
+      }
+    }
+
     return null;
   }
 
