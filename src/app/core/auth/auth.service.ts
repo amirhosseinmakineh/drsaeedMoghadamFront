@@ -296,11 +296,17 @@ export class AuthService {
       const tokenUser = this.userFromToken(session.token, null);
 
       return {
-        ...session.user,
         ...tokenUser,
+        ...session.user,
         firstName: tokenUser.firstName || session.user.firstName,
         lastName: tokenUser.lastName || session.user.lastName,
         phoneNumber: tokenUser.phoneNumber || session.user.phoneNumber,
+        userId: tokenUser.userId || session.user.userId,
+        profileId: session.user.profileId ?? tokenUser.profileId,
+        consultantProfileId: session.user.consultantProfileId ?? tokenUser.consultantProfileId,
+        isCompleteProfile: session.user.isCompleteProfile ?? tokenUser.isCompleteProfile,
+        roleName: session.user.roleName || tokenUser.roleName,
+        role: session.user.role || tokenUser.role,
         token: session.token
       };
     } catch {

@@ -16,6 +16,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AdminAttendanceTableComponent } from '../admin-dashboard/admin-attendance-table.component';
 import { AdminLeadsTableComponent } from '../admin-dashboard/admin-leads-table.component';
 import { BaseDialogComponent } from '../../shared/base/base-dialog/base-dialog.component';
+import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-datepicker.component';
 import { TableActionClick, TableColumn, TableComponent } from '../../shared/base/table/table.component';
 import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
@@ -57,6 +58,7 @@ interface ScoreFormModel {
     FormsModule,
     RouterLink,
     BaseDialogComponent,
+    BaseDatepickerComponent,
     TableComponent,
     AdminLeadsTableComponent,
     AdminAttendanceTableComponent,
@@ -310,7 +312,16 @@ interface ScoreFormModel {
           @if (userDialogMode === 'add') {
             <div class="two-col">
               <label>رمز عبور<input [(ngModel)]="userForm.passwordHash" name="dialogPassword" type="password" minlength="6" maxlength="100" /></label>
-              <label>تاریخ تولد<input [(ngModel)]="userForm.birthDate" name="dialogBirthDate" type="date" /></label>
+              <label>
+                تاریخ تولد
+                <app-base-datepicker
+                  [label]="birthDatePickerLabel"
+                  [selectedDate]="selectedUserBirthDate"
+                  [minDate]="birthDateMinDate"
+                  [maxDate]="birthDateMaxDate"
+                  (dateChange)="setUserBirthDate($event)"
+                ></app-base-datepicker>
+              </label>
             </div>
           }
           <div class="two-col">
@@ -468,6 +479,10 @@ export class DashboardComponent implements OnInit {
   userDialogMode: UserDialogMode = 'add';
   userSaving = false;
   userForm: UserFormModel = this.emptyUserForm();
+  selectedUserBirthDate?: Date;
+  readonly birthDatePickerLabel = { fa: 'تاریخ تولد', en: 'Birth date' };
+  readonly birthDateMinDate = this.createRelativeYearDate(-120);
+  readonly birthDateMaxDate = this.createYesterday();
   deleteDialogOpen = false;
   userToDelete: AdminUser | null = null;
 
@@ -570,11 +585,13 @@ export class DashboardComponent implements OnInit {
   openAddUserDialog(): void {
     this.userDialogMode = 'add';
     this.userForm = this.emptyUserForm();
+    this.selectedUserBirthDate = undefined;
     this.userDialogOpen = true;
   }
 
   openEditUserDialog(user: AdminUser): void {
     this.userDialogMode = 'edit';
+    this.selectedUserBirthDate = undefined;
     this.userForm = {
       id: user.id,
       firstName: user.firstName ?? '',
@@ -594,6 +611,11 @@ export class DashboardComponent implements OnInit {
   closeUserDialog(): void {
     this.userDialogOpen = false;
     this.userSaving = false;
+  }
+
+  setUserBirthDate(date: Date): void {
+    this.selectedUserBirthDate = date;
+    this.userForm.birthDate = this.toDateInputValue(date);
   }
 
   submitUserForm(): void {
@@ -815,6 +837,29 @@ export class DashboardComponent implements OnInit {
       description: '',
       leadAssignmentId: null
     };
+  }
+
+  private createYesterday(): Date {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return this.startOfDay(date);
+  }
+
+  private createRelativeYearDate(yearOffset: number): Date {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + yearOffset);
+    return this.startOfDay(date);
+  }
+
+  private startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private toDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private showFeedback(message: string, type: 'success' | 'error'): void {
