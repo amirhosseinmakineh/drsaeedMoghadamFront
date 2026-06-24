@@ -15,6 +15,8 @@ export interface PaginatedResponse<T> {
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+  raw?: unknown;
+  source?: unknown;
 }
 
 export interface CompleteConsultantProfileRequest {
@@ -37,21 +39,37 @@ export interface OnlineRequest {
 
 export interface ConsultantLead {
   id?: number;
+  Id?: number;
   leadAssignmentId?: number;
+  LeadAssignmentId?: number;
   userName?: string | null;
+  UserName?: string | null;
   fullName?: string | null;
+  FullName?: string | null;
   firstName?: string | null;
+  FirstName?: string | null;
   lastName?: string | null;
+  LastName?: string | null;
   phoneNumber?: string | null;
+  PhoneNumber?: string | null;
   mobile?: string | null;
+  Mobile?: string | null;
   userPhoneNumber?: string | null;
+  UserPhoneNumber?: string | null;
   leadPhoneNumber?: string | null;
+  LeadPhoneNumber?: string | null;
   leadAssignmentState?: number | null;
+  LeadAssignmentState?: number | null;
   state?: number | null;
+  State?: number | null;
   status?: number | null;
+  Status?: number | null;
   leadAssignmentType?: number | null;
+  LeadAssignmentType?: number | null;
   type?: number | null;
+  Type?: number | null;
   assignmentType?: number | null;
+  AssignmentType?: number | null;
   requiresThreeMinuteCall?: boolean | null;
   RequiresThreeMinuteCall?: boolean | null;
   callDeadlineAt?: string | null;
@@ -59,7 +77,9 @@ export interface ConsultantLead {
   isReportSubmitted?: boolean | null;
   IsReportSubmitted?: boolean | null;
   user?: LeadPerson | null;
+  User?: LeadPerson | null;
   lead?: LeadPerson | null;
+  Lead?: LeadPerson | null;
 }
 
 export interface LeadFilters {
@@ -130,12 +150,19 @@ export interface ReservationFilters {
 
 interface LeadPerson {
   userName?: string | null;
+  UserName?: string | null;
   fullName?: string | null;
+  FullName?: string | null;
   name?: string | null;
+  Name?: string | null;
   firstName?: string | null;
+  FirstName?: string | null;
   lastName?: string | null;
+  LastName?: string | null;
   phoneNumber?: string | null;
+  PhoneNumber?: string | null;
   mobile?: string | null;
+  Mobile?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -212,13 +239,7 @@ export class ConsultantDashboardService {
 
   private ensureCommandSucceeded<T>(fallback: string) {
     return (source: Observable<ApiCommandResponse<T>>) => source.pipe(
-      map(response => {
-        if (!response.isSuccess) {
-          throw new Error(response.message || fallback);
-        }
-
-        return response;
-      }),
+      map(response => this.normalizeCommandResponse(response, fallback)),
       catchError(error => throwError(() => this.toUserFacingError(error, fallback)))
     );
   }
@@ -226,17 +247,27 @@ export class ConsultantDashboardService {
   private normalizePaginatedResponse<T>(response: unknown, filters: { pageNumber: number; pageSize: number }): PaginatedResponse<T> {
     const source = this.unwrapResponseData(response);
     const items = this.readItems<T>(source);
-    const totalCount = this.readNumber(source, 'totalCount', 'total', 'count') ?? items.length;
-    const pageSize = this.readNumber(source, 'pageSize', 'take') ?? filters.pageSize;
-    const pageNumber = this.readNumber(source, 'pageNumber', 'page') ?? filters.pageNumber;
-    const totalPages = this.readNumber(source, 'totalPages') ?? Math.ceil(totalCount / pageSize);
+    const totalCount = this.readNumber(source, 'totalCount', 'total', 'count', 'recordsTotal')
+      ?? this.readNumber(response, 'totalCount', 'total', 'count', 'recordsTotal')
+      ?? items.length;
+    const pageSize = this.readNumber(source, 'pageSize', 'take', 'limit')
+      ?? this.readNumber(response, 'pageSize', 'take', 'limit')
+      ?? filters.pageSize;
+    const pageNumber = this.readNumber(source, 'pageNumber', 'page', 'currentPage')
+      ?? this.readNumber(response, 'pageNumber', 'page', 'currentPage')
+      ?? filters.pageNumber;
+    const totalPages = this.readNumber(source, 'totalPages', 'pages', 'pageCount')
+      ?? this.readNumber(response, 'totalPages', 'pages', 'pageCount')
+      ?? Math.ceil(totalCount / Math.max(1, pageSize));
 
     return {
       items,
       totalCount,
       pageNumber,
       pageSize,
-      totalPages: Math.max(1, totalPages)
+      totalPages: Math.max(1, totalPages),
+      raw: response,
+      source
     };
   }
 
@@ -244,8 +275,9 @@ export class ConsultantDashboardService {
     if (Array.isArray(response)) return response;
     if (!this.isRecord(response)) return response;
 
-    if ('data' in response && response['data'] !== null && response['data'] !== undefined) {
-      return response['data'];
+    const payload = this.readValue(response, 'data', 'result', 'value', 'payload');
+    if (payload !== null && payload !== undefined) {
+      return payload;
     }
 
     return response;
@@ -255,21 +287,87 @@ export class ConsultantDashboardService {
     if (Array.isArray(source)) return source as T[];
     if (!this.isRecord(source)) return [];
 
-    const items = source['items'] ?? source['data'];
-    return Array.isArray(items) ? items as T[] : [];
+    for (const key of ['items', 'data', 'result', 'values', 'records', 'list']) {
+      const value = this.readValue(source, key);
+      if (Array.isArray(value)) return value as T[];
+      const nestedItems = this.readItems<T>(value);
+      if (nestedItems.length) return nestedItems;
+    }
+
+    const firstArray = Object.values(source).find(Array.isArray);
+    return Array.isArray(firstArray) ? firstArray as T[] : [];
   }
 
   private readNumber(source: unknown, ...keys: string[]): number | null {
     if (!this.isRecord(source)) return null;
 
     for (const key of keys) {
-      const value = source[key];
+      const value = this.readValue(source, key);
       if (value === null || value === undefined || value === '') continue;
       const numeric = typeof value === 'number' ? value : Number(value);
       if (Number.isFinite(numeric)) return numeric;
     }
 
     return null;
+  }
+
+  private normalizeCommandResponse<T>(response: ApiCommandResponse<T>, fallback: string): ApiCommandResponse<T> {
+    const success = this.readBoolean(response, 'isSuccess', 'success', 'succeeded');
+    const message = this.readString(response, 'message', 'error') ?? response.message ?? '';
+
+    if (success === false) {
+      throw new Error(message || fallback);
+    }
+
+    return {
+      ...response,
+      isSuccess: success ?? true,
+      message,
+      data: this.readValue(response, 'data', 'result', 'value') as T | undefined
+    };
+  }
+
+  private readBoolean(source: unknown, ...keys: string[]): boolean | null {
+    if (!this.isRecord(source)) return null;
+
+    for (const key of keys) {
+      const value = this.readValue(source, key);
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['true', '1', 'yes'].includes(normalized)) return true;
+        if (['false', '0', 'no'].includes(normalized)) return false;
+      }
+    }
+
+    return null;
+  }
+
+  private readString(source: unknown, ...keys: string[]): string | null {
+    if (!this.isRecord(source)) return null;
+
+    for (const key of keys) {
+      const value = this.readValue(source, key);
+      if (typeof value === 'string' && value.trim()) return value;
+    }
+
+    return null;
+  }
+
+  private readValue(source: unknown, ...keys: string[]): unknown {
+    if (!this.isRecord(source)) return undefined;
+
+    for (const key of keys) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) return source[key];
+    }
+
+    const entries = Object.entries(source);
+    for (const key of keys) {
+      const match = entries.find(([entryKey]) => entryKey.toLowerCase() === key.toLowerCase());
+      if (match) return match[1];
+    }
+
+    return undefined;
   }
 
   private isRecord(value: unknown): value is Record<string, unknown> {

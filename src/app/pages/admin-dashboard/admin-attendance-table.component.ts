@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { finalize } from 'rxjs';
 import { AdminDashboardService, AttendanceItem } from '../../core/admin/admin-dashboard.service';
 import { TableColumn, TableComponent } from '../../shared/base/table/table.component';
@@ -16,6 +16,7 @@ import { TableColumn, TableComponent } from '../../shared/base/table/table.compo
           <h2>{{ title }}</h2>
           <p>نمایش رکوردهای حضور مشاور بر اساس profileId انتخاب‌شده.</p>
         </div>
+        <button class="secondary-action compact" type="button" [disabled]="loading" (click)="load()">بروزرسانی</button>
       </header>
 
       @if (feedback) {
@@ -40,12 +41,13 @@ import { TableColumn, TableComponent } from '../../shared/base/table/table.compo
   `,
   styles: [`
     .admin-panel{display:grid;gap:16px;padding:18px;border:1px solid var(--line);border-radius:30px;background:color-mix(in srgb,var(--surface) 88%,transparent);box-shadow:var(--shadow)}
-    .panel-heading span{display:inline-flex;margin-bottom:8px;padding:5px 12px;border-radius:999px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);font-weight:950}.panel-heading h2{margin:0;font-size:1.35rem}.panel-heading p{margin:8px 0 0;color:var(--muted)}
+    .panel-heading{display:flex;justify-content:space-between;gap:12px}.panel-heading span{display:inline-flex;margin-bottom:8px;padding:5px 12px;border-radius:999px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);font-weight:950}.panel-heading h2{margin:0;font-size:1.35rem}.panel-heading p{margin:8px 0 0;color:var(--muted)}
+    .secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:18px;padding:12px 16px;background:var(--surface-muted);color:var(--text);font:inherit;font-weight:950}.secondary-action:disabled{cursor:not-allowed;opacity:.55}.compact{min-height:40px;border-radius:999px;padding:9px 13px;font-size:.86rem}
     .feedback{margin:0;padding:10px 12px;border-radius:18px;font-weight:900}.feedback.error{background:color-mix(in srgb,var(--danger) 14%,transparent);color:#fecaca}
     @media (max-width:760px){.admin-panel{padding:14px;border-radius:24px}}
   `]
 })
-export class AdminAttendanceTableComponent implements OnChanges {
+export class AdminAttendanceTableComponent implements OnChanges, OnInit {
   @Input() consultantProfileId: number | null = null;
   @Input() title = 'حضور و غیاب مشاور';
 
@@ -56,6 +58,8 @@ export class AdminAttendanceTableComponent implements OnChanges {
   pageSize = 10;
   totalCount = 0;
   totalPages = 1;
+  private hasRequestedLoad = false;
+  private loadRequestId = 0;
 
   readonly columns: TableColumn<AttendanceItem>[] = [
     { key: 'attendanceDate', label: 'تاریخ' },
@@ -66,6 +70,10 @@ export class AdminAttendanceTableComponent implements OnChanges {
   ];
 
   constructor(private adminApi: AdminDashboardService) {}
+
+  ngOnInit(): void {
+    if (!this.hasRequestedLoad) this.load();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['consultantProfileId']) {
@@ -80,6 +88,8 @@ export class AdminAttendanceTableComponent implements OnChanges {
   }
 
   load(): void {
+    this.hasRequestedLoad = true;
+
     if (!this.consultantProfileId) {
       this.items = [];
       this.totalCount = 0;
@@ -87,18 +97,24 @@ export class AdminAttendanceTableComponent implements OnChanges {
       return;
     }
 
+    const requestId = ++this.loadRequestId;
     this.loading = true;
     this.feedback = '';
 
     this.adminApi.getAttendance(this.consultantProfileId, this.pageNumber, this.pageSize)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        if (requestId === this.loadRequestId) this.loading = false;
+      }))
       .subscribe({
         next: response => {
+          if (requestId !== this.loadRequestId) return;
           this.items = response.items ?? [];
           this.totalCount = response.totalCount ?? this.items.length;
           this.totalPages = Math.max(1, response.totalPages || Math.ceil(this.totalCount / this.pageSize));
         },
-        error: error => this.feedback = this.errorMessage(error, 'دریافت حضور و غیاب انجام نشد')
+        error: error => {
+          if (requestId === this.loadRequestId) this.feedback = this.errorMessage(error, 'دریافت حضور و غیاب انجام نشد');
+        }
       });
   }
 

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   ConsultantDashboardService,
@@ -47,6 +47,11 @@ interface ReservationForm {
   reservationDate: Date | null;
   reservationTime: string;
   description: string;
+}
+
+interface ConsultantStatusUpdate {
+  isAvailable: boolean | null;
+  isOnline: boolean | null;
 }
 
 type ConsultantDashboardSection = 'overview' | 'profile' | 'leads' | 'reservations';
@@ -576,6 +581,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private readonly expirationRetryAfter = new Map<number, number>();
   private timerStarts: Record<string, number> = {};
   private notifiedRealtimeLeadIds = new Set<number>();
+  private leadRequestId = 0;
+  private pendingOfflineRequestId = 0;
+  private reservationRequestId = 0;
+  private visibleLeadLoadingRequestId = 0;
 
   constructor(
     private auth: AuthService,
@@ -668,15 +677,31 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.requireProfileId();
     if (!profileId) return;
 
+    const shouldForceOffline = !isAvailable && this.isOnline;
     this.availabilitySaving = true;
+    if (shouldForceOffline) this.onlineSaving = true;
     this.clearFeedback();
 
-    this.consultantApi.setAvailability({ profileId, isAvailable })
-      .pipe(finalize(() => this.availabilitySaving = false))
+    const request = shouldForceOffline
+      ? this.consultantApi.setOnlineStatus({ profileId, isOnline: false, isOffline: true }).pipe(
+        tap(response => {
+          const status = this.applyConsultantStatusFrom(response, response.data);
+          if (status.isOnline === null) this.isOnline = false;
+        }),
+        switchMap(() => this.consultantApi.setAvailability({ profileId, isAvailable }))
+      )
+      : this.consultantApi.setAvailability({ profileId, isAvailable });
+
+    request
+      .pipe(finalize(() => {
+        this.availabilitySaving = false;
+        if (shouldForceOffline) this.onlineSaving = false;
+      }))
       .subscribe({
         next: response => {
-          this.isAvailable = isAvailable;
-          if (!isAvailable) this.isOnline = false;
+          const status = this.applyConsultantStatusFrom(response, response.data);
+          if (status.isAvailable === null) this.isAvailable = isAvailable;
+          if (!isAvailable && status.isOnline === null) this.isOnline = false;
           this.showFeedback(response.message || (isAvailable ? 'حضور شما ثبت شد' : 'عدم حضور شما ثبت شد'), 'success');
           this.requestNotificationPermission();
           this.refreshDashboard();
@@ -704,7 +729,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.onlineSaving = false))
       .subscribe({
         next: response => {
-          this.isOnline = isOnline;
+          const status = this.applyConsultantStatusFrom(response, response.data);
+          if (status.isOnline === null) this.isOnline = isOnline;
+          if (isOnline && status.isAvailable === null) this.isAvailable = true;
           this.showFeedback(response.message || (isOnline ? 'شما آنلاین شدید' : 'شما آفلاین شدید'), 'success');
           this.requestNotificationPermission();
           this.refreshDashboard();
@@ -769,10 +796,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.reportSaving = false))
       .subscribe({
         next: response => {
+          const wasBlockingOfflineLead = this.leadType(lead) === LEAD_TYPE.OfflineQueue && this.leadState(lead) === LEAD_STATE.Pending;
           this.reportedLeadIds.add(leadAssignmentId);
-          if (typeof response.data?.isConsultantOnline === 'boolean') {
+          const status = this.applyConsultantStatusFrom(response, response.data);
+          if (status.isOnline === null && typeof response.data?.isConsultantOnline === 'boolean') {
             this.isOnline = response.data.isConsultantOnline;
           }
+          this.markLeadReported(leadAssignmentId, response.data?.leadAssignmentState ?? LEAD_STATE.Contacted);
+          if (wasBlockingOfflineLead) this.pendingOfflineCount = Math.max(0, this.pendingOfflineCount - 1);
           this.closeReportDialog();
           this.showFeedback(response.message || 'گزارش تماس ثبت شد', 'success');
           this.refreshDashboard();
@@ -845,42 +876,83 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   leadId(lead: ConsultantLead): number | null {
-    const value = lead.id ?? lead.leadAssignmentId;
-    return typeof value === 'number' && value > 0 ? value : null;
+    const value = lead.id ?? lead.Id ?? lead.leadAssignmentId ?? lead.LeadAssignmentId;
+    const numeric = this.numberOrNull(value);
+    return numeric && numeric > 0 ? numeric : null;
   }
 
   leadName(lead: ConsultantLead): string {
     return lead.userName
+      || lead.UserName
       || lead.fullName
+      || lead.FullName
       || [lead.firstName, lead.lastName].filter(Boolean).join(' ').trim()
+      || [lead.FirstName, lead.LastName].filter(Boolean).join(' ').trim()
       || lead.user?.userName
+      || lead.user?.UserName
       || lead.user?.fullName
+      || lead.user?.FullName
       || lead.user?.name
+      || lead.user?.Name
       || [lead.user?.firstName, lead.user?.lastName].filter(Boolean).join(' ').trim()
+      || [lead.user?.FirstName, lead.user?.LastName].filter(Boolean).join(' ').trim()
+      || lead.User?.userName
+      || lead.User?.UserName
+      || lead.User?.fullName
+      || lead.User?.FullName
+      || lead.User?.name
+      || lead.User?.Name
+      || [lead.User?.firstName, lead.User?.lastName].filter(Boolean).join(' ').trim()
+      || [lead.User?.FirstName, lead.User?.LastName].filter(Boolean).join(' ').trim()
       || lead.lead?.fullName
+      || lead.lead?.FullName
       || lead.lead?.name
+      || lead.lead?.Name
       || [lead.lead?.firstName, lead.lead?.lastName].filter(Boolean).join(' ').trim()
+      || [lead.lead?.FirstName, lead.lead?.LastName].filter(Boolean).join(' ').trim()
+      || lead.Lead?.fullName
+      || lead.Lead?.FullName
+      || lead.Lead?.name
+      || lead.Lead?.Name
+      || [lead.Lead?.firstName, lead.Lead?.lastName].filter(Boolean).join(' ').trim()
+      || [lead.Lead?.FirstName, lead.Lead?.LastName].filter(Boolean).join(' ').trim()
       || 'بدون نام';
   }
 
   leadPhone(lead: ConsultantLead): string {
     return lead.phoneNumber
+      || lead.PhoneNumber
       || lead.mobile
+      || lead.Mobile
       || lead.userPhoneNumber
+      || lead.UserPhoneNumber
       || lead.leadPhoneNumber
+      || lead.LeadPhoneNumber
       || lead.user?.phoneNumber
+      || lead.user?.PhoneNumber
       || lead.user?.mobile
+      || lead.user?.Mobile
+      || lead.User?.phoneNumber
+      || lead.User?.PhoneNumber
+      || lead.User?.mobile
+      || lead.User?.Mobile
       || lead.lead?.phoneNumber
+      || lead.lead?.PhoneNumber
       || lead.lead?.mobile
+      || lead.lead?.Mobile
+      || lead.Lead?.phoneNumber
+      || lead.Lead?.PhoneNumber
+      || lead.Lead?.mobile
+      || lead.Lead?.Mobile
       || '-';
   }
 
   leadState(lead: ConsultantLead): number | null {
-    return lead.leadAssignmentState ?? lead.state ?? lead.status ?? null;
+    return this.numberOrNull(lead.leadAssignmentState ?? lead.LeadAssignmentState ?? lead.state ?? lead.State ?? lead.status ?? lead.Status ?? null);
   }
 
   leadType(lead: ConsultantLead): number | null {
-    return lead.leadAssignmentType ?? lead.assignmentType ?? lead.type ?? null;
+    return this.numberOrNull(lead.leadAssignmentType ?? lead.LeadAssignmentType ?? lead.assignmentType ?? lead.AssignmentType ?? lead.type ?? lead.Type ?? null);
   }
 
   stateLabel(value: number | null): string {
@@ -972,6 +1044,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.currentProfileId();
     if (!profileId) return;
 
+    const requestId = ++this.pendingOfflineRequestId;
+
     this.consultantApi.getLeads({
       profileId,
       leadAssignmentState: LEAD_STATE.Pending,
@@ -979,8 +1053,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       pageNumber: 1,
       pageSize: 50
     }).subscribe({
-      next: response => this.pendingOfflineCount = response.totalCount ?? response.items.length,
-      error: () => this.pendingOfflineCount = 0
+      next: response => {
+        if (requestId !== this.pendingOfflineRequestId) return;
+        this.applyConsultantStatusFrom(response.source, response.raw);
+        this.pendingOfflineCount = response.totalCount ?? response.items.length;
+      },
+      error: () => {
+        if (requestId === this.pendingOfflineRequestId) this.pendingOfflineCount = 0;
+      }
     });
   }
 
@@ -988,7 +1068,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.currentProfileId();
     if (!profileId) return;
 
-    this.leadsLoading = !quiet;
+    const requestId = ++this.leadRequestId;
+    if (!quiet) {
+      this.visibleLeadLoadingRequestId = requestId;
+      this.leadsLoading = true;
+    }
     if (!quiet) this.clearFeedback();
 
     this.consultantApi.getLeads({
@@ -997,8 +1081,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentType: this.leadTypeFilter,
       pageNumber: this.leadPageNumber,
       pageSize: this.leadPageSize
-    }).pipe(finalize(() => this.leadsLoading = false)).subscribe({
+    }).pipe(finalize(() => {
+      if (!quiet && requestId === this.visibleLeadLoadingRequestId) this.leadsLoading = false;
+    })).subscribe({
       next: response => {
+        if (requestId !== this.leadRequestId) return;
+        this.applyConsultantStatusFrom(response.source, response.raw);
         this.leads = response.items ?? [];
         this.leadTotalCount = response.totalCount ?? this.leads.length;
         this.leadTotalPages = Math.max(1, response.totalPages || Math.ceil(this.leadTotalCount / this.leadPageSize));
@@ -1007,6 +1095,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         this.expireDueRealtimeLeads();
       },
       error: error => {
+        if (requestId !== this.leadRequestId) return;
         if (!quiet) this.showFeedback(this.errorMessage(error, 'دریافت لیدها انجام نشد'), 'error');
       }
     });
@@ -1016,6 +1105,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.currentProfileId();
     if (!profileId) return;
 
+    const requestId = ++this.reservationRequestId;
     this.reservationsLoading = true;
 
     this.consultantApi.getReservations({
@@ -1024,9 +1114,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       includeCanceled: false,
       pageNumber: 1,
       pageSize: 5
-    }).pipe(finalize(() => this.reservationsLoading = false)).subscribe({
-      next: response => this.reservations = response.items ?? [],
-      error: () => this.reservations = []
+    }).pipe(finalize(() => {
+      if (requestId === this.reservationRequestId) this.reservationsLoading = false;
+    })).subscribe({
+      next: response => {
+        if (requestId !== this.reservationRequestId) return;
+        this.applyConsultantStatusFrom(response.source, response.raw);
+        this.reservations = response.items ?? [];
+      },
+      error: () => {
+        if (requestId === this.reservationRequestId) this.reservations = [];
+      }
     });
   }
 
@@ -1132,7 +1230,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.consultantApi.expireLeadNoCall({ leadAssignmentId, consultantProfileId: profileId }).subscribe({
       next: response => {
-        if (typeof response.data?.isConsultantOnline === 'boolean') {
+        const status = this.applyConsultantStatusFrom(response, response.data);
+        if (status.isOnline === null && typeof response.data?.isConsultantOnline === 'boolean') {
           this.isOnline = response.data.isConsultantOnline;
         }
         this.leads = this.leads.map(lead => this.leadId(lead) === leadAssignmentId ? { ...lead, leadAssignmentState: LEAD_STATE.Expired } : lead);
@@ -1159,6 +1258,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       description: 'رزرو اولیه پس از تماس موفق'
     };
     this.reservationDialogOpen = true;
+  }
+
+  private markLeadReported(leadAssignmentId: number, nextState: number): void {
+    this.leads = this.leads.map(lead => {
+      if (this.leadId(lead) !== leadAssignmentId) return lead;
+
+      return {
+        ...lead,
+        isReportSubmitted: true,
+        IsReportSubmitted: true,
+        leadAssignmentState: nextState,
+        LeadAssignmentState: nextState,
+        state: nextState
+      };
+    });
   }
 
   private selectedReservationDateTime(): Date | null {
@@ -1266,6 +1380,76 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     } catch {
       // The dashboard still works; only local timer persistence is skipped.
     }
+  }
+
+  private applyConsultantStatusFrom(...sources: unknown[]): ConsultantStatusUpdate {
+    const update: ConsultantStatusUpdate = { isAvailable: null, isOnline: null };
+
+    sources.forEach(source => this.collectConsultantStatus(source, update, 0));
+
+    if (update.isAvailable !== null) this.isAvailable = update.isAvailable;
+    if (update.isOnline !== null) this.isOnline = update.isOnline;
+
+    return update;
+  }
+
+  private collectConsultantStatus(source: unknown, update: ConsultantStatusUpdate, depth: number): void {
+    if (depth > 2 || !this.isRecord(source)) return;
+
+    update.isAvailable ??= this.readBoolean(source, 'isAvailable', 'available', 'consultantIsAvailable');
+    update.isOnline ??= this.readBoolean(source, 'isOnline', 'online', 'consultantIsOnline', 'isConsultantOnline');
+
+    if (update.isOnline === null) {
+      const isOffline = this.readBoolean(source, 'isOffline', 'offline', 'consultantIsOffline');
+      if (isOffline !== null) update.isOnline = !isOffline;
+    }
+
+    for (const key of ['data', 'result', 'value', 'payload', 'consultant', 'profile', 'status']) {
+      const nested = this.readValue(source, key);
+      if (nested && nested !== source) this.collectConsultantStatus(nested, update, depth + 1);
+    }
+  }
+
+  private readBoolean(source: unknown, ...keys: string[]): boolean | null {
+    if (!this.isRecord(source)) return null;
+
+    for (const key of keys) {
+      const value = this.readValue(source, key);
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['true', '1', 'yes'].includes(normalized)) return true;
+        if (['false', '0', 'no'].includes(normalized)) return false;
+      }
+    }
+
+    return null;
+  }
+
+  private numberOrNull(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const numeric = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  private readValue(source: unknown, ...keys: string[]): unknown {
+    if (!this.isRecord(source)) return undefined;
+
+    for (const key of keys) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) return source[key];
+    }
+
+    const entries = Object.entries(source);
+    for (const key of keys) {
+      const match = entries.find(([entryKey]) => entryKey.toLowerCase() === key.toLowerCase());
+      if (match) return match[1];
+    }
+
+    return undefined;
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
   }
 
   private showFeedback(message: string, type: 'success' | 'error'): void {
