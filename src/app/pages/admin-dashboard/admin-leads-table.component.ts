@@ -48,10 +48,6 @@ type LeadTableMode = 'system' | 'consultant';
         <button class="primary-filter" type="submit">اعمال فیلتر</button>
       </form>
 
-      <p class="hint">
-        محدودیت فعلی بک‌اند: فیلتر وضعیت فقط برای جدید، تماس گرفته شده، در انتظار پیگیری و رد شده اعمال می‌شود؛ فیلتر نوع هم فقط برای صف آفلاین اعمال می‌شود.
-      </p>
-
       @if (feedback) {
         <p class="feedback error">{{ feedback }}</p>
       }
@@ -76,7 +72,7 @@ type LeadTableMode = 'system' | 'consultant';
     .admin-panel{display:grid;gap:16px;padding:18px;border:1px solid var(--line);border-radius:30px;background:color-mix(in srgb,var(--surface) 88%,transparent);box-shadow:var(--shadow)}
     .panel-heading{display:flex;justify-content:space-between;gap:12px}.panel-heading span{display:inline-flex;margin-bottom:8px;padding:5px 12px;border-radius:999px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);font-weight:950}.panel-heading h2{margin:0;font-size:1.35rem}.panel-heading p{margin:8px 0 0;color:var(--muted)}
     .filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}label{display:grid;gap:8px;color:var(--muted);font-weight:950}.primary-filter{min-height:50px;border:0;border-radius:18px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712;font:inherit;font-weight:950}
-    .hint,.feedback{margin:0;padding:10px 12px;border-radius:18px;font-weight:900}.hint{background:var(--surface-muted);color:var(--muted)}.feedback.error{background:color-mix(in srgb,var(--danger) 14%,transparent);color:#fecaca}
+    .feedback{margin:0;padding:10px 12px;border-radius:18px;font-weight:900}.feedback.error{background:color-mix(in srgb,var(--danger) 14%,transparent);color:#fecaca}
     @media (max-width:760px){.admin-panel{padding:14px;border-radius:24px}.filter-grid{grid-template-columns:1fr}}
   `]
 })
@@ -99,11 +95,11 @@ export class AdminLeadsTableComponent implements OnChanges {
   };
 
   readonly columns: TableColumn<LeadAssignmentItem>[] = [
-    { key: 'id', label: 'شناسه' },
-    { key: 'userName', label: 'نام مراجعه‌کننده' },
-    { key: 'phoneNumber', label: 'موبایل' },
-    { key: 'leadAssignmentState', label: 'وضعیت', value: row => this.stateLabel(row.leadAssignmentState), badge: row => this.stateBadge(row.leadAssignmentState) },
-    { key: 'leadAssignmentType', label: 'نوع', value: row => this.typeLabel(row.leadAssignmentType), badge: () => 'info' }
+    { key: 'id', label: 'شناسه', value: row => row.id ?? row.leadAssignmentId ?? '-' },
+    { key: 'userName', label: 'نام مراجعه‌کننده', value: row => this.leadName(row) },
+    { key: 'phoneNumber', label: 'موبایل', value: row => this.leadPhone(row) },
+    { key: 'leadAssignmentState', label: 'وضعیت', value: row => this.stateLabel(this.leadState(row)), badge: row => this.stateBadge(this.leadState(row)) },
+    { key: 'leadAssignmentType', label: 'نوع', value: row => this.typeLabel(this.leadType(row)), badge: () => 'info' }
   ];
 
   constructor(private adminApi: AdminDashboardService) {}
@@ -155,7 +151,41 @@ export class AdminLeadsTableComponent implements OnChanges {
     });
   }
 
-  private stateLabel(value: number): string {
+  private leadName(row: LeadAssignmentItem): string {
+    return row.userName
+      || row.fullName
+      || [row.firstName, row.lastName].filter(Boolean).join(' ').trim()
+      || row.user?.userName
+      || row.user?.fullName
+      || row.user?.name
+      || [row.user?.firstName, row.user?.lastName].filter(Boolean).join(' ').trim()
+      || row.lead?.fullName
+      || row.lead?.name
+      || [row.lead?.firstName, row.lead?.lastName].filter(Boolean).join(' ').trim()
+      || 'بدون نام';
+  }
+
+  private leadPhone(row: LeadAssignmentItem): string {
+    return row.phoneNumber
+      || row.mobile
+      || row.userPhoneNumber
+      || row.leadPhoneNumber
+      || row.user?.phoneNumber
+      || row.user?.mobile
+      || row.lead?.phoneNumber
+      || row.lead?.mobile
+      || '-';
+  }
+
+  private leadState(row: LeadAssignmentItem): number | null {
+    return row.leadAssignmentState ?? row.state ?? row.status ?? null;
+  }
+
+  private leadType(row: LeadAssignmentItem): number | null {
+    return row.leadAssignmentType ?? row.assignmentType ?? row.type ?? null;
+  }
+
+  private stateLabel(value: number | null): string {
     const labels: Record<number, string> = {
       1: 'جدید',
       2: 'تخصیص داده شده',
@@ -166,17 +196,18 @@ export class AdminLeadsTableComponent implements OnChanges {
       7: 'رد شده'
     };
 
-    return labels[value] ?? 'نامشخص';
+    return value === null ? 'نامشخص' : labels[value] ?? 'نامشخص';
   }
 
-  private stateBadge(value: number): string {
-    if ([1, 2].includes(value)) return 'info';
-    if ([3, 5].includes(value)) return 'success';
-    if ([4, 6].includes(value)) return 'warn';
+  private stateBadge(value: number | null): string {
+    if (value === 1 || value === 2) return 'info';
+    if (value === 3 || value === 5) return 'success';
+    if (value === 4 || value === 6) return 'warn';
     return 'danger';
   }
 
-  private typeLabel(value: number): string {
+  private typeLabel(value: number | null): string {
+    if (value === null) return 'نامشخص';
     return value === 2 ? 'صف آفلاین' : 'هم‌زمان';
   }
 
