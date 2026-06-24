@@ -229,7 +229,7 @@ interface ScoreFormModel {
                   [pageSize]="consultantFilters.pageSize"
                   [totalCount]="consultantsTotalCount"
                   [totalPages]="consultantsTotalPages"
-                  emptyText="مشاوری برای نمایش وجود ندارد"
+                  emptyText="چیزی نیست"
                   (actionClick)="handleConsultantAction($event)"
                   (pageChange)="changeConsultantsPage($event)"
                 ></app-base-table>
@@ -256,7 +256,7 @@ interface ScoreFormModel {
               <app-admin-leads-table
                 mode="system"
                 title="مدیریت کامل لیدهای سیستم"
-                description="مشاهده همه لیدهای سیستم همراه فیلترهای مجاز بک‌اند"
+                description="مشاهده همه لیدهای سیستم همراه فیلتر وضعیت و نوع تخصیص"
               ></app-admin-leads-table>
             }
           </section>

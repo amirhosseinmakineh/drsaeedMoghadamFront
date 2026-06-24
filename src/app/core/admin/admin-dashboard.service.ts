@@ -83,11 +83,24 @@ export interface AttendanceItem {
 }
 
 export interface LeadAssignmentItem {
-  id: number;
-  userName: string;
-  phoneNumber: string;
-  leadAssignmentState: number;
-  leadAssignmentType: number;
+  id?: number;
+  leadAssignmentId?: number;
+  userName?: string | null;
+  fullName?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  phoneNumber?: string | null;
+  mobile?: string | null;
+  userPhoneNumber?: string | null;
+  leadPhoneNumber?: string | null;
+  leadAssignmentState?: number | null;
+  state?: number | null;
+  status?: number | null;
+  leadAssignmentType?: number | null;
+  type?: number | null;
+  assignmentType?: number | null;
+  user?: LeadPerson | null;
+  lead?: LeadPerson | null;
 }
 
 export interface LeadFilters {
@@ -106,6 +119,16 @@ export interface ScoreRequest {
   description: string | null;
   leadAssignmentId: number | null;
   createdByUserId: string | null;
+}
+
+interface LeadPerson {
+  userName?: string | null;
+  fullName?: string | null;
+  name?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  phoneNumber?: string | null;
+  mobile?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -161,17 +184,17 @@ export class AdminDashboardService {
   }
 
   getConsultantLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
-    return this.http.get<PaginatedResponse<LeadAssignmentItem>>(`${this.apiBaseUrl}/api/Consultant/GetLeads`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Consultant/GetLeads`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
-    });
+    }).pipe(map(response => this.normalizePaginatedResponse<LeadAssignmentItem>(response, filters)));
   }
 
   getSystemLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
-    return this.http.get<PaginatedResponse<LeadAssignmentItem>>(`${this.apiBaseUrl}/api/LeadAssignment`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/api/LeadAssignment`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
-    });
+    }).pipe(map(response => this.normalizePaginatedResponse<LeadAssignmentItem>(response, filters)));
   }
 
   private authHeaders(): HttpHeaders {
@@ -201,6 +224,59 @@ export class AdminDashboardService {
       }),
       catchError(error => throwError(() => this.toUserFacingError(error, fallback)))
     );
+  }
+
+  private normalizePaginatedResponse<T>(response: unknown, filters: { pageNumber: number; pageSize: number }): PaginatedResponse<T> {
+    const source = this.unwrapResponseData(response);
+    const items = this.readItems<T>(source);
+    const totalCount = this.readNumber(source, 'totalCount', 'total', 'count') ?? items.length;
+    const pageSize = this.readNumber(source, 'pageSize', 'take') ?? filters.pageSize;
+    const pageNumber = this.readNumber(source, 'pageNumber', 'page') ?? filters.pageNumber;
+    const totalPages = this.readNumber(source, 'totalPages') ?? Math.ceil(totalCount / pageSize);
+
+    return {
+      items,
+      totalCount,
+      pageNumber,
+      pageSize,
+      totalPages: Math.max(1, totalPages)
+    };
+  }
+
+  private unwrapResponseData(response: unknown): unknown {
+    if (Array.isArray(response)) return response;
+    if (!this.isRecord(response)) return response;
+
+    if ('data' in response && response.data !== null && response.data !== undefined) {
+      return response.data;
+    }
+
+    return response;
+  }
+
+  private readItems<T>(source: unknown): T[] {
+    if (Array.isArray(source)) return source as T[];
+    if (!this.isRecord(source)) return [];
+
+    const items = source.items ?? source.data;
+    return Array.isArray(items) ? items as T[] : [];
+  }
+
+  private readNumber(source: unknown, ...keys: string[]): number | null {
+    if (!this.isRecord(source)) return null;
+
+    for (const key of keys) {
+      const value = source[key];
+      if (value === null || value === undefined || value === '') continue;
+      const numeric = typeof value === 'number' ? value : Number(value);
+      if (Number.isFinite(numeric)) return numeric;
+    }
+
+    return null;
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {
