@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize, switchMap, tap } from 'rxjs';
@@ -590,11 +590,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private pendingOfflineLoadSubscription: Subscription | null = null;
   private leadLoadSubscription: Subscription | null = null;
   private reservationLoadSubscription: Subscription | null = null;
+  private destroyed = false;
 
   constructor(
     private auth: AuthService,
     private router: Router,
-    private consultantApi: ConsultantDashboardService
+    private consultantApi: ConsultantDashboardService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   get visibleDashboardLinks(): ConsultantDashboardLink[] {
@@ -617,6 +619,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
     this.pendingOfflineLoadSubscription?.unsubscribe();
@@ -664,7 +667,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       nationalityCode: this.profileForm.nationalityCode.trim(),
       address: this.profileForm.address.trim(),
       isCompleteProfile: true
-    }).pipe(finalize(() => this.profileSaving = false)).subscribe({
+    }).pipe(finalize(() => {
+      this.profileSaving = false;
+      this.markViewDirty();
+    })).subscribe({
       next: response => {
         const profileId = this.resolveProfileId(response.data) ?? this.currentProfileId() ?? 0;
         if (profileId > 0) {
@@ -704,6 +710,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => {
         this.availabilitySaving = false;
         if (shouldForceOffline) this.onlineSaving = false;
+        this.markViewDirty();
       }))
       .subscribe({
         next: response => {
@@ -734,7 +741,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.clearFeedback();
 
     this.consultantApi.setOnlineStatus({ profileId, isOnline, isOffline: !isOnline })
-      .pipe(finalize(() => this.onlineSaving = false))
+      .pipe(finalize(() => {
+        this.onlineSaving = false;
+        this.markViewDirty();
+      }))
       .subscribe({
         next: response => {
           const status = this.applyConsultantStatusFrom(response, response.data);
@@ -801,7 +811,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     };
 
     this.consultantApi.submitLeadCallReport(payload)
-      .pipe(finalize(() => this.reportSaving = false))
+      .pipe(finalize(() => {
+        this.reportSaving = false;
+        this.markViewDirty();
+      }))
       .subscribe({
         next: response => {
           const wasBlockingOfflineLead = this.leadType(lead) === LEAD_TYPE.OfflineQueue && this.leadState(lead) === LEAD_STATE.Pending;
@@ -863,7 +876,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.clearFeedback();
 
     this.consultantApi.createReservation(payload)
-      .pipe(finalize(() => this.reservationSaving = false))
+      .pipe(finalize(() => {
+        this.reservationSaving = false;
+        this.markViewDirty();
+      }))
       .subscribe({
         next: response => {
           this.reservationRequired = false;
@@ -1061,7 +1077,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentType: LEAD_TYPE.OfflineQueue,
       pageNumber: 1,
       pageSize: 50
-    }).subscribe({
+    }).pipe(finalize(() => this.markViewDirty())).subscribe({
       next: response => {
         if (requestId !== this.pendingOfflineRequestId) return;
         this.applyConsultantStatusFrom(response.source, response.raw);
@@ -1095,6 +1111,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       pageSize: this.leadPageSize
     }).pipe(finalize(() => {
       if (!quiet && requestId === this.visibleLeadLoadingRequestId) this.leadsLoading = false;
+      this.markViewDirty();
     })).subscribe({
       next: response => {
         if (requestId !== this.leadRequestId) return;
@@ -1129,6 +1146,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       pageSize: 5
     }).pipe(finalize(() => {
       if (requestId === this.reservationRequestId) this.reservationsLoading = false;
+      this.markViewDirty();
     })).subscribe({
       next: response => {
         if (requestId !== this.reservationRequestId) return;
@@ -1146,6 +1164,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.timerId = setInterval(() => {
         this.currentTime = Date.now();
         this.expireDueRealtimeLeads();
+        this.markViewDirty();
       }, 1000);
     }
 
@@ -1241,7 +1260,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.expiringLeadIds.add(leadAssignmentId);
 
-    this.consultantApi.expireLeadNoCall({ leadAssignmentId, consultantProfileId: profileId }).subscribe({
+    this.consultantApi.expireLeadNoCall({ leadAssignmentId, consultantProfileId: profileId }).pipe(finalize(() => {
+      this.expiringLeadIds.delete(leadAssignmentId);
+      this.markViewDirty();
+    })).subscribe({
       next: response => {
         const status = this.applyConsultantStatusFrom(response, response.data);
         if (status.isOnline === null && typeof response.data?.isConsultantOnline === 'boolean') {
@@ -1257,7 +1279,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         this.showFeedback(this.errorMessage(error, 'منقضی کردن لید انجام نشد'), 'error');
         this.loadLeads(true);
       },
-      complete: () => this.expiringLeadIds.delete(leadAssignmentId)
     });
   }
 
@@ -1472,6 +1493,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private clearFeedback(): void {
     this.feedbackMessage = '';
+  }
+
+  private markViewDirty(): void {
+    if (this.destroyed) return;
+    this.cdr.markForCheck();
   }
 
   private errorMessage(error: unknown, fallback: string): string {
