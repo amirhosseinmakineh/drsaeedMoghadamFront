@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { DatePickerDay, LanguageCode, LocalizedText, pickText, text } from '../../../models/clinic.model';
 
 @Component({
@@ -17,7 +17,7 @@ import { DatePickerDay, LanguageCode, LocalizedText, pickText, text } from '../.
           <button type="button" (click)="moveMonth(-1)" [disabled]="!canMovePrevious">
             {{ language === 'fa' ? 'ماه قبل' : 'Prev' }}
           </button>
-          <button type="button" (click)="moveMonth(1)">
+          <button type="button" (click)="moveMonth(1)" [disabled]="!canMoveNext">
             {{ language === 'fa' ? 'ماه بعد' : 'Next' }}
           </button>
         </div>
@@ -63,10 +63,13 @@ import { DatePickerDay, LanguageCode, LocalizedText, pickText, text } from '../.
     @media(max-width:560px){header{align-items:flex-start;flex-direction:column}.month-nav{width:100%}.month-nav button{flex:1}}
   `]
 })
-export class BaseDatepickerComponent {
+export class BaseDatepickerComponent implements OnChanges {
   @Input() language: LanguageCode = 'fa';
   @Input() selectedDate?: Date;
   @Input() label: LocalizedText = text('تاریخ پیشنهادی تماس', 'Preferred call date');
+  @Input() minDate?: Date | null;
+  @Input() maxDate?: Date | null;
+  @Input() allowToday = false;
   @Output() dateChange = new EventEmitter<Date>();
 
   private activeMonthAnchor = new Date();
@@ -101,11 +104,17 @@ export class BaseDatepickerComponent {
   }
 
   get canMovePrevious(): boolean {
-    return this.monthStart.getTime() > this.currentMonthStart.getTime();
+    return this.monthStart.getTime() > this.minMonthStart.getTime();
+  }
+
+  get canMoveNext(): boolean {
+    if (!this.maxDate) return true;
+    return this.monthStart.getTime() < this.findMonthStart(this.maxDate, this.calendarParts(this.maxDate)).getTime();
   }
 
   get days(): DatePickerDay[] {
-    const today = new Date();
+    const minDate = this.minSelectableDate;
+    const maxDate = this.maxDate ? this.startOfDay(this.maxDate) : null;
     const currentMonth = this.calendarParts(this.activeMonthAnchor);
     const gridStart = this.addDays(this.monthStart, -this.weekOffset(this.monthStart));
 
@@ -118,7 +127,9 @@ export class BaseDatepickerComponent {
         label: new Intl.DateTimeFormat(this.locale, { day: 'numeric' }).format(date),
         weekday: new Intl.DateTimeFormat(this.locale, { weekday: 'short' }).format(date),
         iso: this.toIsoDate(date),
-        disabled: outsideMonth || this.startOfDay(date).getTime() <= this.startOfDay(today).getTime(),
+        disabled: outsideMonth
+          || this.startOfDay(date).getTime() < minDate.getTime()
+          || (maxDate !== null && this.startOfDay(date).getTime() > maxDate.getTime()),
         outsideMonth,
         ariaLabel: new Intl.DateTimeFormat(this.locale, {
           weekday: 'long',
@@ -130,8 +141,20 @@ export class BaseDatepickerComponent {
     });
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedDate'] && this.selectedDate) {
+      this.activeMonthAnchor = this.selectedDate;
+      return;
+    }
+
+    if ((changes['maxDate'] || changes['minDate']) && this.activeMonthAnchorOutsideSelectableRange()) {
+      this.activeMonthAnchor = this.maxDate ?? this.minSelectableDate;
+    }
+  }
+
   moveMonth(direction: number): void {
     if (direction < 0 && !this.canMovePrevious) return;
+    if (direction > 0 && !this.canMoveNext) return;
 
     const base = this.monthStart;
     this.activeMonthAnchor = this.addDays(base, direction > 0 ? 32 : -2);
@@ -154,6 +177,17 @@ export class BaseDatepickerComponent {
   private get currentMonthStart(): Date {
     const today = new Date();
     return this.findMonthStart(today, this.calendarParts(today));
+  }
+
+  private get minMonthStart(): Date {
+    return this.findMonthStart(this.minSelectableDate, this.calendarParts(this.minSelectableDate));
+  }
+
+  private get minSelectableDate(): Date {
+    if (this.minDate) return this.startOfDay(this.minDate);
+
+    const today = this.startOfDay(new Date());
+    return this.allowToday ? today : this.addDays(today, 1);
   }
 
   private get locale(): string {
@@ -215,5 +249,14 @@ export class BaseDatepickerComponent {
     const month = `${date.getMonth() + 1}`.padStart(2, '0');
     const day = `${date.getDate()}`.padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private activeMonthAnchorOutsideSelectableRange(): boolean {
+    const monthStart = this.monthStart.getTime();
+    if (monthStart < this.minMonthStart.getTime()) return true;
+    if (!this.maxDate) return false;
+
+    const maxMonthStart = this.findMonthStart(this.maxDate, this.calendarParts(this.maxDate)).getTime();
+    return monthStart > maxMonthStart;
   }
 }

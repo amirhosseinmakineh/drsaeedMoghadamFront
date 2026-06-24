@@ -12,6 +12,7 @@ import {
   SubmitLeadCallReportRequest
 } from '../../core/consultant/consultant-dashboard.service';
 import { BaseDialogComponent } from '../../shared/base/base-dialog/base-dialog.component';
+import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-datepicker.component';
 import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
 const LEAD_STATE = {
@@ -43,7 +44,8 @@ interface LeadReportForm {
 }
 
 interface ReservationForm {
-  reservationAt: string;
+  reservationDate: Date | null;
+  reservationTime: string;
   description: string;
 }
 
@@ -58,7 +60,7 @@ interface ConsultantDashboardLink {
 @Component({
   selector: 'app-consultant-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BaseDialogComponent, FaIconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, BaseDialogComponent, BaseDatepickerComponent, FaIconComponent],
   template: `
     <section class="dashboard-layout consultant-mode">
       <aside class="dashboard-sidebar mobile-app-nav">
@@ -78,7 +80,7 @@ interface ConsultantDashboardLink {
 
         <nav class="dashboard-nav" aria-label="داشبورد مشاور">
           <button
-            *ngFor="let item of dashboardLinks"
+            *ngFor="let item of visibleDashboardLinks"
             type="button"
             [class.active]="activeSection === item.id"
             (click)="setSection(item.id)"
@@ -110,11 +112,13 @@ interface ConsultantDashboardLink {
 
           @if (activeSection === 'overview') {
             <section class="consultant-overview">
-              <button type="button" (click)="setSection('profile')">
-                <span><app-fa-icon name="shield"></app-fa-icon></span>
-                <strong>پروفایل و وضعیت</strong>
-                <small>{{ isProfileReady() ? 'پروفایل کامل است؛ حضور و آنلاین بودن را مدیریت کنید.' : 'برای فعال شدن لیدها، تکمیل پروفایل ضروری است.' }}</small>
-              </button>
+              @if (!isProfileReady()) {
+                <button type="button" (click)="setSection('profile')">
+                  <span><app-fa-icon name="shield"></app-fa-icon></span>
+                  <strong>تکمیل پروفایل</strong>
+                  <small>برای فعال شدن لیدها، تکمیل یک‌باره پروفایل ضروری است.</small>
+                </button>
+              }
               <button type="button" (click)="setSection('leads')">
                 <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                 <strong>لیدهای من</strong>
@@ -152,6 +156,30 @@ interface ConsultantDashboardLink {
                     <strong [class.good]="isOnline" [class.bad]="!isOnline">{{ isOnline ? 'آنلاین' : 'آفلاین' }}</strong>
                   </div>
                 </div>
+                <div class="action-grid">
+                  <button class="primary-action" type="button" [disabled]="availabilitySaving || isAvailable" (click)="setAvailability(true)">
+                    <app-fa-icon name="check"></app-fa-icon>
+                    ثبت حضور
+                  </button>
+                  <button class="secondary-action danger" type="button" [disabled]="availabilitySaving || !isAvailable" (click)="setAvailability(false)">
+                    <app-fa-icon name="moon"></app-fa-icon>
+                    عدم حضور
+                  </button>
+                  <button class="primary-action" type="button" [disabled]="onlineSaving || !canGoOnline()" (click)="setOnlineStatus(true)">
+                    <app-fa-icon name="mobile"></app-fa-icon>
+                    آنلاین
+                  </button>
+                  <button class="secondary-action" type="button" [disabled]="onlineSaving || !isOnline" (click)="setOnlineStatus(false)">
+                    <app-fa-icon name="close"></app-fa-icon>
+                    آفلاین
+                  </button>
+                </div>
+
+                @if (pendingOfflineCount > 0) {
+                  <p class="queue-warning">
+                    {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
+                  </p>
+                }
               </section>
             }
           }
@@ -414,8 +442,18 @@ interface ConsultantDashboardLink {
       >
         <form class="dialog-form" (ngSubmit)="submitReservation()">
           <label>
-            زمان رزرو
-            <input [(ngModel)]="reservationForm.reservationAt" name="reservationAt" type="datetime-local" [min]="minReservationDateTime()" />
+            تاریخ رزرو
+            <app-base-datepicker
+              [label]="reservationDatePickerLabel"
+              [selectedDate]="reservationForm.reservationDate ?? undefined"
+              [minDate]="minimumReservationDate()"
+              [allowToday]="true"
+              (dateChange)="setReservationDate($event)"
+            ></app-base-datepicker>
+          </label>
+          <label>
+            ساعت رزرو
+            <input [(ngModel)]="reservationForm.reservationTime" name="reservationTime" type="time" />
           </label>
           <label>
             توضیحات
@@ -519,11 +557,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reservationRequired = false;
   selectedReservationLead: ConsultantLead | null = null;
   reservationForm: ReservationForm = {
-    reservationAt: '',
+    reservationDate: null,
+    reservationTime: '',
     description: ''
   };
   reservations: ConsultantReservation[] = [];
   reservationsLoading = false;
+  readonly reservationDatePickerLabel = { fa: 'تاریخ رزرو', en: 'Reservation date' };
 
   feedbackMessage = '';
   feedbackType: 'success' | 'error' = 'success';
@@ -542,6 +582,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private consultantApi: ConsultantDashboardService
   ) {}
+
+  get visibleDashboardLinks(): ConsultantDashboardLink[] {
+    return this.isProfileReady()
+      ? this.dashboardLinks.filter(item => item.id !== 'profile')
+      : this.dashboardLinks;
+  }
 
   ngOnInit(): void {
     this.profileId = this.currentProfileId();
@@ -578,6 +624,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   setSection(section: ConsultantDashboardSection): void {
+    if (section === 'profile' && this.isProfileReady()) {
+      this.activeSection = 'overview';
+      return;
+    }
+
     this.activeSection = section;
   }
 
@@ -598,7 +649,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       isCompleteProfile: true
     }).pipe(finalize(() => this.profileSaving = false)).subscribe({
       next: response => {
-        const profileId = Number(response.data || this.currentProfileId() || 0);
+        const profileId = this.resolveProfileId(response.data) ?? this.currentProfileId() ?? 0;
         if (profileId > 0) {
           this.profileId = profileId;
           this.auth.updateConsultantProfile(profileId, true);
@@ -746,14 +797,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  setReservationDate(date: Date): void {
+    this.reservationForm.reservationDate = date;
+  }
+
   submitReservation(): void {
     const profileId = this.requireProfileId();
     const lead = this.selectedReservationLead;
     const leadAssignmentId = lead ? this.leadId(lead) : null;
     if (!profileId || !leadAssignmentId) return;
 
-    const reservationAt = new Date(this.reservationForm.reservationAt);
-    if (!this.reservationForm.reservationAt || !Number.isFinite(reservationAt.getTime()) || reservationAt.getTime() <= Date.now()) {
+    const reservationAt = this.selectedReservationDateTime();
+    if (!reservationAt || !Number.isFinite(reservationAt.getTime()) || reservationAt.getTime() <= Date.now()) {
       this.showFeedback('زمان رزرو باید در آینده باشد', 'error');
       return;
     }
@@ -894,9 +949,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   minReservationDateTime(): string {
-    const date = new Date(Date.now() + 5 * 60 * 1000);
-    date.setSeconds(0, 0);
-    return this.toDateTimeLocalValue(date);
+    return this.toDateTimeLocalValue(this.minimumReservationDateTime());
+  }
+
+  minimumReservationDate(): Date {
+    const date = this.minimumReservationDateTime();
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
   formatDateTime(value: string): string {
@@ -1092,13 +1150,39 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private openReservationDialog(lead: ConsultantLead, required: boolean): void {
+    const minimumReservationAt = this.minimumReservationDateTime();
     this.selectedReservationLead = lead;
     this.reservationRequired = required;
     this.reservationForm = {
-      reservationAt: this.minReservationDateTime(),
+      reservationDate: minimumReservationAt,
+      reservationTime: this.toTimeValue(minimumReservationAt),
       description: 'رزرو اولیه پس از تماس موفق'
     };
     this.reservationDialogOpen = true;
+  }
+
+  private selectedReservationDateTime(): Date | null {
+    const date = this.reservationForm.reservationDate;
+    const time = this.reservationForm.reservationTime;
+    if (!date || !time) return null;
+
+    const [hours, minutes] = time.split(':').map(Number);
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return null;
+    }
+
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes);
+  }
+
+  private minimumReservationDateTime(): Date {
+    const date = new Date(Date.now() + 5 * 60 * 1000);
+    date.setSeconds(0, 0);
+    return date;
+  }
+
+  private toTimeValue(date: Date): string {
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
   private leadDeadlineMs(lead: ConsultantLead): number {
@@ -1117,6 +1201,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const code = this.profileForm.nationalityCode.trim();
     if (!/^\d{10}$/.test(code)) return 'کد ملی باید ۱۰ رقم باشد';
     if (!this.profileForm.address.trim() || this.profileForm.address.trim().length < 5) return 'آدرس مشاور الزامی است';
+    return null;
+  }
+
+  private resolveProfileId(data: unknown): number | null {
+    if (typeof data === 'number' && data > 0) return data;
+    if (typeof data === 'string') {
+      const numeric = Number(data);
+      return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+    }
+
+    if (typeof data !== 'object' || data === null) return null;
+
+    const source = data as Record<string, unknown>;
+    for (const key of ['profileId', 'consultantProfileId', 'id']) {
+      const value = source[key];
+      const numeric = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+      if (Number.isFinite(numeric) && numeric > 0) return numeric;
+    }
+
     return null;
   }
 

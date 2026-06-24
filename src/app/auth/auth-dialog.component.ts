@@ -5,12 +5,13 @@ import { finalize } from 'rxjs';
 import { AuthService, RegisterRequest } from '../core/auth/auth.service';
 import { AuthDialogMode, AuthDialogModel, LanguageCode, text } from '../models/clinic.model';
 import { BaseDialogComponent } from '../shared/base/base-dialog/base-dialog.component';
+import { BaseDatepickerComponent } from '../shared/base/base-datepicker/base-datepicker.component';
 import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
 
 @Component({
   selector: 'app-auth-dialog',
   standalone: true,
-  imports: [FormsModule, BaseDialogComponent, FaIconComponent],
+  imports: [FormsModule, BaseDialogComponent, BaseDatepickerComponent, FaIconComponent],
   template: `
     <app-base-dialog
       [open]="open"
@@ -66,7 +67,14 @@ import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
             </label>
             <label>
               {{ copy.birthDate[language] }}
-              <input [(ngModel)]="form.birthDate" name="authBirthDate" type="date" />
+              <app-base-datepicker
+                [language]="language"
+                [label]="copy.birthDate"
+                [selectedDate]="selectedBirthDate"
+                [minDate]="birthDateMinDate"
+                [maxDate]="birthDateMaxDate"
+                (dateChange)="setBirthDate($event)"
+              ></app-base-datepicker>
             </label>
           </div>
         }
@@ -106,6 +114,9 @@ export class AuthDialogComponent {
     gender: 1,
     birthDate: ''
   };
+  selectedBirthDate?: Date;
+  readonly birthDateMinDate = this.createRelativeYearDate(-120);
+  readonly birthDateMaxDate = this.createYesterday();
 
   copy = {
     title: text('ورود و عضویت', 'Sign in and membership'),
@@ -131,6 +142,11 @@ export class AuthDialogComponent {
   switchMode(mode: AuthDialogMode): void {
     this.mode.set(mode);
     this.feedback.set(null);
+  }
+
+  setBirthDate(date: Date): void {
+    this.selectedBirthDate = date;
+    this.form.birthDate = this.toDateInputValue(date);
   }
 
   submit(): void {
@@ -216,7 +232,31 @@ export class AuthDialogComponent {
       gender: 1,
       birthDate: ''
     };
+    this.selectedBirthDate = undefined;
     this.feedback.set(null);
+  }
+
+  private createYesterday(): Date {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return this.startOfDay(date);
+  }
+
+  private createRelativeYearDate(yearOffset: number): Date {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + yearOffset);
+    return this.startOfDay(date);
+  }
+
+  private startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private toDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private errorMessage(error: unknown, fallback: string): string {
