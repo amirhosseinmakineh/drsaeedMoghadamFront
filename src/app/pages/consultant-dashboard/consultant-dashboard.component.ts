@@ -550,7 +550,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.requireProfileId();
     const lead = this.selectedLead;
     const leadAssignmentId = lead ? this.leadId(lead) : null;
-    if (!profileId || !leadAssignmentId) return;
+    if (!profileId || !lead || !leadAssignmentId) return;
 
     this.reportSaving = true;
     this.clearFeedback();
