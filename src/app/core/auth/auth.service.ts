@@ -12,6 +12,9 @@ export interface AuthUser {
   token: string;
   userId?: string;
   phoneNumber?: string;
+  profileId?: number;
+  consultantProfileId?: number;
+  isCompleteProfile?: boolean;
 }
 
 export interface RegisterRequest {
@@ -45,6 +48,9 @@ type TokenResponseData = string | {
   role?: string;
   firstName?: string;
   lastName?: string;
+  profileId?: number | string;
+  consultantProfileId?: number | string;
+  isCompleteProfile?: boolean | string;
 };
 
 interface StoredSession {
@@ -108,6 +114,18 @@ export class AuthService {
     }
   }
 
+  updateConsultantProfile(profileId: number, isCompleteProfile = true): void {
+    const user = this.currentUser();
+    if (!user) return;
+
+    this.saveSession({
+      ...user,
+      profileId,
+      consultantProfileId: profileId,
+      isCompleteProfile
+    });
+  }
+
   dashboardUrl(user: AuthUser | null = this.currentUser()): string {
     if (!user) return '/';
 
@@ -162,6 +180,12 @@ export class AuthService {
         'nameid',
         'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
       ]) ?? data.userId,
+      profileId: this.claimNumber(claims, ['profileId', 'ProfileId', 'consultantProfileId', 'ConsultantProfileId'])
+        ?? this.dataNumber(data, 'profileId', 'consultantProfileId'),
+      consultantProfileId: this.claimNumber(claims, ['consultantProfileId', 'ConsultantProfileId', 'profileId', 'ProfileId'])
+        ?? this.dataNumber(data, 'consultantProfileId', 'profileId'),
+      isCompleteProfile: this.claimBoolean(claims, ['isCompleteProfile', 'IsCompleteProfile', 'profileComplete', 'ProfileComplete'])
+        ?? this.dataBoolean(data, 'isCompleteProfile'),
       roleName,
       role: this.normalizeRole(roleName)
     };
@@ -196,6 +220,54 @@ export class AuthService {
       const value = claims[key];
       if (typeof value === 'string' && value.trim()) return value;
       if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) return value[0];
+    }
+
+    return undefined;
+  }
+
+  private claimNumber(claims: Record<string, unknown>, keys: string[]): number | undefined {
+    for (const key of keys) {
+      const value = claims[key];
+      const numeric = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+      if (Number.isFinite(numeric) && numeric > 0) return numeric;
+    }
+
+    return undefined;
+  }
+
+  private claimBoolean(claims: Record<string, unknown>, keys: string[]): boolean | undefined {
+    for (const key of keys) {
+      const value = claims[key];
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['true', '1', 'yes'].includes(normalized)) return true;
+        if (['false', '0', 'no'].includes(normalized)) return false;
+      }
+    }
+
+    return undefined;
+  }
+
+  private dataNumber(data: Record<string, unknown>, ...keys: string[]): number | undefined {
+    for (const key of keys) {
+      const value = data[key];
+      const numeric = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+      if (Number.isFinite(numeric) && numeric > 0) return numeric;
+    }
+
+    return undefined;
+  }
+
+  private dataBoolean(data: Record<string, unknown>, ...keys: string[]): boolean | undefined {
+    for (const key of keys) {
+      const value = data[key];
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['true', '1', 'yes'].includes(normalized)) return true;
+        if (['false', '0', 'no'].includes(normalized)) return false;
+      }
     }
 
     return undefined;

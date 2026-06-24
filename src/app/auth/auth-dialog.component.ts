@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService, RegisterRequest } from '../core/auth/auth.service';
 import { AuthDialogMode, AuthDialogModel, LanguageCode, text } from '../models/clinic.model';
@@ -125,7 +126,7 @@ export class AuthDialogComponent {
     registerSuccess: text('ثبت نام با موفقیت انجام شد. برای دریافت توکن وارد حساب شوید.', 'Registration succeeded. Please sign in to receive your token.')
   };
 
-  constructor(private auth: AuthService) {}
+  constructor(private auth: AuthService, private router: Router) {}
 
   switchMode(mode: AuthDialogMode): void {
     this.mode.set(mode);
@@ -147,9 +148,12 @@ export class AuthDialogComponent {
       this.auth.login(this.form.phone.trim(), this.form.password)
         .pipe(finalize(() => this.loading.set(false)))
         .subscribe({
-          next: () => {
+          next: user => {
             this.resetForm();
             this.closed.emit();
+            if (user.role === 'consultant') {
+              this.router.navigateByUrl(this.auth.dashboardUrl(user));
+            }
           },
           error: error => this.feedback.set({ type: 'error', message: this.errorMessage(error, 'ورود انجام نشد') })
         });

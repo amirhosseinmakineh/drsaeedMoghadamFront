@@ -21,7 +21,7 @@ export const routes: Routes = [
   {
     path: 'dashboard/consultant',
     canActivate: [authGuard, roleGuard(['consultant'])],
-    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    loadComponent: () => import('./pages/consultant-dashboard/consultant-dashboard.component').then(m => m.ConsultantDashboardComponent),
     data: { role: 'consultant' }
   },
   {
