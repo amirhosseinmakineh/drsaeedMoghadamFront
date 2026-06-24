@@ -247,8 +247,8 @@ export class AdminDashboardService {
     if (Array.isArray(response)) return response;
     if (!this.isRecord(response)) return response;
 
-    if ('data' in response && response.data !== null && response.data !== undefined) {
-      return response.data;
+    if ('data' in response && response['data'] !== null && response['data'] !== undefined) {
+      return response['data'];
     }
 
     return response;
@@ -258,7 +258,7 @@ export class AdminDashboardService {
     if (Array.isArray(source)) return source as T[];
     if (!this.isRecord(source)) return [];
 
-    const items = source.items ?? source.data;
+    const items = source['items'] ?? source['data'];
     return Array.isArray(items) ? items as T[] : [];
   }
 
