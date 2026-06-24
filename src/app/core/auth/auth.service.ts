@@ -1,0 +1,239 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, computed, signal } from '@angular/core';
+import { Observable, catchError, map, throwError } from 'rxjs';
+
+export type AuthRole = 'admin' | 'consultant' | 'patient';
+
+export interface AuthUser {
+  firstName: string;
+  lastName: string;
+  role: AuthRole;
+  roleName: string;
+  token: string;
+  userId?: string;
+  phoneNumber?: string;
+}
+
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  passwordHash: string;
+  isCompleteProfile: boolean;
+  avatarImageName: string | null;
+  gender: number;
+  birthDate: string;
+}
+
+interface ApiResponse<T> {
+  isSuccess: boolean;
+  message: string;
+  data: T;
+}
+
+type LoginPayload = {
+  phoneNumber: string;
+  passwordHash: string;
+};
+
+type TokenResponseData = string | {
+  token?: string;
+  accessToken?: string;
+  access_token?: string;
+  jwt?: string;
+  userId?: string;
+  role?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
+interface StoredSession {
+  token: string;
+  user: Omit<AuthUser, 'token'>;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private readonly apiBaseUrl = 'http://localhost:5182';
+  private readonly sessionStorageKey = 'clinic-auth-session';
+  private readonly currentUser = signal<AuthUser | null>(this.readSession());
+
+  readonly user = this.currentUser.asReadonly();
+  readonly isAuthenticated = computed(() => this.currentUser() !== null);
+
+  constructor(private http: HttpClient) {}
+
+  register(payload: RegisterRequest): Observable<ApiResponse<{ userId: string; role: string } | null>> {
+    return this.http.post<ApiResponse<{ userId: string; role: string } | null>>(`${this.apiBaseUrl}/api/Auth`, payload).pipe(
+      map(response => {
+        if (!response.isSuccess) {
+          throw new Error(response.message || 'ثبت نام انجام نشد');
+        }
+
+        return response;
+      }),
+      catchError(error => throwError(() => this.toUserFacingError(error, 'خطا در ثبت نام')))
+    );
+  }
+
+  login(phoneNumber: string, password: string): Observable<AuthUser> {
+    const payload: LoginPayload = { phoneNumber, passwordHash: password };
+
+    return this.http.post<ApiResponse<TokenResponseData | null>>(`${this.apiBaseUrl}/api/Auth/Login`, payload).pipe(
+      map(response => {
+        if (!response.isSuccess) {
+          throw new Error(response.message || 'ورود انجام نشد');
+        }
+
+        const token = this.extractToken(response);
+        if (!token) {
+          throw new Error('توکن ورود از سمت سرور دریافت نشد');
+        }
+
+        const decodedUser = this.userFromToken(token, response.data);
+        this.saveSession(decodedUser);
+        return decodedUser;
+      }),
+      catchError(error => throwError(() => this.toUserFacingError(error, 'خطا در ورود')))
+    );
+  }
+
+  logout(): void {
+    this.currentUser.set(null);
+
+    try {
+      localStorage.removeItem(this.sessionStorageKey);
+    } catch {
+      // Auth state is still cleared in memory when storage is unavailable.
+    }
+  }
+
+  dashboardUrl(user: AuthUser | null = this.currentUser()): string {
+    if (!user) return '/';
+
+    return `/dashboard/${user.role}`;
+  }
+
+  roleLabel(role: AuthRole, language: 'fa' | 'en'): string {
+    const labels: Record<AuthRole, { fa: string; en: string }> = {
+      admin: { fa: 'ادمین', en: 'Admin' },
+      consultant: { fa: 'مشاور', en: 'Consultant' },
+      patient: { fa: 'بیمار', en: 'Patient' }
+    };
+
+    return labels[role][language];
+  }
+
+  private extractToken(response: ApiResponse<TokenResponseData | null>): string | null {
+    const root = response as ApiResponse<TokenResponseData | null> & {
+      token?: string;
+      accessToken?: string;
+      access_token?: string;
+      jwt?: string;
+    };
+
+    if (typeof response.data === 'string') return response.data;
+    if (response.data?.accessToken) return response.data.accessToken;
+    if (response.data?.token) return response.data.token;
+    if (response.data?.access_token) return response.data.access_token;
+    if (response.data?.jwt) return response.data.jwt;
+    return root.accessToken ?? root.token ?? root.access_token ?? root.jwt ?? null;
+  }
+
+  private userFromToken(token: string, responseData: TokenResponseData | null): AuthUser {
+    const claims = this.decodeJwtPayload(token);
+    const data = typeof responseData === 'object' && responseData !== null ? responseData : {};
+    const roleName = this.claimValue(claims, [
+      'role',
+      'Role',
+      'roles',
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+    ]) ?? data.role ?? 'Patient';
+
+    return {
+      token,
+      firstName: this.claimValue(claims, ['firstName', 'FirstName', 'given_name', 'name']) ?? data.firstName ?? '',
+      lastName: this.claimValue(claims, ['lastName', 'LastName', 'family_name', 'surname']) ?? data.lastName ?? '',
+      phoneNumber: this.claimValue(claims, ['phoneNumber', 'PhoneNumber', 'phone_number', 'phone']),
+      userId: this.claimValue(claims, [
+        'userId',
+        'UserId',
+        'sub',
+        'nameid',
+        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+      ]) ?? data.userId,
+      roleName,
+      role: this.normalizeRole(roleName)
+    };
+  }
+
+  private normalizeRole(role: string): AuthRole {
+    const normalized = role.trim().toLowerCase();
+
+    if (['admin', 'administrator', 'ادمین'].includes(normalized)) return 'admin';
+    if (['consultant', 'advisor', 'مشاور'].includes(normalized)) return 'consultant';
+    return 'patient';
+  }
+
+  private decodeJwtPayload(token: string): Record<string, unknown> {
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) return {};
+
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      const decoded = atob(padded);
+      return JSON.parse(decoded) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }
+
+  private claimValue(claims: Record<string, unknown>, keys: string[]): string | undefined {
+    for (const key of keys) {
+      const value = claims[key];
+      if (typeof value === 'string' && value.trim()) return value;
+      if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) return value[0];
+    }
+
+    return undefined;
+  }
+
+  private saveSession(user: AuthUser): void {
+    this.currentUser.set(user);
+
+    try {
+      const { token, ...sessionUser } = user;
+      const session: StoredSession = { token, user: sessionUser };
+      localStorage.setItem(this.sessionStorageKey, JSON.stringify(session));
+    } catch {
+      // The in-memory session remains available until page refresh.
+    }
+  }
+
+  private readSession(): AuthUser | null {
+    try {
+      const rawSession = localStorage.getItem(this.sessionStorageKey);
+      if (!rawSession) return null;
+
+      const session = JSON.parse(rawSession) as StoredSession;
+      if (!session.token || !session.user) return null;
+
+      return { ...session.user, token: session.token };
+    } catch {
+      return null;
+    }
+  }
+
+  private toUserFacingError(error: unknown, fallback: string): Error {
+    if (error instanceof Error && error.message) return error;
+    if (typeof error === 'object' && error !== null && 'error' in error) {
+      const httpError = error as { error?: { message?: string } | string; message?: string };
+      if (typeof httpError.error === 'object' && httpError.error?.message) return new Error(httpError.error.message);
+      if (typeof httpError.error === 'string' && httpError.error) return new Error(httpError.error);
+      if (httpError.message) return new Error(httpError.message);
+    }
+
+    return new Error(fallback);
+  }
+}

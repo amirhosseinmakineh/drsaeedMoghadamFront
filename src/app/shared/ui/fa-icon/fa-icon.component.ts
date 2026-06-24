@@ -21,6 +21,8 @@ const iconClasses: Record<string, string> = {
   moon: 'fa-solid fa-moon',
   menu: 'fa-solid fa-bars',
   close: 'fa-solid fa-xmark',
+  dashboard: 'fa-solid fa-gauge-high',
+  logout: 'fa-solid fa-right-from-bracket',
   arrowLeft: 'fa-solid fa-arrow-left',
   arrowRight: 'fa-solid fa-arrow-right',
   chevronLeft: 'fa-solid fa-chevron-left',
