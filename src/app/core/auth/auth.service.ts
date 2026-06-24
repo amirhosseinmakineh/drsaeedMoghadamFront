@@ -183,7 +183,9 @@ export class AuthService {
       const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
       const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
       const decoded = atob(padded);
-      return JSON.parse(decoded) as Record<string, unknown>;
+      const bytes = Uint8Array.from(decoded, character => character.charCodeAt(0));
+      const json = new TextDecoder().decode(bytes);
+      return JSON.parse(json) as Record<string, unknown>;
     } catch {
       return {};
     }
@@ -219,7 +221,16 @@ export class AuthService {
       const session = JSON.parse(rawSession) as StoredSession;
       if (!session.token || !session.user) return null;
 
-      return { ...session.user, token: session.token };
+      const tokenUser = this.userFromToken(session.token, null);
+
+      return {
+        ...session.user,
+        ...tokenUser,
+        firstName: tokenUser.firstName || session.user.firstName,
+        lastName: tokenUser.lastName || session.user.lastName,
+        phoneNumber: tokenUser.phoneNumber || session.user.phoneNumber,
+        token: session.token
+      };
     } catch {
       return null;
     }
