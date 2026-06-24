@@ -229,7 +229,7 @@ interface ScoreFormModel {
                   [pageSize]="consultantFilters.pageSize"
                   [totalCount]="consultantsTotalCount"
                   [totalPages]="consultantsTotalPages"
-                  emptyText="مشاوری برای نمایش وجود ندارد"
+                  emptyText="در حال حاضر هیچ مشاوری در سیستم وجود ندارد"
                   (actionClick)="handleConsultantAction($event)"
                   (pageChange)="changeConsultantsPage($event)"
                 ></app-base-table>
@@ -256,7 +256,7 @@ interface ScoreFormModel {
               <app-admin-leads-table
                 mode="system"
                 title="مدیریت کامل لیدهای سیستم"
-                description="مشاهده همه لیدهای سیستم همراه فیلترهای مجاز بک‌اند"
+                description="ادمین فقط لیست لیدها را مشاهده و فیلتر می‌کند؛ افزودن، ویرایش و حذف برای لیدها وجود ندارد."
               ></app-admin-leads-table>
             }
           </section>
@@ -661,6 +661,7 @@ export class DashboardComponent implements OnInit {
           this.consultants = response.items ?? [];
           this.consultantsTotalCount = response.totalCount ?? this.consultants.length;
           this.consultantsTotalPages = Math.max(1, response.totalPages || Math.ceil(this.consultantsTotalCount / this.consultantFilters.pageSize));
+          this.keepSelectedConsultantsInCurrentList();
         },
         error: error => this.showFeedback(this.errorMessage(error, 'دریافت مشاوران انجام نشد'), 'error')
       });
@@ -682,6 +683,15 @@ export class DashboardComponent implements OnInit {
     if (event.action === 'leads') {
       this.selectedLeadsConsultant = event.row;
     }
+  }
+
+  private keepSelectedConsultantsInCurrentList(): void {
+    const hasProfile = (consultant: Consultant | null): boolean =>
+      consultant ? this.consultants.some(item => item.profileId === consultant.profileId) : true;
+
+    if (!hasProfile(this.selectedAttendanceConsultant)) this.selectedAttendanceConsultant = null;
+    if (!hasProfile(this.selectedLeadsConsultant)) this.selectedLeadsConsultant = null;
+    if (!hasProfile(this.selectedScoreConsultant)) this.closeScoreDialog();
   }
 
   closeScoreDialog(): void {

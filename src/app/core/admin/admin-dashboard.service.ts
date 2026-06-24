@@ -84,8 +84,11 @@ export interface AttendanceItem {
 
 export interface LeadAssignmentItem {
   id: number;
-  userName: string;
-  phoneNumber: string;
+  userName?: string;
+  fullName?: string;
+  name?: string;
+  phoneNumber?: string;
+  mobile?: string;
   leadAssignmentState: number;
   leadAssignmentType: number;
 }
@@ -115,10 +118,10 @@ export class AdminDashboardService {
   constructor(private http: HttpClient, private auth: AuthService) {}
 
   getUsers(filters: UserFilters): Observable<PaginatedResponse<AdminUser>> {
-    return this.http.get<PaginatedResponse<AdminUser>>(`${this.apiBaseUrl}/api/User`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/api/User`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
-    });
+    }).pipe(map(response => this.toPaginatedResponse<AdminUser>(response, filters.pageNumber, filters.pageSize)));
   }
 
   addUser(payload: SaveUserRequest): Observable<ApiCommandResponse> {
@@ -141,10 +144,10 @@ export class AdminDashboardService {
   }
 
   getConsultants(filters: ConsultantFilters): Observable<PaginatedResponse<Consultant>> {
-    return this.http.get<PaginatedResponse<Consultant>>(`${this.apiBaseUrl}/api/Consultant/GetConsultants`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Consultant/GetConsultants`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
-    });
+    }).pipe(map(response => this.toPaginatedResponse<Consultant>(response, filters.pageNumber, filters.pageSize)));
   }
 
   createScore(payload: ScoreRequest): Observable<ApiCommandResponse> {
@@ -154,24 +157,24 @@ export class AdminDashboardService {
   }
 
   getAttendance(consultantProfileId: number, pageNumber = 1, pageSize = 10): Observable<PaginatedResponse<AttendanceItem>> {
-    return this.http.get<PaginatedResponse<AttendanceItem>>(`${this.apiBaseUrl}/api/Attendance`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Attendance`, {
       headers: this.authHeaders(),
       params: this.toParams({ consultantProfileId, pageNumber, pageSize })
-    });
+    }).pipe(map(response => this.toPaginatedResponse<AttendanceItem>(response, pageNumber, pageSize)));
   }
 
   getConsultantLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
-    return this.http.get<PaginatedResponse<LeadAssignmentItem>>(`${this.apiBaseUrl}/api/Consultant/GetLeads`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Consultant/GetLeads`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
-    });
+    }).pipe(map(response => this.toPaginatedResponse<LeadAssignmentItem>(response, filters.pageNumber, filters.pageSize)));
   }
 
   getSystemLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
-    return this.http.get<PaginatedResponse<LeadAssignmentItem>>(`${this.apiBaseUrl}/api/LeadAssignment`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/api/LeadAssignment`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
-    });
+    }).pipe(map(response => this.toPaginatedResponse<LeadAssignmentItem>(response, filters.pageNumber, filters.pageSize)));
   }
 
   private authHeaders(): HttpHeaders {
@@ -201,6 +204,65 @@ export class AdminDashboardService {
       }),
       catchError(error => throwError(() => this.toUserFacingError(error, fallback)))
     );
+  }
+
+  private toPaginatedResponse<T>(response: unknown, fallbackPageNumber: number, fallbackPageSize: number): PaginatedResponse<T> {
+    const page = this.unwrapPage(response);
+    const items = this.readArray<T>(page, 'items')
+      ?? this.readArray<T>(page, 'Items')
+      ?? this.readArray<T>(page, 'data')
+      ?? this.readArray<T>(page, 'Data')
+      ?? (Array.isArray(page) ? page as T[] : []);
+    const totalCount = this.readNumber(page, 'totalCount') ?? this.readNumber(page, 'TotalCount') ?? items.length;
+    const pageNumber = this.readNumber(page, 'pageNumber') ?? this.readNumber(page, 'PageNumber') ?? fallbackPageNumber;
+    const pageSize = this.readNumber(page, 'pageSize') ?? this.readNumber(page, 'PageSize') ?? fallbackPageSize;
+    const totalPages = this.readNumber(page, 'totalPages')
+      ?? this.readNumber(page, 'TotalPages')
+      ?? Math.max(1, Math.ceil(totalCount / Math.max(1, pageSize)));
+
+    return {
+      items,
+      totalCount,
+      pageNumber,
+      pageSize,
+      totalPages
+    };
+  }
+
+  private unwrapPage(response: unknown): unknown {
+    let current = response;
+
+    for (let depth = 0; depth < 4; depth += 1) {
+      if (!this.isObject(current)) return current;
+      if (Array.isArray(current['items']) || Array.isArray(current['Items'])) return current;
+
+      const next = current['data'] ?? current['Data'] ?? current['result'] ?? current['Result'] ?? current['value'] ?? current['Value'];
+      if (next === undefined || next === current) return current;
+      current = next;
+    }
+
+    return current;
+  }
+
+  private readArray<T>(source: unknown, key: string): T[] | null {
+    if (!this.isObject(source)) return null;
+    const value = source[key];
+    return Array.isArray(value) ? value as T[] : null;
+  }
+
+  private readNumber(source: unknown, key: string): number | null {
+    if (!this.isObject(source)) return null;
+    const value = source[key];
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string' && value.trim()) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  }
+
+  private isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {
