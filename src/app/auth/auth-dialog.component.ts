@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AuthDialogMode, AuthDialogModel, LanguageCode, pickText, text } from '../models/clinic.model';
+import { finalize } from 'rxjs';
+import { AuthService, RegisterRequest } from '../core/auth/auth.service';
+import { AuthDialogMode, AuthDialogModel, LanguageCode, text } from '../models/clinic.model';
 import { BaseDialogComponent } from '../shared/base/base-dialog/base-dialog.component';
 import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
 
@@ -17,57 +19,74 @@ import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
       [subtitle]="copy.subtitle[language]"
       (closed)="closed.emit()"
     >
-      @if (submitted()) {
-        <div class="success-card">
-          <span><app-fa-icon name="check"></app-fa-icon></span>
-          <h3>{{ copy.successTitle[language] }}</h3>
-          <p>{{ copy.successText[language] }}</p>
-          <button class="primary full" type="button" (click)="resetAndClose()">{{ copy.done[language] }}</button>
-        </div>
-      } @else {
-        <div class="tabs">
-          <button type="button" [class.active]="mode() === 'login'" (click)="mode.set('login')">{{ copy.login[language] }}</button>
-          <button type="button" [class.active]="mode() === 'register'" (click)="mode.set('register')">{{ copy.register[language] }}</button>
-        </div>
+      <div class="tabs">
+        <button type="button" [class.active]="mode() === 'login'" [disabled]="loading()" (click)="switchMode('login')">{{ copy.login[language] }}</button>
+        <button type="button" [class.active]="mode() === 'register'" [disabled]="loading()" (click)="switchMode('register')">{{ copy.register[language] }}</button>
+      </div>
 
+      @if (feedback(); as currentFeedback) {
+        <p class="feedback" [class.error]="currentFeedback.type === 'error'" [class.success]="currentFeedback.type === 'success'">
+          {{ currentFeedback.message }}
+        </p>
+      }
+
+      <form class="auth-form" (ngSubmit)="submit()">
         @if (mode() === 'register') {
-          <label>
-            {{ copy.fullName[language] }}
-            <input [(ngModel)]="form.fullName" name="authFullName" autocomplete="name" />
-          </label>
+          <div class="two-col">
+            <label>
+              {{ copy.firstName[language] }}
+              <input [(ngModel)]="form.firstName" name="authFirstName" autocomplete="given-name" maxlength="100" />
+            </label>
+            <label>
+              {{ copy.lastName[language] }}
+              <input [(ngModel)]="form.lastName" name="authLastName" autocomplete="family-name" maxlength="100" />
+            </label>
+          </div>
         }
 
         <label>
           {{ copy.phone[language] }}
-          <input [(ngModel)]="form.phone" name="authPhone" inputmode="tel" autocomplete="tel" [placeholder]="language === 'fa' ? '09xxxxxxxxx' : '+98 9xx xxx xxxx'" />
+          <input [(ngModel)]="form.phone" name="authPhone" inputmode="tel" autocomplete="tel" placeholder="09123456789" />
         </label>
 
         <label>
           {{ copy.password[language] }}
-          <input [(ngModel)]="form.password" name="authPassword" type="password" [autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'" />
+          <input [(ngModel)]="form.password" name="authPassword" type="password" minlength="8" maxlength="100" [autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'" />
         </label>
 
         @if (mode() === 'register') {
-          <label class="check-row">
-            <input [(ngModel)]="form.acceptCarePolicy" name="acceptCarePolicy" type="checkbox" />
-            <span>{{ copy.policy[language] }}</span>
-          </label>
+          <div class="two-col">
+            <label>
+              {{ copy.gender[language] }}
+              <select [(ngModel)]="form.gender" name="authGender">
+                <option [ngValue]="1">{{ copy.male[language] }}</option>
+                <option [ngValue]="2">{{ copy.female[language] }}</option>
+              </select>
+            </label>
+            <label>
+              {{ copy.birthDate[language] }}
+              <input [(ngModel)]="form.birthDate" name="authBirthDate" type="date" />
+            </label>
+          </div>
         }
 
-        <button class="primary full" type="button" (click)="submit()">
+        <button class="primary full" type="submit" [disabled]="loading()">
           <app-fa-icon name="user"></app-fa-icon>
-          {{ mode() === 'login' ? copy.loginAction[language] : copy.registerAction[language] }}
+          {{ loading() ? copy.loading[language] : (mode() === 'login' ? copy.loginAction[language] : copy.registerAction[language]) }}
         </button>
-      }
+      </form>
     </app-base-dialog>
   `,
   styles: [`
     .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px;border-radius:999px;background:var(--surface-muted,#eefafa)}
-    .tabs button{border:0;border-radius:999px;padding:11px;font:inherit;font-weight:900;background:transparent;color:var(--muted,#786a59);cursor:pointer}.tabs .active{background:var(--surface,#fff);color:var(--brand,#a8793f);box-shadow:0 10px 24px rgba(91,64,38,.08)}
-    label{display:grid;gap:8px;color:var(--muted,#786a59);font-weight:900}.check-row{grid-template-columns:auto 1fr;align-items:start}.check-row input{width:18px;height:18px;margin-top:4px;accent-color:var(--brand,#a8793f)}
-    input{width:100%;border:1px solid color-mix(in srgb,var(--line,#dbe6ee) 94%,transparent);border-radius:17px;padding:13px 14px;background:var(--surface,#fff);color:var(--text,#14222e);font:inherit}
+    .tabs button{border:0;border-radius:999px;padding:11px;font:inherit;font-weight:900;background:transparent;color:var(--muted,#786a59);cursor:pointer}.tabs button:disabled{cursor:not-allowed;opacity:.7}.tabs .active{background:var(--surface,#fff);color:var(--brand,#a8793f);box-shadow:0 10px 24px rgba(91,64,38,.08)}
+    .auth-form{display:grid;gap:14px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label{display:grid;gap:8px;color:var(--muted,#786a59);font-weight:900}
+    input,select{width:100%;border:1px solid color-mix(in srgb,var(--line,#dbe6ee) 94%,transparent);border-radius:17px;padding:13px 14px;background:var(--surface,#fff);color:var(--text,#14222e);font:inherit}
     .primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--brand,#a8793f),var(--brand-2,#d7b16d));color:#fff;font:inherit;font-weight:950;cursor:pointer;box-shadow:0 16px 36px color-mix(in srgb,var(--brand,#a8793f) 24%,transparent)}
-    .full{width:100%}.success-card{display:grid;place-items:center;text-align:center;gap:10px;padding:10px}.success-card span{display:grid;place-items:center;width:58px;height:58px;border-radius:22px;background:color-mix(in srgb,var(--brand,#a8793f) 16%,transparent);color:var(--brand,#a8793f);font-size:1.6rem}.success-card h3{margin:0;color:var(--text,#2c241b)}.success-card p{margin:0;color:var(--muted,#786a59);line-height:1.8}
+    .primary:disabled{cursor:not-allowed;opacity:.72}.full{width:100%}
+    .feedback{margin:0;padding:10px 12px;border-radius:16px;font-weight:900;line-height:1.7}.feedback.error{background:color-mix(in srgb,var(--danger,#ef4444) 14%,transparent);color:#fecaca}.feedback.success{background:color-mix(in srgb,#22c55e 16%,transparent);color:#bbf7d0}
+    @media (max-width:560px){.two-col{grid-template-columns:1fr}}
   `]
 })
 export class AuthDialogComponent {
@@ -76,12 +95,15 @@ export class AuthDialogComponent {
   @Output() closed = new EventEmitter<void>();
 
   mode = signal<AuthDialogMode>('login');
-  submitted = signal(false);
+  loading = signal(false);
+  feedback = signal<{ type: 'success' | 'error'; message: string } | null>(null);
   form: AuthDialogModel = {
-    fullName: '',
+    firstName: '',
+    lastName: '',
     phone: '',
     password: '',
-    acceptCarePolicy: false
+    gender: 1,
+    birthDate: ''
   };
 
   copy = {
@@ -89,28 +111,111 @@ export class AuthDialogComponent {
     subtitle: text('برای پیگیری درخواست تماس، ذخیره خدمات مورد علاقه و دریافت راهنمای درمان وارد شوید.', 'Sign in to follow consultant calls, save favorite services and receive care guidance.'),
     login: text('ورود', 'Sign in'),
     register: text('عضویت', 'Join'),
-    fullName: text('نام و نام خانوادگی', 'Full name'),
+    firstName: text('نام', 'First name'),
+    lastName: text('نام خانوادگی', 'Last name'),
     phone: text('شماره موبایل', 'Mobile number'),
     password: text('رمز عبور', 'Password'),
-    policy: text('می‌پذیرم اطلاعات تماس من فقط برای ارتباط کلینیک و راهنمای درمان استفاده شود.', 'I accept that my contact details are used only for clinic communication and care guidance.'),
+    gender: text('جنسیت', 'Gender'),
+    male: text('مرد', 'Male'),
+    female: text('زن', 'Female'),
+    birthDate: text('تاریخ تولد', 'Birth date'),
     loginAction: text('ورود به حساب', 'Sign in'),
     registerAction: text('ساخت حساب', 'Create account'),
-    successTitle: text('درخواست شما آماده پیگیری است', 'Your request is ready for follow-up'),
-    successText: text('اطلاعات شما ثبت شد و می‌توانید پیگیری خدمات، درخواست تماس و راهنمای درمان را از مسیر حساب کاربری دنبال کنید.', 'Your information has been recorded so you can follow services, call requests and care guidance through your account path.'),
-    done: text('متوجه شدم', 'Got it')
+    loading: text('در حال ارسال...', 'Sending...'),
+    registerSuccess: text('ثبت نام با موفقیت انجام شد. برای دریافت توکن وارد حساب شوید.', 'Registration succeeded. Please sign in to receive your token.')
   };
 
+  constructor(private auth: AuthService) {}
+
+  switchMode(mode: AuthDialogMode): void {
+    this.mode.set(mode);
+    this.feedback.set(null);
+  }
+
   submit(): void {
-    if (!this.form.phone || !this.form.password) return;
-    if (this.mode() === 'register' && (!this.form.fullName || !this.form.acceptCarePolicy)) return;
+    this.feedback.set(null);
 
-    this.submitted.set(true);
+    const validationError = this.validate();
+    if (validationError) {
+      this.feedback.set({ type: 'error', message: validationError });
+      return;
+    }
+
+    this.loading.set(true);
+
+    if (this.mode() === 'login') {
+      this.auth.login(this.form.phone.trim(), this.form.password)
+        .pipe(finalize(() => this.loading.set(false)))
+        .subscribe({
+          next: () => {
+            this.resetForm();
+            this.closed.emit();
+          },
+          error: error => this.feedback.set({ type: 'error', message: this.errorMessage(error, 'ورود انجام نشد') })
+        });
+      return;
+    }
+
+    this.auth.register(this.buildRegisterRequest())
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: response => {
+          this.mode.set('login');
+          this.form.password = '';
+          this.feedback.set({ type: 'success', message: response.message || this.copy.registerSuccess[this.language] });
+        },
+        error: error => this.feedback.set({ type: 'error', message: this.errorMessage(error, 'ثبت نام انجام نشد') })
+      });
   }
 
-  resetAndClose(): void {
-    this.submitted.set(false);
-    this.closed.emit();
+  private validate(): string | null {
+    const phone = this.form.phone.trim();
+    if (!phone) return this.language === 'fa' ? 'شماره موبایل الزامی است' : 'Mobile number is required';
+    if (!/^09\d{9}$/.test(phone)) return this.language === 'fa' ? 'شماره موبایل معتبر نیست' : 'Mobile number is invalid';
+    if (!this.form.password) return this.language === 'fa' ? 'رمز عبور الزامی است' : 'Password is required';
+    if (this.form.password.length < 8) return this.language === 'fa' ? 'رمز عبور باید حداقل ۸ کاراکتر باشد' : 'Password must be at least 8 characters';
+    if (this.form.password.length > 100) return this.language === 'fa' ? 'رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد' : 'Password must be at most 100 characters';
+
+    if (this.mode() === 'login') return null;
+
+    if (!this.form.firstName.trim()) return this.language === 'fa' ? 'نام الزامی است' : 'First name is required';
+    if (this.form.firstName.trim().length > 100) return this.language === 'fa' ? 'نام نباید بیشتر از ۱۰۰ کاراکتر باشد' : 'First name must be at most 100 characters';
+    if (!this.form.lastName.trim()) return this.language === 'fa' ? 'نام خانوادگی الزامی است' : 'Last name is required';
+    if (this.form.lastName.trim().length > 100) return this.language === 'fa' ? 'نام خانوادگی نباید بیشتر از ۱۰۰ کاراکتر باشد' : 'Last name must be at most 100 characters';
+    if (![1, 2].includes(Number(this.form.gender))) return this.language === 'fa' ? 'جنسیت معتبر نیست' : 'Gender is invalid';
+    if (!this.form.birthDate || new Date(`${this.form.birthDate}T00:00:00`).getTime() >= Date.now()) {
+      return this.language === 'fa' ? 'تاریخ تولد معتبر نیست' : 'Birth date is invalid';
+    }
+
+    return null;
   }
 
-  protected readonly pickText = pickText;
+  private buildRegisterRequest(): RegisterRequest {
+    return {
+      firstName: this.form.firstName.trim(),
+      lastName: this.form.lastName.trim(),
+      phoneNumber: this.form.phone.trim(),
+      passwordHash: this.form.password,
+      isCompleteProfile: false,
+      avatarImageName: null,
+      gender: Number(this.form.gender),
+      birthDate: `${this.form.birthDate}T00:00:00`
+    };
+  }
+
+  private resetForm(): void {
+    this.form = {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      password: '',
+      gender: 1,
+      birthDate: ''
+    };
+    this.feedback.set(null);
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    return error instanceof Error && error.message ? error.message : fallback;
+  }
 }

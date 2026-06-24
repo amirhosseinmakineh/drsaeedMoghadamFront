@@ -102,10 +102,12 @@ export interface ContactFormModel {
 }
 
 export interface AuthDialogModel {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   password: string;
-  acceptCarePolicy: boolean;
+  gender: number;
+  birthDate: string;
 }
 
 export interface DatePickerDay {

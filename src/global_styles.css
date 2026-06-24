@@ -250,6 +250,40 @@ textarea:focus {
   font-size: .9rem;
 }
 
+.secondary-btn.small {
+  min-height: 40px;
+  padding: 9px 14px;
+  font-size: .86rem;
+}
+
+.header-account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 210px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.account-name app-fa-icon {
+  color: var(--brand);
+}
+
+.logout-header {
+  color: var(--brand);
+}
+
 .secondary-btn {
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface) 72%, transparent);
@@ -538,7 +572,8 @@ summary {
   }
 
   .desktop-nav,
-  .primary-btn.small {
+  .primary-btn.small,
+  .header-account {
     display: none;
   }
 
@@ -584,6 +619,59 @@ summary {
     backdrop-filter: blur(22px);
   }
 
+  .mobile-account-panel {
+    position: absolute;
+    inset-inline: 0;
+    bottom: calc(100% + 10px);
+    display: none;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 26px;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(22px);
+  }
+
+  .mobile-bottom-nav.account-open .mobile-account-panel {
+    display: grid;
+  }
+
+  .mobile-account-panel strong,
+  .mobile-account-panel span {
+    display: block;
+  }
+
+  .mobile-account-panel strong {
+    color: var(--text);
+    font-weight: 950;
+  }
+
+  .mobile-account-panel span {
+    color: var(--brand);
+    font-weight: 900;
+  }
+
+  .mobile-account-panel div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .mobile-account-panel a,
+  .mobile-account-panel button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    border: 0;
+    border-radius: 18px;
+    background: var(--surface-muted);
+    color: var(--text);
+    font-weight: 950;
+  }
+
   .mobile-bottom-nav a,
   .mobile-bottom-nav button {
     display: grid;
@@ -596,6 +684,16 @@ summary {
     color: var(--muted);
     font-size: .72rem;
     font-weight: 900;
+  }
+
+  .mobile-bottom-nav .mobile-account-panel a,
+  .mobile-bottom-nav .mobile-account-panel button {
+    display: inline-flex;
+    place-items: initial;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--text);
+    font-size: .82rem;
   }
 
   .mobile-bottom-nav app-fa-icon {

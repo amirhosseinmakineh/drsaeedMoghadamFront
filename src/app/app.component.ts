@@ -2,6 +2,7 @@ import { NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthDialogComponent } from './auth/auth-dialog.component';
+import { AuthService, AuthUser } from './core/auth/auth.service';
 import { LanguageCode, NAV_ITEMS, pickText } from './models/clinic.model';
 import { FaIconComponent } from './shared/ui/fa-icon/fa-icon.component';
 
@@ -15,7 +16,7 @@ interface LanguageAwarePage {
   imports: [NgFor, NgIf, RouterLink, RouterLinkActive, RouterOutlet, AuthDialogComponent, FaIconComponent],
   template: `
     <div class="app-shell dark" [attr.dir]="direction">
-      <header class="site-header">
+      <header *ngIf="!isDashboardRoute()" class="site-header">
         <a class="brand" routerLink="/" [attr.aria-label]="language() === 'fa' ? 'صفحه اصلی' : 'Homepage'">
           <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
           <span>
@@ -34,10 +35,26 @@ interface LanguageAwarePage {
           <button class="icon-btn" type="button" (click)="toggleLanguage()" [attr.aria-label]="language() === 'fa' ? 'English' : 'فارسی'">
             {{ language() === 'fa' ? 'EN' : 'فا' }}
           </button>
-          <button *ngIf="showAuthActions()" class="primary-btn small" type="button" (click)="authOpen.set(true)">
-            <app-fa-icon name="user"></app-fa-icon>
-            {{ language() === 'fa' ? 'ورود / عضویت' : 'Sign in / Join' }}
-          </button>
+          @if (user(); as currentUser) {
+            <div class="header-account">
+              <span class="account-name">
+                <app-fa-icon name="user"></app-fa-icon>
+                {{ displayName(currentUser) }}
+              </span>
+              <a class="secondary-btn small" [routerLink]="dashboardUrl()">
+                <app-fa-icon name="dashboard"></app-fa-icon>
+                {{ language() === 'fa' ? 'ورود به داشبورد' : 'Dashboard' }}
+              </a>
+              <button class="icon-btn logout-header" type="button" (click)="logout()" [attr.aria-label]="language() === 'fa' ? 'خروج از حساب کاربری' : 'Sign out'">
+                <app-fa-icon name="logout"></app-fa-icon>
+              </button>
+            </div>
+          } @else if (showAuthActions()) {
+            <button class="primary-btn small" type="button" (click)="authOpen.set(true)">
+              <app-fa-icon name="user"></app-fa-icon>
+              {{ language() === 'fa' ? 'ورود / عضویت' : 'Sign in / Join' }}
+            </button>
+          }
         </div>
       </header>
 
@@ -81,15 +98,38 @@ interface LanguageAwarePage {
         </div>
       </footer>
 
-      <nav class="mobile-bottom-nav" [attr.aria-label]="language() === 'fa' ? 'دسترسی سریع موبایل' : 'Mobile quick actions'">
+      <nav *ngIf="!isDashboardRoute()" class="mobile-bottom-nav" [class.account-open]="mobileAccountOpen()" [attr.aria-label]="language() === 'fa' ? 'دسترسی سریع موبایل' : 'Mobile quick actions'">
+        @if (user(); as currentUser) {
+          <div class="mobile-account-panel">
+            <strong>{{ displayName(currentUser) }}</strong>
+            <span>{{ auth.roleLabel(currentUser.role, language()) }}</span>
+            <div>
+              <a [routerLink]="dashboardUrl()" (click)="mobileAccountOpen.set(false)">
+                <app-fa-icon name="dashboard"></app-fa-icon>
+                {{ language() === 'fa' ? 'ورود به داشبورد' : 'Dashboard' }}
+              </a>
+              <button type="button" (click)="logout()">
+                <app-fa-icon name="logout"></app-fa-icon>
+                {{ language() === 'fa' ? 'خروج' : 'Sign out' }}
+              </button>
+            </div>
+          </div>
+        }
         <a *ngFor="let item of navItems" [routerLink]="item.href" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.href === '/' }">
           <app-fa-icon [name]="item.icon"></app-fa-icon>
           <span>{{ pickText(item.label, language()) }}</span>
         </a>
-        <button *ngIf="showAuthActions()" type="button" (click)="authOpen.set(true)">
-          <app-fa-icon name="user"></app-fa-icon>
-          <span>{{ language() === 'fa' ? 'ورود' : 'Sign in' }}</span>
-        </button>
+        @if (user(); as currentUser) {
+          <button type="button" (click)="mobileAccountOpen.set(!mobileAccountOpen())">
+            <app-fa-icon name="user"></app-fa-icon>
+            <span>{{ displayName(currentUser) }}</span>
+          </button>
+        } @else if (showAuthActions()) {
+          <button type="button" (click)="authOpen.set(true)">
+            <app-fa-icon name="user"></app-fa-icon>
+            <span>{{ language() === 'fa' ? 'ورود' : 'Sign in' }}</span>
+          </button>
+        }
       </nav>
 
       <app-auth-dialog [open]="authOpen()" [language]="language()" (closed)="authOpen.set(false)"></app-auth-dialog>
@@ -100,19 +140,42 @@ export class AppComponent implements OnInit, OnDestroy {
   navItems = NAV_ITEMS;
   language = signal<LanguageCode>(this.readSetting<LanguageCode>('language', 'fa'));
   authOpen = signal(false);
+  mobileAccountOpen = signal(false);
+  user = this.auth.user;
   activePage: LanguageAwarePage | null = null;
   protected readonly pickText = pickText;
 
   private readonly openAuthFromPage = (): void => this.authOpen.set(true);
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, public auth: AuthService) {}
 
   get direction(): 'rtl' | 'ltr' {
     return this.language() === 'fa' ? 'rtl' : 'ltr';
   }
 
   showAuthActions(): boolean {
-    return !this.router.url.startsWith('/services');
+    return !this.isDashboardRoute();
+  }
+
+  isDashboardRoute(): boolean {
+    return this.router.url.startsWith('/dashboard');
+  }
+
+  displayName(user: AuthUser): string {
+    const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+    return name || (this.language() === 'fa' ? 'کاربر' : 'User');
+  }
+
+  dashboardUrl(): string {
+    return this.auth.dashboardUrl();
+  }
+
+  logout(): void {
+    this.auth.logout();
+    this.mobileAccountOpen.set(false);
+    if (this.isDashboardRoute()) {
+      this.router.navigateByUrl('/');
+    }
   }
 
   ngOnInit(): void {
