@@ -36,7 +36,6 @@ export interface StatItem {
 
 export interface HeroSlide {
   id: string;
-  eyebrow: LocalizedText;
   title: LocalizedText;
   text: LocalizedText;
   image: string;
@@ -137,7 +136,6 @@ export const NAV_ITEMS: NavItem[] = [
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 'digital-smile',
-    eyebrow: text('کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Dr. Saeed Moghaddam Dental Clinic'),
     title: text('درمان دقیق، طراحی لبخند طبیعی و مراقبت قابل اعتماد', 'Precise care, natural smile design and trustworthy dentistry'),
     text: text(
       'در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان‌های زیبایی و عمومی مثل ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه و مراقبت لثه با معاینه دقیق و توضیح شفاف انجام می‌شود.',
@@ -147,7 +145,6 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 'calm-suite',
-    eyebrow: text('مشاوره قبل از درمان', 'Pre-treatment consultation'),
     title: text('قبل از تصمیم، مشکل، گزینه‌ها و مراقبت‌ها روشن می‌شود', 'Before any decision, the problem, options and care are clear'),
     text: text(
       'اگر درد دندان، نیاز به ایمپلنت، اصلاح طرح لبخند یا درمان لثه دارید، ابتدا شرایط دهان و دندان بررسی می‌شود و مسیر مناسب بدون وعده اغراق‌آمیز توضیح داده می‌شود.',
@@ -157,7 +154,6 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 'mobile-first',
-    eyebrow: text('تجربه آرام مراجعه‌کننده', 'Calm patient experience'),
     title: text('از تماس اولیه تا پیگیری بعد از درمان، مسیر ساده است', 'From first call to aftercare, the path stays simple'),
     text: text(
       'درمان‌ها، توضیحات تخصصی، سوالات پرتکرار و فرم درخواست تماس کنار هم آمده‌اند تا مراجعه‌کننده سریع‌تر بداند برای کدام مسیر درمانی باید راهنمایی بگیرد.',
@@ -614,6 +610,8 @@ export const DENTAL_SERVICES: DentalService[] = [
     }
   }
 ];
+
+export const FEATURED_DENTAL_SERVICES = DENTAL_SERVICES.slice(0, 6);
 
 export const BENEFIT_CARDS: BenefitCard[] = [
   {

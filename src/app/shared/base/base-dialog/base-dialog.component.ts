@@ -13,8 +13,7 @@ import { FaIconComponent } from '../../ui/fa-icon/fa-icon.component';
         <button class="dialog-close" type="button" (click)="close()" [attr.aria-label]="language === 'fa' ? 'بستن' : 'Close'">
           <app-fa-icon name="close"></app-fa-icon>
         </button>
-        <header *ngIf="eyebrow || title || subtitle">
-          <p *ngIf="eyebrow" class="dialog-eyebrow">{{ eyebrow }}</p>
+        <header *ngIf="title || subtitle">
           <h2 *ngIf="title">{{ title }}</h2>
           <p *ngIf="subtitle" class="dialog-subtitle">{{ subtitle }}</p>
         </header>
@@ -31,13 +30,12 @@ import { FaIconComponent } from '../../ui/fa-icon/fa-icon.component';
     .base-dialog{position:relative;width:min(520px,100%);max-height:92vh;overflow:auto;border:1px solid color-mix(in srgb,var(--line,#d9e3ea) 75%,transparent);border-radius:34px;background:linear-gradient(145deg,var(--surface,#fff),var(--surface-soft,#f8fbff));box-shadow:0 34px 100px rgba(5,18,28,.28);padding:28px;color:var(--text,#13202b);animation:dialogIn .28s ease both}
     .base-dialog::before{content:'';position:absolute;inset:0 0 auto;height:112px;border-radius:34px 34px 46% 46%;background:radial-gradient(circle at 18% 0,color-mix(in srgb,var(--brand,#a8793f) 22%,transparent),transparent 58%);pointer-events:none}
     .dialog-close{position:absolute;inset-block-start:16px;inset-inline-end:16px;z-index:2;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:16px;background:color-mix(in srgb,var(--surface-muted,#efe2d0) 86%,transparent);color:var(--brand,#a8793f);cursor:pointer}
-    header{position:relative;z-index:1;margin-bottom:20px;padding-inline-end:48px}.dialog-eyebrow{margin:0 0 8px;color:var(--brand,#a8793f);font-size:.82rem;font-weight:900}.dialog-subtitle{margin:10px 0 0;color:var(--muted,#786a59)}h2{margin:0;font-size:clamp(1.45rem,4vw,2rem);line-height:1.25}.dialog-content{position:relative;z-index:1;display:grid;gap:14px}footer{position:relative;z-index:1;display:flex;justify-content:flex-end;gap:10px;margin-top:22px}.dialog-btn{border:0;border-radius:999px;padding:12px 18px;font-weight:900;cursor:pointer}.ghost{background:var(--surface-muted,#efe2d0);color:var(--text,#2c241b)}.solid{background:linear-gradient(135deg,var(--brand,#a8793f),var(--brand-2,#d7b16d));color:#fff;box-shadow:0 14px 34px color-mix(in srgb,var(--brand,#a8793f) 24%,transparent)}@keyframes dialogIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+    header{position:relative;z-index:1;margin-bottom:20px;padding-inline-end:48px}.dialog-subtitle{margin:10px 0 0;color:var(--muted,#786a59)}h2{margin:0;font-size:clamp(1.45rem,4vw,2rem);line-height:1.25}.dialog-content{position:relative;z-index:1;display:grid;gap:14px}footer{position:relative;z-index:1;display:flex;justify-content:flex-end;gap:10px;margin-top:22px}.dialog-btn{border:0;border-radius:999px;padding:12px 18px;font-weight:900;cursor:pointer}.ghost{background:var(--surface-muted,#efe2d0);color:var(--text,#2c241b)}.solid{background:linear-gradient(135deg,var(--brand,#a8793f),var(--brand-2,#d7b16d));color:#fff;box-shadow:0 14px 34px color-mix(in srgb,var(--brand,#a8793f) 24%,transparent)}@keyframes dialogIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
   `]
 })
 export class BaseDialogComponent {
   @Input() open = false;
   @Input() language: LanguageCode = 'fa';
-  @Input() eyebrow = '';
   @Input() title = '';
   @Input() subtitle = '';
   @Input() showFooter = true;

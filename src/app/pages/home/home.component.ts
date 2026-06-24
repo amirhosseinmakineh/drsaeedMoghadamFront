@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import {
   BENEFIT_CARDS,
   DENTAL_SERVICES,
+  FEATURED_DENTAL_SERVICES,
   GLOBAL_FAQS,
   HERO_SLIDES,
   LeadFormModel,
@@ -32,7 +33,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   activeTestimonial = signal(0);
   leadSent = signal(false);
   services = DENTAL_SERVICES;
-  featuredServices = DENTAL_SERVICES.slice(0, 6);
+  featuredServices = FEATURED_DENTAL_SERVICES;
   heroSlides = HERO_SLIDES;
   workSamples = WORK_SAMPLES;
   benefits = BENEFIT_CARDS;

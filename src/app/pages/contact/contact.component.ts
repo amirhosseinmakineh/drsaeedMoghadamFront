@@ -13,7 +13,6 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
   template: `
     <section class="page-section contact-hero">
       <div class="section-heading">
-        <p class="eyebrow">{{ language() === 'fa' ? 'تماس با ما' : 'Contact us' }}</p>
         <h1>{{ language() === 'fa' ? 'برای مشاوره انسانی، شماره خود را بگذارید یا مستقیم تماس بگیرید' : 'For human guidance, leave your number or call directly' }}</h1>
         <p>{{ language() === 'fa'
           ? 'برای راهنمایی درباره ایمپلنت، طراحی لبخند، درد دندان، درمان ریشه یا لثه، شماره خود را ثبت کنید تا مسیر مناسب مراجعه با شما هماهنگ شود.'
