@@ -498,15 +498,15 @@ export class DashboardComponent implements OnInit {
 
   readonly userColumns: TableColumn<AdminUser>[] = [
     { key: 'firstName', label: 'نام کامل', value: row => this.fullName(row) },
-    { key: 'phoneNumber', label: 'موبایل' },
-    { key: 'roleName', label: 'نقش', value: row => this.roleNameLabel(row.roleName), badge: () => 'info' },
+    { key: 'phoneNumber', label: 'موبایل', value: row => row.phoneNumber || row.PhoneNumber || '-' },
+    { key: 'roleName', label: 'نقش', value: row => this.roleNameLabel(row.roleName || row.RoleName || ''), badge: () => 'info' },
     { key: 'isActive', label: 'وضعیت', value: row => row.isActive ? 'فعال' : 'غیرفعال', badge: row => row.isActive ? 'success' : 'danger' }
   ];
 
   readonly consultantColumns: TableColumn<Consultant>[] = [
     { key: 'firstName', label: 'نام کامل', value: row => this.fullName(row) },
-    { key: 'phoneNumber', label: 'موبایل' },
-    { key: 'profileId', label: 'شناسه پروفایل', badge: () => 'info' }
+    { key: 'phoneNumber', label: 'موبایل', value: row => row.phoneNumber || row.PhoneNumber || '-' },
+    { key: 'profileId', label: 'شناسه پروفایل', value: row => row.profileId ?? row.ProfileId ?? '-', badge: () => 'info' }
   ];
 
   readonly consultantActions = [
@@ -562,7 +562,7 @@ export class DashboardComponent implements OnInit {
       .pipe(finalize(() => this.usersLoading = false))
       .subscribe({
         next: response => {
-          this.users = response.items ?? [];
+          this.users = (response.items ?? []).map(user => this.normalizeUser(user));
           this.usersTotalCount = response.totalCount ?? this.users.length;
           this.usersTotalPages = Math.max(1, response.totalPages || Math.ceil(this.usersTotalCount / this.userFilters.pageSize));
         },
@@ -680,7 +680,7 @@ export class DashboardComponent implements OnInit {
       .pipe(finalize(() => this.consultantsLoading = false))
       .subscribe({
         next: response => {
-          this.consultants = response.items ?? [];
+          this.consultants = (response.items ?? []).map(consultant => this.normalizeConsultant(consultant));
           this.consultantsTotalCount = response.totalCount ?? this.consultants.length;
           this.consultantsTotalPages = Math.max(1, response.totalPages || Math.ceil(this.consultantsTotalCount / this.consultantFilters.pageSize));
         },
@@ -698,11 +698,13 @@ export class DashboardComponent implements OnInit {
 
     if (event.action === 'attendance') {
       this.selectedAttendanceConsultant = event.row;
+      this.selectedLeadsConsultant = null;
       return;
     }
 
     if (event.action === 'leads') {
       this.selectedLeadsConsultant = event.row;
+      this.selectedAttendanceConsultant = null;
     }
   }
 
@@ -759,7 +761,8 @@ export class DashboardComponent implements OnInit {
   }
 
   fullName(user: { firstName?: string; lastName?: string }): string {
-    return [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || 'بدون نام';
+    const value = user as { firstName?: string; FirstName?: string; lastName?: string; LastName?: string };
+    return [value.firstName || value.FirstName, value.lastName || value.LastName].filter(Boolean).join(' ').trim() || 'بدون نام';
   }
 
   roleNameLabel(roleName: string): string {
@@ -827,6 +830,32 @@ export class DashboardComponent implements OnInit {
       birthDate: '',
       isActive: true,
       roleName: 'NormalUser'
+    };
+  }
+
+  private normalizeUser(user: AdminUser): AdminUser {
+    return {
+      ...user,
+      id: user.id || user.Id || '',
+      firstName: user.firstName || user.FirstName || '',
+      lastName: user.lastName || user.LastName || '',
+      phoneNumber: user.phoneNumber || user.PhoneNumber || '',
+      roleName: user.roleName || user.RoleName || 'NormalUser',
+      isActive: user.isActive ?? user.IsActive ?? false,
+      isCompleteProfile: user.isCompleteProfile ?? user.IsCompleteProfile,
+      gender: user.gender ?? user.Gender,
+      avatarImageName: user.avatarImageName ?? user.AvatarImageName ?? null
+    };
+  }
+
+  private normalizeConsultant(consultant: Consultant): Consultant {
+    return {
+      ...consultant,
+      id: consultant.id || consultant.Id || '',
+      firstName: consultant.firstName || consultant.FirstName || '',
+      lastName: consultant.lastName || consultant.LastName || '',
+      phoneNumber: consultant.phoneNumber || consultant.PhoneNumber || '',
+      profileId: consultant.profileId ?? consultant.ProfileId ?? 0
     };
   }
 
