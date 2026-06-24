@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { finalize, switchMap, tap } from 'rxjs';
+import { Subscription, finalize, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   ConsultantDashboardService,
@@ -314,7 +314,9 @@ interface ConsultantDashboardLink {
                       <option [ngValue]="2">صف آفلاین</option>
                     </select>
                   </label>
-                  <button class="primary-action compact" type="submit">اعمال</button>
+                  <button class="primary-action compact" type="submit" [disabled]="leadsLoading">
+                    {{ leadsLoading ? 'در حال اعمال...' : 'اعمال' }}
+                  </button>
                 </form>
 
                 @if (leadsLoading) {
@@ -585,6 +587,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private pendingOfflineRequestId = 0;
   private reservationRequestId = 0;
   private visibleLeadLoadingRequestId = 0;
+  private pendingOfflineLoadSubscription: Subscription | null = null;
+  private leadLoadSubscription: Subscription | null = null;
+  private reservationLoadSubscription: Subscription | null = null;
 
   constructor(
     private auth: AuthService,
@@ -614,6 +619,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
+    this.pendingOfflineLoadSubscription?.unsubscribe();
+    this.leadLoadSubscription?.unsubscribe();
+    this.reservationLoadSubscription?.unsubscribe();
   }
 
   currentProfileId(): number | null {
@@ -1045,8 +1053,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId) return;
 
     const requestId = ++this.pendingOfflineRequestId;
+    this.pendingOfflineLoadSubscription?.unsubscribe();
 
-    this.consultantApi.getLeads({
+    this.pendingOfflineLoadSubscription = this.consultantApi.getLeads({
       profileId,
       leadAssignmentState: LEAD_STATE.Pending,
       leadAssignmentType: LEAD_TYPE.OfflineQueue,
@@ -1067,15 +1076,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private loadLeads(quiet = false): void {
     const profileId = this.currentProfileId();
     if (!profileId) return;
+    if (quiet && this.leadLoadSubscription && !this.leadLoadSubscription.closed) return;
 
     const requestId = ++this.leadRequestId;
+    this.leadLoadSubscription?.unsubscribe();
+
     if (!quiet) {
       this.visibleLeadLoadingRequestId = requestId;
       this.leadsLoading = true;
     }
     if (!quiet) this.clearFeedback();
 
-    this.consultantApi.getLeads({
+    this.leadLoadSubscription = this.consultantApi.getLeads({
       profileId,
       leadAssignmentState: this.leadStateFilter,
       leadAssignmentType: this.leadTypeFilter,
@@ -1106,9 +1118,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId) return;
 
     const requestId = ++this.reservationRequestId;
+    this.reservationLoadSubscription?.unsubscribe();
     this.reservationsLoading = true;
 
-    this.consultantApi.getReservations({
+    this.reservationLoadSubscription = this.consultantApi.getReservations({
       consultantProfileId: profileId,
       from: new Date().toISOString(),
       includeCanceled: false,
