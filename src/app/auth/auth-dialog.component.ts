@@ -13,7 +13,6 @@ import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
       [open]="open"
       [language]="language"
       [showFooter]="false"
-      [eyebrow]="copy.eyebrow[language]"
       [title]="copy.title[language]"
       [subtitle]="copy.subtitle[language]"
       (closed)="closed.emit()"
@@ -86,7 +85,6 @@ export class AuthDialogComponent {
   };
 
   copy = {
-    eyebrow: text('حساب کاربری کلینیک', 'Clinic account'),
     title: text('ورود و عضویت', 'Sign in and membership'),
     subtitle: text('برای پیگیری درخواست تماس، ذخیره خدمات مورد علاقه و دریافت راهنمای درمان وارد شوید.', 'Sign in to follow consultant calls, save favorite services and receive care guidance.'),
     login: text('ورود', 'Sign in'),

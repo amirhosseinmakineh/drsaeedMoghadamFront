@@ -13,7 +13,6 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
   template: `
     <section class="page-section about-hero">
       <div class="section-heading">
-        <p class="eyebrow">{{ language() === 'fa' ? 'درباره ما' : 'About us' }}</p>
         <h1>{{ language() === 'fa' ? 'کلینیکی برای درمان شفاف، زیبایی طبیعی و آرامش بیمار' : 'A clinic for transparent care, natural beauty and patient calm' }}</h1>
         <p>{{ language() === 'fa'
           ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم با رویکرد محافظه‌کارانه، طراحی لبخند طبیعی و ارتباط انسانی با بیمار شکل گرفته است.'
@@ -42,7 +41,6 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
     <section class="page-section story-panel">
       <div>
-        <p class="eyebrow">{{ language() === 'fa' ? 'رویکرد درمانی' : 'Care philosophy' }}</p>
         <h2>{{ language() === 'fa' ? 'تصمیم درمانی فقط بعد از فهم نیاز واقعی بیمار گرفته می‌شود' : 'Treatment decisions come after understanding the patient’s real need' }}</h2>
       </div>
       <p>{{ language() === 'fa'

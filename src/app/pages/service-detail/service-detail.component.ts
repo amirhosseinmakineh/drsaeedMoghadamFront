@@ -74,10 +74,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
     <article>
       <section class="page-section detail-hero" [style.--accent]="service.accent">
         <div>
-          <p class="eyebrow">
-            <a routerLink="/services">{{ language() === 'fa' ? 'خدمات' : 'Services' }}</a>
-            / {{ pickText(service.title, language()) }}
-          </p>
           <h1>{{ pickText(service.title, language()) }}</h1>
           <h2>{{ pickText(service.subtitle, language()) }}</h2>
           <p>{{ pickText(service.summary, language()) }}</p>
@@ -94,13 +90,11 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
         </div>
         <div class="detail-media">
           <img [src]="service.image" [alt]="pickText(service.title, language())" loading="eager" />
-          <span class="media-badge"><app-fa-icon [name]="service.icon"></app-fa-icon>{{ pickText(service.duration, language()) }}</span>
         </div>
       </section>
 
       <section class="page-section intro-panel">
         <div class="section-heading">
-          <p class="eyebrow">{{ language() === 'fa' ? 'راهنمای درمان در کلینیک دکتر سعید مقدم' : 'Treatment guide at Dr. Saeed Moghaddam Clinic' }}</p>
           <h2>{{ language() === 'fa' ? pickText(service.title, language()) + ' چگونه برنامه‌ریزی می‌شود؟' : 'How is ' + pickText(service.title, language()) + ' planned?' }}</h2>
         </div>
         <p class="long-text">{{ pickText(service.longIntro, language()) }}</p>
@@ -108,7 +102,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section">
         <div class="section-heading center">
-          <p class="eyebrow">{{ language() === 'fa' ? 'اطلاعات تصمیم‌گیری' : 'Decision information' }}</p>
           <h2>{{ language() === 'fa' ? 'زمان، هزینه و هدف درمان' : 'Time, cost and treatment goal' }}</h2>
         </div>
         <div class="info-grid three">
@@ -133,7 +126,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
       <section class="page-section two-column">
         <div>
           <div class="section-heading">
-            <p class="eyebrow">{{ language() === 'fa' ? 'مناسب برای' : 'Ideal for' }}</p>
             <h2>{{ language() === 'fa' ? pickText(service.title, language()) + ' برای چه شرایطی بررسی می‌شود؟' : 'When is ' + pickText(service.title, language()) + ' considered?' }}</h2>
           </div>
           <ul class="check-list">
@@ -150,7 +142,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section">
         <div class="section-heading center">
-          <p class="eyebrow">{{ language() === 'fa' ? 'مزایا' : 'Benefits' }}</p>
           <h2>{{ language() === 'fa' ? 'مزایای واقعی ' + pickText(service.title, language()) : 'Real benefits of ' + pickText(service.title, language()) }}</h2>
         </div>
         <div class="benefit-grid">
@@ -163,7 +154,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section journey-section">
         <div class="section-heading">
-          <p class="eyebrow">{{ language() === 'fa' ? 'مسیر درمان' : 'Care journey' }}</p>
           <h2>{{ language() === 'fa' ? 'مراحل استاندارد ' + pickText(service.title, language()) : 'Standard steps for ' + pickText(service.title, language()) }}</h2>
         </div>
         <div class="timeline">
@@ -179,7 +169,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section care-panel">
         <div>
-          <p class="eyebrow">{{ language() === 'fa' ? 'مراقبت' : 'Aftercare' }}</p>
           <h2>{{ language() === 'fa' ? 'مراقبت‌های استاندارد بعد از ' + pickText(service.title, language()) : 'Standard aftercare after ' + pickText(service.title, language()) }}</h2>
         </div>
         <ul class="check-list">
@@ -189,7 +178,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section before-after">
         <div>
-          <p class="eyebrow">{{ language() === 'fa' ? 'اسلایدر نتیجه' : 'Result slider' }}</p>
           <h2>{{ language() === 'fa' ? 'نمای تصویری قبل و بعد ' + pickText(service.title, language()) : 'Before and after visual for ' + pickText(service.title, language()) }}</h2>
           <p>{{ language() === 'fa' ? 'این تصاویر نمونه برای توضیح روند تغییر درمانی استفاده می‌شوند؛ نتیجه واقعی هر بیمار پس از معاینه، عکس و طرح درمان مشخص می‌شود.' : 'These sample visuals explain the treatment change; each patient result is defined after examination, imaging and treatment planning.' }}</p>
         </div>
@@ -208,7 +196,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section faq-section">
         <div class="section-heading">
-          <p class="eyebrow">FAQ</p>
           <h2>{{ language() === 'fa' ? 'سوالات پرتکرار درباره ' + pickText(service.title, language()) : 'Frequently asked questions about ' + pickText(service.title, language()) }}</h2>
         </div>
         <div class="faq-list">
@@ -221,7 +208,6 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section">
         <div class="section-heading">
-          <p class="eyebrow">{{ language() === 'fa' ? 'خدمات مرتبط' : 'Related services' }}</p>
           <h2>{{ language() === 'fa' ? 'درمان‌های مرتبط با ' + pickText(service.title, language()) : 'Care paths related to ' + pickText(service.title, language()) }}</h2>
         </div>
         <div class="related-rail">
@@ -244,7 +230,7 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
     </article>
   `,
   styles: [`
-    .detail-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.82fr);gap:36px;align-items:center;min-height:610px;padding-top:132px}.detail-hero h1{margin:10px 0 8px;font-size:clamp(1.75rem,3.3vw,3rem)}.detail-hero h2{margin:0 0 14px;color:var(--brand);font-size:clamp(1rem,1.6vw,1.35rem)}.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.hero-actions.centered{justify-content:center}.detail-media{position:relative}.detail-media img{width:100%;height:440px;object-fit:cover;border-radius:40px;box-shadow:var(--shadow);animation:mediaFloat 6s ease-in-out infinite alternate}.detail-media::before{content:'';position:absolute;inset:-18px;border:2px dashed color-mix(in srgb,var(--accent) 48%,transparent);border-radius:50px;transform:rotate(3deg);z-index:-1}.media-badge{position:absolute;inset:auto 22px 22px auto;display:inline-flex;align-items:center;gap:8px;padding:12px 15px;border-radius:999px;background:color-mix(in srgb,var(--surface) 82%,transparent);box-shadow:0 16px 40px rgba(91,64,38,.14);font-weight:950;color:var(--text);backdrop-filter:blur(16px)}.intro-panel{padding:36px;border:1px solid var(--line);border-radius:36px;background:color-mix(in srgb,var(--surface) 82%,transparent);box-shadow:var(--shadow)}.long-text{max-width:none;font-size:1rem}.three{grid-template-columns:repeat(3,minmax(0,1fr))}.two-column,.care-panel,.before-after{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,.9fr);gap:26px;align-items:center}.check-list{display:grid;gap:12px;margin:0;padding:0;list-style:none}.check-list li{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:20px;background:color-mix(in srgb,var(--surface) 78%,transparent);font-weight:800}.check-list app-fa-icon{color:var(--brand);margin-top:5px}.timeline{display:grid;gap:14px}.timeline article{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;padding:18px;border:1px solid var(--line);border-radius:26px;background:color-mix(in srgb,var(--surface) 82%,transparent)}.timeline article>span{display:grid;place-items:center;width:44px;height:44px;border-radius:16px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;font-weight:950}.timeline h3{margin:0 0 4px;font-size:1.05rem}.timeline p{margin:0}.care-panel,.before-after,.final-cta{padding:34px;border:1px solid var(--line);border-radius:36px;background:radial-gradient(circle at 10% 0,color-mix(in srgb,var(--brand) 12%,transparent),transparent 48%),color-mix(in srgb,var(--surface) 82%,transparent);box-shadow:var(--shadow)}.result-frame{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:320px;overflow:hidden;border:1px solid var(--line);border-radius:34px;background:var(--surface)}.result-frame figure{position:relative;display:grid;margin:0;min-height:320px;overflow:hidden}.result-frame img{width:100%;height:100%;object-fit:cover;filter:saturate(.9)}.result-frame figcaption{position:absolute;inset:auto 14px 14px auto;padding:8px 12px;border-radius:999px;background:rgba(17,16,14,.72);color:#fff;font-size:.9rem;font-weight:950;backdrop-filter:blur(12px)}.result-frame .before img{filter:saturate(.55) brightness(.75)}.result-frame span{position:absolute;top:0;bottom:0;left:50%;width:3px;background:#fff;box-shadow:0 0 0 999px rgba(255,255,255,.02);animation:handleMove 3.2s ease-in-out infinite alternate}.related-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(280px,360px);gap:16px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory}.related-rail .service-card{scroll-snap-align:start}.final-cta{text-align:center}.final-cta h2{font-size:clamp(1.35rem,2.3vw,2.25rem);margin:0 0 12px}@keyframes mediaFloat{to{transform:translateY(-10px) scale(1.005)}}@keyframes handleMove{from{left:44%}to{left:56%}}@media(max-width:900px){.detail-hero,.two-column,.care-panel,.before-after{grid-template-columns:1fr}.detail-hero{min-height:auto;padding-top:112px}.detail-media{order:-1}.detail-media img{height:320px}.three{grid-template-columns:1fr}.intro-panel,.care-panel,.before-after,.final-cta{padding:24px;border-radius:30px}.result-frame,.result-frame figure{min-height:240px}}
+    .detail-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.82fr);gap:36px;align-items:center;min-height:610px;padding-top:132px}.detail-hero h1{margin:10px 0 8px;font-size:clamp(1.75rem,3.3vw,3rem)}.detail-hero h2{margin:0 0 14px;color:var(--brand);font-size:clamp(1rem,1.6vw,1.35rem)}.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.hero-actions.centered{justify-content:center}.detail-media{position:relative}.detail-media img{width:100%;height:440px;object-fit:cover;border-radius:40px;box-shadow:var(--shadow);animation:mediaFloat 6s ease-in-out infinite alternate}.detail-media::before{content:'';position:absolute;inset:-18px;border:2px dashed color-mix(in srgb,var(--accent) 48%,transparent);border-radius:50px;transform:rotate(3deg);z-index:-1}.intro-panel{padding:36px;border:1px solid var(--line);border-radius:36px;background:color-mix(in srgb,var(--surface) 82%,transparent);box-shadow:var(--shadow)}.long-text{max-width:none;font-size:1rem}.three{grid-template-columns:repeat(3,minmax(0,1fr))}.two-column,.care-panel,.before-after{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,.9fr);gap:26px;align-items:center}.check-list{display:grid;gap:12px;margin:0;padding:0;list-style:none}.check-list li{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:20px;background:color-mix(in srgb,var(--surface) 78%,transparent);font-weight:800}.check-list app-fa-icon{color:var(--brand);margin-top:5px}.timeline{display:grid;gap:14px}.timeline article{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;padding:18px;border:1px solid var(--line);border-radius:26px;background:color-mix(in srgb,var(--surface) 82%,transparent)}.timeline article>span{display:grid;place-items:center;width:44px;height:44px;border-radius:16px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;font-weight:950}.timeline h3{margin:0 0 4px;font-size:1.05rem}.timeline p{margin:0}.care-panel,.before-after,.final-cta{padding:34px;border:1px solid var(--line);border-radius:36px;background:radial-gradient(circle at 10% 0,color-mix(in srgb,var(--brand) 12%,transparent),transparent 48%),color-mix(in srgb,var(--surface) 82%,transparent);box-shadow:var(--shadow)}.result-frame{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:320px;overflow:hidden;border:1px solid var(--line);border-radius:34px;background:var(--surface)}.result-frame figure{position:relative;display:grid;margin:0;min-height:320px;overflow:hidden}.result-frame img{width:100%;height:100%;object-fit:cover;filter:saturate(.9)}.result-frame figcaption{position:absolute;inset:auto 14px 14px auto;padding:8px 12px;border-radius:999px;background:rgba(17,16,14,.72);color:#fff;font-size:.9rem;font-weight:950;backdrop-filter:blur(12px)}.result-frame .before img{filter:saturate(.55) brightness(.75)}.result-frame span{position:absolute;top:0;bottom:0;left:50%;width:3px;background:#fff;box-shadow:0 0 0 999px rgba(255,255,255,.02);animation:handleMove 3.2s ease-in-out infinite alternate}.related-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(280px,360px);gap:16px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory}.related-rail .service-card{scroll-snap-align:start}.final-cta{text-align:center}.final-cta h2{font-size:clamp(1.35rem,2.3vw,2.25rem);margin:0 0 12px}@keyframes mediaFloat{to{transform:translateY(-10px) scale(1.005)}}@keyframes handleMove{from{left:44%}to{left:56%}}@media(max-width:900px){.detail-hero,.two-column,.care-panel,.before-after{grid-template-columns:1fr}.detail-hero{min-height:auto;padding-top:112px}.detail-media{order:-1}.detail-media img{height:320px}.three{grid-template-columns:1fr}.intro-panel,.care-panel,.before-after,.final-cta{padding:24px;border-radius:30px}.result-frame,.result-frame figure{min-height:240px}}
   `]
 })
 export class ServiceDetailComponent {
