@@ -106,9 +106,8 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
       padding: 22px;
       border: 1px solid var(--line);
       border-radius: 30px;
-      background: color-mix(in srgb, var(--surface) 82%, transparent);
+      background: var(--surface);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
     }
 
     .info-panel article {

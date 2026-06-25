@@ -131,32 +131,48 @@ export interface DatePickerDay {
 export const text = (fa: string, en: string): LocalizedText => ({ fa, en });
 export const pickText = (value: LocalizedText, language: LanguageCode): string => value[language];
 
-const buildUnsplashUrl = (id: string, width: number, quality = 38): string =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=${quality}`;
+const paletteFor = (id: string): [string, string, string] => {
+  const palettes: [string, string, string][] = [
+    ['#fff8ec', '#e8d3ad', '#a8793f'],
+    ['#fffaf2', '#efdcbc', '#b88a44'],
+    ['#fff7ed', '#ead6bd', '#9f8565'],
+    ['#fffbf4', '#f2e2c9', '#8f9d74']
+  ];
+  const index = [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % palettes.length;
 
-const image = (
+  return palettes[index];
+};
+
+const inlineClinicImage = (
   id: string,
   width = 640,
   height = 420,
   sizes = '(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw'
 ): ClinicImage => {
-  const widths = [320, 480, 640, 760, 960];
+  const [bg, soft, accent] = paletteFor(id);
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">
+      <rect width="100%" height="100%" rx="42" fill="${bg}"/>
+      <circle cx="${Math.round(width * 0.18)}" cy="${Math.round(height * 0.18)}" r="${Math.round(width * 0.22)}" fill="${soft}"/>
+      <circle cx="${Math.round(width * 0.84)}" cy="${Math.round(height * 0.82)}" r="${Math.round(width * 0.20)}" fill="${soft}" opacity=".72"/>
+      <path d="M${Math.round(width * 0.26)} ${Math.round(height * 0.36)}c${Math.round(width * 0.12)}-${Math.round(height * 0.22)} ${Math.round(width * 0.35)}-${Math.round(height * 0.24)} ${Math.round(width * 0.48)} 0 ${Math.round(width * 0.08)} ${Math.round(height * 0.15)} ${Math.round(width * 0.04)} ${Math.round(height * 0.38)}-${Math.round(width * 0.06)} ${Math.round(height * 0.44)}-${Math.round(width * 0.08)} ${Math.round(height * 0.04)}-${Math.round(width * 0.15)}-${Math.round(height * 0.03)}-${Math.round(width * 0.20)}-${Math.round(height * 0.15)}-${Math.round(width * 0.05)} ${Math.round(height * 0.12)}-${Math.round(width * 0.13)} ${Math.round(height * 0.19)}-${Math.round(width * 0.20)} ${Math.round(height * 0.15)}-${Math.round(width * 0.10)}-${Math.round(height * 0.06)}-${Math.round(width * 0.14)}-${Math.round(height * 0.29)}-${Math.round(width * 0.06)}-${Math.round(height * 0.44)}z" fill="#fffdf8" stroke="${accent}" stroke-width="6"/>
+      <path d="M${Math.round(width * 0.28)} ${Math.round(height * 0.68)}c${Math.round(width * 0.12)} ${Math.round(height * 0.11)} ${Math.round(width * 0.32)} ${Math.round(height * 0.11)} ${Math.round(width * 0.44)} 0" fill="none" stroke="${accent}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M${Math.round(width * 0.19)} ${Math.round(height * 0.78)}h${Math.round(width * 0.62)}" stroke="${accent}" stroke-width="3" stroke-linecap="round" opacity=".22"/>
+    </svg>
+  `.trim();
 
   return {
-    src: buildUnsplashUrl(id, width),
-    srcset: widths.map(item => `${buildUnsplashUrl(id, item)} ${item}w`).join(', '),
+    src: `data:image/svg+xml,${encodeURIComponent(svg)}`,
     sizes,
     width,
     height
   };
 };
 
-const portfolioImage = (path: string): ClinicImage => ({
-  src: `https://labkhanddental.com/wp-content/uploads/${path}`,
-  sizes: '(max-width: 640px) 100vw, (max-width: 980px) 92vw, 44vw',
-  width: 720,
-  height: 420
-});
+const image = inlineClinicImage;
+
+const portfolioImage = (path: string): ClinicImage =>
+  inlineClinicImage(path, 720, 420, '(max-width: 640px) 100vw, (max-width: 980px) 92vw, 44vw');
 
 const heroImage = (id: string): ClinicImage =>
   image(id, 760, 430, '(max-width: 640px) 76vw, (max-width: 980px) 70vw, 32vw');

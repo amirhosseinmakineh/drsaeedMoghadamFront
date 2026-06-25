@@ -24,13 +24,25 @@ interface ServiceDetailCopy {
 }
 
 const resultImage = (id: string): ClinicImage => {
-  const widths = [320, 480, 620, 760];
-  const buildUrl = (width: number): string =>
-    `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=38`;
+  const palettes = [
+    ['#fff8ec', '#ead6bd', '#a8793f'],
+    ['#fffaf2', '#f0dec0', '#b88a44'],
+    ['#fff7ed', '#e8d3ad', '#8f9d74']
+  ];
+  const [bg, soft, accent] = palettes[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % palettes.length];
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="620" height="320" viewBox="0 0 620 320" role="img">
+      <rect width="620" height="320" rx="34" fill="${bg}"/>
+      <circle cx="120" cy="70" r="110" fill="${soft}"/>
+      <circle cx="520" cy="260" r="120" fill="${soft}" opacity=".72"/>
+      <path d="M178 106c70-88 204-88 274 0 42 54 20 150-20 174-36 22-60-52-70-96-13 46-35 116-75 92-44-26-64-116-24-170z" fill="#fffdf8" stroke="${accent}" stroke-width="6"/>
+      <path d="M190 230c66 42 176 42 242 0" fill="none" stroke="${accent}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M118 278h384" stroke="${accent}" stroke-width="3" stroke-linecap="round" opacity=".22"/>
+    </svg>
+  `.trim();
 
   return {
-    src: buildUrl(620),
-    srcset: widths.map(width => `${buildUrl(width)} ${width}w`).join(', '),
+    src: `data:image/svg+xml,${encodeURIComponent(svg)}`,
     sizes: '(max-width: 900px) 50vw, 24vw',
     width: 620,
     height: 320
@@ -406,7 +418,6 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
       object-fit: cover;
       border-radius: 40px;
       box-shadow: var(--shadow);
-      animation: mediaFloat 6s ease-in-out infinite alternate;
     }
 
     .detail-media::before {
@@ -423,7 +434,7 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
       padding: 36px;
       border: 1px solid var(--line);
       border-radius: 36px;
-      background: color-mix(in srgb, var(--surface) 82%, transparent);
+      background: var(--surface);
       box-shadow: var(--shadow);
     }
 
@@ -511,9 +522,7 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
       padding: 34px;
       border: 1px solid var(--line);
       border-radius: 36px;
-      background:
-        radial-gradient(circle at 10% 0, color-mix(in srgb, var(--brand) 12%, transparent), transparent 48%),
-        color-mix(in srgb, var(--surface) 82%, transparent);
+      background: var(--surface);
       box-shadow: var(--shadow);
     }
 
@@ -540,7 +549,6 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: saturate(.9);
     }
 
     .result-frame figcaption {
@@ -552,11 +560,10 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
       color: #fff;
       font-size: .9rem;
       font-weight: 950;
-      backdrop-filter: blur(12px);
     }
 
     .result-frame .before img {
-      filter: saturate(.55) brightness(.75);
+      opacity: .72;
     }
 
     .result-frame span {
@@ -567,7 +574,6 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
       width: 3px;
       background: #fff;
       box-shadow: 0 0 0 999px rgba(255, 255, 255, .02);
-      animation: handleMove 3.2s ease-in-out infinite alternate;
     }
 
     .related-rail {
@@ -591,22 +597,6 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
     .final-cta h2 {
       margin: 0 0 12px;
       font-size: clamp(1.35rem, 2.3vw, 2.25rem);
-    }
-
-    @keyframes mediaFloat {
-      to {
-        transform: translateY(-10px) scale(1.005);
-      }
-    }
-
-    @keyframes handleMove {
-      from {
-        left: 44%;
-      }
-
-      to {
-        left: 56%;
-      }
     }
 
     @media (max-width: 900px) {
