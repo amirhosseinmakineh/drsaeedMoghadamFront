@@ -85,13 +85,13 @@ export class HomeComponent {
   private updateSeo(): void {
     const isFa = this.language() === 'fa';
     this.title.setTitle(isFa
-      ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم | ایمپلنت، لمینت و طراحی لبخند'
-      : 'Dr. Saeed Moghaddam Dental Clinic | Implants, veneers and smile design');
+      ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم | کامپوزیت، لمینت و بلیچینگ'
+      : 'Dr. Saeed Moghaddam Dental Clinic | Composite, veneers and bleaching');
     this.meta.updateTag({
       name: 'description',
       content: isFa
-        ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه، درمان لثه و درخواست تماس برای راهنمایی اولیه.'
-        : 'Dr. Saeed Moghaddam Dental Clinic for implants, veneers, composite, whitening, root canal, gum care and initial consultant call requests.'
+        ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم؛ خدمات زیبایی دندان شامل کامپوزیت ونیر، لمینت سرامیکی، بلیچینگ دندان و درخواست تماس برای راهنمایی اولیه.'
+        : 'Dr. Saeed Moghaddam Dental Clinic for composite veneers, porcelain veneers, dental bleaching and initial consultant call requests.'
     });
   }
 }

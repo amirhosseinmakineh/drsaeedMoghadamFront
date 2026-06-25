@@ -25,7 +25,7 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
       <div class="doctor-card">
         <span class="icon-bubble"><app-fa-icon name="doctor"></app-fa-icon></span>
         <h2>{{ language() === 'fa' ? 'دکتر سعید مقدم' : 'Dr. Saeed Moghaddam' }}</h2>
-        <p>{{ language() === 'fa' ? 'دندان‌پزشکی زیبایی، ایمپلنت، ترمیمی و درمان‌های دقیق محافظه‌کارانه' : 'Cosmetic dentistry, implants, restorative and precise conservative care' }}</p>
+        <p>{{ language() === 'fa' ? 'دندان‌پزشکی زیبایی با تمرکز بر کامپوزیت، لمینت و بلیچینگ محافظه‌کارانه' : 'Cosmetic dentistry focused on conservative composite, veneers and bleaching' }}</p>
       </div>
     </section>
 
@@ -44,8 +44,8 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
         <h2>{{ language() === 'fa' ? 'تصمیم درمانی فقط بعد از فهم نیاز واقعی بیمار گرفته می‌شود' : 'Treatment decisions come after understanding the patient’s real need' }}</h2>
       </div>
       <p>{{ language() === 'fa'
-        ? 'در هر درمان، ابتدا سلامت لثه، دندان‌ها، عادت‌های بهداشتی، انتظار زیبایی، محدودیت‌های مالی و سبک زندگی بررسی می‌شود. سپس گزینه‌ها با زبان ساده توضیح داده می‌شوند تا بیمار بداند چرا یک مسیر پیشنهاد شده و چه مراقبت‌هایی برای ماندگاری نتیجه لازم است.'
-        : 'For every treatment, gum health, teeth, hygiene habits, aesthetic expectations, financial limits and lifestyle are reviewed first. Options are then explained in simple language so the patient understands why a path is suggested and what care is needed for lasting results.' }}</p>
+        ? 'در هر درمان زیبایی، ابتدا سلامت لثه، دندان‌ها، مینا، حساسیت، ترمیم‌های قبلی، انتظار زیبایی، محدودیت‌های مالی و سبک زندگی بررسی می‌شود. سپس گزینه‌های کامپوزیت، لمینت یا بلیچینگ با زبان ساده توضیح داده می‌شوند تا بیمار بداند چرا یک مسیر پیشنهاد شده و چه مراقبت‌هایی برای ماندگاری نتیجه لازم است.'
+        : 'For every cosmetic treatment, gum health, teeth, enamel, sensitivity, existing restorations, aesthetic expectations, financial limits and lifestyle are reviewed first. Composite, veneer or bleaching options are then explained in simple language so the patient understands why a path is suggested and what care is needed for lasting results.' }}</p>
       <a class="secondary-btn" routerLink="/services">{{ language() === 'fa' ? 'مشاهده خدمات' : 'View services' }}</a>
     </section>
   `,

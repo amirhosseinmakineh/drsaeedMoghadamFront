@@ -177,37 +177,37 @@ export const NAV_ITEMS: NavItem[] = [
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 'digital-smile',
-    title: text('درمان دقیق، طراحی لبخند طبیعی و مراقبت قابل اعتماد', 'Precise care, natural smile design and trustworthy dentistry'),
+    title: text('طراحی لبخند طبیعی با کامپوزیت، لمینت و بلیچینگ', 'Natural smile design with composite, veneers and bleaching'),
     text: text(
-      'در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان‌های زیبایی و عمومی مثل ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه و مراقبت لثه با معاینه دقیق و توضیح شفاف انجام می‌شود.',
-      'At Dr. Saeed Moghaddam Dental Clinic, cosmetic and general dental treatments such as implants, veneers, composite, whitening, root canal therapy and gum care are planned with careful exams and clear guidance.'
+      'در کلینیک دندان‌پزشکی دکتر سعید مقدم، خدمات زیبایی دندان روی سه مسیر کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان متمرکز است و هر تصمیم بعد از معاینه، بررسی سلامت لثه و توضیح محدودیت‌ها گرفته می‌شود.',
+      'At Dr. Saeed Moghaddam Dental Clinic, cosmetic dental care focuses on composite veneers, porcelain veneers and professional bleaching, with each decision made after examination, gum-health review and clear discussion of limits.'
     ),
     image: heroImage('clinic')
   },
   {
     id: 'calm-suite',
-    title: text('قبل از تصمیم، مشکل، گزینه‌ها و مراقبت‌ها روشن می‌شود', 'Before any decision, the problem, options and care are clear'),
+    title: text('زیبایی دندان با انتظار واقع‌بینانه و مراقبت ایمن', 'Cosmetic dentistry with realistic expectations and safe care'),
     text: text(
-      'اگر درد دندان، نیاز به ایمپلنت، اصلاح طرح لبخند یا درمان لثه دارید، ابتدا شرایط دهان و دندان بررسی می‌شود و مسیر مناسب بدون وعده اغراق‌آمیز توضیح داده می‌شود.',
-      'Whether you have tooth pain, need implants, want a smile makeover or require gum care, your oral condition is reviewed first and the suitable path is explained without exaggerated promises.'
+      'در انتخاب بین کامپوزیت، لمینت و بلیچینگ، وضعیت پوسیدگی، مینای دندان، حساسیت، رنگ ترمیم‌های قبلی، بایت و عادت‌هایی مثل دندان‌قروچه بررسی می‌شود تا درمان بیش از حد یا پرخطر پیشنهاد نشود.',
+      'When choosing between composite, veneers and bleaching, decay, enamel, sensitivity, existing restoration shade, bite and habits such as grinding are reviewed so excessive or risky treatment is not suggested.'
     ),
-    image: heroImage('implant')
+    image: heroImage('laminate')
   },
   {
     id: 'mobile-first',
-    title: text('از تماس اولیه تا پیگیری بعد از درمان، مسیر ساده است', 'From first call to aftercare, the path stays simple'),
+    title: text('از انتخاب رنگ تا مراقبت بعد درمان، مسیر شفاف است', 'From shade selection to aftercare, the path stays clear'),
     text: text(
-      'درمان‌ها، توضیحات تخصصی، سوالات پرتکرار و فرم درخواست تماس کنار هم آمده‌اند تا مراجعه‌کننده سریع‌تر بداند برای کدام مسیر درمانی باید راهنمایی بگیرد.',
-      'Services, treatment explanations, FAQs and the call request form are grouped together so patients quickly know which service they need guidance for.'
+      'توضیحات هر خدمت شامل کاربرد، مراحل، مراقبت‌ها، موارد احتیاط و پرسش‌های پرتکرار است تا مراجعه‌کننده پیش از ثبت درخواست تماس، تصویر دقیق‌تری از درمان داشته باشد.',
+      'Each service explains indications, steps, aftercare, precautions and common questions so patients understand the treatment more clearly before requesting a call.'
     ),
     image: heroImage('whitening')
   }
 ];
 
 export const STATS: StatItem[] = [
-  { value: text('زیبایی و درمان', 'Cosmetic and care'), label: text('طراحی لبخند، ترمیم و درمان‌های ضروری دندان', 'Smile design, restorative and essential dental treatments') },
-  { value: text('۸ مسیر درمان', '8 care paths'), label: text('از ایمپلنت و لمینت تا درمان ریشه و لثه', 'From implants and veneers to root canal and gum care') },
-  { value: text('پاسخگویی', 'Call back'), label: text('ثبت شماره برای تماس مشاور و راهنمایی اولیه', 'Leave your number for an initial consultant call') }
+  { value: text('۳ خدمت زیبایی', '3 cosmetic services'), label: text('کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان', 'Composite veneers, porcelain veneers and dental bleaching') },
+  { value: text('استاندارد سلامت', 'Health-first standards'), label: text('معاینه، کنترل حساسیت و بررسی سلامت لثه پیش از درمان', 'Exam, sensitivity control and gum-health review before care') },
+  { value: text('پاسخگویی', 'Call back'), label: text('ثبت شماره برای راهنمایی اولیه و انتخاب مسیر مناسب', 'Leave your number for initial guidance and service selection') }
 ];
 
 export const WORK_SAMPLES: WorkSample[] = [
@@ -223,15 +223,15 @@ export const WORK_SAMPLES: WorkSample[] = [
     image: portfolioImage('laminate')
   },
   {
-    id: 'implant-rehab',
-    title: text('نمونه ایمپلنت دندان', 'Dental implant sample'),
-    service: text('ایمپلنت دندان', 'Dental implants'),
+    id: 'whitening-shade',
+    title: text('نمونه بلیچینگ دندان', 'Dental bleaching sample'),
+    service: text('بلیچینگ دندان', 'Dental bleaching'),
     description: text(
-      'در درمان ایمپلنت، وضعیت استخوان، لثه و فضای دندان از دست رفته بررسی می‌شود تا جایگزینی ثابت و قابل اتکا انجام شود.',
-      'For implant treatment, bone, gum and missing-tooth space are reviewed so the fixed replacement is reliable.'
+      'برای روشن‌تر شدن کنترل‌شده رنگ دندان طبیعی، رنگ پایه، حساسیت، سلامت لثه و ترمیم‌های قبلی قبل از بلیچینگ بررسی می‌شود.',
+      'For controlled brightening of natural teeth, baseline shade, sensitivity, gum health and existing restorations are reviewed before bleaching.'
     ),
-    result: text('بازگرداندن عملکرد جویدن و فرم لبخند', 'Restored chewing function and smile form'),
-    image: portfolioImage('implant')
+    result: text('روشن‌تر شدن طبیعی بدون تغییر رنگ ترمیم‌ها یا وعده غیرواقعی', 'Natural brightening without changing restorations or making unrealistic promises'),
+    image: portfolioImage('whitening')
   },
   {
     id: 'composite-shape',
@@ -246,7 +246,7 @@ export const WORK_SAMPLES: WorkSample[] = [
   }
 ];
 
-export const DENTAL_SERVICES: DentalService[] = [
+const ALL_DENTAL_SERVICES: DentalService[] = [
   {
     id: 'implant',
     icon: 'tooth',
@@ -307,10 +307,10 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#c9a26a',
     title: text('لمینت سرامیکی', 'Porcelain veneers'),
     subtitle: text('طراحی لبخند ظریف و طبیعی', 'Delicate natural smile design'),
-    summary: text('لمینت سرامیکی برای اصلاح رنگ، فرم و تناسب دندان‌های جلو به کار می‌رود؛ هدف، لبخندی طبیعی و هماهنگ با چهره است.', 'Veneers improve color, shape, size and harmony of front teeth without an overdone look.'),
+    summary: text('لمینت سرامیکی برای اصلاح رنگ، فرم و تناسب دندان‌های جلو به کار می‌رود؛ قبل از آن سلامت دندان، لثه، بایت و میزان تراش لازم بررسی می‌شود.', 'Porcelain veneers improve front-tooth shade, shape and proportion after tooth health, gums, bite and preparation needs are reviewed.'),
     longIntro: text(
-      'لمینت سرامیکی برای افرادی مناسب است که می‌خواهند رنگ، فرم، اندازه یا هماهنگی دندان‌های جلویی اصلاح شود اما نتیجه مصنوعی و اغراق‌آمیز نباشد. در کلینیک دندان‌پزشکی دکتر سعید مقدم، قبل از لمینت وضعیت پوسیدگی، مینای دندان، سلامت لثه، خط لبخند، فرم لب، رنگ پوست، عادت دندان‌قروچه و نیاز احتمالی به ارتودنسی بررسی می‌شود. انتخاب رنگ و میزان آماده‌سازی باید محافظه‌کارانه و قابل توضیح باشد، چون لمینت درمانی دقیق و معمولاً برگشت‌ناپذیر است.',
-      'Porcelain veneers suit people who want a brighter, more balanced smile without an artificial look. Lip shape, skin tone, smile line, gum display and tooth health are considered. Before treatment, preparation limits, shade selection and aftercare are explained clearly.'
+      'لمینت سرامیکی برای افرادی مناسب است که می‌خواهند رنگ، فرم، اندازه یا هماهنگی دندان‌های جلویی اصلاح شود اما نتیجه مصنوعی و اغراق‌آمیز نباشد. پیش از لمینت، پوسیدگی فعال، کیفیت مینا، سلامت لثه، حساسیت دندان، خط لبخند، فرم لب، رنگ پوست، بایت و عادت دندان‌قروچه بررسی می‌شود. مطابق اصول پذیرفته‌شده سلامت دهان، انتخاب رنگ و میزان آماده‌سازی باید محافظه‌کارانه، قابل توضیح و متناسب با شرایط فرد باشد، چون لمینت درمانی دقیق و معمولاً برگشت‌ناپذیر است.',
+      'Porcelain veneers suit people who want better shade, shape, size or harmony of front teeth without an artificial look. Active decay, enamel quality, gum health, sensitivity, smile line, lip form, skin tone, bite and grinding habits are reviewed first. In line with accepted oral-health principles, shade selection and preparation should be conservative, explainable and matched to the patient because veneer treatment is precise and usually irreversible.'
     ),
     duration: text('معمولاً ۱۰ تا ۱۴ روز پس از آماده‌سازی', 'Usually 10 to 14 days after preparation'),
     cost: text('وابسته به تعداد دندان، جنس سرامیک و طراحی لبخند', 'Depends on tooth count, ceramic type and smile design details'),
@@ -344,7 +344,7 @@ export const DENTAL_SERVICES: DentalService[] = [
       { id: 'laminate-3', question: text('آیا رنگ لمینت بعد از نصب تغییر می‌کند؟', 'Can veneer shade change after bonding?'), answer: text('سرامیک باکیفیت رنگ‌پذیری کمی دارد، اما انتخاب رنگ پس از چسباندن به‌سادگی قابل تغییر نیست؛ به همین دلیل انتخاب رنگ قبل از ساخت اهمیت زیادی دارد.', 'Quality ceramic has low staining, but shade is not easily changed after bonding, so pre-fabrication shade selection matters.') },
       { id: 'laminate-4', question: text('لمینت برای دندان‌قروچه مناسب است؟', 'Are veneers suitable for teeth grinding?'), answer: text('دندان‌قروچه کنترل‌نشده خطر لب‌پریدگی یا شکستگی را بالا می‌برد. در این شرایط ابتدا شدت فشار فکی بررسی و معمولاً نایت‌گارد توصیه می‌شود.', 'Uncontrolled grinding increases chipping or fracture risk. Bite force is assessed first and a night guard is often recommended.') }
     ],
-    relatedIds: ['composite', 'whitening', 'orthodontics'],
+    relatedIds: ['composite', 'whitening'],
     seo: {
       title: text('لمینت دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Porcelain veneers | Dr. Saeed Moghaddam Dental Clinic'),
       description: text('راهنمای لمینت دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ طراحی لبخند طبیعی، میزان تراش، انتخاب رنگ، مراقبت و ماندگاری.', 'Porcelain veneer guide at Dr. Saeed Moghaddam Dental Clinic: natural smile design, preparation, shade selection, care and longevity.')
@@ -357,10 +357,10 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#d7a85d',
     title: text('کامپوزیت ونیر', 'Composite veneers'),
     subtitle: text('اصلاح سریع فرم و رنگ دندان', 'Fast shape and color enhancement'),
-    summary: text('کامپوزیت ونیر می‌تواند لب‌پریدگی، فاصله‌های کوچک و فرم نامنظم دندان را با روشی محافظه‌کارانه‌تر اصلاح کند.', 'Composite veneers conservatively improve chips, small gaps, shape issues and unwanted tooth color.'),
+    summary: text('کامپوزیت ونیر می‌تواند لب‌پریدگی، فاصله‌های کوچک و فرم نامنظم دندان را با روشی محافظه‌کارانه‌تر اصلاح کند؛ البته انتخاب کیس و مراقبت بعد درمان تعیین‌کننده است.', 'Composite veneers can conservatively improve chips, small gaps and shape concerns, with case selection and aftercare defining predictability.'),
     longIntro: text(
-      'کامپوزیت ونیر راهکاری مستقیم و کم‌تهاجمی برای اصلاح برخی مشکلات فرم و رنگ دندان است؛ مثل لب‌پریدگی محدود، فاصله کوچک، نامنظمی خفیف یا نیاز به بازسازی ظریف لبه دندان. در کلینیک دندان‌پزشکی دکتر سعید مقدم، پیش از شروع درمان، بایت، سلامت لثه، پوسیدگی، کیفیت مینای دندان، رنگ پایه و عادت‌هایی مثل دندان‌قروچه بررسی می‌شود. کامپوزیت برای همه موارد جایگزین ارتودنسی یا لمینت نیست، اما در کیس مناسب می‌تواند نتیجه طبیعی، قابل ترمیم و محافظه‌کارانه ایجاد کند.',
-      'Composite veneers are a direct and relatively fast way to improve a smile. Tooth-colored resin is shaped and polished on the tooth surface. Good results depend on case selection, artistic shaping, polish quality and patient care. It is not a replacement for orthodontics or porcelain veneers in every case, but it can create meaningful conservative change.'
+      'کامپوزیت ونیر راهکاری مستقیم و کم‌تهاجمی برای اصلاح برخی مشکلات فرم و رنگ دندان است؛ مثل لب‌پریدگی محدود، فاصله کوچک، نامنظمی خفیف یا نیاز به بازسازی ظریف لبه دندان. پیش از شروع، بایت، سلامت لثه، پوسیدگی، کیفیت مینای دندان، رنگ پایه، ترمیم‌های قبلی، بهداشت دهان و عادت‌هایی مثل دندان‌قروچه بررسی می‌شود. مطابق اصول سلامت دهان، کامپوزیت برای همه موارد جایگزین لمینت یا بلیچینگ نیست و باید درباره رنگ‌پذیری، لب‌پریدگی احتمالی، نیاز به پولیش دوره‌ای و مراقبت غذایی توضیح شفاف داده شود.',
+      'Composite veneers are a direct, minimally invasive option for selected shape and shade concerns such as limited chips, small gaps, mild irregularity or edge rebuilding. Bite, gum health, decay, enamel quality, baseline shade, previous restorations, hygiene and habits such as grinding are reviewed first. In line with oral-health principles, composite is not a replacement for veneers or bleaching in every case, and staining, possible chipping, periodic polishing and diet-related care must be explained clearly.'
     ),
     duration: text('اغلب ۱ تا ۲ جلسه', 'Often 1 to 2 visits'),
     cost: text('وابسته به تعداد دندان و میزان اصلاح فرم', 'Depends on tooth count and shaping complexity'),
@@ -394,7 +394,7 @@ export const DENTAL_SERVICES: DentalService[] = [
       { id: 'composite-3', question: text('اگر کامپوزیت لب‌پر شود باید کامل تعویض شود؟', 'Does chipped composite need full replacement?'), answer: text('در بسیاری از موارد لب‌پریدگی محدود قابل ترمیم است، اما علت آن مثل بایت بلند یا دندان‌قروچه باید بررسی شود تا تکرار نشود.', 'Limited chips are often repairable, but the cause such as high bite or grinding should be checked to prevent recurrence.') },
       { id: 'composite-4', question: text('کامپوزیت بهتر است یا لمینت سرامیکی؟', 'Is composite better than porcelain veneers?'), answer: text('پاسخ به وضعیت دندان، هدف زیبایی، بودجه، میزان تغییر رنگ، بایت و انتظار ماندگاری بستگی دارد. در معاینه مشخص می‌شود کدام انتخاب منطقی‌تر است.', 'The answer depends on tooth condition, aesthetic goals, budget, discoloration, bite and longevity expectations. Examination defines the more logical option.') }
     ],
-    relatedIds: ['laminate', 'whitening', 'orthodontics'],
+    relatedIds: ['laminate', 'whitening'],
     seo: {
       title: text('کامپوزیت دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Composite veneers | Dr. Saeed Moghaddam Dental Clinic'),
       description: text('راهنمای کامپوزیت دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ مزایا، مراحل، مراقبت، زرد شدن، ترمیم لب‌پریدگی و محدودیت‌ها.', 'Composite veneer guide at Dr. Saeed Moghaddam Dental Clinic: benefits, steps, care, staining, chip repair and limitations.')
@@ -455,12 +455,12 @@ export const DENTAL_SERVICES: DentalService[] = [
     icon: 'sun',
     image: image('whitening'),
     accent: '#c6a15b',
-    title: text('سفید کردن دندان', 'Teeth whitening'),
+    title: text('بلیچینگ دندان', 'Dental bleaching'),
     subtitle: text('روشن‌تر شدن کنترل‌شده لبخند', 'Controlled smile brightening'),
-    summary: text('سفید کردن دندان برای روشن‌تر شدن رنگ دندان طبیعی است؛ پیش از آن پوسیدگی، ترمیم‌های قدیمی و حساسیت دندان بررسی می‌شود.', 'Professional whitening brightens teeth by several shades using a safer sensitivity-controlled protocol.'),
+    summary: text('بلیچینگ دندان برای روشن‌تر شدن رنگ دندان طبیعی است؛ پیش از آن پوسیدگی، التهاب لثه، ترمیم‌های قدیمی و حساسیت دندان بررسی می‌شود.', 'Dental bleaching brightens natural tooth shade after decay, gum inflammation, old restorations and sensitivity are reviewed.'),
     longIntro: text(
-      'سفید کردن دندان یا بلیچینگ برای روشن‌تر کردن رنگ دندان طبیعی استفاده می‌شود، نه برای تغییر رنگ روکش، لمینت یا کامپوزیت. در کلینیک دندان‌پزشکی دکتر سعید مقدم، پیش از بلیچینگ پوسیدگی، ترک دندان، حساسیت قبلی، التهاب لثه، جرم و رنگ ترمیم‌های قدیمی بررسی می‌شود. نتیجه درمان به جنس دندان، رنگ پایه، رژیم غذایی، مصرف دخانیات و مراقبت بعد از درمان وابسته است؛ بنابراین وعده سفید شدن غیرواقعی داده نمی‌شود و هدف روشن‌تر شدن ایمن و قابل کنترل است.',
-      'Whitening treats surface stains and some internal discoloration. Before starting, decay, cracks, sensitivity, old restorations and gum health are checked. It is important to know that whitening does not lighten crowns, veneers or composite, and the result depends on tooth structure and lifestyle.'
+      'بلیچینگ دندان برای روشن‌تر کردن رنگ دندان طبیعی استفاده می‌شود، نه برای تغییر رنگ روکش، لمینت، کامپوزیت یا پرکردگی‌ها. پیش از بلیچینگ، پوسیدگی، ترک دندان، حساسیت قبلی، التهاب لثه، جرم، تحلیل لثه، بارداری یا شرایط پزشکی مهم و رنگ ترمیم‌های قدیمی بررسی می‌شود. مطابق راهنماهای پذیرفته‌شده سلامت دهان، درمان باید تحت نظر دندان‌پزشک، با محافظت لثه، کنترل غلظت و زمان تماس ماده، و آموزش مراقبت بعد درمان انجام شود تا خطر حساسیت و تحریک بافت نرم کاهش یابد.',
+      'Dental bleaching lightens natural tooth structure, not crowns, veneers, composite or fillings. Decay, cracks, previous sensitivity, gum inflammation, calculus, recession, pregnancy or relevant medical conditions and existing restoration shade are reviewed first. In line with accepted oral-health guidance, bleaching should be dentist-supervised with gum protection, controlled concentration and contact time, plus aftercare instructions to reduce sensitivity and soft-tissue irritation.'
     ),
     duration: text('اغلب ۱ جلسه یا برنامه خانگی کنترل‌شده', 'Often 1 visit or a controlled home plan'),
     cost: text('بر اساس روش، شدت تغییر رنگ و نیازهای قبل درمان', 'Based on method, stain severity and pre-treatment needs'),
@@ -494,10 +494,10 @@ export const DENTAL_SERVICES: DentalService[] = [
       { id: 'white-3', question: text('آیا بلیچینگ رنگ کامپوزیت یا روکش را روشن می‌کند؟', 'Does whitening lighten composite or crowns?'), answer: text('خیر. مواد بلیچینگ فقط روی ساختار دندان طبیعی اثر دارند و رنگ ترمیم‌ها، روکش‌ها، لمینت یا کامپوزیت را تغییر نمی‌دهند.', 'No. Whitening materials affect natural tooth structure, not fillings, crowns, veneers or composite.') },
       { id: 'white-4', question: text('حساسیت بعد از بلیچینگ طبیعی است؟', 'Is sensitivity after whitening normal?'), answer: text('حساسیت موقت در برخی افراد طبیعی است و معمولاً کاهش می‌یابد. اگر درد شدید، سوختگی لثه یا حساسیت طولانی داشتید باید بررسی شوید.', 'Temporary sensitivity can be normal and usually decreases. Severe pain, gum burns or prolonged sensitivity should be checked.') }
     ],
-    relatedIds: ['laminate', 'composite', 'gum-treatment'],
+    relatedIds: ['composite', 'laminate'],
     seo: {
-      title: text('سفید کردن دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Teeth whitening | Dr. Saeed Moghaddam Dental Clinic'),
-      description: text('راهنمای بلیچینگ و سفید کردن دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمنی مینا، حساسیت، ماندگاری و مراقبت بعد درمان.', 'Teeth whitening guide at Dr. Saeed Moghaddam Dental Clinic: enamel safety, sensitivity, longevity and aftercare.')
+      title: text('بلیچینگ دندان | کلینیک دندان‌پزشکی دکتر سعید مقدم', 'Dental bleaching | Dr. Saeed Moghaddam Dental Clinic'),
+      description: text('راهنمای بلیچینگ دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمنی مینا، حساسیت، ماندگاری، محدودیت روی ترمیم‌ها و مراقبت بعد درمان.', 'Dental bleaching guide at Dr. Saeed Moghaddam Dental Clinic: enamel safety, sensitivity, longevity, restoration limits and aftercare.')
     }
   },
   {
@@ -652,7 +652,13 @@ export const DENTAL_SERVICES: DentalService[] = [
   }
 ];
 
-export const FEATURED_DENTAL_SERVICES = DENTAL_SERVICES.slice(0, 6);
+const COSMETIC_SERVICE_IDS = ['composite', 'laminate', 'whitening'] as const;
+
+export const DENTAL_SERVICES: DentalService[] = COSMETIC_SERVICE_IDS
+  .map(id => ALL_DENTAL_SERVICES.find(service => service.id === id))
+  .filter((service): service is DentalService => Boolean(service));
+
+export const FEATURED_DENTAL_SERVICES = DENTAL_SERVICES;
 
 export const BENEFIT_CARDS: BenefitCard[] = [
   {
@@ -671,13 +677,13 @@ export const BENEFIT_CARDS: BenefitCard[] = [
     id: 'care-access',
     icon: 'tooth',
     title: text('دسترسی ساده به مسیر درمان', 'Simple access to care paths'),
-    text: text('اطلاعات هر درمان، نمونه‌ها و فرم درخواست تماس کنار هم قرار گرفته‌اند تا بیمار سریع‌تر مسیر مناسب را پیدا کند.', 'Service information, treatment samples and the call request form sit together so patients can find the right path faster.')
+    text: text('اطلاعات کامپوزیت، لمینت و بلیچینگ، نمونه‌ها و فرم درخواست تماس کنار هم قرار گرفته‌اند تا بیمار سریع‌تر مسیر مناسب را پیدا کند.', 'Composite, veneer and bleaching information, samples and the call request form sit together so patients can find the right path faster.')
   },
   {
     id: 'phone-lead',
     icon: 'phone',
     title: text('درخواست تماس برای راهنمایی', 'Call request for guidance'),
-    text: text('اگر درباره ایمپلنت، زیبایی، درد دندان یا درمان لثه سؤال دارید، شماره خود را ثبت می‌کنید تا برای راهنمایی اولیه تماس گرفته شود.', 'If you have questions about implants, cosmetic care, tooth pain or gum treatment, leave your number for an initial guidance call.')
+    text: text('اگر درباره انتخاب بین کامپوزیت، لمینت یا بلیچینگ سؤال دارید، شماره خود را ثبت می‌کنید تا برای راهنمایی اولیه تماس گرفته شود.', 'If you have questions about choosing composite, veneers or bleaching, leave your number for an initial guidance call.')
   }
 ];
 
@@ -692,8 +698,8 @@ export const TESTIMONIALS: Testimonial[] = [
   {
     id: 'reza',
     name: text('رضا ک.', 'Reza K.'),
-    service: text('ایمپلنت دندان', 'Dental implants'),
-    text: text('قبل از ایمپلنت نمی‌دانستم چند مرحله لازم است. بعد از بررسی عکس، زمان‌بندی و مراقبت‌ها را دقیق گفتند و همین باعث شد با خیال راحت‌تر شروع کنم.', 'Before my implant, I did not know how many steps were needed. After imaging, the timing and aftercare were explained clearly, which made it easier to start.'),
+    service: text('بلیچینگ دندان', 'Dental bleaching'),
+    text: text('برای بلیچینگ نگران حساسیت بودم. قبل از شروع، وضعیت لثه و ترمیم‌ها بررسی شد و توضیح دادند که نتیجه روی دندان طبیعی اثر دارد، نه روی کامپوزیت یا روکش.', 'I was worried about bleaching sensitivity. Before starting, my gums and restorations were checked and they explained that results affect natural teeth, not composite or crowns.'),
     rating: 5
   },
   {
@@ -706,15 +712,15 @@ export const TESTIMONIALS: Testimonial[] = [
   {
     id: 'hamid',
     name: text('حمید ر.', 'Hamid R.'),
-    service: text('درمان ریشه', 'Root canal therapy'),
-    text: text('با درد شبانه تماس گرفتم. در مراجعه اول علت درد مشخص شد و مرحله‌های درمان ریشه را ساده توضیح دادند، برای همین از روند کار نترسیدم.', 'I called because of night pain. At the first visit, the cause was found and the root canal steps were explained simply, so the process felt less stressful.'),
+    service: text('لمینت سرامیکی', 'Porcelain veneers'),
+    text: text('برای لمینت، اول درباره میزان تراش، رنگ مناسب و مراقبت بعد از نصب صحبت شد. همین شفافیت باعث شد انتظارم از نتیجه واقعی‌تر باشد.', 'For veneers, the preparation amount, suitable shade and aftercare were discussed first. That clarity made my expectations more realistic.'),
     rating: 5
   },
   {
     id: 'niloofar',
     name: text('نیلوفر ک.', 'Niloofar K.'),
-    service: text('درمان لثه', 'Gum treatment'),
-    text: text('خونریزی لثه را جدی نگرفته بودم. بعد از معاینه فهمیدم مشکل از التهاب است و روش مسواک، نخ دندان و زمان پیگیری را واضح گفتند.', 'I had not taken gum bleeding seriously. After the exam, I learned it was inflammation and got clear brushing, flossing and follow-up guidance.'),
+    service: text('کامپوزیت ونیر', 'Composite veneers'),
+    text: text('برای کامپوزیت، درباره رنگ‌پذیری، پولیش دوره‌ای و پرهیز از فشار روی لبه‌ها توضیح کامل گرفتم؛ نتیجه طبیعی بود و مراقبت‌ها را می‌دانستم.', 'For composite veneers, staining, periodic polishing and avoiding force on the edges were explained clearly; the result looked natural and I knew the care routine.'),
     rating: 5
   }
 ];
@@ -723,12 +729,12 @@ export const GLOBAL_FAQS: FaqItem[] = [
   {
     id: 'first-step',
     question: text('اگر ندانم دقیقاً چه درمانی لازم دارم چه کنم؟', 'What if I do not know which treatment I need?'),
-    answer: text('در فرم درخواست تماس، مشکل اصلی خود را کوتاه بنویسید؛ مثل درد، جای خالی دندان، تغییر رنگ یا اصلاح لبخند. مشاور برای راهنمایی اولیه و انتخاب مسیر مراجعه با شما تماس می‌گیرد.', 'Briefly describe your main concern in the call request form, such as pain, missing teeth, discoloration or smile correction. A consultant will call to guide the first step.')
+    answer: text('در فرم درخواست تماس، هدف خود را کوتاه بنویسید؛ مثل اصلاح رنگ، فرم دندان، فاصله‌های کوچک یا انتخاب بین کامپوزیت، لمینت و بلیچینگ. مشاور برای راهنمایی اولیه با شما تماس می‌گیرد.', 'Briefly describe your goal in the call request form, such as shade improvement, tooth shape, small gaps or choosing between composite, veneers and bleaching. A consultant will call to guide the first step.')
   },
   {
     id: 'cost',
     question: text('هزینه درمان قبل از مراجعه مشخص می‌شود؟', 'Can treatment cost be defined before the visit?'),
-    answer: text('برای بعضی خدمات می‌توان بازه حدودی گفت، اما هزینه دقیق بعد از معاینه، بررسی عکس، تعداد دندان‌ها و نوع درمان مشخص می‌شود.', 'A rough range may be possible for some services, but exact cost depends on exam, imaging, tooth count and treatment type.')
+    answer: text('برای بعضی خدمات می‌توان بازه حدودی گفت، اما هزینه دقیق بعد از معاینه، تعداد دندان‌ها، وضعیت ترمیم‌های قبلی، نیاز به آماده‌سازی و نوع درمان مشخص می‌شود.', 'A rough range may be possible for some services, but exact cost depends on exam, tooth count, existing restorations, preparation needs and treatment type.')
   },
   {
     id: 'call-back',
@@ -736,8 +742,8 @@ export const GLOBAL_FAQS: FaqItem[] = [
     answer: text('نام، شماره تماس و درمان مورد نظر شما ثبت می‌شود و مشاور کلینیک برای شنیدن توضیح کوتاه، پاسخ به سوال اولیه و هماهنگی مراجعه با شما تماس می‌گیرد.', 'Your name, phone number and selected service are saved, and a clinic consultant calls to hear your concern, answer initial questions and coordinate the visit.')
   },
   {
-    id: 'urgent-pain',
-    question: text('اگر درد دندان یا ورم داشته باشم کدام گزینه را انتخاب کنم؟', 'Which option should I choose for tooth pain or swelling?'),
-    answer: text('در فرم، درمان ریشه یا درمان لثه را انتخاب کنید و در توضیح کوتاه شدت درد، ورم یا زمان شروع مشکل را بنویسید تا تماس اولیه دقیق‌تر انجام شود.', 'Select root canal or gum treatment in the form and describe pain severity, swelling or when it started so the first call can be more accurate.')
+    id: 'health-check',
+    question: text('اگر پوسیدگی، التهاب لثه یا حساسیت داشته باشم می‌توانم درمان زیبایی انجام دهم؟', 'Can I have cosmetic treatment if I have decay, gum inflammation or sensitivity?'),
+    answer: text('ابتدا باید معاینه انجام شود. در بسیاری از موارد، پوسیدگی، التهاب فعال یا حساسیت شدید باید پیش از کامپوزیت، لمینت یا بلیچینگ کنترل شود تا درمان ایمن‌تر و قابل پیش‌بینی‌تر باشد.', 'An exam is needed first. In many cases, decay, active inflammation or severe sensitivity should be controlled before composite, veneers or bleaching so treatment is safer and more predictable.')
   }
 ];

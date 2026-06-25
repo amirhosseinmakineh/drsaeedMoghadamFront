@@ -21,7 +21,7 @@ interface LanguageAwarePage {
           <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
           <span>
             <b>{{ language() === 'fa' ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Dr. Saeed Moghaddam Dental' }}</b>
-            <small>{{ language() === 'fa' ? 'زیبایی، ایمپلنت و درمان دقیق' : 'Cosmetic, implant and precise care' }}</small>
+            <small>{{ language() === 'fa' ? 'کامپوزیت، لمینت و بلیچینگ' : 'Composite, veneers and bleaching' }}</small>
           </span>
         </a>
 
@@ -68,7 +68,7 @@ interface LanguageAwarePage {
             <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
             <span>
               <b>{{ language() === 'fa' ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Dr. Saeed Moghaddam Dental Clinic' }}</b>
-              <small>{{ language() === 'fa' ? 'طراحی لبخند، ایمپلنت و درمان‌های دقیق دندان' : 'Smile design, implants and precise dental care' }}</small>
+              <small>{{ language() === 'fa' ? 'طراحی لبخند با کامپوزیت، لمینت و بلیچینگ' : 'Smile design with composite, veneers and bleaching' }}</small>
             </span>
           </a>
           <p>{{ language() === 'fa' ? 'دسترسی سریع به خدمات، تماس، ساعات پاسخگویی و مسیرهای مهم کلینیک دندان‌پزشکی دکتر سعید مقدم.' : 'Quick access to services, contact details, response hours and key paths for Dr. Saeed Moghaddam Dental Clinic.' }}</p>
@@ -84,9 +84,9 @@ interface LanguageAwarePage {
 
           <section>
             <h2>{{ language() === 'fa' ? 'خدمات محبوب' : 'Popular services' }}</h2>
-            <a routerLink="/services/implant">{{ language() === 'fa' ? 'ایمپلنت دندان' : 'Dental implants' }}</a>
-            <a routerLink="/services/laminate">{{ language() === 'fa' ? 'لمینت سرامیکی' : 'Porcelain veneers' }}</a>
             <a routerLink="/services/composite">{{ language() === 'fa' ? 'کامپوزیت ونیر' : 'Composite veneers' }}</a>
+            <a routerLink="/services/laminate">{{ language() === 'fa' ? 'لمینت سرامیکی' : 'Porcelain veneers' }}</a>
+            <a routerLink="/services/whitening">{{ language() === 'fa' ? 'بلیچینگ دندان' : 'Dental bleaching' }}</a>
           </section>
 
           <section class="footer-contact-card">
