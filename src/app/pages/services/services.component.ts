@@ -22,17 +22,74 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
     <section class="page-section">
       <div class="service-grid">
         <article class="service-card" *ngFor="let service of services" [style.--accent]="service.accent">
-          <img
-            [src]="service.image.src"
-            [attr.srcset]="service.image.srcset"
-            [attr.sizes]="service.image.sizes"
-            [width]="service.image.width"
-            [height]="service.image.height"
-            [alt]="pickText(service.title, language())"
-            loading="lazy"
-            decoding="async"
-            fetchpriority="low"
-          />
+          @switch (service.id) {
+            @case ('laminate') {
+              <img
+                src="/2.png"
+                width="1310"
+                height="1200"
+                [alt]="pickText(service.title, language())"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
+              />
+            }
+            @case ('composite') {
+              <img
+                src="/3.png"
+                width="1310"
+                height="1201"
+                [alt]="pickText(service.title, language())"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
+              />
+            }
+            @case ('orthodontics') {
+              <img
+                src="/4.png"
+                width="1310"
+                height="1200"
+                [alt]="pickText(service.title, language())"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
+              />
+            }
+            @case ('whitening') {
+              <img
+                src="/5.png"
+                width="1310"
+                height="1201"
+                [alt]="pickText(service.title, language())"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
+              />
+            }
+            @case ('root-canal') {
+              <img
+                src="/6.png"
+                width="1310"
+                height="1201"
+                [alt]="pickText(service.title, language())"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
+              />
+            }
+            @default {
+              <img
+                src="/1.png"
+                width="1361"
+                height="1156"
+                [alt]="pickText(service.title, language())"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
+              />
+            }
+          }
           <span class="icon-bubble"><app-fa-icon [name]="service.icon"></app-fa-icon></span>
           <h3>{{ pickText(service.title, language()) }}</h3>
           <b>{{ pickText(service.subtitle, language()) }}</b>
