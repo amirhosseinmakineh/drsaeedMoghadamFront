@@ -131,51 +131,38 @@ export interface DatePickerDay {
 export const text = (fa: string, en: string): LocalizedText => ({ fa, en });
 export const pickText = (value: LocalizedText, language: LanguageCode): string => value[language];
 
-const paletteFor = (id: string): [string, string, string] => {
-  const palettes: [string, string, string][] = [
-    ['#fff8ec', '#e8d3ad', '#a8793f'],
-    ['#fffaf2', '#efdcbc', '#b88a44'],
-    ['#fff7ed', '#ead6bd', '#9f8565'],
-    ['#fffbf4', '#f2e2c9', '#8f9d74']
-  ];
-  const index = [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % palettes.length;
+const PUBLIC_IMAGE_SIZES = {
+  default: '(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw',
+  hero: '(max-width: 640px) 76vw, (max-width: 980px) 70vw, 32vw',
+  portfolio: '(max-width: 640px) 100vw, (max-width: 980px) 92vw, 44vw'
+} as const;
 
-  return palettes[index];
-};
+const PUBLIC_IMAGES = {
+  clinic: { src: '/1.png', width: 1361, height: 1156 },
+  implant: { src: '/2.png', width: 1310, height: 1200 },
+  laminate: { src: '/3.png', width: 1310, height: 1201 },
+  composite: { src: '/4.png', width: 1310, height: 1200 },
+  orthodontics: { src: '/5.png', width: 1310, height: 1201 },
+  whitening: { src: '/6.png', width: 1310, height: 1201 }
+} as const;
 
-const inlineClinicImage = (
-  id: string,
-  width = 640,
-  height = 420,
-  sizes = '(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw'
-): ClinicImage => {
-  const [bg, soft, accent] = paletteFor(id);
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">
-      <rect width="100%" height="100%" rx="42" fill="${bg}"/>
-      <circle cx="${Math.round(width * 0.18)}" cy="${Math.round(height * 0.18)}" r="${Math.round(width * 0.22)}" fill="${soft}"/>
-      <circle cx="${Math.round(width * 0.84)}" cy="${Math.round(height * 0.82)}" r="${Math.round(width * 0.20)}" fill="${soft}" opacity=".72"/>
-      <path d="M${Math.round(width * 0.26)} ${Math.round(height * 0.36)}c${Math.round(width * 0.12)}-${Math.round(height * 0.22)} ${Math.round(width * 0.35)}-${Math.round(height * 0.24)} ${Math.round(width * 0.48)} 0 ${Math.round(width * 0.08)} ${Math.round(height * 0.15)} ${Math.round(width * 0.04)} ${Math.round(height * 0.38)}-${Math.round(width * 0.06)} ${Math.round(height * 0.44)}-${Math.round(width * 0.08)} ${Math.round(height * 0.04)}-${Math.round(width * 0.15)}-${Math.round(height * 0.03)}-${Math.round(width * 0.20)}-${Math.round(height * 0.15)}-${Math.round(width * 0.05)} ${Math.round(height * 0.12)}-${Math.round(width * 0.13)} ${Math.round(height * 0.19)}-${Math.round(width * 0.20)} ${Math.round(height * 0.15)}-${Math.round(width * 0.10)}-${Math.round(height * 0.06)}-${Math.round(width * 0.14)}-${Math.round(height * 0.29)}-${Math.round(width * 0.06)}-${Math.round(height * 0.44)}z" fill="#fffdf8" stroke="${accent}" stroke-width="6"/>
-      <path d="M${Math.round(width * 0.28)} ${Math.round(height * 0.68)}c${Math.round(width * 0.12)} ${Math.round(height * 0.11)} ${Math.round(width * 0.32)} ${Math.round(height * 0.11)} ${Math.round(width * 0.44)} 0" fill="none" stroke="${accent}" stroke-width="8" stroke-linecap="round"/>
-      <path d="M${Math.round(width * 0.19)} ${Math.round(height * 0.78)}h${Math.round(width * 0.62)}" stroke="${accent}" stroke-width="3" stroke-linecap="round" opacity=".22"/>
-    </svg>
-  `.trim();
+export type PublicClinicImageKey = keyof typeof PUBLIC_IMAGES;
 
-  return {
-    src: `data:image/svg+xml,${encodeURIComponent(svg)}`,
-    sizes,
-    width,
-    height
-  };
-};
+export const publicClinicImage = (
+  key: PublicClinicImageKey,
+  sizes: string = PUBLIC_IMAGE_SIZES.default
+): ClinicImage => ({
+  ...PUBLIC_IMAGES[key],
+  sizes
+});
 
-const image = inlineClinicImage;
+const image = publicClinicImage;
 
-const portfolioImage = (path: string): ClinicImage =>
-  inlineClinicImage(path, 720, 420, '(max-width: 640px) 100vw, (max-width: 980px) 92vw, 44vw');
+const portfolioImage = (key: PublicClinicImageKey): ClinicImage =>
+  publicClinicImage(key, PUBLIC_IMAGE_SIZES.portfolio);
 
-const heroImage = (id: string): ClinicImage =>
-  image(id, 760, 430, '(max-width: 640px) 76vw, (max-width: 980px) 70vw, 32vw');
+const heroImage = (key: PublicClinicImageKey): ClinicImage =>
+  publicClinicImage(key, PUBLIC_IMAGE_SIZES.hero);
 
 export const NAV_ITEMS: NavItem[] = [
   { label: text('خانه', 'Home'), href: '/', icon: 'home' },
@@ -192,7 +179,7 @@ export const HERO_SLIDES: HeroSlide[] = [
       'در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان‌های زیبایی و عمومی مثل ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه و مراقبت لثه با معاینه دقیق و توضیح شفاف انجام می‌شود.',
       'At Dr. Saeed Moghaddam Dental Clinic, cosmetic and general dental treatments such as implants, veneers, composite, whitening, root canal therapy and gum care are planned with careful exams and clear guidance.'
     ),
-    image: heroImage('photo-1606811971618-4486d14f3f99')
+    image: heroImage('clinic')
   },
   {
     id: 'calm-suite',
@@ -201,7 +188,7 @@ export const HERO_SLIDES: HeroSlide[] = [
       'اگر درد دندان، نیاز به ایمپلنت، اصلاح طرح لبخند یا درمان لثه دارید، ابتدا شرایط دهان و دندان بررسی می‌شود و مسیر مناسب بدون وعده اغراق‌آمیز توضیح داده می‌شود.',
       'Whether you have tooth pain, need implants, want a smile makeover or require gum care, your oral condition is reviewed first and the suitable path is explained without exaggerated promises.'
     ),
-    image: heroImage('photo-1629909615184-74f495363b67')
+    image: heroImage('implant')
   },
   {
     id: 'mobile-first',
@@ -210,7 +197,7 @@ export const HERO_SLIDES: HeroSlide[] = [
       'درمان‌ها، توضیحات تخصصی، سوالات پرتکرار و فرم درخواست تماس کنار هم آمده‌اند تا مراجعه‌کننده سریع‌تر بداند برای کدام مسیر درمانی باید راهنمایی بگیرد.',
       'Services, treatment explanations, FAQs and the call request form are grouped together so patients quickly know which service they need guidance for.'
     ),
-    image: heroImage('photo-1588776814546-1ffcf47267a5')
+    image: heroImage('whitening')
   }
 ];
 
@@ -230,7 +217,7 @@ export const WORK_SAMPLES: WorkSample[] = [
       'For front-tooth shade and shape correction, color choice, smile-line proportion and gum health are reviewed before treatment starts.'
     ),
     result: text('ظاهر روشن‌تر و هماهنگ‌تر با فرم طبیعی دندان‌ها', 'A brighter look aligned with natural tooth form'),
-    image: portfolioImage('2025/05/laminet-1.webp')
+    image: portfolioImage('laminate')
   },
   {
     id: 'implant-rehab',
@@ -241,7 +228,7 @@ export const WORK_SAMPLES: WorkSample[] = [
       'For implant treatment, bone, gum and missing-tooth space are reviewed so the fixed replacement is reliable.'
     ),
     result: text('بازگرداندن عملکرد جویدن و فرم لبخند', 'Restored chewing function and smile form'),
-    image: portfolioImage('2025/11/implant-portfolio-3.webp')
+    image: portfolioImage('implant')
   },
   {
     id: 'composite-shape',
@@ -252,7 +239,7 @@ export const WORK_SAMPLES: WorkSample[] = [
       'Composite is used for conservative correction of front-tooth shape, gaps or limited chips, with aftercare playing an important role.'
     ),
     result: text('فرم منظم‌تر بدون تغییر اغراق‌آمیز لبخند', 'Cleaner shape without an exaggerated smile change'),
-    image: portfolioImage('2025/09/photo_2025-09-24_20-04-56.webp')
+    image: portfolioImage('composite')
   }
 ];
 
@@ -260,7 +247,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'implant',
     icon: 'tooth',
-    image: image('photo-1606811841689-23dfddce3e95'),
+    image: image('implant'),
     accent: '#b88a44',
     title: text('ایمپلنت دندان', 'Dental implants'),
     subtitle: text('جایگزینی پایدار دندان از دست رفته', 'Stable replacement for missing teeth'),
@@ -313,7 +300,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'laminate',
     icon: 'sparkle',
-    image: image('photo-1609840114035-3c981b782dfe'),
+    image: image('laminate'),
     accent: '#c9a26a',
     title: text('لمینت سرامیکی', 'Porcelain veneers'),
     subtitle: text('طراحی لبخند ظریف و طبیعی', 'Delicate natural smile design'),
@@ -363,7 +350,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'composite',
     icon: 'brush',
-    image: image('photo-1600170311833-c2cf5280ce49'),
+    image: image('composite'),
     accent: '#d7a85d',
     title: text('کامپوزیت ونیر', 'Composite veneers'),
     subtitle: text('اصلاح سریع فرم و رنگ دندان', 'Fast shape and color enhancement'),
@@ -413,7 +400,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'orthodontics',
     icon: 'align',
-    image: image('photo-1609840114035-3c981b782dfe'),
+    image: image('orthodontics'),
     accent: '#9f8565',
     title: text('ارتودنسی و نظم لبخند', 'Orthodontics and smile alignment'),
     subtitle: text('مرتب‌سازی دندان‌ها با برنامه مرحله‌ای', 'Step-by-step teeth alignment'),
@@ -463,7 +450,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'whitening',
     icon: 'sun',
-    image: image('photo-1588776814546-1ffcf47267a5'),
+    image: image('whitening'),
     accent: '#c6a15b',
     title: text('سفید کردن دندان', 'Teeth whitening'),
     subtitle: text('روشن‌تر شدن کنترل‌شده لبخند', 'Controlled smile brightening'),
@@ -513,7 +500,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'root-canal',
     icon: 'shield',
-    image: image('photo-1606811971618-4486d14f3f99'),
+    image: image('clinic'),
     accent: '#b96f52',
     title: text('درمان ریشه', 'Root canal therapy'),
     subtitle: text('حفظ دندان طبیعی و کنترل درد', 'Saving the natural tooth and controlling pain'),
@@ -563,7 +550,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'pediatric',
     icon: 'heart',
-    image: image('photo-1629909613654-28e377c37b09'),
+    image: image('clinic'),
     accent: '#c58d73',
     title: text('دندان‌پزشکی کودکان', 'Pediatric dentistry'),
     subtitle: text('تجربه آرام برای کودک و والدین', 'A calm experience for children and parents'),
@@ -613,7 +600,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'gum-treatment',
     icon: 'leaf',
-    image: image('photo-1629909615184-74f495363b67'),
+    image: image('clinic'),
     accent: '#8f9d74',
     title: text('درمان لثه', 'Gum treatment'),
     subtitle: text('کنترل التهاب، خونریزی و بوی دهان', 'Managing inflammation, bleeding and breath concerns'),
