@@ -45,31 +45,9 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
                 fetchpriority="low"
               />
             }
-            @case ('orthodontics') {
-              <img
-                src="/4.png"
-                width="1310"
-                height="1200"
-                [alt]="pickText(service.title, language())"
-                loading="lazy"
-                decoding="async"
-                fetchpriority="low"
-              />
-            }
             @case ('whitening') {
               <img
                 src="/5.png"
-                width="1310"
-                height="1201"
-                [alt]="pickText(service.title, language())"
-                loading="lazy"
-                decoding="async"
-                fetchpriority="low"
-              />
-            }
-            @case ('root-canal') {
-              <img
-                src="/6.png"
                 width="1310"
                 height="1201"
                 [alt]="pickText(service.title, language())"
