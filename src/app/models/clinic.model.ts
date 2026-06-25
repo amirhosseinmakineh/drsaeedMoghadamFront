@@ -139,11 +139,14 @@ const PUBLIC_IMAGE_SIZES = {
 
 const PUBLIC_IMAGES = {
   clinic: { src: '/1.png', width: 1361, height: 1156 },
-  implant: { src: '/2.png', width: 1310, height: 1200 },
-  laminate: { src: '/3.png', width: 1310, height: 1201 },
-  composite: { src: '/4.png', width: 1310, height: 1200 },
-  orthodontics: { src: '/5.png', width: 1310, height: 1201 },
-  whitening: { src: '/6.png', width: 1310, height: 1201 }
+  implant: { src: '/1.png', width: 1361, height: 1156 },
+  laminate: { src: '/2.png', width: 1310, height: 1200 },
+  composite: { src: '/3.png', width: 1310, height: 1201 },
+  orthodontics: { src: '/4.png', width: 1310, height: 1200 },
+  whitening: { src: '/5.png', width: 1310, height: 1201 },
+  rootCanal: { src: '/6.png', width: 1310, height: 1201 },
+  pediatric: { src: '/1.png', width: 1361, height: 1156 },
+  gumTreatment: { src: '/2.png', width: 1310, height: 1200 }
 } as const;
 
 export type PublicClinicImageKey = keyof typeof PUBLIC_IMAGES;
@@ -500,7 +503,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'root-canal',
     icon: 'shield',
-    image: image('clinic'),
+    image: image('rootCanal'),
     accent: '#b96f52',
     title: text('درمان ریشه', 'Root canal therapy'),
     subtitle: text('حفظ دندان طبیعی و کنترل درد', 'Saving the natural tooth and controlling pain'),
@@ -550,7 +553,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'pediatric',
     icon: 'heart',
-    image: image('clinic'),
+    image: image('pediatric'),
     accent: '#c58d73',
     title: text('دندان‌پزشکی کودکان', 'Pediatric dentistry'),
     subtitle: text('تجربه آرام برای کودک و والدین', 'A calm experience for children and parents'),
@@ -600,7 +603,7 @@ export const DENTAL_SERVICES: DentalService[] = [
   {
     id: 'gum-treatment',
     icon: 'leaf',
-    image: image('clinic'),
+    image: image('gumTreatment'),
     accent: '#8f9d74',
     title: text('درمان لثه', 'Gum treatment'),
     subtitle: text('کنترل التهاب، خونریزی و بوی دهان', 'Managing inflammation, bleeding and breath concerns'),

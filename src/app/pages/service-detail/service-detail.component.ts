@@ -58,20 +58,20 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
     afterAlt: { fa: 'روشن‌تر شدن کنترل‌شده دندان پس از بلیچینگ', en: 'Controlled tooth brightening after whitening' }
   },
   'root-canal': {
-    before: resultImage('clinic'),
-    after: resultImage('clinic'),
+    before: resultImage('rootCanal'),
+    after: resultImage('rootCanal'),
     beforeAlt: { fa: 'تشخیص درد و عفونت پیش از درمان ریشه', en: 'Pain and infection diagnosis before root canal therapy' },
     afterAlt: { fa: 'حفظ دندان پس از درمان ریشه و ترمیم', en: 'Tooth preservation after root canal therapy and restoration' }
   },
   pediatric: {
-    before: resultImage('clinic'),
-    after: resultImage('clinic'),
+    before: resultImage('pediatric'),
+    after: resultImage('pediatric'),
     beforeAlt: { fa: 'معاینه آرام کودک پیش از درمان دندان‌پزشکی', en: 'Calm child exam before pediatric dental care' },
     afterAlt: { fa: 'پیگیری سلامت دندان کودک پس از درمان یا پیشگیری', en: 'Child dental health follow-up after care or prevention' }
   },
   'gum-treatment': {
-    before: resultImage('clinic'),
-    after: resultImage('clinic'),
+    before: resultImage('gumTreatment'),
+    after: resultImage('gumTreatment'),
     beforeAlt: { fa: 'بررسی التهاب و خونریزی لثه پیش از درمان', en: 'Gum inflammation and bleeding assessment before treatment' },
     afterAlt: { fa: 'کنترل التهاب لثه پس از پاک‌سازی و مراقبت', en: 'Controlled gum inflammation after cleaning and care' }
   }
