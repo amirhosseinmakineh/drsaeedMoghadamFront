@@ -12,6 +12,17 @@ interface ResultVisual {
   afterAlt: LocalizedText;
 }
 
+interface ServiceDetailCopy {
+  introTitle: LocalizedText;
+  fitTitle: LocalizedText;
+  benefitsTitle: LocalizedText;
+  stepsTitle: LocalizedText;
+  aftercareTitle: LocalizedText;
+  visualTitle: LocalizedText;
+  relatedTitle: LocalizedText;
+  finalCtaTitle: LocalizedText;
+}
+
 const resultImage = (id: string): ClinicImage => {
   const widths = [320, 480, 620, 760];
   const buildUrl = (width: number): string =>
@@ -77,6 +88,89 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
   }
 };
 
+const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
+  implant: {
+    introTitle: { fa: 'برنامه‌ریزی ایمپلنت دندان چگونه انجام می‌شود؟', en: 'How is dental implant care planned?' },
+    fitTitle: { fa: 'ایمپلنت دندان برای چه کسانی مناسب است؟', en: 'When are dental implants considered?' },
+    benefitsTitle: { fa: 'مزایای ایمپلنت دندان', en: 'Real benefits of dental implants' },
+    stepsTitle: { fa: 'مراحل کاشت ایمپلنت دندان', en: 'Standard steps for dental implants' },
+    aftercareTitle: { fa: 'مراقبت‌های بعد از ایمپلنت دندان', en: 'Standard aftercare after dental implants' },
+    visualTitle: { fa: 'نمونه تغییرات قبل و بعد از ایمپلنت', en: 'Before and after visual for dental implants' },
+    relatedTitle: { fa: 'خدمات مرتبط با ایمپلنت دندان', en: 'Care paths related to dental implants' },
+    finalCtaTitle: { fa: 'مشاوره ایمپلنت دندان در کلینیک دکتر سعید مقدم', en: 'Review dental implants at Dr. Saeed Moghaddam Dental Clinic' }
+  },
+  laminate: {
+    introTitle: { fa: 'برنامه‌ریزی لمینت سرامیکی چگونه انجام می‌شود؟', en: 'How are porcelain veneers planned?' },
+    fitTitle: { fa: 'لمینت سرامیکی برای چه لبخندی مناسب است؟', en: 'When are porcelain veneers considered?' },
+    benefitsTitle: { fa: 'مزایای لمینت سرامیکی', en: 'Real benefits of porcelain veneers' },
+    stepsTitle: { fa: 'مراحل انجام لمینت سرامیکی', en: 'Standard steps for porcelain veneers' },
+    aftercareTitle: { fa: 'مراقبت‌های بعد از لمینت سرامیکی', en: 'Standard aftercare after porcelain veneers' },
+    visualTitle: { fa: 'نمونه تغییرات قبل و بعد از لمینت', en: 'Before and after visual for porcelain veneers' },
+    relatedTitle: { fa: 'خدمات مرتبط با لمینت سرامیکی', en: 'Care paths related to porcelain veneers' },
+    finalCtaTitle: { fa: 'مشاوره لمینت سرامیکی در کلینیک دکتر سعید مقدم', en: 'Review porcelain veneers at Dr. Saeed Moghaddam Dental Clinic' }
+  },
+  composite: {
+    introTitle: { fa: 'برنامه‌ریزی کامپوزیت ونیر چگونه انجام می‌شود؟', en: 'How are composite veneers planned?' },
+    fitTitle: { fa: 'کامپوزیت ونیر چه زمانی انتخاب خوبی است؟', en: 'When are composite veneers considered?' },
+    benefitsTitle: { fa: 'مزایای کامپوزیت ونیر', en: 'Real benefits of composite veneers' },
+    stepsTitle: { fa: 'مراحل انجام کامپوزیت ونیر', en: 'Standard steps for composite veneers' },
+    aftercareTitle: { fa: 'مراقبت‌های بعد از کامپوزیت ونیر', en: 'Standard aftercare after composite veneers' },
+    visualTitle: { fa: 'نمونه تغییرات قبل و بعد از کامپوزیت', en: 'Before and after visual for composite veneers' },
+    relatedTitle: { fa: 'خدمات مرتبط با کامپوزیت ونیر', en: 'Care paths related to composite veneers' },
+    finalCtaTitle: { fa: 'مشاوره کامپوزیت ونیر در کلینیک دکتر سعید مقدم', en: 'Review composite veneers at Dr. Saeed Moghaddam Dental Clinic' }
+  },
+  orthodontics: {
+    introTitle: { fa: 'برنامه‌ریزی ارتودنسی چگونه انجام می‌شود؟', en: 'How is orthodontic care planned?' },
+    fitTitle: { fa: 'چه زمانی ارتودنسی پیشنهاد می‌شود؟', en: 'When is orthodontics considered?' },
+    benefitsTitle: { fa: 'ارتودنسی چه کمکی می‌کند؟', en: 'Real benefits of orthodontics' },
+    stepsTitle: { fa: 'مراحل درمان ارتودنسی', en: 'Standard steps for orthodontics' },
+    aftercareTitle: { fa: 'مراقبت‌ها و نگهدارنده بعد از ارتودنسی', en: 'Standard aftercare after orthodontics' },
+    visualTitle: { fa: 'نمونه تغییرات قبل و بعد از ارتودنسی', en: 'Before and after visual for orthodontics' },
+    relatedTitle: { fa: 'خدمات مرتبط با ارتودنسی', en: 'Care paths related to orthodontics' },
+    finalCtaTitle: { fa: 'مشاوره ارتودنسی در کلینیک دکتر سعید مقدم', en: 'Review orthodontics at Dr. Saeed Moghaddam Dental Clinic' }
+  },
+  whitening: {
+    introTitle: { fa: 'قبل از سفید کردن دندان چه چیزهایی بررسی می‌شود؟', en: 'How is teeth whitening planned?' },
+    fitTitle: { fa: 'سفید کردن دندان برای چه تغییر رنگ‌هایی مناسب است؟', en: 'When is teeth whitening considered?' },
+    benefitsTitle: { fa: 'مزایای سفید کردن دندان', en: 'Real benefits of teeth whitening' },
+    stepsTitle: { fa: 'مراحل سفید کردن دندان', en: 'Standard steps for teeth whitening' },
+    aftercareTitle: { fa: 'مراقبت‌های بعد از سفید کردن دندان', en: 'Standard aftercare after teeth whitening' },
+    visualTitle: { fa: 'نمونه تغییر رنگ قبل و بعد از بلیچینگ', en: 'Before and after visual for teeth whitening' },
+    relatedTitle: { fa: 'خدمات مرتبط با سفید کردن دندان', en: 'Care paths related to teeth whitening' },
+    finalCtaTitle: { fa: 'مشاوره سفید کردن دندان در کلینیک دکتر سعید مقدم', en: 'Review teeth whitening at Dr. Saeed Moghaddam Dental Clinic' }
+  },
+  'root-canal': {
+    introTitle: { fa: 'درمان ریشه چگونه شروع می‌شود؟', en: 'How is root canal therapy planned?' },
+    fitTitle: { fa: 'چه علائمی نیاز به درمان ریشه را مطرح می‌کند؟', en: 'When is root canal therapy considered?' },
+    benefitsTitle: { fa: 'درمان ریشه چه کمکی می‌کند؟', en: 'Real benefits of root canal therapy' },
+    stepsTitle: { fa: 'مراحل درمان ریشه', en: 'Standard steps for root canal therapy' },
+    aftercareTitle: { fa: 'مراقبت‌های بعد از درمان ریشه', en: 'Standard aftercare after root canal therapy' },
+    visualTitle: { fa: 'قبل و بعد از کنترل درد و عفونت دندان', en: 'Before and after visual for root canal therapy' },
+    relatedTitle: { fa: 'خدمات مرتبط با درمان ریشه', en: 'Care paths related to root canal therapy' },
+    finalCtaTitle: { fa: 'مشاوره درمان ریشه در کلینیک دکتر سعید مقدم', en: 'Review root canal therapy at Dr. Saeed Moghaddam Dental Clinic' }
+  },
+  pediatric: {
+    introTitle: { fa: 'مراجعه کودک چگونه برنامه‌ریزی می‌شود؟', en: 'How is pediatric dental care planned?' },
+    fitTitle: { fa: 'چه زمانی کودک به دندان‌پزشکی نیاز دارد؟', en: 'When is pediatric dental care considered?' },
+    benefitsTitle: { fa: 'دندان‌پزشکی کودکان چه کمکی می‌کند؟', en: 'Real benefits of pediatric dental care' },
+    stepsTitle: { fa: 'مراحل مراجعه کودک', en: 'Standard steps for pediatric dental care' },
+    aftercareTitle: { fa: 'مراقبت‌های خانه برای سلامت دندان کودک', en: 'Standard aftercare after pediatric dental care' },
+    visualTitle: { fa: 'قبل و بعد از مراجعه آرام کودک', en: 'Before and after visual for pediatric dental care' },
+    relatedTitle: { fa: 'خدمات مرتبط با دندان‌پزشکی کودکان', en: 'Care paths related to pediatric dental care' },
+    finalCtaTitle: { fa: 'مشاوره دندان‌پزشکی کودکان در کلینیک دکتر سعید مقدم', en: 'Review pediatric dental care at Dr. Saeed Moghaddam Dental Clinic' }
+  },
+  'gum-treatment': {
+    introTitle: { fa: 'درمان لثه چگونه برنامه‌ریزی می‌شود؟', en: 'How is gum treatment planned?' },
+    fitTitle: { fa: 'چه نشانه‌هایی به بررسی لثه نیاز دارند؟', en: 'When is gum treatment considered?' },
+    benefitsTitle: { fa: 'درمان لثه چه کمکی می‌کند؟', en: 'Real benefits of gum treatment' },
+    stepsTitle: { fa: 'مراحل بررسی و درمان لثه', en: 'Standard steps for gum treatment' },
+    aftercareTitle: { fa: 'مراقبت‌های بعد از درمان لثه', en: 'Standard aftercare after gum treatment' },
+    visualTitle: { fa: 'قبل و بعد از کنترل التهاب لثه', en: 'Before and after visual for gum treatment' },
+    relatedTitle: { fa: 'خدمات مرتبط با درمان لثه', en: 'Care paths related to gum treatment' },
+    finalCtaTitle: { fa: 'مشاوره درمان لثه در کلینیک دکتر سعید مقدم', en: 'Review gum treatment at Dr. Saeed Moghaddam Dental Clinic' }
+  }
+};
+
 @Component({
   selector: 'app-service-detail',
   standalone: true,
@@ -116,14 +210,14 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section intro-panel">
         <div class="section-heading">
-          <h2>{{ language() === 'fa' ? pickText(service.title, language()) + ' چگونه برنامه‌ریزی می‌شود؟' : 'How is ' + pickText(service.title, language()) + ' planned?' }}</h2>
+          <h2>{{ detailCopyText('introTitle') }}</h2>
         </div>
         <p class="long-text">{{ pickText(service.longIntro, language()) }}</p>
       </section>
 
       <section class="page-section">
         <div class="section-heading center">
-          <h2>{{ language() === 'fa' ? 'زمان، هزینه و هدف درمان' : 'Time, cost and treatment goal' }}</h2>
+          <h2>{{ language() === 'fa' ? 'زمان، هزینه و هدف مراجعه' : 'Time, cost and treatment goal' }}</h2>
         </div>
         <div class="info-grid three">
           <article class="info-card">
@@ -138,7 +232,7 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
           </article>
           <article class="info-card">
             <span class="icon-bubble"><app-fa-icon name="sparkle"></app-fa-icon></span>
-            <h3>{{ language() === 'fa' ? 'هدف نتیجه' : 'Result goal' }}</h3>
+            <h3>{{ language() === 'fa' ? 'هدف اصلی' : 'Result goal' }}</h3>
             <p>{{ resultGoal() }}</p>
           </article>
         </div>
@@ -147,7 +241,7 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
       <section class="page-section two-column">
         <div>
           <div class="section-heading">
-            <h2>{{ language() === 'fa' ? pickText(service.title, language()) + ' برای چه شرایطی بررسی می‌شود؟' : 'When is ' + pickText(service.title, language()) + ' considered?' }}</h2>
+            <h2>{{ detailCopyText('fitTitle') }}</h2>
           </div>
           <ul class="check-list">
             <li *ngFor="let item of service.idealFor"><app-fa-icon name="check"></app-fa-icon>{{ pickText(item, language()) }}</li>
@@ -155,15 +249,15 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
         </div>
         <div class="glass-card">
           <span class="icon-bubble"><app-fa-icon name="phone"></app-fa-icon></span>
-          <h3>{{ language() === 'fa' ? 'مشاوره قبل از تصمیم' : 'Consult before deciding' }}</h3>
-          <p>{{ language() === 'fa' ? 'اگر مطمئن نیستید این درمان برای شرایط دهان و دندان شما مناسب است، درخواست مشاوره ثبت کنید تا مسیر مراجعه دقیق‌تر شود.' : 'If you are unsure whether this treatment matches your oral condition, request a consultation so the visit path is clearer.' }}</p>
+          <h3>{{ language() === 'fa' ? 'مشاوره برای انتخاب درست' : 'Consult before deciding' }}</h3>
+          <p>{{ language() === 'fa' ? 'اگر مطمئن نیستید این خدمت با نیاز دهان و دندان شما هماهنگ است، درخواست مشاوره ثبت کنید تا مسیر مراجعه روشن‌تر شود.' : 'If you are unsure whether this treatment matches your oral condition, request a consultation so the visit path is clearer.' }}</p>
           <a class="secondary-btn" routerLink="/contact">{{ language() === 'fa' ? 'ثبت درخواست مشاوره' : 'Request consultation' }}</a>
         </div>
       </section>
 
       <section class="page-section">
         <div class="section-heading center">
-          <h2>{{ language() === 'fa' ? 'مزایای واقعی ' + pickText(service.title, language()) : 'Real benefits of ' + pickText(service.title, language()) }}</h2>
+          <h2>{{ detailCopyText('benefitsTitle') }}</h2>
         </div>
         <div class="benefit-grid">
           <article class="glass-card" *ngFor="let item of service.benefits">
@@ -175,7 +269,7 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section journey-section">
         <div class="section-heading">
-          <h2>{{ language() === 'fa' ? 'مراحل استاندارد ' + pickText(service.title, language()) : 'Standard steps for ' + pickText(service.title, language()) }}</h2>
+          <h2>{{ detailCopyText('stepsTitle') }}</h2>
         </div>
         <div class="timeline">
           <article *ngFor="let step of service.steps">
@@ -190,7 +284,7 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section care-panel">
         <div>
-          <h2>{{ language() === 'fa' ? 'مراقبت‌های استاندارد بعد از ' + pickText(service.title, language()) : 'Standard aftercare after ' + pickText(service.title, language()) }}</h2>
+          <h2>{{ detailCopyText('aftercareTitle') }}</h2>
         </div>
         <ul class="check-list">
           <li *ngFor="let item of service.care"><app-fa-icon name="shield"></app-fa-icon>{{ pickText(item, language()) }}</li>
@@ -199,8 +293,8 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section before-after">
         <div>
-          <h2>{{ language() === 'fa' ? 'نمای تصویری قبل و بعد ' + pickText(service.title, language()) : 'Before and after visual for ' + pickText(service.title, language()) }}</h2>
-          <p>{{ language() === 'fa' ? 'این تصاویر نمونه برای توضیح روند تغییر درمانی استفاده می‌شوند؛ نتیجه واقعی هر بیمار پس از معاینه، عکس و طرح درمان مشخص می‌شود.' : 'These sample visuals explain the treatment change; each patient result is defined after examination, imaging and treatment planning.' }}</p>
+          <h2>{{ detailCopyText('visualTitle') }}</h2>
+          <p>{{ language() === 'fa' ? 'این تصاویر فقط برای آشنایی با نوع تغییرات هستند؛ نتیجه هر مراجعه‌کننده بعد از معاینه، عکس و طرح درمان مشخص می‌شود.' : 'These sample visuals explain the treatment change; each patient result is defined after examination, imaging and treatment planning.' }}</p>
         </div>
         <div class="result-frame">
           <figure class="before">
@@ -237,7 +331,7 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section faq-section">
         <div class="section-heading">
-          <h2>{{ language() === 'fa' ? 'سوالات پرتکرار درباره ' + pickText(service.title, language()) : 'Frequently asked questions about ' + pickText(service.title, language()) }}</h2>
+          <h2>{{ language() === 'fa' ? 'پرسش‌های رایج درباره ' + pickText(service.title, language()) : 'Frequently asked questions about ' + pickText(service.title, language()) }}</h2>
         </div>
         <div class="faq-list">
           <details *ngFor="let item of service.faqs">
@@ -249,7 +343,7 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
 
       <section class="page-section">
         <div class="section-heading">
-          <h2>{{ language() === 'fa' ? 'درمان‌های مرتبط با ' + pickText(service.title, language()) : 'Care paths related to ' + pickText(service.title, language()) }}</h2>
+          <h2>{{ detailCopyText('relatedTitle') }}</h2>
         </div>
         <div class="related-rail">
           <a class="service-card" *ngFor="let item of relatedServices" [routerLink]="['/services', item.id]" [style.--accent]="item.accent">
@@ -261,8 +355,8 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
       </section>
 
       <section class="page-section final-cta">
-        <h2>{{ language() === 'fa' ? 'بررسی ' + pickText(service.title, language()) + ' در کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Review ' + pickText(service.title, language()) + ' at Dr. Saeed Moghaddam Dental Clinic' }}</h2>
-        <p>{{ language() === 'fa' ? 'برای هماهنگی مراجعه، سوال اولیه یا بررسی مناسب بودن این درمان، از مسیر تماس با کلینیک اقدام کنید.' : 'For visit coordination, initial questions or checking whether this treatment is suitable, contact the clinic.' }}</p>
+        <h2>{{ detailCopyText('finalCtaTitle') }}</h2>
+        <p>{{ language() === 'fa' ? 'برای هماهنگی مراجعه، پرسیدن سوال اولیه یا انتخاب مسیر مناسب، از بخش تماس با کلینیک اقدام کنید.' : 'For visit coordination, initial questions or checking whether this treatment is suitable, contact the clinic.' }}</p>
         <div class="hero-actions centered">
           <a class="primary-btn" routerLink="/contact"><app-fa-icon name="phone"></app-fa-icon>{{ language() === 'fa' ? 'ثبت درخواست مشاوره' : 'Request consultation' }}</a>
           <a class="secondary-btn" routerLink="/contact">{{ language() === 'fa' ? 'تماس با ما' : 'Contact us' }}</a>
@@ -577,6 +671,10 @@ export class ServiceDetailComponent {
     return RESULT_VISUALS[this.service.id] ?? RESULT_VISUALS['implant'];
   }
 
+  detailCopyText(key: keyof ServiceDetailCopy): string {
+    return pickText(this.detailCopy()[key], this.language());
+  }
+
   resultGoal(): string {
     const goals: Record<string, LocalizedText> = {
       implant: {
@@ -614,6 +712,10 @@ export class ServiceDetailComponent {
     };
 
     return pickText(goals[this.service.id] ?? goals['implant'], this.language());
+  }
+
+  private detailCopy(): ServiceDetailCopy {
+    return DETAIL_COPY[this.service.id] ?? DETAIL_COPY['implant'];
   }
 
   private updateSeo(): void {
