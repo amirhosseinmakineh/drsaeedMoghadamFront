@@ -249,7 +249,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     title: text('ایمپلنت دندان', 'Dental implants'),
     subtitle: text('جایگزینی پایدار دندان از دست رفته', 'Stable replacement for missing teeth'),
     summary: text(
-      'ایمپلنت دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم برای جایگزینی ریشه از دست رفته، بازگرداندن جویدن و حفظ فرم لبخند بررسی می‌شود.',
+      'ایمپلنت دندان راهی برای جایگزینی ثابت دندان از دست رفته است؛ پیش از شروع، وضعیت استخوان، لثه و مسیر نگهداری آن مشخص می‌شود.',
       'Implants restore chewing strength, smile aesthetics and help prevent neighboring teeth from shifting.'
     ),
     longIntro: text(
@@ -301,7 +301,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#c9a26a',
     title: text('لمینت سرامیکی', 'Porcelain veneers'),
     subtitle: text('طراحی لبخند ظریف و طبیعی', 'Delicate natural smile design'),
-    summary: text('لمینت سرامیکی در کلینیک دندان‌پزشکی دکتر سعید مقدم برای اصلاح رنگ، فرم و تناسب دندان‌های جلو با طراحی طبیعی لبخند بررسی می‌شود.', 'Veneers improve color, shape, size and harmony of front teeth without an overdone look.'),
+    summary: text('لمینت سرامیکی برای اصلاح رنگ، فرم و تناسب دندان‌های جلو به کار می‌رود؛ هدف، لبخندی طبیعی و هماهنگ با چهره است.', 'Veneers improve color, shape, size and harmony of front teeth without an overdone look.'),
     longIntro: text(
       'لمینت سرامیکی برای افرادی مناسب است که می‌خواهند رنگ، فرم، اندازه یا هماهنگی دندان‌های جلویی اصلاح شود اما نتیجه مصنوعی و اغراق‌آمیز نباشد. در کلینیک دندان‌پزشکی دکتر سعید مقدم، قبل از لمینت وضعیت پوسیدگی، مینای دندان، سلامت لثه، خط لبخند، فرم لب، رنگ پوست، عادت دندان‌قروچه و نیاز احتمالی به ارتودنسی بررسی می‌شود. انتخاب رنگ و میزان آماده‌سازی باید محافظه‌کارانه و قابل توضیح باشد، چون لمینت درمانی دقیق و معمولاً برگشت‌ناپذیر است.',
       'Porcelain veneers suit people who want a brighter, more balanced smile without an artificial look. Lip shape, skin tone, smile line, gum display and tooth health are considered. Before treatment, preparation limits, shade selection and aftercare are explained clearly.'
@@ -351,7 +351,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#d7a85d',
     title: text('کامپوزیت ونیر', 'Composite veneers'),
     subtitle: text('اصلاح سریع فرم و رنگ دندان', 'Fast shape and color enhancement'),
-    summary: text('کامپوزیت ونیر در کلینیک دندان‌پزشکی دکتر سعید مقدم برای اصلاح محافظه‌کارانه لب‌پریدگی، فاصله‌های کوچک و فرم دندان بررسی می‌شود.', 'Composite veneers conservatively improve chips, small gaps, shape issues and unwanted tooth color.'),
+    summary: text('کامپوزیت ونیر می‌تواند لب‌پریدگی، فاصله‌های کوچک و فرم نامنظم دندان را با روشی محافظه‌کارانه‌تر اصلاح کند.', 'Composite veneers conservatively improve chips, small gaps, shape issues and unwanted tooth color.'),
     longIntro: text(
       'کامپوزیت ونیر راهکاری مستقیم و کم‌تهاجمی برای اصلاح برخی مشکلات فرم و رنگ دندان است؛ مثل لب‌پریدگی محدود، فاصله کوچک، نامنظمی خفیف یا نیاز به بازسازی ظریف لبه دندان. در کلینیک دندان‌پزشکی دکتر سعید مقدم، پیش از شروع درمان، بایت، سلامت لثه، پوسیدگی، کیفیت مینای دندان، رنگ پایه و عادت‌هایی مثل دندان‌قروچه بررسی می‌شود. کامپوزیت برای همه موارد جایگزین ارتودنسی یا لمینت نیست، اما در کیس مناسب می‌تواند نتیجه طبیعی، قابل ترمیم و محافظه‌کارانه ایجاد کند.',
       'Composite veneers are a direct and relatively fast way to improve a smile. Tooth-colored resin is shaped and polished on the tooth surface. Good results depend on case selection, artistic shaping, polish quality and patient care. It is not a replacement for orthodontics or porcelain veneers in every case, but it can create meaningful conservative change.'
@@ -401,7 +401,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#9f8565',
     title: text('ارتودنسی و نظم لبخند', 'Orthodontics and smile alignment'),
     subtitle: text('مرتب‌سازی دندان‌ها با برنامه مرحله‌ای', 'Step-by-step teeth alignment'),
-    summary: text('ارتودنسی در کلینیک دندان‌پزشکی دکتر سعید مقدم برای مرتب‌سازی دندان‌ها، بهبود تماس‌های فکی و حفظ نتیجه با نگهدارنده بررسی می‌شود.', 'Orthodontics improves tooth alignment, bite contacts, easier cleaning and smile appearance.'),
+    summary: text('ارتودنسی به مرتب شدن دندان‌ها، بهتر شدن تماس‌های فکی و ساده‌تر شدن مراقبت روزانه کمک می‌کند و نتیجه با نگهدارنده حفظ می‌شود.', 'Orthodontics improves tooth alignment, bite contacts, easier cleaning and smile appearance.'),
     longIntro: text(
       'نامرتبی دندان‌ها فقط مسئله زیبایی نیست؛ تمیز کردن دندان‌ها سخت‌تر می‌شود، فشار جویدن می‌تواند روی بعضی دندان‌ها بیشتر شود و ریسک پوسیدگی یا التهاب لثه بالا برود. در کلینیک دندان‌پزشکی دکتر سعید مقدم، پیش از ارتودنسی شدت نامرتبی، روابط فکی، سلامت لثه، پوسیدگی‌های درمان‌نشده، سن، همکاری بیمار و هدف زیبایی بررسی می‌شود. درمان می‌تواند با روش ثابت، متحرک یا پلاک شفاف مطرح شود و بخش مهم آن نگهدارنده بعد از پایان درمان است.',
       'Crowded or misaligned teeth affect more than appearance; cleaning becomes harder, some teeth take more pressure and decay or gum inflammation risks increase. Orthodontic planning reviews crowding severity, jaw relationships, age, gum health and aesthetic goals before explaining the best method and stages.'
@@ -451,7 +451,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#c6a15b',
     title: text('سفید کردن دندان', 'Teeth whitening'),
     subtitle: text('روشن‌تر شدن کنترل‌شده لبخند', 'Controlled smile brightening'),
-    summary: text('سفید کردن دندان در کلینیک دندان‌پزشکی دکتر سعید مقدم با ارزیابی پوسیدگی، ترمیم‌ها و حساسیت انجام می‌شود تا روشن شدن رنگ کنترل‌شده باشد.', 'Professional whitening brightens teeth by several shades using a safer sensitivity-controlled protocol.'),
+    summary: text('سفید کردن دندان برای روشن‌تر شدن رنگ دندان طبیعی است؛ پیش از آن پوسیدگی، ترمیم‌های قدیمی و حساسیت دندان بررسی می‌شود.', 'Professional whitening brightens teeth by several shades using a safer sensitivity-controlled protocol.'),
     longIntro: text(
       'سفید کردن دندان یا بلیچینگ برای روشن‌تر کردن رنگ دندان طبیعی استفاده می‌شود، نه برای تغییر رنگ روکش، لمینت یا کامپوزیت. در کلینیک دندان‌پزشکی دکتر سعید مقدم، پیش از بلیچینگ پوسیدگی، ترک دندان، حساسیت قبلی، التهاب لثه، جرم و رنگ ترمیم‌های قدیمی بررسی می‌شود. نتیجه درمان به جنس دندان، رنگ پایه، رژیم غذایی، مصرف دخانیات و مراقبت بعد از درمان وابسته است؛ بنابراین وعده سفید شدن غیرواقعی داده نمی‌شود و هدف روشن‌تر شدن ایمن و قابل کنترل است.',
       'Whitening treats surface stains and some internal discoloration. Before starting, decay, cracks, sensitivity, old restorations and gum health are checked. It is important to know that whitening does not lighten crowns, veneers or composite, and the result depends on tooth structure and lifestyle.'
@@ -501,7 +501,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#b96f52',
     title: text('درمان ریشه', 'Root canal therapy'),
     subtitle: text('حفظ دندان طبیعی و کنترل درد', 'Saving the natural tooth and controlling pain'),
-    summary: text('درمان ریشه در کلینیک دندان‌پزشکی دکتر سعید مقدم برای پاک‌سازی عفونت داخل دندان، کنترل درد و حفظ دندان طبیعی انجام می‌شود.', 'Root canal therapy cleans infection inside the tooth, reduces pain and helps avoid extraction.'),
+    summary: text('درمان ریشه به پاک‌سازی عفونت داخل دندان، کاهش درد و حفظ دندان طبیعی کمک می‌کند؛ بعد از آن ترمیم نهایی اهمیت زیادی دارد.', 'Root canal therapy cleans infection inside the tooth, reduces pain and helps avoid extraction.'),
     longIntro: text(
       'وقتی پالپ یا عصب داخل دندان به دلیل پوسیدگی عمیق، ترک، ضربه یا ترمیم قدیمی دچار التهاب یا عفونت شود، درد شبانه، حساسیت طولانی به سرما و گرما، تورم یا آبسه ممکن است ایجاد شود. در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان ریشه با تشخیص دقیق، عکس، پاک‌سازی کانال‌ها، ضدعفونی و پر کردن فضای داخلی انجام می‌شود تا دندان طبیعی تا حد امکان حفظ شود. بخش مهم درمان، ترمیم نهایی یا روکش مناسب است چون دندان عصب‌کشی‌شده بدون بازسازی مقاوم در معرض شکستگی قرار می‌گیرد.',
       'When the tooth pulp becomes infected or severely inflamed, pain, lingering sensitivity, swelling or abscess can occur. Root canal therapy cleans, disinfects and seals the inner space so the natural tooth can be saved. A strong restoration or crown may be needed afterwards to prevent fracture.'
@@ -551,7 +551,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#c58d73',
     title: text('دندان‌پزشکی کودکان', 'Pediatric dentistry'),
     subtitle: text('تجربه آرام برای کودک و والدین', 'A calm experience for children and parents'),
-    summary: text('دندان‌پزشکی کودکان در کلینیک دندان‌پزشکی دکتر سعید مقدم با تمرکز بر پیشگیری، درمان پوسیدگی و تجربه آرام کودک انجام می‌شود.', 'Children receive preventive and restorative care with simple communication, anxiety control and parent education.'),
+    summary: text('دندان‌پزشکی کودکان بر پیشگیری، درمان پوسیدگی و تجربه‌ای آرام تمرکز دارد تا کودک و والدین مسیر مراقبت را بهتر بشناسند.', 'Children receive preventive and restorative care with simple communication, anxiety control and parent education.'),
     longIntro: text(
       'اولین تجربه‌های دندان‌پزشکی می‌تواند نگاه کودک به درمان را برای سال‌ها شکل دهد. در کلینیک دندان‌پزشکی دکتر سعید مقدم، معاینه کودک، آموزش مسواک و تغذیه، فلورایدتراپی، فیشورسیلانت، درمان پوسیدگی دندان شیری و پیگیری رشد دندان‌ها با زبان ساده و محیط آرام انجام می‌شود. والدین هم درباره اهمیت دندان شیری، زمان اولین مراجعه، مقدار مناسب خمیر دندان فلورایددار، عادت‌های دهانی و علائم درد یا عفونت راهنمایی می‌شوند.',
       'Early dental experiences can shape a child’s attitude for years. Pediatric care focuses on calm exams, brushing education, fluoride, fissure sealants and cavity treatment with child-friendly explanations. Parents receive guidance on diet, oral habits and checkup timing.'
@@ -601,7 +601,7 @@ export const DENTAL_SERVICES: DentalService[] = [
     accent: '#8f9d74',
     title: text('درمان لثه', 'Gum treatment'),
     subtitle: text('کنترل التهاب، خونریزی و بوی دهان', 'Managing inflammation, bleeding and breath concerns'),
-    summary: text('درمان لثه در کلینیک دندان‌پزشکی دکتر سعید مقدم برای کنترل خونریزی، التهاب، جرم زیر لثه و حفظ پایه سالم دندان‌ها انجام می‌شود.', 'Gum health is the foundation for long-lasting cosmetic work, implants and natural teeth.'),
+    summary: text('درمان لثه برای کنترل خونریزی، التهاب، جرم زیر لثه و حفظ پایه سالم دندان‌ها انجام می‌شود.', 'Gum health is the foundation for long-lasting cosmetic work, implants and natural teeth.'),
     longIntro: text(
       'خونریزی هنگام مسواک یا نخ دندان، بوی بد دهان، التهاب، تحلیل لثه، حساسیت ریشه یا لق شدن دندان‌ها نشانه‌هایی هستند که نباید نادیده گرفته شوند. در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان لثه با اندازه‌گیری وضعیت لثه، بررسی جرم و پلاک، آموزش بهداشت، جرم‌گیری و در صورت نیاز پاک‌سازی عمیق یا ارجاع تخصصی برنامه‌ریزی می‌شود. سلامت لثه پایه ماندگاری دندان طبیعی، ایمپلنت، لمینت، کامپوزیت و ترمیم‌های ساده است.',
       'Bleeding, bad breath, recession or loose teeth should not be ignored. Gum care ranges from hygiene coaching and professional cleaning to deeper treatments. Without healthy gums, veneers, composite, implants and even simple restorations become less predictable.'
