@@ -27,12 +27,6 @@ const resultImage = (key: Parameters<typeof publicClinicImage>[0]): ClinicImage 
   publicClinicImage(key, '(max-width: 900px) 50vw, 24vw');
 
 const RESULT_VISUALS: Record<string, ResultVisual> = {
-  implant: {
-    before: resultImage('clinic'),
-    after: resultImage('implant'),
-    beforeAlt: { fa: 'بررسی ناحیه بی‌دندانی پیش از ایمپلنت', en: 'Missing-tooth area assessment before implant treatment' },
-    afterAlt: { fa: 'بازسازی لبخند پس از درمان ایمپلنت', en: 'Smile restoration after implant treatment' }
-  },
   laminate: {
     before: resultImage('clinic'),
     after: resultImage('laminate'),
@@ -45,49 +39,15 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
     beforeAlt: { fa: 'ارزیابی فاصله و فرم دندان پیش از کامپوزیت', en: 'Gap and tooth-shape assessment before composite veneers' },
     afterAlt: { fa: 'اصلاح فرم دندان با کامپوزیت ونیر', en: 'Tooth-shape correction with composite veneers' }
   },
-  orthodontics: {
-    before: resultImage('clinic'),
-    after: resultImage('orthodontics'),
-    beforeAlt: { fa: 'بررسی نامرتبی دندان‌ها پیش از ارتودنسی', en: 'Crowding assessment before orthodontics' },
-    afterAlt: { fa: 'نظم بهتر دندان‌ها پس از درمان ارتودنسی', en: 'Improved alignment after orthodontic treatment' }
-  },
   whitening: {
     before: resultImage('clinic'),
     after: resultImage('whitening'),
     beforeAlt: { fa: 'ثبت رنگ پایه دندان پیش از بلیچینگ', en: 'Baseline tooth shade before whitening' },
     afterAlt: { fa: 'روشن‌تر شدن کنترل‌شده دندان پس از بلیچینگ', en: 'Controlled tooth brightening after whitening' }
-  },
-  'root-canal': {
-    before: resultImage('rootCanal'),
-    after: resultImage('rootCanal'),
-    beforeAlt: { fa: 'تشخیص درد و عفونت پیش از درمان ریشه', en: 'Pain and infection diagnosis before root canal therapy' },
-    afterAlt: { fa: 'حفظ دندان پس از درمان ریشه و ترمیم', en: 'Tooth preservation after root canal therapy and restoration' }
-  },
-  pediatric: {
-    before: resultImage('pediatric'),
-    after: resultImage('pediatric'),
-    beforeAlt: { fa: 'معاینه آرام کودک پیش از درمان دندان‌پزشکی', en: 'Calm child exam before pediatric dental care' },
-    afterAlt: { fa: 'پیگیری سلامت دندان کودک پس از درمان یا پیشگیری', en: 'Child dental health follow-up after care or prevention' }
-  },
-  'gum-treatment': {
-    before: resultImage('gumTreatment'),
-    after: resultImage('gumTreatment'),
-    beforeAlt: { fa: 'بررسی التهاب و خونریزی لثه پیش از درمان', en: 'Gum inflammation and bleeding assessment before treatment' },
-    afterAlt: { fa: 'کنترل التهاب لثه پس از پاک‌سازی و مراقبت', en: 'Controlled gum inflammation after cleaning and care' }
   }
 };
 
 const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
-  implant: {
-    introTitle: { fa: 'برنامه‌ریزی ایمپلنت دندان چگونه انجام می‌شود؟', en: 'How is dental implant care planned?' },
-    fitTitle: { fa: 'ایمپلنت دندان برای چه کسانی مناسب است؟', en: 'When are dental implants considered?' },
-    benefitsTitle: { fa: 'مزایای ایمپلنت دندان', en: 'Real benefits of dental implants' },
-    stepsTitle: { fa: 'مراحل کاشت ایمپلنت دندان', en: 'Standard steps for dental implants' },
-    aftercareTitle: { fa: 'مراقبت‌های بعد از ایمپلنت دندان', en: 'Standard aftercare after dental implants' },
-    visualTitle: { fa: 'نمونه تغییرات قبل و بعد از ایمپلنت', en: 'Before and after visual for dental implants' },
-    relatedTitle: { fa: 'خدمات مرتبط با ایمپلنت دندان', en: 'Care paths related to dental implants' },
-    finalCtaTitle: { fa: 'مشاوره ایمپلنت دندان در کلینیک دکتر سعید مقدم', en: 'Review dental implants at Dr. Saeed Moghaddam Dental Clinic' }
-  },
   laminate: {
     introTitle: { fa: 'برنامه‌ریزی لمینت سرامیکی چگونه انجام می‌شود؟', en: 'How are porcelain veneers planned?' },
     fitTitle: { fa: 'لمینت سرامیکی برای چه لبخندی مناسب است؟', en: 'When are porcelain veneers considered?' },
@@ -108,55 +68,15 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
     relatedTitle: { fa: 'خدمات مرتبط با کامپوزیت ونیر', en: 'Care paths related to composite veneers' },
     finalCtaTitle: { fa: 'مشاوره کامپوزیت ونیر در کلینیک دکتر سعید مقدم', en: 'Review composite veneers at Dr. Saeed Moghaddam Dental Clinic' }
   },
-  orthodontics: {
-    introTitle: { fa: 'برنامه‌ریزی ارتودنسی چگونه انجام می‌شود؟', en: 'How is orthodontic care planned?' },
-    fitTitle: { fa: 'چه زمانی ارتودنسی پیشنهاد می‌شود؟', en: 'When is orthodontics considered?' },
-    benefitsTitle: { fa: 'ارتودنسی چه کمکی می‌کند؟', en: 'Real benefits of orthodontics' },
-    stepsTitle: { fa: 'مراحل درمان ارتودنسی', en: 'Standard steps for orthodontics' },
-    aftercareTitle: { fa: 'مراقبت‌ها و نگهدارنده بعد از ارتودنسی', en: 'Standard aftercare after orthodontics' },
-    visualTitle: { fa: 'نمونه تغییرات قبل و بعد از ارتودنسی', en: 'Before and after visual for orthodontics' },
-    relatedTitle: { fa: 'خدمات مرتبط با ارتودنسی', en: 'Care paths related to orthodontics' },
-    finalCtaTitle: { fa: 'مشاوره ارتودنسی در کلینیک دکتر سعید مقدم', en: 'Review orthodontics at Dr. Saeed Moghaddam Dental Clinic' }
-  },
   whitening: {
-    introTitle: { fa: 'قبل از سفید کردن دندان چه چیزهایی بررسی می‌شود؟', en: 'How is teeth whitening planned?' },
-    fitTitle: { fa: 'سفید کردن دندان برای چه تغییر رنگ‌هایی مناسب است؟', en: 'When is teeth whitening considered?' },
-    benefitsTitle: { fa: 'مزایای سفید کردن دندان', en: 'Real benefits of teeth whitening' },
-    stepsTitle: { fa: 'مراحل سفید کردن دندان', en: 'Standard steps for teeth whitening' },
-    aftercareTitle: { fa: 'مراقبت‌های بعد از سفید کردن دندان', en: 'Standard aftercare after teeth whitening' },
-    visualTitle: { fa: 'نمونه تغییر رنگ قبل و بعد از بلیچینگ', en: 'Before and after visual for teeth whitening' },
-    relatedTitle: { fa: 'خدمات مرتبط با سفید کردن دندان', en: 'Care paths related to teeth whitening' },
-    finalCtaTitle: { fa: 'مشاوره سفید کردن دندان در کلینیک دکتر سعید مقدم', en: 'Review teeth whitening at Dr. Saeed Moghaddam Dental Clinic' }
-  },
-  'root-canal': {
-    introTitle: { fa: 'درمان ریشه چگونه شروع می‌شود؟', en: 'How is root canal therapy planned?' },
-    fitTitle: { fa: 'چه علائمی نیاز به درمان ریشه را مطرح می‌کند؟', en: 'When is root canal therapy considered?' },
-    benefitsTitle: { fa: 'درمان ریشه چه کمکی می‌کند؟', en: 'Real benefits of root canal therapy' },
-    stepsTitle: { fa: 'مراحل درمان ریشه', en: 'Standard steps for root canal therapy' },
-    aftercareTitle: { fa: 'مراقبت‌های بعد از درمان ریشه', en: 'Standard aftercare after root canal therapy' },
-    visualTitle: { fa: 'قبل و بعد از کنترل درد و عفونت دندان', en: 'Before and after visual for root canal therapy' },
-    relatedTitle: { fa: 'خدمات مرتبط با درمان ریشه', en: 'Care paths related to root canal therapy' },
-    finalCtaTitle: { fa: 'مشاوره درمان ریشه در کلینیک دکتر سعید مقدم', en: 'Review root canal therapy at Dr. Saeed Moghaddam Dental Clinic' }
-  },
-  pediatric: {
-    introTitle: { fa: 'مراجعه کودک چگونه برنامه‌ریزی می‌شود؟', en: 'How is pediatric dental care planned?' },
-    fitTitle: { fa: 'چه زمانی کودک به دندان‌پزشکی نیاز دارد؟', en: 'When is pediatric dental care considered?' },
-    benefitsTitle: { fa: 'دندان‌پزشکی کودکان چه کمکی می‌کند؟', en: 'Real benefits of pediatric dental care' },
-    stepsTitle: { fa: 'مراحل مراجعه کودک', en: 'Standard steps for pediatric dental care' },
-    aftercareTitle: { fa: 'مراقبت‌های خانه برای سلامت دندان کودک', en: 'Standard aftercare after pediatric dental care' },
-    visualTitle: { fa: 'قبل و بعد از مراجعه آرام کودک', en: 'Before and after visual for pediatric dental care' },
-    relatedTitle: { fa: 'خدمات مرتبط با دندان‌پزشکی کودکان', en: 'Care paths related to pediatric dental care' },
-    finalCtaTitle: { fa: 'مشاوره دندان‌پزشکی کودکان در کلینیک دکتر سعید مقدم', en: 'Review pediatric dental care at Dr. Saeed Moghaddam Dental Clinic' }
-  },
-  'gum-treatment': {
-    introTitle: { fa: 'درمان لثه چگونه برنامه‌ریزی می‌شود؟', en: 'How is gum treatment planned?' },
-    fitTitle: { fa: 'چه نشانه‌هایی به بررسی لثه نیاز دارند؟', en: 'When is gum treatment considered?' },
-    benefitsTitle: { fa: 'درمان لثه چه کمکی می‌کند؟', en: 'Real benefits of gum treatment' },
-    stepsTitle: { fa: 'مراحل بررسی و درمان لثه', en: 'Standard steps for gum treatment' },
-    aftercareTitle: { fa: 'مراقبت‌های بعد از درمان لثه', en: 'Standard aftercare after gum treatment' },
-    visualTitle: { fa: 'قبل و بعد از کنترل التهاب لثه', en: 'Before and after visual for gum treatment' },
-    relatedTitle: { fa: 'خدمات مرتبط با درمان لثه', en: 'Care paths related to gum treatment' },
-    finalCtaTitle: { fa: 'مشاوره درمان لثه در کلینیک دکتر سعید مقدم', en: 'Review gum treatment at Dr. Saeed Moghaddam Dental Clinic' }
+    introTitle: { fa: 'قبل از بلیچینگ دندان چه چیزهایی بررسی می‌شود؟', en: 'How is dental bleaching planned?' },
+    fitTitle: { fa: 'بلیچینگ دندان برای چه تغییر رنگ‌هایی مناسب است؟', en: 'When is dental bleaching considered?' },
+    benefitsTitle: { fa: 'مزایای بلیچینگ دندان', en: 'Real benefits of dental bleaching' },
+    stepsTitle: { fa: 'مراحل بلیچینگ دندان', en: 'Standard steps for dental bleaching' },
+    aftercareTitle: { fa: 'مراقبت‌های بعد از بلیچینگ دندان', en: 'Standard aftercare after dental bleaching' },
+    visualTitle: { fa: 'نمونه تغییر رنگ قبل و بعد از بلیچینگ', en: 'Before and after visual for dental bleaching' },
+    relatedTitle: { fa: 'خدمات مرتبط با بلیچینگ دندان', en: 'Care paths related to dental bleaching' },
+    finalCtaTitle: { fa: 'مشاوره بلیچینگ دندان در کلینیک دکتر سعید مقدم', en: 'Review dental bleaching at Dr. Saeed Moghaddam Dental Clinic' }
   }
 };
 
@@ -206,44 +126,11 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
                 fetchpriority="high"
               />
             }
-            @case ('orthodontics') {
-              <img
-                src="/4.png"
-                width="1310"
-                height="1200"
-                [alt]="pickText(service.title, language())"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-              />
-            }
             @case ('whitening') {
               <img
                 src="/5.png"
                 width="1310"
                 height="1201"
-                [alt]="pickText(service.title, language())"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-              />
-            }
-            @case ('root-canal') {
-              <img
-                src="/6.png"
-                width="1310"
-                height="1201"
-                [alt]="pickText(service.title, language())"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-              />
-            }
-            @case ('gum-treatment') {
-              <img
-                src="/2.png"
-                width="1310"
-                height="1200"
                 [alt]="pickText(service.title, language())"
                 loading="eager"
                 decoding="async"
@@ -356,28 +243,6 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
         <div class="result-frame">
           <figure class="before">
             @switch (service.id) {
-              @case ('root-canal') {
-                <img
-                  src="/6.png"
-                  width="1310"
-                  height="1201"
-                  [alt]="pickText(resultVisual().beforeAlt, language())"
-                  loading="lazy"
-                  decoding="async"
-                  fetchpriority="low"
-                />
-              }
-              @case ('gum-treatment') {
-                <img
-                  src="/2.png"
-                  width="1310"
-                  height="1200"
-                  [alt]="pickText(resultVisual().beforeAlt, language())"
-                  loading="lazy"
-                  decoding="async"
-                  fetchpriority="low"
-                />
-              }
               @default {
                 <img
                   src="/1.png"
@@ -416,44 +281,11 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
                   fetchpriority="low"
                 />
               }
-              @case ('orthodontics') {
-                <img
-                  src="/4.png"
-                  width="1310"
-                  height="1200"
-                  [alt]="pickText(resultVisual().afterAlt, language())"
-                  loading="lazy"
-                  decoding="async"
-                  fetchpriority="low"
-                />
-              }
               @case ('whitening') {
                 <img
                   src="/5.png"
                   width="1310"
                   height="1201"
-                  [alt]="pickText(resultVisual().afterAlt, language())"
-                  loading="lazy"
-                  decoding="async"
-                  fetchpriority="low"
-                />
-              }
-              @case ('root-canal') {
-                <img
-                  src="/6.png"
-                  width="1310"
-                  height="1201"
-                  [alt]="pickText(resultVisual().afterAlt, language())"
-                  loading="lazy"
-                  decoding="async"
-                  fetchpriority="low"
-                />
-              }
-              @case ('gum-treatment') {
-                <img
-                  src="/2.png"
-                  width="1310"
-                  height="1200"
                   [alt]="pickText(resultVisual().afterAlt, language())"
                   loading="lazy"
                   decoding="async"
@@ -795,7 +627,7 @@ export class ServiceDetailComponent {
   }
 
   resultVisual(): ResultVisual {
-    return RESULT_VISUALS[this.service.id] ?? RESULT_VISUALS['implant'];
+    return RESULT_VISUALS[this.service.id] ?? RESULT_VISUALS['composite'];
   }
 
   detailCopyText(key: keyof ServiceDetailCopy): string {
@@ -804,10 +636,6 @@ export class ServiceDetailComponent {
 
   resultGoal(): string {
     const goals: Record<string, LocalizedText> = {
-      implant: {
-        fa: 'بازگرداندن توان جویدن و پر کردن جای خالی دندان با طرحی پایدار، قابل نگهداری و هماهنگ با لثه و لبخند.',
-        en: 'Restoring chewing ability and replacing the missing tooth with a stable, maintainable plan that fits the gum and smile.'
-      },
       laminate: {
         fa: 'اصلاح رنگ، فرم و تناسب دندان‌های جلو با حداقل تراش لازم و نتیجه‌ای طبیعی، تمیز و قابل نگهداری.',
         en: 'Improving front-tooth shade, form and proportion with the least needed preparation and a natural, maintainable result.'
@@ -816,33 +644,17 @@ export class ServiceDetailComponent {
         fa: 'اصلاح محافظه‌کارانه فرم، فاصله یا لب‌پریدگی دندان با پولیش دقیق و توضیح روشن درباره مراقبت و رنگ‌پذیری.',
         en: 'Conservative correction of shape, gaps or chips with precise polishing and clear guidance on care and staining limits.'
       },
-      orthodontics: {
-        fa: 'حرکت کنترل‌شده دندان‌ها برای نظم بهتر، تماس‌های سالم‌تر و حفظ نتیجه با نگهدارنده پس از درمان.',
-        en: 'Controlled tooth movement for better alignment, healthier contacts and result stability with retention after treatment.'
-      },
       whitening: {
         fa: 'روشن‌تر شدن کنترل‌شده رنگ دندان طبیعی بدون تغییر رنگ ترمیم‌ها، با مدیریت حساسیت و انتظار واقع‌بینانه.',
         en: 'Controlled brightening of natural teeth without changing restorations, with sensitivity control and realistic expectations.'
-      },
-      'root-canal': {
-        fa: 'حذف عفونت داخل دندان، کاهش درد و حفظ دندان طبیعی با ترمیم نهایی مناسب برای جلوگیری از شکستگی.',
-        en: 'Removing infection inside the tooth, reducing pain and saving the natural tooth with a proper final restoration.'
-      },
-      pediatric: {
-        fa: 'درمان یا پیشگیری بدون ایجاد ترس، حفظ دندان‌های شیری تا زمان مناسب و آموزش کاربردی به والدین.',
-        en: 'Care or prevention without creating fear, preserving baby teeth until the right time and giving practical parent guidance.'
-      },
-      'gum-treatment': {
-        fa: 'کاهش التهاب و خونریزی، کنترل پلاک و جرم زیر لثه و ساختن پایه سالم برای دندان طبیعی، ایمپلنت و درمان زیبایی.',
-        en: 'Reducing inflammation and bleeding, controlling plaque and deep calculus and building a healthy base for teeth, implants and cosmetic care.'
       }
     };
 
-    return pickText(goals[this.service.id] ?? goals['implant'], this.language());
+    return pickText(goals[this.service.id] ?? goals['composite'], this.language());
   }
 
   private detailCopy(): ServiceDetailCopy {
-    return DETAIL_COPY[this.service.id] ?? DETAIL_COPY['implant'];
+    return DETAIL_COPY[this.service.id] ?? DETAIL_COPY['composite'];
   }
 
   private updateSeo(): void {

@@ -15,8 +15,8 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
       <div class="section-heading">
         <h1>{{ language() === 'fa' ? 'برای مشاوره انسانی، شماره خود را بگذارید یا مستقیم تماس بگیرید' : 'For human guidance, leave your number or call directly' }}</h1>
         <p>{{ language() === 'fa'
-          ? 'برای راهنمایی درباره ایمپلنت، طراحی لبخند، درد دندان، درمان ریشه یا لثه، شماره خود را ثبت کنید تا مسیر مناسب مراجعه با شما هماهنگ شود.'
-          : 'For guidance on implants, smile design, tooth pain, root canal or gum care, leave your number so the suitable visit path can be coordinated.' }}</p>
+          ? 'برای راهنمایی درباره کامپوزیت ونیر، لمینت سرامیکی یا بلیچینگ دندان، شماره خود را ثبت کنید تا مسیر مناسب مراجعه با شما هماهنگ شود.'
+          : 'For guidance on composite veneers, porcelain veneers or dental bleaching, leave your number so the suitable visit path can be coordinated.' }}</p>
       </div>
       <div class="contact-actions">
         <a class="primary-btn" href="#contact-request"><app-fa-icon name="phone"></app-fa-icon>{{ language() === 'fa' ? 'ثبت درخواست تماس' : 'Request a call' }}</a>
