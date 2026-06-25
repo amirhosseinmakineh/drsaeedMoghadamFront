@@ -2,18 +2,29 @@ import { NgFor } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
-import { DENTAL_SERVICES, DentalService, LanguageCode, LocalizedText, pickText } from '../../models/clinic.model';
+import { ClinicImage, DENTAL_SERVICES, DentalService, LanguageCode, LocalizedText, pickText } from '../../models/clinic.model';
 import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
 interface ResultVisual {
-  before: string;
-  after: string;
+  before: ClinicImage;
+  after: ClinicImage;
   beforeAlt: LocalizedText;
   afterAlt: LocalizedText;
 }
 
-const resultImage = (id: string): string =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=620&q=45`;
+const resultImage = (id: string): ClinicImage => {
+  const widths = [320, 480, 620, 760];
+  const buildUrl = (width: number): string =>
+    `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=38`;
+
+  return {
+    src: buildUrl(620),
+    srcset: widths.map(width => `${buildUrl(width)} ${width}w`).join(', '),
+    sizes: '(max-width: 900px) 50vw, 24vw',
+    width: 620,
+    height: 320
+  };
+};
 
 const RESULT_VISUALS: Record<string, ResultVisual> = {
   implant: {
@@ -89,7 +100,17 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
           </div>
         </div>
         <div class="detail-media">
-          <img [src]="service.image" [alt]="pickText(service.title, language())" loading="eager" />
+          <img
+            [src]="service.image.src"
+            [attr.srcset]="service.image.srcset"
+            [attr.sizes]="service.image.sizes"
+            [width]="service.image.width"
+            [height]="service.image.height"
+            [alt]="pickText(service.title, language())"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+          />
         </div>
       </section>
 
@@ -183,11 +204,31 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
         </div>
         <div class="result-frame">
           <figure class="before">
-            <img [src]="resultVisual().before" [alt]="pickText(resultVisual().beforeAlt, language())" loading="lazy" />
+            <img
+              [src]="resultVisual().before.src"
+              [attr.srcset]="resultVisual().before.srcset"
+              [attr.sizes]="resultVisual().before.sizes"
+              [width]="resultVisual().before.width"
+              [height]="resultVisual().before.height"
+              [alt]="pickText(resultVisual().beforeAlt, language())"
+              loading="lazy"
+              decoding="async"
+              fetchpriority="low"
+            />
             <figcaption>{{ language() === 'fa' ? 'قبل' : 'Before' }}</figcaption>
           </figure>
           <figure class="after">
-            <img [src]="resultVisual().after" [alt]="pickText(resultVisual().afterAlt, language())" loading="lazy" />
+            <img
+              [src]="resultVisual().after.src"
+              [attr.srcset]="resultVisual().after.srcset"
+              [attr.sizes]="resultVisual().after.sizes"
+              [width]="resultVisual().after.width"
+              [height]="resultVisual().after.height"
+              [alt]="pickText(resultVisual().afterAlt, language())"
+              loading="lazy"
+              decoding="async"
+              fetchpriority="low"
+            />
             <figcaption>{{ language() === 'fa' ? 'بعد' : 'After' }}</figcaption>
           </figure>
           <span></span>
@@ -230,7 +271,288 @@ const RESULT_VISUALS: Record<string, ResultVisual> = {
     </article>
   `,
   styles: [`
-    .detail-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.82fr);gap:36px;align-items:center;min-height:610px;padding-top:132px}.detail-hero h1{margin:10px 0 8px;font-size:clamp(1.75rem,3.3vw,3rem)}.detail-hero h2{margin:0 0 14px;color:var(--brand);font-size:clamp(1rem,1.6vw,1.35rem)}.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.hero-actions.centered{justify-content:center}.detail-media{position:relative}.detail-media img{width:100%;height:440px;object-fit:cover;border-radius:40px;box-shadow:var(--shadow);animation:mediaFloat 6s ease-in-out infinite alternate}.detail-media::before{content:'';position:absolute;inset:-18px;border:2px dashed color-mix(in srgb,var(--accent) 48%,transparent);border-radius:50px;transform:rotate(3deg);z-index:-1}.intro-panel{padding:36px;border:1px solid var(--line);border-radius:36px;background:color-mix(in srgb,var(--surface) 82%,transparent);box-shadow:var(--shadow)}.long-text{max-width:none;font-size:1rem}.three{grid-template-columns:repeat(3,minmax(0,1fr))}.two-column,.care-panel,.before-after{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,.9fr);gap:26px;align-items:center}.check-list{display:grid;gap:12px;margin:0;padding:0;list-style:none}.check-list li{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:20px;background:color-mix(in srgb,var(--surface) 78%,transparent);font-weight:800}.check-list app-fa-icon{color:var(--brand);margin-top:5px}.timeline{display:grid;gap:14px}.timeline article{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;padding:18px;border:1px solid var(--line);border-radius:26px;background:color-mix(in srgb,var(--surface) 82%,transparent)}.timeline article>span{display:grid;place-items:center;width:44px;height:44px;border-radius:16px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;font-weight:950}.timeline h3{margin:0 0 4px;font-size:1.05rem}.timeline p{margin:0}.care-panel,.before-after,.final-cta{padding:34px;border:1px solid var(--line);border-radius:36px;background:radial-gradient(circle at 10% 0,color-mix(in srgb,var(--brand) 12%,transparent),transparent 48%),color-mix(in srgb,var(--surface) 82%,transparent);box-shadow:var(--shadow)}.result-frame{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:320px;overflow:hidden;border:1px solid var(--line);border-radius:34px;background:var(--surface)}.result-frame figure{position:relative;display:grid;margin:0;min-height:320px;overflow:hidden}.result-frame img{width:100%;height:100%;object-fit:cover;filter:saturate(.9)}.result-frame figcaption{position:absolute;inset:auto 14px 14px auto;padding:8px 12px;border-radius:999px;background:rgba(17,16,14,.72);color:#fff;font-size:.9rem;font-weight:950;backdrop-filter:blur(12px)}.result-frame .before img{filter:saturate(.55) brightness(.75)}.result-frame span{position:absolute;top:0;bottom:0;left:50%;width:3px;background:#fff;box-shadow:0 0 0 999px rgba(255,255,255,.02);animation:handleMove 3.2s ease-in-out infinite alternate}.related-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(280px,360px);gap:16px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory}.related-rail .service-card{scroll-snap-align:start}.final-cta{text-align:center}.final-cta h2{font-size:clamp(1.35rem,2.3vw,2.25rem);margin:0 0 12px}@keyframes mediaFloat{to{transform:translateY(-10px) scale(1.005)}}@keyframes handleMove{from{left:44%}to{left:56%}}@media(max-width:900px){.detail-hero,.two-column,.care-panel,.before-after{grid-template-columns:1fr}.detail-hero{min-height:auto;padding-top:112px}.detail-media{order:-1}.detail-media img{height:320px}.three{grid-template-columns:1fr}.intro-panel,.care-panel,.before-after,.final-cta{padding:24px;border-radius:30px}.result-frame,.result-frame figure{min-height:240px}}
+    .detail-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(330px, .82fr);
+      gap: 36px;
+      align-items: center;
+      min-height: 610px;
+      padding-top: 132px;
+    }
+
+    .detail-hero h1 {
+      margin: 10px 0 8px;
+      font-size: clamp(1.75rem, 3.3vw, 3rem);
+    }
+
+    .detail-hero h2 {
+      margin: 0 0 14px;
+      color: var(--brand);
+      font-size: clamp(1rem, 1.6vw, 1.35rem);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .hero-actions.centered {
+      justify-content: center;
+    }
+
+    .detail-media {
+      position: relative;
+    }
+
+    .detail-media img {
+      width: 100%;
+      height: 440px;
+      object-fit: cover;
+      border-radius: 40px;
+      box-shadow: var(--shadow);
+      animation: mediaFloat 6s ease-in-out infinite alternate;
+    }
+
+    .detail-media::before {
+      content: '';
+      position: absolute;
+      inset: -18px;
+      z-index: -1;
+      border: 2px dashed color-mix(in srgb, var(--accent) 48%, transparent);
+      border-radius: 50px;
+      transform: rotate(3deg);
+    }
+
+    .intro-panel {
+      padding: 36px;
+      border: 1px solid var(--line);
+      border-radius: 36px;
+      background: color-mix(in srgb, var(--surface) 82%, transparent);
+      box-shadow: var(--shadow);
+    }
+
+    .long-text {
+      max-width: none;
+      font-size: 1rem;
+    }
+
+    .three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .two-column,
+    .care-panel,
+    .before-after {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(310px, .9fr);
+      gap: 26px;
+      align-items: center;
+    }
+
+    .check-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: color-mix(in srgb, var(--surface) 78%, transparent);
+      font-weight: 800;
+    }
+
+    .check-list app-fa-icon {
+      margin-top: 5px;
+      color: var(--brand);
+    }
+
+    .timeline {
+      display: grid;
+      gap: 14px;
+    }
+
+    .timeline article {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: color-mix(in srgb, var(--surface) 82%, transparent);
+    }
+
+    .timeline article > span {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff;
+      font-weight: 950;
+    }
+
+    .timeline h3 {
+      margin: 0 0 4px;
+      font-size: 1.05rem;
+    }
+
+    .timeline p {
+      margin: 0;
+    }
+
+    .care-panel,
+    .before-after,
+    .final-cta {
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: 36px;
+      background:
+        radial-gradient(circle at 10% 0, color-mix(in srgb, var(--brand) 12%, transparent), transparent 48%),
+        color-mix(in srgb, var(--surface) 82%, transparent);
+      box-shadow: var(--shadow);
+    }
+
+    .result-frame {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 320px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background: var(--surface);
+    }
+
+    .result-frame figure {
+      position: relative;
+      display: grid;
+      min-height: 320px;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .result-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(.9);
+    }
+
+    .result-frame figcaption {
+      position: absolute;
+      inset: auto 14px 14px auto;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(17, 16, 14, .72);
+      color: #fff;
+      font-size: .9rem;
+      font-weight: 950;
+      backdrop-filter: blur(12px);
+    }
+
+    .result-frame .before img {
+      filter: saturate(.55) brightness(.75);
+    }
+
+    .result-frame span {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 3px;
+      background: #fff;
+      box-shadow: 0 0 0 999px rgba(255, 255, 255, .02);
+      animation: handleMove 3.2s ease-in-out infinite alternate;
+    }
+
+    .related-rail {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(280px, 360px);
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .related-rail .service-card {
+      scroll-snap-align: start;
+    }
+
+    .final-cta {
+      text-align: center;
+    }
+
+    .final-cta h2 {
+      margin: 0 0 12px;
+      font-size: clamp(1.35rem, 2.3vw, 2.25rem);
+    }
+
+    @keyframes mediaFloat {
+      to {
+        transform: translateY(-10px) scale(1.005);
+      }
+    }
+
+    @keyframes handleMove {
+      from {
+        left: 44%;
+      }
+
+      to {
+        left: 56%;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .detail-hero,
+      .two-column,
+      .care-panel,
+      .before-after {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-hero {
+        min-height: auto;
+        padding-top: 112px;
+      }
+
+      .detail-media {
+        order: -1;
+      }
+
+      .detail-media img {
+        height: 320px;
+      }
+
+      .three {
+        grid-template-columns: 1fr;
+      }
+
+      .intro-panel,
+      .care-panel,
+      .before-after,
+      .final-cta {
+        padding: 24px;
+        border-radius: 30px;
+      }
+
+      .result-frame,
+      .result-frame figure {
+        min-height: 240px;
+      }
+    }
   `]
 })
 export class ServiceDetailComponent {

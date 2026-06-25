@@ -38,7 +38,7 @@ export interface HeroSlide {
   id: string;
   title: LocalizedText;
   text: LocalizedText;
-  image: string;
+  image: ClinicImage;
 }
 
 export interface WorkSample {
@@ -47,13 +47,13 @@ export interface WorkSample {
   service: LocalizedText;
   description: LocalizedText;
   result: LocalizedText;
-  image: string;
+  image: ClinicImage;
 }
 
 export interface DentalService {
   id: string;
   icon: string;
-  image: string;
+  image: ClinicImage;
   accent: string;
   title: LocalizedText;
   subtitle: LocalizedText;
@@ -101,6 +101,15 @@ export interface ContactFormModel {
   message: string;
 }
 
+export interface ClinicImage {
+  src: string;
+  alt?: LocalizedText;
+  srcset?: string;
+  sizes?: string;
+  width: number;
+  height: number;
+}
+
 export interface AuthDialogModel {
   firstName: string;
   lastName: string;
@@ -122,11 +131,35 @@ export interface DatePickerDay {
 export const text = (fa: string, en: string): LocalizedText => ({ fa, en });
 export const pickText = (value: LocalizedText, language: LanguageCode): string => value[language];
 
-const image = (id: string): string =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=760&q=45`;
+const buildUnsplashUrl = (id: string, width: number, quality = 38): string =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=${quality}`;
 
-const portfolioImage = (path: string): string =>
-  `https://labkhanddental.com/wp-content/uploads/${path}`;
+const image = (
+  id: string,
+  width = 640,
+  height = 420,
+  sizes = '(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw'
+): ClinicImage => {
+  const widths = [320, 480, 640, 760, 960];
+
+  return {
+    src: buildUnsplashUrl(id, width),
+    srcset: widths.map(item => `${buildUnsplashUrl(id, item)} ${item}w`).join(', '),
+    sizes,
+    width,
+    height
+  };
+};
+
+const portfolioImage = (path: string): ClinicImage => ({
+  src: `https://labkhanddental.com/wp-content/uploads/${path}`,
+  sizes: '(max-width: 640px) 100vw, (max-width: 980px) 92vw, 44vw',
+  width: 720,
+  height: 420
+});
+
+const heroImage = (id: string): ClinicImage =>
+  image(id, 760, 430, '(max-width: 640px) 76vw, (max-width: 980px) 70vw, 32vw');
 
 export const NAV_ITEMS: NavItem[] = [
   { label: text('خانه', 'Home'), href: '/', icon: 'home' },
@@ -143,7 +176,7 @@ export const HERO_SLIDES: HeroSlide[] = [
       'در کلینیک دندان‌پزشکی دکتر سعید مقدم، درمان‌های زیبایی و عمومی مثل ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه و مراقبت لثه با معاینه دقیق و توضیح شفاف انجام می‌شود.',
       'At Dr. Saeed Moghaddam Dental Clinic, cosmetic and general dental treatments such as implants, veneers, composite, whitening, root canal therapy and gum care are planned with careful exams and clear guidance.'
     ),
-    image: image('photo-1606811971618-4486d14f3f99')
+    image: heroImage('photo-1606811971618-4486d14f3f99')
   },
   {
     id: 'calm-suite',
@@ -152,7 +185,7 @@ export const HERO_SLIDES: HeroSlide[] = [
       'اگر درد دندان، نیاز به ایمپلنت، اصلاح طرح لبخند یا درمان لثه دارید، ابتدا شرایط دهان و دندان بررسی می‌شود و مسیر مناسب بدون وعده اغراق‌آمیز توضیح داده می‌شود.',
       'Whether you have tooth pain, need implants, want a smile makeover or require gum care, your oral condition is reviewed first and the suitable path is explained without exaggerated promises.'
     ),
-    image: image('photo-1629909615184-74f495363b67')
+    image: heroImage('photo-1629909615184-74f495363b67')
   },
   {
     id: 'mobile-first',
@@ -161,7 +194,7 @@ export const HERO_SLIDES: HeroSlide[] = [
       'درمان‌ها، توضیحات تخصصی، سوالات پرتکرار و فرم درخواست تماس کنار هم آمده‌اند تا مراجعه‌کننده سریع‌تر بداند برای کدام مسیر درمانی باید راهنمایی بگیرد.',
       'Services, treatment explanations, FAQs and the call request form are grouped together so patients quickly know which service they need guidance for.'
     ),
-    image: image('photo-1588776814546-1ffcf47267a5')
+    image: heroImage('photo-1588776814546-1ffcf47267a5')
   }
 ];
 
