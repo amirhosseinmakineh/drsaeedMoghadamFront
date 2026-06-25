@@ -2,7 +2,7 @@ import { NgFor } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
-import { ClinicImage, DENTAL_SERVICES, DentalService, LanguageCode, LocalizedText, pickText } from '../../models/clinic.model';
+import { ClinicImage, DENTAL_SERVICES, DentalService, LanguageCode, LocalizedText, pickText, publicClinicImage } from '../../models/clinic.model';
 import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
 interface ResultVisual {
@@ -23,78 +23,55 @@ interface ServiceDetailCopy {
   finalCtaTitle: LocalizedText;
 }
 
-const resultImage = (id: string): ClinicImage => {
-  const palettes = [
-    ['#fff8ec', '#ead6bd', '#a8793f'],
-    ['#fffaf2', '#f0dec0', '#b88a44'],
-    ['#fff7ed', '#e8d3ad', '#8f9d74']
-  ];
-  const [bg, soft, accent] = palettes[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % palettes.length];
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="620" height="320" viewBox="0 0 620 320" role="img">
-      <rect width="620" height="320" rx="34" fill="${bg}"/>
-      <circle cx="120" cy="70" r="110" fill="${soft}"/>
-      <circle cx="520" cy="260" r="120" fill="${soft}" opacity=".72"/>
-      <path d="M178 106c70-88 204-88 274 0 42 54 20 150-20 174-36 22-60-52-70-96-13 46-35 116-75 92-44-26-64-116-24-170z" fill="#fffdf8" stroke="${accent}" stroke-width="6"/>
-      <path d="M190 230c66 42 176 42 242 0" fill="none" stroke="${accent}" stroke-width="8" stroke-linecap="round"/>
-      <path d="M118 278h384" stroke="${accent}" stroke-width="3" stroke-linecap="round" opacity=".22"/>
-    </svg>
-  `.trim();
-
-  return {
-    src: `data:image/svg+xml,${encodeURIComponent(svg)}`,
-    sizes: '(max-width: 900px) 50vw, 24vw',
-    width: 620,
-    height: 320
-  };
-};
+const resultImage = (key: Parameters<typeof publicClinicImage>[0]): ClinicImage =>
+  publicClinicImage(key, '(max-width: 900px) 50vw, 24vw');
 
 const RESULT_VISUALS: Record<string, ResultVisual> = {
   implant: {
-    before: resultImage('photo-1588776814546-1ffcf47267a5'),
-    after: resultImage('photo-1606811841689-23dfddce3e95'),
+    before: resultImage('clinic'),
+    after: resultImage('implant'),
     beforeAlt: { fa: 'بررسی ناحیه بی‌دندانی پیش از ایمپلنت', en: 'Missing-tooth area assessment before implant treatment' },
     afterAlt: { fa: 'بازسازی لبخند پس از درمان ایمپلنت', en: 'Smile restoration after implant treatment' }
   },
   laminate: {
-    before: resultImage('photo-1609840114035-3c981b782dfe'),
-    after: resultImage('photo-1606811971618-4486d14f3f99'),
+    before: resultImage('clinic'),
+    after: resultImage('laminate'),
     beforeAlt: { fa: 'بررسی رنگ و فرم دندان‌ها پیش از لمینت', en: 'Tooth shade and shape review before veneers' },
     afterAlt: { fa: 'هماهنگی فرم و رنگ پس از لمینت سرامیکی', en: 'Shape and shade harmony after porcelain veneers' }
   },
   composite: {
-    before: resultImage('photo-1600170311833-c2cf5280ce49'),
-    after: resultImage('photo-1606811971618-4486d14f3f99'),
+    before: resultImage('clinic'),
+    after: resultImage('composite'),
     beforeAlt: { fa: 'ارزیابی فاصله و فرم دندان پیش از کامپوزیت', en: 'Gap and tooth-shape assessment before composite veneers' },
     afterAlt: { fa: 'اصلاح فرم دندان با کامپوزیت ونیر', en: 'Tooth-shape correction with composite veneers' }
   },
   orthodontics: {
-    before: resultImage('photo-1609840114035-3c981b782dfe'),
-    after: resultImage('photo-1629909615184-74f495363b67'),
+    before: resultImage('clinic'),
+    after: resultImage('orthodontics'),
     beforeAlt: { fa: 'بررسی نامرتبی دندان‌ها پیش از ارتودنسی', en: 'Crowding assessment before orthodontics' },
     afterAlt: { fa: 'نظم بهتر دندان‌ها پس از درمان ارتودنسی', en: 'Improved alignment after orthodontic treatment' }
   },
   whitening: {
-    before: resultImage('photo-1588776814546-1ffcf47267a5'),
-    after: resultImage('photo-1606811971618-4486d14f3f99'),
+    before: resultImage('clinic'),
+    after: resultImage('whitening'),
     beforeAlt: { fa: 'ثبت رنگ پایه دندان پیش از بلیچینگ', en: 'Baseline tooth shade before whitening' },
     afterAlt: { fa: 'روشن‌تر شدن کنترل‌شده دندان پس از بلیچینگ', en: 'Controlled tooth brightening after whitening' }
   },
   'root-canal': {
-    before: resultImage('photo-1606811841689-23dfddce3e95'),
-    after: resultImage('photo-1606811971618-4486d14f3f99'),
+    before: resultImage('clinic'),
+    after: resultImage('clinic'),
     beforeAlt: { fa: 'تشخیص درد و عفونت پیش از درمان ریشه', en: 'Pain and infection diagnosis before root canal therapy' },
     afterAlt: { fa: 'حفظ دندان پس از درمان ریشه و ترمیم', en: 'Tooth preservation after root canal therapy and restoration' }
   },
   pediatric: {
-    before: resultImage('photo-1629909613654-28e377c37b09'),
-    after: resultImage('photo-1606811971618-4486d14f3f99'),
+    before: resultImage('clinic'),
+    after: resultImage('clinic'),
     beforeAlt: { fa: 'معاینه آرام کودک پیش از درمان دندان‌پزشکی', en: 'Calm child exam before pediatric dental care' },
     afterAlt: { fa: 'پیگیری سلامت دندان کودک پس از درمان یا پیشگیری', en: 'Child dental health follow-up after care or prevention' }
   },
   'gum-treatment': {
-    before: resultImage('photo-1629909615184-74f495363b67'),
-    after: resultImage('photo-1606811971618-4486d14f3f99'),
+    before: resultImage('clinic'),
+    after: resultImage('clinic'),
     beforeAlt: { fa: 'بررسی التهاب و خونریزی لثه پیش از درمان', en: 'Gum inflammation and bleeding assessment before treatment' },
     afterAlt: { fa: 'کنترل التهاب لثه پس از پاک‌سازی و مراقبت', en: 'Controlled gum inflammation after cleaning and care' }
   }
