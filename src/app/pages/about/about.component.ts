@@ -67,11 +67,8 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
       padding: 30px;
       border: 1px solid var(--line);
       border-radius: 42px;
-      background:
-        radial-gradient(circle at 10% 0, color-mix(in srgb, var(--brand) 14%, transparent), transparent 46%),
-        color-mix(in srgb, var(--surface) 82%, transparent);
+      background: var(--surface);
       box-shadow: var(--shadow);
-      animation: doctorFloat 5s ease-in-out infinite alternate;
     }
 
     .doctor-card .icon-bubble {
@@ -90,12 +87,6 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
       border-radius: 42px;
       background: color-mix(in srgb, var(--surface) 82%, transparent);
       box-shadow: var(--shadow);
-    }
-
-    @keyframes doctorFloat {
-      to {
-        transform: translateY(-12px);
-      }
     }
 
     @media (max-width: 820px) {

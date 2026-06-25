@@ -15,7 +15,7 @@ interface LanguageAwarePage {
   standalone: true,
   imports: [NgFor, NgIf, RouterLink, RouterLinkActive, RouterOutlet, AuthDialogComponent, FaIconComponent],
   template: `
-    <div class="app-shell dark" [attr.dir]="direction">
+    <div class="app-shell light" [attr.dir]="direction">
       <header *ngIf="!isDashboardRoute()" class="site-header">
         <a class="brand" routerLink="/" [attr.aria-label]="language() === 'fa' ? 'صفحه اصلی' : 'Homepage'">
           <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
@@ -202,7 +202,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private applyDocumentState(): void {
     document.documentElement.lang = this.language();
     document.documentElement.dir = this.direction;
-    document.body.dataset['theme'] = 'dark';
+    document.body.dataset['theme'] = 'light';
   }
 
   private readSetting<T extends string>(key: string, fallback: T): T {

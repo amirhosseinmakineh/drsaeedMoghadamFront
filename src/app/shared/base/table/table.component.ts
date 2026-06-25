@@ -127,7 +127,7 @@ export interface TableActionClick<T = unknown> {
     .table-action:disabled{cursor:not-allowed;opacity:.58}
     .cell-badge{display:inline-flex;align-items:center;justify-content:center;min-height:30px;border-radius:999px;padding:5px 10px;background:var(--surface-muted);color:var(--text);font-size:.82rem}
     .cell-badge.success{background:color-mix(in srgb,#22c55e 16%,transparent);color:#bbf7d0}.cell-badge.warn{background:color-mix(in srgb,#f59e0b 16%,transparent);color:#fde68a}.cell-badge.danger{background:color-mix(in srgb,var(--danger) 16%,transparent);color:#fecaca}.cell-badge.info{background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)}
-    .empty-table,.table-loading{padding:28px;text-align:center;color:var(--muted);font-weight:900}.table-loading{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--surface) 76%,transparent);backdrop-filter:blur(4px)}
+    .empty-table,.table-loading{padding:28px;text-align:center;color:var(--muted);font-weight:900}.table-loading{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--surface) 76%,transparent)}
     .table-pagination{display:flex;align-items:center;justify-content:center;gap:10px}.table-pagination button{border:1px solid var(--line);border-radius:999px;padding:9px 16px;background:var(--surface-muted);color:var(--text);font:inherit;font-weight:950}.table-pagination button:disabled{opacity:.45;cursor:not-allowed}.table-pagination span{color:var(--muted);font-weight:950}
     @media (max-width:760px){
       .table-header,.table-tools{display:grid;grid-template-columns:1fr;width:100%}.search-box{min-width:0}.table-action.add{width:100%}

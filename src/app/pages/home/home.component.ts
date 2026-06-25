@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
@@ -26,7 +26,7 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent {
   language = signal<LanguageCode>('fa');
   activeSlide = signal(0);
   activeWorkSample = signal(0);
@@ -48,28 +48,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   };
 
   protected readonly pickText = pickText;
-  private carouselTimer?: ReturnType<typeof setInterval>;
-  private readonly handleVisibilityChange = (): void => {
-    if (document.hidden) {
-      this.stopCarousel();
-      return;
-    }
-
-    this.startCarousel();
-  };
 
   constructor(private title: Title, private meta: Meta) {
     this.updateSeo();
-  }
-
-  ngOnInit(): void {
-    this.startCarousel();
-    document.addEventListener('visibilitychange', this.handleVisibilityChange);
-  }
-
-  ngOnDestroy(): void {
-    this.stopCarousel();
-    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   }
 
   setLanguage(language: LanguageCode): void {
@@ -112,22 +93,5 @@ export class HomeComponent implements OnInit, OnDestroy {
         ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم؛ ایمپلنت، لمینت، کامپوزیت، بلیچینگ، درمان ریشه، درمان لثه و درخواست تماس برای راهنمایی اولیه.'
         : 'Dr. Saeed Moghaddam Dental Clinic for implants, veneers, composite, whitening, root canal, gum care and initial consultant call requests.'
     });
-  }
-
-  private startCarousel(): void {
-    if (this.carouselTimer) return;
-
-    this.carouselTimer = setInterval(() => {
-      this.nextSlide(1);
-      this.nextWorkSample(1);
-      this.nextTestimonial(1);
-    }, 6500);
-  }
-
-  private stopCarousel(): void {
-    if (!this.carouselTimer) return;
-
-    clearInterval(this.carouselTimer);
-    this.carouselTimer = undefined;
   }
 }

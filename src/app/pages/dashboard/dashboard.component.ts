@@ -397,7 +397,7 @@ interface ScoreFormModel {
   `,
   styles: [`
     .dashboard-layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;width:min(1180px,calc(100% - 36px));margin:0 auto;padding:36px 0 86px}
-    .dashboard-sidebar,.dashboard-content article,.dashboard-hero{border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 86%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+    .dashboard-sidebar,.dashboard-content article,.dashboard-hero{border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 86%,transparent);box-shadow:var(--shadow)}
     .dashboard-sidebar{position:sticky;top:18px;display:grid;align-content:start;gap:18px;min-height:calc(100vh - 72px);padding:20px;border-radius:34px}
     .dashboard-brand{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:950}
     .dashboard-user-card{display:grid;gap:12px;padding:18px;border:1px solid var(--line);border-radius:28px;background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 12%,transparent),color-mix(in srgb,var(--surface-muted) 84%,transparent))}
