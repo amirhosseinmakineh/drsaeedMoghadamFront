@@ -307,6 +307,11 @@ main {
   animation: pageFadeUp .62s ease both;
 }
 
+.page-section + .page-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 680px;
+}
+
 h1,
 h2,
 h3 {
@@ -563,6 +568,17 @@ summary {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
   }
 }
 
