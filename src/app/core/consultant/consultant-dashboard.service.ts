@@ -130,16 +130,28 @@ export interface CreateReservationRequest {
 }
 
 export interface ConsultantReservation {
-  id: number;
-  leadAssignmentId: number;
-  consultantProfileId: number;
+  id?: number;
+  Id?: number;
+  reservationId?: number;
+  ReservationId?: number;
+  leadAssignmentId?: number;
+  LeadAssignmentId?: number;
+  consultantProfileId?: number;
+  ConsultantProfileId?: number;
   patientUserId?: string | null;
+  PatientUserId?: string | null;
   requiresPatientProfile?: boolean;
-  reservationAt: string;
-  patientName: string;
-  patientPhoneNumber: string;
+  RequiresPatientProfile?: boolean;
+  reservationAt?: string;
+  ReservationAt?: string;
+  patientName?: string;
+  PatientName?: string;
+  patientPhoneNumber?: string;
+  PatientPhoneNumber?: string;
   description?: string | null;
+  Description?: string | null;
   isCanceled?: boolean;
+  IsCanceled?: boolean;
 }
 
 export interface CompletePatientProfileRequest {
@@ -148,7 +160,7 @@ export interface CompletePatientProfileRequest {
   lastName: string;
   phoneNumber: string;
   passwordHash: string;
-  avatarImageName: string | null;
+  avatarImageName?: string | null;
   gender: number;
   birthDate: string;
   nationalCode: string;
