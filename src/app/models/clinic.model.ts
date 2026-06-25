@@ -150,7 +150,7 @@ export type PublicClinicImageKey = keyof typeof PUBLIC_IMAGES;
 
 export const publicClinicImage = (
   key: PublicClinicImageKey,
-  sizes = PUBLIC_IMAGE_SIZES.default
+  sizes: string = PUBLIC_IMAGE_SIZES.default
 ): ClinicImage => ({
   ...PUBLIC_IMAGES[key],
   sizes
