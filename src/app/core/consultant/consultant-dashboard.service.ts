@@ -105,6 +105,7 @@ export interface LeadCallReportResponse {
   leadAssignmentState: number;
   callResult: number;
   isConsultantOnline: boolean;
+  shouldOpenReservationPage?: boolean;
 }
 
 export interface ExpireLeadNoCallRequest {
@@ -132,11 +133,42 @@ export interface ConsultantReservation {
   id: number;
   leadAssignmentId: number;
   consultantProfileId: number;
+  patientUserId?: string | null;
+  requiresPatientProfile?: boolean;
   reservationAt: string;
   patientName: string;
   patientPhoneNumber: string;
   description?: string | null;
   isCanceled?: boolean;
+}
+
+export interface CompletePatientProfileRequest {
+  reservationId: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  passwordHash: string;
+  avatarImageName: string | null;
+  gender: number;
+  birthDate: string;
+  nationalCode: string;
+  address: string;
+  emergencyPhoneNumber?: string | null;
+  insuranceName?: string | null;
+  notes?: string | null;
+}
+
+export interface CompletePatientProfileResponse {
+  reservationId: number;
+  patientUserId: string;
+  patientProfileId: number;
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  reservationAt: string;
+  patientName: string;
+  patientPhoneNumber: string;
+  isCompleteProfile: boolean;
+  roleName: string;
 }
 
 export interface ReservationFilters {
@@ -212,6 +244,12 @@ export class ConsultantDashboardService {
     return this.http.post<ApiCommandResponse<ConsultantReservation>>(`${this.apiBaseUrl}/api/Reservation`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('ثبت رزرو انجام نشد'));
+  }
+
+  completePatientProfile(payload: CompletePatientProfileRequest): Observable<ApiCommandResponse<CompletePatientProfileResponse>> {
+    return this.http.post<ApiCommandResponse<CompletePatientProfileResponse>>(`${this.apiBaseUrl}/api/Reservation/CompletePatientProfile`, payload, {
+      headers: this.authHeaders()
+    }).pipe(this.ensureCommandSucceeded('تشکیل پرونده بیمار انجام نشد'));
   }
 
   getReservations(filters: ReservationFilters): Observable<PaginatedResponse<ConsultantReservation>> {

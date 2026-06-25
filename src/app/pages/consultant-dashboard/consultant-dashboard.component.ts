@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import {
+  CompletePatientProfileRequest,
   ConsultantDashboardService,
   ConsultantLead,
   ConsultantReservation,
@@ -30,7 +31,6 @@ const LEAD_TYPE = {
   OfflineQueue: 2
 } as const;
 
-const SUCCESSFUL_CALL_RESULTS = [1, 2];
 const THREE_MINUTES_MS = 3 * 60 * 1000;
 
 interface ConsultantProfileForm {
@@ -47,6 +47,20 @@ interface ReservationForm {
   reservationDate: Date | null;
   reservationTime: string;
   description: string;
+}
+
+interface PatientProfileForm {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  password: string;
+  gender: number;
+  birthDate: string;
+  nationalCode: string;
+  address: string;
+  emergencyPhoneNumber: string;
+  insuranceName: string;
+  notes: string;
 }
 
 interface ConsultantStatusUpdate {
@@ -400,6 +414,11 @@ interface ConsultantDashboardLink {
                         <strong>{{ reservation.patientName || 'بدون نام' }}</strong>
                         <span>{{ reservation.patientPhoneNumber }}</span>
                         <time>{{ formatDateTime(reservation.reservationAt) }}</time>
+                        @if (canCompletePatientProfile(reservation)) {
+                          <button class="secondary-action compact" type="button" (click)="openPatientProfileFromReservation(reservation)">
+                            تکمیل پرونده
+                          </button>
+                        }
                       </article>
                     }
                   </div>
@@ -472,6 +491,106 @@ interface ConsultantDashboardLink {
           </div>
         </form>
       </app-base-dialog>
+
+      <app-base-dialog
+        [open]="patientProfileDialogOpen"
+        [showFooter]="false"
+        title="تشکیل پرونده بیمار"
+        subtitle="برای تکمیل رزرو، اطلاعات ثبت‌نام و پرونده بیمار را وارد کنید."
+        (closed)="closePatientProfileDialog()"
+      >
+        <form class="dialog-form" (ngSubmit)="submitPatientProfile()">
+          <div class="two-col">
+            <label>
+              نام
+              <input [(ngModel)]="patientProfileForm.firstName" name="patientFirstName" autocomplete="given-name" maxlength="100" />
+            </label>
+            <label>
+              نام خانوادگی
+              <input [(ngModel)]="patientProfileForm.lastName" name="patientLastName" autocomplete="family-name" maxlength="100" />
+            </label>
+          </div>
+
+          <div class="two-col">
+            <label>
+              شماره موبایل
+              <input
+                [(ngModel)]="patientProfileForm.phoneNumber"
+                name="patientPhoneNumber"
+                inputmode="tel"
+                autocomplete="tel"
+                readonly
+              />
+              <small class="field-note">شماره باید با شماره لید رزرو شده یکسان باشد.</small>
+            </label>
+            <label>
+              رمز عبور
+              <input
+                [(ngModel)]="patientProfileForm.password"
+                name="patientPassword"
+                type="password"
+                autocomplete="new-password"
+                minlength="8"
+                maxlength="100"
+              />
+            </label>
+          </div>
+
+          <div class="two-col">
+            <label>
+              جنسیت
+              <select [(ngModel)]="patientProfileForm.gender" name="patientGender">
+                <option [ngValue]="1">مرد</option>
+                <option [ngValue]="2">زن</option>
+              </select>
+            </label>
+            <label>
+              تاریخ تولد
+              <app-base-datepicker
+                [label]="patientBirthDatePickerLabel"
+                [selectedDate]="selectedPatientBirthDate"
+                [minDate]="patientBirthDateMinDate"
+                [maxDate]="patientBirthDateMaxDate"
+                (dateChange)="setPatientBirthDate($event)"
+              ></app-base-datepicker>
+            </label>
+          </div>
+
+          <div class="two-col">
+            <label>
+              کد ملی
+              <input [(ngModel)]="patientProfileForm.nationalCode" name="patientNationalCode" inputmode="numeric" maxlength="10" placeholder="0012345678" />
+            </label>
+            <label>
+              شماره اضطراری
+              <input [(ngModel)]="patientProfileForm.emergencyPhoneNumber" name="patientEmergencyPhoneNumber" inputmode="tel" placeholder="09120000000" />
+            </label>
+          </div>
+
+          <label>
+            آدرس
+            <textarea [(ngModel)]="patientProfileForm.address" name="patientAddress" rows="3" placeholder="آدرس کامل بیمار"></textarea>
+          </label>
+
+          <div class="two-col">
+            <label>
+              بیمه
+              <input [(ngModel)]="patientProfileForm.insuranceName" name="patientInsuranceName" maxlength="100" />
+            </label>
+            <label>
+              توضیحات پرونده
+              <textarea [(ngModel)]="patientProfileForm.notes" name="patientNotes" rows="3"></textarea>
+            </label>
+          </div>
+
+          <div class="dialog-actions">
+            <button class="secondary-action" type="button" (click)="closePatientProfileDialog()">بعداً</button>
+            <button class="primary-action" type="submit" [disabled]="patientProfileSaving">
+              {{ patientProfileSaving ? 'در حال ثبت...' : 'ثبت پرونده' }}
+            </button>
+          </div>
+        </form>
+      </app-base-dialog>
     </section>
   `,
   styles: [`
@@ -491,7 +610,7 @@ interface ConsultantDashboardLink {
     .consultant-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.consultant-overview button{display:grid;gap:12px;text-align:start;border:1px solid var(--line);border-radius:30px;padding:22px;background:color-mix(in srgb,var(--surface) 86%,transparent);color:var(--text);box-shadow:0 18px 54px rgba(0,0,0,.18)}.consultant-overview span{display:grid;place-items:center;width:52px;height:52px;border-radius:20px;background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand);font-size:1.25rem}.consultant-overview strong{font-size:1.1rem}.consultant-overview small{color:var(--muted);font-weight:900;line-height:1.8}
     .profile-lock-card,.status-card,.lead-panel,.reservation-panel,.consultant-panel{display:grid;gap:16px;padding:18px;border-radius:30px}.lock-icon{display:grid;place-items:center;width:58px;height:58px;border-radius:22px;background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand);font-size:1.35rem}.profile-lock-card h2,.panel-heading h2,.locked-panel h2{margin:0;font-size:1.35rem}.profile-lock-card p,.panel-heading p,.locked-panel p{margin:0;color:var(--muted)}
     .locked-panel{grid-template-columns:auto minmax(0,1fr) auto;align-items:center}
-    .profile-form,.dialog-form{display:grid;gap:14px}label{display:grid;gap:8px;color:var(--muted);font-weight:950}.primary-action,.secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;border-radius:18px;padding:12px 16px;font:inherit;font-weight:950}.primary-action{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712}.secondary-action{border:1px solid var(--line);background:var(--surface-muted);color:var(--text)}.secondary-action.danger{background:color-mix(in srgb,var(--danger) 15%,var(--surface-muted));color:#fecaca}.primary-action:disabled,.secondary-action:disabled{cursor:not-allowed;opacity:.55}.full{width:100%}.compact{min-height:40px;border-radius:999px;padding:9px 13px;font-size:.86rem}
+    .profile-form,.dialog-form{display:grid;gap:14px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:grid;gap:8px;color:var(--muted);font-weight:950}.field-note{color:var(--muted);font-weight:800;line-height:1.7}input[readonly]{opacity:.78;background:color-mix(in srgb,var(--surface-muted) 72%,transparent)}.primary-action,.secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;border-radius:18px;padding:12px 16px;font:inherit;font-weight:950}.primary-action{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712}.secondary-action{border:1px solid var(--line);background:var(--surface-muted);color:var(--text)}.secondary-action.danger{background:color-mix(in srgb,var(--danger) 15%,var(--surface-muted));color:#fecaca}.primary-action:disabled,.secondary-action:disabled{cursor:not-allowed;opacity:.55}.full{width:100%}.compact{min-height:40px;border-radius:999px;padding:9px 13px;font-size:.86rem}
     .status-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.status-summary div{padding:14px;border:1px solid var(--line);border-radius:22px;background:color-mix(in srgb,var(--surface-muted) 70%,transparent)}.status-summary span{display:block;color:var(--muted);font-size:.82rem;font-weight:900}.status-summary strong{display:block;color:var(--text);font-size:1.05rem}.status-summary .good{color:#bbf7d0}.status-summary .bad{color:#fecaca}
     .action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.queue-warning{margin:0;padding:12px 14px;border-radius:18px;background:color-mix(in srgb,#f59e0b 14%,transparent);color:#fde68a;font-weight:950}
     .panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.lead-filters{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}.loading-copy,.empty-copy{margin:0;padding:18px;border:1px dashed var(--line);border-radius:22px;color:var(--muted);text-align:center;font-weight:900}
@@ -504,7 +623,7 @@ interface ConsultantDashboardLink {
     @media (max-width:980px){.dashboard-layout{grid-template-columns:1fr;width:min(100% - 24px,760px);padding-top:14px}.dashboard-sidebar{position:relative;top:0;min-height:0}.consultant-overview{grid-template-columns:1fr}.lead-filters{grid-template-columns:1fr 1fr auto}.locked-panel{grid-template-columns:1fr}}
     @media (max-width:760px){
       .dashboard-layout.consultant-mode{width:100%;padding:0 10px 96px}.dashboard-layout.consultant-mode .dashboard-sidebar{position:fixed;z-index:80;inset-inline:10px;bottom:10px;top:auto;min-height:0;padding:8px;border-radius:28px}.consultant-mode .dashboard-brand,.consultant-mode .dashboard-user-card,.consultant-mode .logout-btn{display:none}.consultant-mode .dashboard-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.consultant-mode .dashboard-nav button{display:grid;place-items:center;gap:3px;min-height:58px;padding:7px;border-radius:20px;text-align:center;font-size:.72rem}.consultant-mode .dashboard-nav app-fa-icon{font-size:1.1rem;color:var(--brand)}
-      .dashboard-content{padding-top:10px}.dashboard-hero,.profile-lock-card,.status-card,.lead-panel,.reservation-panel,.consultant-panel{border-radius:24px;padding:14px}.status-summary,.action-grid,.lead-filters,.lead-actions{grid-template-columns:1fr}.panel-heading{display:grid}.dialog-actions{grid-template-columns:1fr 1fr}
+      .dashboard-content{padding-top:10px}.dashboard-hero,.profile-lock-card,.status-card,.lead-panel,.reservation-panel,.consultant-panel{border-radius:24px;padding:14px}.status-summary,.action-grid,.lead-filters,.lead-actions,.two-col{grid-template-columns:1fr}.panel-heading{display:grid}.dialog-actions{grid-template-columns:1fr 1fr}
     }
   `]
 })
@@ -571,6 +690,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reservations: ConsultantReservation[] = [];
   reservationsLoading = false;
   readonly reservationDatePickerLabel = { fa: 'تاریخ رزرو', en: 'Reservation date' };
+
+  patientProfileDialogOpen = false;
+  patientProfileSaving = false;
+  patientProfileRequired = false;
+  selectedPatientProfileReservation: ConsultantReservation | null = null;
+  patientProfileForm: PatientProfileForm = this.emptyPatientProfileForm();
+  selectedPatientBirthDate?: Date;
+  readonly patientBirthDatePickerLabel = { fa: 'تاریخ تولد', en: 'Birth date' };
+  readonly patientBirthDateMinDate = this.createRelativeYearDate(-120);
+  readonly patientBirthDateMaxDate = this.createYesterday();
 
   feedbackMessage = '';
   feedbackType: 'success' | 'error' = 'success';
@@ -829,7 +958,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.showFeedback(response.message || 'گزارش تماس ثبت شد', 'success');
           this.refreshDashboard();
 
-          if (SUCCESSFUL_CALL_RESULTS.includes(payload.callResult)) {
+          if (response.data?.shouldOpenReservationPage === true) {
             this.openReservationDialog(lead, true);
           }
         },
@@ -851,6 +980,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   setReservationDate(date: Date): void {
     this.reservationForm.reservationDate = date;
+  }
+
+  setPatientBirthDate(date: Date): void {
+    this.selectedPatientBirthDate = date;
+    this.patientProfileForm.birthDate = this.toDateInputValue(date);
+  }
+
+  canCompletePatientProfile(reservation: ConsultantReservation): boolean {
+    return reservation.requiresPatientProfile === true && !reservation.patientUserId && !reservation.isCanceled;
+  }
+
+  openPatientProfileFromReservation(reservation: ConsultantReservation): void {
+    if (!this.canCompletePatientProfile(reservation)) return;
+    this.openPatientProfileDialog(reservation);
   }
 
   submitReservation(): void {
@@ -882,13 +1025,71 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       }))
       .subscribe({
         next: response => {
+          const reservation = response.data;
           this.reservationRequired = false;
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           this.showFeedback(response.message || 'رزرو با موفقیت ثبت شد', 'success');
           this.loadReservations();
+
+          if (reservation?.requiresPatientProfile === true && reservation.id) {
+            this.openPatientProfileDialog(reservation);
+          }
         },
         error: error => this.showFeedback(this.errorMessage(error, 'ثبت رزرو انجام نشد'), 'error')
+      });
+  }
+
+  closePatientProfileDialog(): void {
+    const wasRequired = this.patientProfileRequired;
+    this.resetPatientProfileState();
+
+    if (wasRequired) {
+      this.showFeedback('برای تکمیل رزرو، تشکیل پرونده بیمار الزامی است', 'error');
+    }
+  }
+
+  submitPatientProfile(): void {
+    const reservation = this.selectedPatientProfileReservation;
+    if (!reservation?.id) return;
+
+    const validationError = this.validatePatientProfileForm();
+    if (validationError) {
+      this.showFeedback(validationError, 'error');
+      return;
+    }
+
+    const payload: CompletePatientProfileRequest = {
+      reservationId: reservation.id,
+      firstName: this.patientProfileForm.firstName.trim(),
+      lastName: this.patientProfileForm.lastName.trim(),
+      phoneNumber: this.patientProfileForm.phoneNumber.trim(),
+      passwordHash: this.patientProfileForm.password,
+      avatarImageName: null,
+      gender: Number(this.patientProfileForm.gender),
+      birthDate: `${this.patientProfileForm.birthDate}T00:00:00`,
+      nationalCode: this.patientProfileForm.nationalCode.trim(),
+      address: this.patientProfileForm.address.trim(),
+      emergencyPhoneNumber: this.patientProfileForm.emergencyPhoneNumber.trim() || null,
+      insuranceName: this.patientProfileForm.insuranceName.trim() || null,
+      notes: this.patientProfileForm.notes.trim() || null
+    };
+
+    this.patientProfileSaving = true;
+    this.clearFeedback();
+
+    this.consultantApi.completePatientProfile(payload)
+      .pipe(finalize(() => {
+        this.patientProfileSaving = false;
+        this.markViewDirty();
+      }))
+      .subscribe({
+        next: response => {
+          this.resetPatientProfileState();
+          this.showFeedback(response.message || 'پرونده بیمار برای رزرو با موفقیت تشکیل شد', 'success');
+          this.loadReservations();
+        },
+        error: error => this.showFeedback(this.errorMessage(error, 'تشکیل پرونده بیمار انجام نشد'), 'error')
       });
   }
 
@@ -1294,6 +1495,31 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationDialogOpen = true;
   }
 
+  private openPatientProfileDialog(reservation: ConsultantReservation): void {
+    const names = this.splitReservationPatientName(reservation.patientName);
+    const phoneNumber = reservation.patientPhoneNumber || '';
+
+    this.selectedPatientProfileReservation = reservation;
+    this.patientProfileRequired = true;
+    this.patientProfileForm = {
+      ...this.emptyPatientProfileForm(),
+      firstName: names.firstName,
+      lastName: names.lastName,
+      phoneNumber: phoneNumber === '-' ? '' : phoneNumber
+    };
+    this.selectedPatientBirthDate = undefined;
+    this.patientProfileDialogOpen = true;
+  }
+
+  private resetPatientProfileState(): void {
+    this.patientProfileDialogOpen = false;
+    this.patientProfileSaving = false;
+    this.patientProfileRequired = false;
+    this.selectedPatientProfileReservation = null;
+    this.patientProfileForm = this.emptyPatientProfileForm();
+    this.selectedPatientBirthDate = undefined;
+  }
+
   private markLeadReported(leadAssignmentId: number, nextState: number): void {
     this.leads = this.leads.map(lead => {
       if (this.leadId(lead) !== leadAssignmentId) return lead;
@@ -1350,6 +1576,80 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!/^\d{10}$/.test(code)) return 'کد ملی باید ۱۰ رقم باشد';
     if (!this.profileForm.address.trim() || this.profileForm.address.trim().length < 5) return 'آدرس مشاور الزامی است';
     return null;
+  }
+
+  private validatePatientProfileForm(): string | null {
+    const firstName = this.patientProfileForm.firstName.trim();
+    const lastName = this.patientProfileForm.lastName.trim();
+    const phoneNumber = this.patientProfileForm.phoneNumber.trim();
+    const expectedPhoneNumber = this.selectedPatientProfileReservation?.patientPhoneNumber?.trim() || phoneNumber;
+    const nationalCode = this.patientProfileForm.nationalCode.trim();
+    const address = this.patientProfileForm.address.trim();
+    const emergencyPhoneNumber = this.patientProfileForm.emergencyPhoneNumber.trim();
+
+    if (!firstName) return 'نام بیمار الزامی است';
+    if (firstName.length > 100) return 'نام بیمار نباید بیشتر از ۱۰۰ کاراکتر باشد';
+    if (!lastName) return 'نام خانوادگی بیمار الزامی است';
+    if (lastName.length > 100) return 'نام خانوادگی بیمار نباید بیشتر از ۱۰۰ کاراکتر باشد';
+    if (!/^09\d{9}$/.test(phoneNumber)) return 'شماره موبایل بیمار معتبر نیست';
+    if (phoneNumber !== expectedPhoneNumber) return 'شماره موبایل بیمار باید با شماره لید رزرو شده یکسان باشد';
+    if (!this.patientProfileForm.password) return 'رمز عبور بیمار الزامی است';
+    if (this.patientProfileForm.password.length < 8) return 'رمز عبور باید حداقل ۸ کاراکتر باشد';
+    if (this.patientProfileForm.password.length > 100) return 'رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد';
+    if (![1, 2].includes(Number(this.patientProfileForm.gender))) return 'جنسیت بیمار معتبر نیست';
+    if (!this.patientProfileForm.birthDate || new Date(`${this.patientProfileForm.birthDate}T00:00:00`).getTime() >= Date.now()) {
+      return 'تاریخ تولد بیمار معتبر نیست';
+    }
+    if (!/^\d{10}$/.test(nationalCode)) return 'کد ملی بیمار باید ۱۰ رقم باشد';
+    if (!address || address.length < 5) return 'آدرس بیمار الزامی است';
+    if (emergencyPhoneNumber && !/^09\d{9}$/.test(emergencyPhoneNumber)) return 'شماره اضطراری معتبر نیست';
+
+    return null;
+  }
+
+  private emptyPatientProfileForm(): PatientProfileForm {
+    return {
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      password: '',
+      gender: 1,
+      birthDate: '',
+      nationalCode: '',
+      address: '',
+      emergencyPhoneNumber: '',
+      insuranceName: '',
+      notes: ''
+    };
+  }
+
+  private splitReservationPatientName(value: string | null | undefined): { firstName: string; lastName: string } {
+    const parts = (value ?? '').trim().split(/\s+/).filter(Boolean);
+    return {
+      firstName: parts[0] ?? '',
+      lastName: parts.slice(1).join(' ')
+    };
+  }
+
+  private createYesterday(): Date {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return this.startOfDay(date);
+  }
+
+  private createRelativeYearDate(yearOffset: number): Date {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + yearOffset);
+    return this.startOfDay(date);
+  }
+
+  private startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private toDateInputValue(date: Date): string {
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
 
   private resolveProfileId(data: unknown): number | null {
