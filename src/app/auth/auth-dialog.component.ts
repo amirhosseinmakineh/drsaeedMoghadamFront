@@ -82,7 +82,7 @@ import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
     input,select{width:100%;border:1px solid color-mix(in srgb,var(--line,#dbe6ee) 94%,transparent);border-radius:17px;padding:13px 14px;background:var(--surface,#fff);color:var(--text,#14222e);font:inherit}
     .primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--brand,#a8793f),var(--brand-2,#d7b16d));color:#1b1712;font:inherit;font-weight:950;cursor:pointer;box-shadow:0 16px 36px color-mix(in srgb,var(--brand,#a8793f) 24%,transparent)}
     .primary:disabled{cursor:not-allowed;opacity:.72}.full{width:100%}
-    .feedback{margin:0;padding:10px 12px;border-radius:16px;font-weight:900;line-height:1.7}.feedback.error{background:color-mix(in srgb,var(--danger,#ef4444) 14%,transparent);color:#fecaca}.feedback.success{background:color-mix(in srgb,#22c55e 16%,transparent);color:#bbf7d0}
+    .feedback{margin:0;padding:10px 12px;border-radius:16px;font-weight:900;line-height:1.7}.feedback.error{background:color-mix(in srgb,var(--danger,#ef4444) 12%,var(--surface,#fff));color:#991b1b}.feedback.success{background:color-mix(in srgb,#22c55e 16%,var(--surface,#fff));color:#166534}
     @media (max-width:560px){.two-col{grid-template-columns:1fr}}
   `]
 })
@@ -191,8 +191,8 @@ export class AuthDialogComponent {
       lastName: this.form.lastName.trim(),
       phoneNumber: this.form.phone.trim(),
       passwordHash: this.form.password,
-      isCompleteProfile: false,
-      avatarImageName: null,
+      isCompleteProfile: true,
+      avatarImageName: 'default-register-avatar.png',
       gender: Number(this.form.gender),
       roleName: 'Patient'
     };
