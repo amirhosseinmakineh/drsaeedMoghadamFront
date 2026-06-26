@@ -140,7 +140,17 @@ export interface CreateReservationRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
   reservationAt: string;
+  patientCity: string;
+  attendanceProbabilityPercent: number;
+  attendancePrediction: string;
   description: string | null;
+}
+
+export interface ConfirmAttendanceRequest {
+  reservationId: number;
+  consultantProfileId: number;
+  patientAttended: boolean;
+  note: string | null;
 }
 
 export interface ConsultantReservation {
@@ -162,6 +172,20 @@ export interface ConsultantReservation {
   PatientName?: string;
   patientPhoneNumber?: string;
   PatientPhoneNumber?: string;
+  patientCity?: string | null;
+  PatientCity?: string | null;
+  attendanceProbabilityPercent?: number | null;
+  AttendanceProbabilityPercent?: number | null;
+  attendancePrediction?: string | null;
+  AttendancePrediction?: string | null;
+  attendanceConfirmationStatus?: number | null;
+  AttendanceConfirmationStatus?: number | null;
+  consultantAttendanceNote?: string | null;
+  ConsultantAttendanceNote?: string | null;
+  consultantClaimedPatientAttended?: boolean | null;
+  ConsultantClaimedPatientAttended?: boolean | null;
+  consultantName?: string | null;
+  ConsultantName?: string | null;
   description?: string | null;
   Description?: string | null;
   isCanceled?: boolean;
@@ -280,6 +304,22 @@ export class ConsultantDashboardService {
     return this.http.post<ApiCommandResponse<ConsultantReservation>>(`${this.apiBaseUrl}/Reservation`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('ثبت رزرو انجام نشد'));
+  }
+
+  getDueConfirmations(consultantProfileId: number): Observable<ConsultantReservation[]> {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/Reservation/DueConfirmations`, {
+      headers: this.authHeaders(),
+      params: this.toParams({ consultantProfileId })
+    }).pipe(
+      map(response => this.readItems<ConsultantReservation>(this.unwrapResponseData(response))),
+      catchError(error => throwError(() => this.toUserFacingError(error, 'دریافت تایید حضورهای لازم انجام نشد')))
+    );
+  }
+
+  confirmAttendance(payload: ConfirmAttendanceRequest): Observable<ApiCommandResponse<ConsultantReservation>> {
+    return this.http.post<ApiCommandResponse<ConsultantReservation>>(`${this.apiBaseUrl}/Reservation/ConfirmAttendance`, payload, {
+      headers: this.authHeaders()
+    }).pipe(this.ensureCommandSucceeded('ثبت تایید حضور انجام نشد'));
   }
 
   completePatientProfile(payload: CompletePatientProfileRequest): Observable<ApiCommandResponse<CompletePatientProfileResponse>> {

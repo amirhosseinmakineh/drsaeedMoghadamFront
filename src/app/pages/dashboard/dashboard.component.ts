@@ -15,12 +15,13 @@ import {
 import { AuthService } from '../../core/auth/auth.service';
 import { AdminAttendanceTableComponent } from '../admin-dashboard/admin-attendance-table.component';
 import { AdminLeadsTableComponent } from '../admin-dashboard/admin-leads-table.component';
+import { SecretaryReservationAttendanceReviewsComponent } from '../admin-dashboard/secretary-reservation-attendance-reviews.component';
 import { BaseDialogComponent } from '../../shared/base/base-dialog/base-dialog.component';
 import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-datepicker.component';
 import { TableActionClick, TableColumn, TableComponent } from '../../shared/base/table/table.component';
 import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
-type DashboardSection = 'overview' | 'users' | 'consultants' | 'leads';
+type DashboardSection = 'overview' | 'users' | 'consultants' | 'leads' | 'attendanceReviews';
 type UserDialogMode = 'add' | 'edit';
 
 interface DashboardLink {
@@ -62,6 +63,7 @@ interface ScoreFormModel {
     TableComponent,
     AdminLeadsTableComponent,
     AdminAttendanceTableComponent,
+    SecretaryReservationAttendanceReviewsComponent,
     FaIconComponent
   ],
   template: `
@@ -133,6 +135,11 @@ interface ScoreFormModel {
                   <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                   <strong>مدیریت لیدهای سیستم</strong>
                   <small>لیست کامل لیدها همراه فیلتر وضعیت و نوع</small>
+                </button>
+                <button type="button" (click)="setSection('attendanceReviews')">
+                  <span><app-fa-icon name="calendar"></app-fa-icon></span>
+                  <strong>بررسی تایید حضور</strong>
+                  <small>تایید یا رد ادعای مشاور و اعمال امتیاز خودکار</small>
                 </button>
               </section>
             }
@@ -260,6 +267,10 @@ interface ScoreFormModel {
                 title="مدیریت کامل لیدهای سیستم"
                 description="مشاهده همه لیدهای سیستم همراه فیلتر وضعیت و نوع تخصیص"
               ></app-admin-leads-table>
+            }
+
+            @if (activeSection === 'attendanceReviews') {
+              <app-secretary-reservation-attendance-reviews></app-secretary-reservation-attendance-reviews>
             }
           </section>
         } @else {
@@ -410,7 +421,7 @@ interface ScoreFormModel {
     .dashboard-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.dashboard-content article{padding:22px;border-radius:30px}.dashboard-content article span{display:grid;place-items:center;width:48px;height:48px;border-radius:18px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand)}.dashboard-content article h3{margin:16px 0 6px}.dashboard-content article strong{display:block;color:var(--text);font-size:1.1rem}.dashboard-content article p{margin:10px 0 0}
     .admin-shell{display:grid;gap:18px}.admin-hero h2{font-size:clamp(1.65rem,4vw,2.45rem)}
     .feedback{margin:0;padding:12px 14px;border-radius:20px;font-weight:950}.feedback.success{background:color-mix(in srgb,#22c55e 16%,transparent);color:#bbf7d0}.feedback.error{background:color-mix(in srgb,var(--danger) 15%,transparent);color:#fecaca}
-    .admin-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.admin-overview button{display:grid;gap:12px;text-align:start;border:1px solid var(--line);border-radius:30px;padding:22px;background:color-mix(in srgb,var(--surface) 86%,transparent);color:var(--text);box-shadow:0 18px 54px rgba(0,0,0,.18)}.admin-overview span{display:grid;place-items:center;width:52px;height:52px;border-radius:20px;background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand);font-size:1.25rem}.admin-overview strong{font-size:1.1rem}.admin-overview small{color:var(--muted);font-weight:900;line-height:1.8}
+    .admin-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.admin-overview button{display:grid;gap:12px;text-align:start;border:1px solid var(--line);border-radius:30px;padding:22px;background:color-mix(in srgb,var(--surface) 86%,transparent);color:var(--text);box-shadow:0 18px 54px rgba(0,0,0,.18)}.admin-overview span{display:grid;place-items:center;width:52px;height:52px;border-radius:20px;background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand);font-size:1.25rem}.admin-overview strong{font-size:1.1rem}.admin-overview small{color:var(--muted);font-weight:900;line-height:1.8}
     .admin-panel{display:grid;gap:16px;padding:18px;border:1px solid var(--line);border-radius:30px;background:color-mix(in srgb,var(--surface) 88%,transparent);box-shadow:var(--shadow)}
     .panel-heading{display:flex;justify-content:space-between;gap:12px}.panel-heading span{display:inline-flex;margin-bottom:8px;padding:5px 12px;border-radius:999px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);font-weight:950}.panel-heading h2{margin:0;font-size:1.35rem}.panel-heading p{margin:8px 0 0;color:var(--muted)}
     .filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}.users-filter{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -418,7 +429,7 @@ interface ScoreFormModel {
     .dialog-form{display:grid;gap:14px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}.switch-row{display:grid;gap:8px}.switch-row label{display:flex;align-items:center;gap:8px}.switch-row input{width:auto}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}.ghost-action,.solid-action{border:0;border-radius:999px;padding:12px 18px;font:inherit;font-weight:950}.ghost-action{background:var(--surface-muted);color:var(--text)}.solid-action{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712}.solid-action:disabled{opacity:.6;cursor:not-allowed}.delete-copy{margin:0;color:var(--muted)}
     @media (max-width: 980px){.dashboard-layout{grid-template-columns:1fr;width:min(100% - 24px,760px);padding-top:14px}.dashboard-sidebar{position:relative;top:0;min-height:0}.dashboard-grid,.admin-overview{grid-template-columns:1fr}.filter-grid,.users-filter{grid-template-columns:1fr 1fr}}
     @media (max-width: 760px){
-      .dashboard-layout.admin-mode{width:100%;padding:0 10px 96px}.dashboard-layout.admin-mode .dashboard-sidebar{position:fixed;z-index:80;inset-inline:10px;bottom:10px;top:auto;min-height:0;padding:8px;border-radius:28px}.admin-mode .dashboard-brand,.admin-mode .dashboard-user-card,.admin-mode .logout-btn{display:none}.admin-mode .dashboard-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.admin-mode .dashboard-nav button{display:grid;place-items:center;gap:3px;min-height:58px;padding:7px;border-radius:20px;text-align:center;font-size:.72rem}.admin-mode .dashboard-nav app-fa-icon{font-size:1.1rem;color:var(--brand)}
+      .dashboard-layout.admin-mode{width:100%;padding:0 10px 96px}.dashboard-layout.admin-mode .dashboard-sidebar{position:fixed;z-index:80;inset-inline:10px;bottom:10px;top:auto;min-height:0;padding:8px;border-radius:28px}.admin-mode .dashboard-brand,.admin-mode .dashboard-user-card,.admin-mode .logout-btn{display:none}.admin-mode .dashboard-nav{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.admin-mode .dashboard-nav button{display:grid;place-items:center;gap:3px;min-height:58px;padding:7px;border-radius:20px;text-align:center;font-size:.72rem}.admin-mode .dashboard-nav app-fa-icon{font-size:1.1rem;color:var(--brand)}
       .dashboard-content{padding-top:10px}.dashboard-hero,.admin-panel{border-radius:24px}.admin-panel{padding:14px}.filter-grid,.users-filter,.two-col{grid-template-columns:1fr}.dialog-actions{display:grid;grid-template-columns:1fr 1fr}.panel-heading{display:grid}
     }
   `]
@@ -431,7 +442,8 @@ export class DashboardComponent implements OnInit {
     { id: 'overview', label: 'نمای کلی', icon: 'dashboard' },
     { id: 'users', label: 'کاربران', icon: 'users' },
     { id: 'consultants', label: 'مشاوران', icon: 'doctor' },
-    { id: 'leads', label: 'لیدها', icon: 'clipboard' }
+    { id: 'leads', label: 'لیدها', icon: 'clipboard' },
+    { id: 'attendanceReviews', label: 'تایید حضور', icon: 'calendar' }
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: 'overview', label: 'نمای کلی', icon: 'dashboard' }
