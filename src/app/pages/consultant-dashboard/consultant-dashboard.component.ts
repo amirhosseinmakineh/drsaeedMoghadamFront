@@ -3,7 +3,8 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed } from '@angu
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize, switchMap, tap } from 'rxjs';
-import { AuthService, RegisterRequest } from '../../core/auth/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { AdminDashboardService, SaveUserRequest } from '../../core/admin/admin-dashboard.service';
 import {
   ConsultantDashboardService,
   ConsultantDashboardStatus,
@@ -56,11 +57,8 @@ interface PatientProfileForm {
   password: string;
   gender: number;
   birthDate: string;
-  nationalCode: string;
-  address: string;
-  emergencyPhoneNumber: string;
-  insuranceName: string;
-  notes: string;
+  isCompleteProfile: boolean;
+  avatarImageName: string | null;
 }
 
 interface ConsultantStatusUpdate {
@@ -570,35 +568,14 @@ interface ConsultantDashboardLink {
             </div>
           </section>
 
-          <section class="form-section">
-            <h3>اطلاعات پرونده</h3>
-            <div class="two-col">
-              <label>
-                کد ملی
-                <input [(ngModel)]="patientProfileForm.nationalCode" name="patientNationalCode" inputmode="numeric" maxlength="10" placeholder="0012345678" />
-              </label>
-              <label>
-                شماره اضطراری
-                <input [(ngModel)]="patientProfileForm.emergencyPhoneNumber" name="patientEmergencyPhoneNumber" inputmode="tel" placeholder="09120000000" />
-              </label>
-            </div>
+          <label>
+            نام فایل آواتار
+            <input [(ngModel)]="patientProfileForm.avatarImageName" name="patientAvatar" placeholder="اختیاری" />
+          </label>
 
-            <label>
-              آدرس
-              <textarea [(ngModel)]="patientProfileForm.address" name="patientAddress" rows="3" placeholder="آدرس کامل بیمار"></textarea>
-            </label>
-
-            <div class="two-col">
-              <label>
-                بیمه
-                <input [(ngModel)]="patientProfileForm.insuranceName" name="patientInsuranceName" maxlength="100" />
-              </label>
-              <label>
-                توضیحات پرونده
-                <textarea [(ngModel)]="patientProfileForm.notes" name="patientNotes" rows="3"></textarea>
-              </label>
-            </div>
-          </section>
+          <div class="switch-row">
+            <label><input [(ngModel)]="patientProfileForm.isCompleteProfile" name="patientComplete" type="checkbox" /> پروفایل کامل است</label>
+          </div>
 
           <div class="dialog-actions">
             @if (!patientProfileRequired) {
@@ -752,6 +729,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private router: Router,
     private consultantApi: ConsultantDashboardService,
+    private adminApi: AdminDashboardService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -1119,7 +1097,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.patientProfileSaving = true;
     this.clearFeedback();
 
-    this.auth.register(payload)
+    this.adminApi.addUser(payload)
       .pipe(finalize(() => {
         this.patientProfileSaving = false;
         this.markViewDirty();
@@ -1681,10 +1659,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ? this.reservationPatientPhone(this.selectedPatientProfileReservation).trim()
       : phoneNumber;
     const expectedPhoneNumber = expectedPhoneNumberValue && expectedPhoneNumberValue !== '-' ? expectedPhoneNumberValue : phoneNumber;
-    const nationalCode = this.patientProfileForm.nationalCode.trim();
-    const address = this.patientProfileForm.address.trim();
-    const emergencyPhoneNumber = this.patientProfileForm.emergencyPhoneNumber.trim();
-
     if (!firstName) return 'نام بیمار الزامی است';
     if (firstName.length > 100) return 'نام بیمار نباید بیشتر از ۱۰۰ کاراکتر باشد';
     if (!lastName) return 'نام خانوادگی بیمار الزامی است';
@@ -1698,32 +1672,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!this.patientProfileForm.birthDate || new Date(`${this.patientProfileForm.birthDate}T00:00:00`).getTime() >= Date.now()) {
       return 'تاریخ تولد بیمار معتبر نیست';
     }
-    if (!/^\d{10}$/.test(nationalCode)) return 'کد ملی بیمار باید ۱۰ رقم باشد';
-    if (!address || address.length < 5) return 'آدرس بیمار الزامی است';
-    if (emergencyPhoneNumber && !/^09\d{9}$/.test(emergencyPhoneNumber)) return 'شماره اضطراری معتبر نیست';
-
     return null;
   }
 
-  private buildPatientRegisterRequest(): RegisterRequest {
-    const reservationId = this.selectedPatientProfileReservation ? this.reservationId(this.selectedPatientProfileReservation) : null;
-
+  private buildPatientRegisterRequest(): SaveUserRequest {
     return {
       firstName: this.patientProfileForm.firstName.trim(),
       lastName: this.patientProfileForm.lastName.trim(),
       phoneNumber: this.patientProfileForm.phoneNumber.trim(),
       passwordHash: this.patientProfileForm.password,
-      isCompleteProfile: false,
-      avatarImageName: null,
+      isCompleteProfile: Boolean(this.patientProfileForm.isCompleteProfile),
+      avatarImageName: this.patientProfileForm.avatarImageName?.trim() || null,
       gender: Number(this.patientProfileForm.gender),
       birthDate: `${this.patientProfileForm.birthDate}T00:00:00`,
-      roleName: 'Patient',
-      ...(reservationId ? { reservationId } : {}),
-      nationalCode: this.patientProfileForm.nationalCode.trim(),
-      address: this.patientProfileForm.address.trim(),
-      emergencyPhoneNumber: this.patientProfileForm.emergencyPhoneNumber.trim() || null,
-      insuranceName: this.patientProfileForm.insuranceName.trim() || null,
-      notes: this.patientProfileForm.notes.trim() || null
+      roleName: 'Patient'
     };
   }
 
@@ -1735,11 +1697,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       password: '',
       gender: 1,
       birthDate: '',
-      nationalCode: '',
-      address: '',
-      emergencyPhoneNumber: '',
-      insuranceName: '',
-      notes: ''
+      isCompleteProfile: false,
+      avatarImageName: null
     };
   }
 
