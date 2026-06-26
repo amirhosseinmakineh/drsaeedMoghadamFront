@@ -38,6 +38,19 @@ export interface OnlineRequest {
   isOffline: boolean;
 }
 
+export interface ConsultantDashboardStatus {
+  profileId: number;
+  isAvailable: boolean;
+  isOnline: boolean;
+  lastOnlineAt: string | null;
+  lastOfflineAt: string | null;
+  pendingOfflineLeadCount: number;
+  currentScore: number;
+  canGoOnline: boolean;
+  onlineStatusBlockReason: string | null;
+  raw?: unknown;
+}
+
 export interface ConsultantLead {
   id?: number;
   Id?: number;
@@ -234,6 +247,16 @@ export class ConsultantDashboardService {
     }).pipe(this.ensureCommandSucceeded('تغییر وضعیت آنلاین انجام نشد'));
   }
 
+  getDashboardStatus(profileId: number): Observable<ConsultantDashboardStatus> {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/Consultant/GetDashboardStatus`, {
+      headers: this.authHeaders(),
+      params: this.toParams({ profileId })
+    }).pipe(
+      map(response => this.normalizeDashboardStatus(response)),
+      catchError(error => throwError(() => this.toUserFacingError(error, 'دریافت وضعیت داشبورد انجام نشد')))
+    );
+  }
+
   getLeads(filters: LeadFilters): Observable<PaginatedResponse<ConsultantLead>> {
     return this.http.get<unknown>(`${this.apiBaseUrl}/Consultant/GetLeads`, {
       headers: this.authHeaders(),
@@ -293,6 +316,23 @@ export class ConsultantDashboardService {
       map(response => this.normalizeCommandResponse(response, fallback)),
       catchError(error => throwError(() => this.toUserFacingError(error, fallback)))
     );
+  }
+
+  private normalizeDashboardStatus(response: unknown): ConsultantDashboardStatus {
+    const source = this.unwrapResponseData(response);
+
+    return {
+      profileId: this.readNumber(source, 'profileId', 'consultantProfileId') ?? 0,
+      isAvailable: this.readBoolean(source, 'isAvailable', 'available', 'consultantIsAvailable') ?? false,
+      isOnline: this.readBoolean(source, 'isOnline', 'online', 'consultantIsOnline', 'isConsultantOnline') ?? false,
+      lastOnlineAt: this.readString(source, 'lastOnlineAt') ?? null,
+      lastOfflineAt: this.readString(source, 'lastOfflineAt') ?? null,
+      pendingOfflineLeadCount: this.readNumber(source, 'pendingOfflineLeadCount', 'pendingOfflineCount') ?? 0,
+      currentScore: this.readNumber(source, 'currentScore', 'score') ?? 0,
+      canGoOnline: this.readBoolean(source, 'canGoOnline') ?? false,
+      onlineStatusBlockReason: this.readString(source, 'onlineStatusBlockReason', 'blockReason') ?? null,
+      raw: response
+    };
   }
 
   private normalizePaginatedResponse<T>(response: unknown, filters: { pageNumber: number; pageSize: number }): PaginatedResponse<T> {
