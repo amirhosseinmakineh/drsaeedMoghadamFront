@@ -116,7 +116,6 @@ export interface AuthDialogModel {
   phone: string;
   password: string;
   gender: number;
-  birthDate: string;
 }
 
 export interface DatePickerDay {

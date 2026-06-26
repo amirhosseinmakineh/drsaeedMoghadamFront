@@ -26,7 +26,7 @@ export interface RegisterRequest {
   isCompleteProfile: boolean;
   avatarImageName: string | null;
   gender: number;
-  birthDate: string;
+  birthDate?: string;
 }
 
 interface ApiResponse<T> {
