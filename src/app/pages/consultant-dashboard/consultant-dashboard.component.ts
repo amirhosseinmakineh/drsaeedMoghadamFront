@@ -6,6 +6,7 @@ import { Subscription, finalize, switchMap, tap } from 'rxjs';
 import { AuthService, RegisterRequest } from '../../core/auth/auth.service';
 import {
   ConsultantDashboardService,
+  ConsultantDashboardStatus,
   ConsultantLead,
   ConsultantReservation,
   CreateReservationRequest,
@@ -671,6 +672,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   availabilitySaving = false;
   onlineSaving = false;
   pendingOfflineCount = 0;
+  currentScore = 0;
+  canGoOnlineFromStatus = false;
+  dashboardStatusLoaded = false;
+  onlineStatusBlockReason: string | null = null;
 
   leads: ConsultantLead[] = [];
   leadsLoading = false;
@@ -730,6 +735,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private pendingOfflineLoadSubscription: Subscription | null = null;
   private leadLoadSubscription: Subscription | null = null;
   private reservationLoadSubscription: Subscription | null = null;
+  private dashboardStatusSubscription: Subscription | null = null;
   private destroyed = false;
 
   constructor(
@@ -765,6 +771,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.pendingOfflineLoadSubscription?.unsubscribe();
     this.leadLoadSubscription?.unsubscribe();
     this.reservationLoadSubscription?.unsubscribe();
+    this.dashboardStatusSubscription?.unsubscribe();
   }
 
   currentProfileId(): number | null {
@@ -780,7 +787,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   canGoOnline(): boolean {
-    return this.isAvailable && this.pendingOfflineCount === 0;
+    return this.dashboardStatusLoaded
+      ? this.canGoOnlineFromStatus
+      : this.isAvailable && this.pendingOfflineCount === 0;
   }
 
   setSection(section: ConsultantDashboardSection): void {
@@ -870,9 +879,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId) return;
 
     if (isOnline && !this.canGoOnline()) {
-      const message = this.pendingOfflineCount > 0
-        ? 'ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید'
-        : 'ابتدا حضور خود را ثبت کنید';
+      const message = this.onlineStatusBlockReason
+        || (this.pendingOfflineCount > 0
+          ? 'ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید'
+          : 'ابتدا حضور خود را ثبت کنید');
       this.showFeedback(message, 'error');
       return;
     }
@@ -903,9 +913,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   refreshDashboard(): void {
     if (!this.isProfileReady()) return;
-    this.loadPendingOfflineLeads();
-    this.loadLeads();
-    this.loadReservations();
+    this.loadDashboardStatus(() => {
+      this.loadPendingOfflineLeads();
+      this.loadLeads();
+      this.loadReservations();
+    });
   }
 
   applyLeadFilters(): void {
@@ -1283,6 +1295,37 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   logout(): void {
     this.auth.logout();
     this.router.navigateByUrl('/');
+  }
+
+  private loadDashboardStatus(afterLoad?: () => void): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    this.dashboardStatusSubscription?.unsubscribe();
+    this.dashboardStatusSubscription = this.consultantApi.getDashboardStatus(profileId)
+      .pipe(finalize(() => this.markViewDirty()))
+      .subscribe({
+        next: status => {
+          this.applyDashboardStatus(status);
+          afterLoad?.();
+        },
+        error: error => {
+          this.showFeedback(this.errorMessage(error, 'دریافت وضعیت داشبورد انجام نشد'), 'error');
+          afterLoad?.();
+        }
+      });
+  }
+
+  private applyDashboardStatus(status: ConsultantDashboardStatus): void {
+    this.profileId = status.profileId || this.profileId;
+    this.isAvailable = status.isAvailable;
+    this.isOnline = status.isOnline;
+    this.pendingOfflineCount = status.pendingOfflineLeadCount;
+    this.currentScore = status.currentScore;
+    this.canGoOnlineFromStatus = status.canGoOnline;
+    this.dashboardStatusLoaded = true;
+    this.onlineStatusBlockReason = status.onlineStatusBlockReason;
+    this.applyConsultantStatusFrom(status.raw);
   }
 
   private loadPendingOfflineLeads(): void {
