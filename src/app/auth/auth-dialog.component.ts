@@ -5,13 +5,12 @@ import { finalize } from 'rxjs';
 import { AuthService, RegisterRequest } from '../core/auth/auth.service';
 import { AuthDialogMode, AuthDialogModel, LanguageCode, text } from '../models/clinic.model';
 import { BaseDialogComponent } from '../shared/base/base-dialog/base-dialog.component';
-import { BaseDatepickerComponent } from '../shared/base/base-datepicker/base-datepicker.component';
 import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
 
 @Component({
   selector: 'app-auth-dialog',
   standalone: true,
-  imports: [FormsModule, BaseDialogComponent, BaseDatepickerComponent, FaIconComponent],
+  imports: [FormsModule, BaseDialogComponent, FaIconComponent],
   template: `
     <app-base-dialog
       [open]="open"
@@ -65,17 +64,6 @@ import { FaIconComponent } from '../shared/ui/fa-icon/fa-icon.component';
                 <option [ngValue]="2">{{ copy.female[language] }}</option>
               </select>
             </label>
-            <label>
-              {{ copy.birthDate[language] }}
-              <app-base-datepicker
-                [language]="language"
-                [label]="copy.birthDate"
-                [selectedDate]="selectedBirthDate"
-                [minDate]="birthDateMinDate"
-                [maxDate]="birthDateMaxDate"
-                (dateChange)="setBirthDate($event)"
-              ></app-base-datepicker>
-            </label>
           </div>
         }
 
@@ -111,12 +99,8 @@ export class AuthDialogComponent {
     lastName: '',
     phone: '',
     password: '',
-    gender: 1,
-    birthDate: ''
+    gender: 1
   };
-  selectedBirthDate?: Date;
-  readonly birthDateMinDate = this.createRelativeYearDate(-120);
-  readonly birthDateMaxDate = this.createYesterday();
 
   copy = {
     title: text('ورود و عضویت', 'Sign in and membership'),
@@ -130,7 +114,6 @@ export class AuthDialogComponent {
     gender: text('جنسیت', 'Gender'),
     male: text('مرد', 'Male'),
     female: text('زن', 'Female'),
-    birthDate: text('تاریخ تولد', 'Birth date'),
     loginAction: text('ورود به حساب', 'Sign in'),
     registerAction: text('ساخت حساب', 'Create account'),
     loading: text('در حال ارسال...', 'Sending...'),
@@ -142,11 +125,6 @@ export class AuthDialogComponent {
   switchMode(mode: AuthDialogMode): void {
     this.mode.set(mode);
     this.feedback.set(null);
-  }
-
-  setBirthDate(date: Date): void {
-    this.selectedBirthDate = date;
-    this.form.birthDate = this.toDateInputValue(date);
   }
 
   submit(): void {
@@ -203,9 +181,6 @@ export class AuthDialogComponent {
     if (!this.form.lastName.trim()) return this.language === 'fa' ? 'نام خانوادگی الزامی است' : 'Last name is required';
     if (this.form.lastName.trim().length > 100) return this.language === 'fa' ? 'نام خانوادگی نباید بیشتر از ۱۰۰ کاراکتر باشد' : 'Last name must be at most 100 characters';
     if (![1, 2].includes(Number(this.form.gender))) return this.language === 'fa' ? 'جنسیت معتبر نیست' : 'Gender is invalid';
-    if (!this.form.birthDate || new Date(`${this.form.birthDate}T00:00:00`).getTime() >= Date.now()) {
-      return this.language === 'fa' ? 'تاریخ تولد معتبر نیست' : 'Birth date is invalid';
-    }
 
     return null;
   }
@@ -218,8 +193,7 @@ export class AuthDialogComponent {
       passwordHash: this.form.password,
       isCompleteProfile: false,
       avatarImageName: null,
-      gender: Number(this.form.gender),
-      birthDate: `${this.form.birthDate}T00:00:00`
+      gender: Number(this.form.gender)
     };
   }
 
@@ -229,34 +203,9 @@ export class AuthDialogComponent {
       lastName: '',
       phone: '',
       password: '',
-      gender: 1,
-      birthDate: ''
+      gender: 1
     };
-    this.selectedBirthDate = undefined;
     this.feedback.set(null);
-  }
-
-  private createYesterday(): Date {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    return this.startOfDay(date);
-  }
-
-  private createRelativeYearDate(yearOffset: number): Date {
-    const date = new Date();
-    date.setFullYear(date.getFullYear() + yearOffset);
-    return this.startOfDay(date);
-  }
-
-  private startOfDay(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  private toDateInputValue(date: Date): string {
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, '0');
-    const day = `${date.getDate()}`.padStart(2, '0');
-    return `${year}-${month}-${day}`;
   }
 
   private errorMessage(error: unknown, fallback: string): string {
