@@ -27,6 +27,7 @@ export interface RegisterRequest {
   avatarImageName: string | null;
   gender: number;
   birthDate?: string;
+  roleName?: string;
 }
 
 interface ApiResponse<T> {

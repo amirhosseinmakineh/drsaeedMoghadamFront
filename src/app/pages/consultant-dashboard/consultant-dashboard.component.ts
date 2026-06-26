@@ -3,7 +3,8 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed } from '@angu
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize, switchMap, tap } from 'rxjs';
-import { AuthService, RegisterRequest } from '../../core/auth/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { AdminDashboardService, SaveUserRequest } from '../../core/admin/admin-dashboard.service';
 import {
   ConsultantDashboardService,
   ConsultantDashboardStatus,
@@ -56,11 +57,8 @@ interface PatientProfileForm {
   password: string;
   gender: number;
   birthDate: string;
-  nationalCode: string;
-  address: string;
-  emergencyPhoneNumber: string;
-  insuranceName: string;
-  notes: string;
+  isCompleteProfile: boolean;
+  avatarImageName: string | null;
 }
 
 interface ConsultantStatusUpdate {
@@ -468,6 +466,7 @@ interface ConsultantDashboardLink {
         [showFooter]="false"
         [title]="selectedReservationLead ? 'رزرو برای ' + leadName(selectedReservationLead) : 'ثبت رزرو'"
         subtitle="برای تماس‌های موفق، ثبت رزرو مرحله بعدی اجباری است."
+        [closable]="!reservationRequired && !reservationSaving"
         (closed)="closeReservationDialog()"
       >
         <form class="dialog-form" (ngSubmit)="submitReservation()">
@@ -490,7 +489,11 @@ interface ConsultantDashboardLink {
             <textarea [(ngModel)]="reservationForm.description" name="reservationDescription" rows="3"></textarea>
           </label>
           <div class="dialog-actions">
-            <button class="secondary-action" type="button" (click)="closeReservationDialog()">بعداً</button>
+            @if (!reservationRequired) {
+              <button class="secondary-action" type="button" (click)="closeReservationDialog()">بعداً</button>
+            } @else {
+              <p class="required-step-note">ثبت رزرو بعد از تماس موفق الزامی است و این پنجره تا ثبت رزرو بسته نمی‌شود.</p>
+            }
             <button class="primary-action" type="submit" [disabled]="reservationSaving">{{ reservationSaving ? 'در حال ثبت...' : 'ثبت رزرو' }}</button>
           </div>
         </form>
@@ -502,6 +505,7 @@ interface ConsultantDashboardLink {
         size="wide"
         title="تشکیل پرونده بیمار"
         subtitle="برای تکمیل رزرو، اطلاعات ثبت‌نام و پرونده بیمار را وارد کنید."
+        [closable]="!patientProfileRequired && !patientProfileSaving"
         (closed)="closePatientProfileDialog()"
       >
         <form class="dialog-form patient-profile-form" (ngSubmit)="submitPatientProfile()">
@@ -564,38 +568,21 @@ interface ConsultantDashboardLink {
             </div>
           </section>
 
-          <section class="form-section">
-            <h3>اطلاعات پرونده</h3>
-            <div class="two-col">
-              <label>
-                کد ملی
-                <input [(ngModel)]="patientProfileForm.nationalCode" name="patientNationalCode" inputmode="numeric" maxlength="10" placeholder="0012345678" />
-              </label>
-              <label>
-                شماره اضطراری
-                <input [(ngModel)]="patientProfileForm.emergencyPhoneNumber" name="patientEmergencyPhoneNumber" inputmode="tel" placeholder="09120000000" />
-              </label>
-            </div>
+          <label>
+            نام فایل آواتار
+            <input [(ngModel)]="patientProfileForm.avatarImageName" name="patientAvatar" placeholder="اختیاری" />
+          </label>
 
-            <label>
-              آدرس
-              <textarea [(ngModel)]="patientProfileForm.address" name="patientAddress" rows="3" placeholder="آدرس کامل بیمار"></textarea>
-            </label>
-
-            <div class="two-col">
-              <label>
-                بیمه
-                <input [(ngModel)]="patientProfileForm.insuranceName" name="patientInsuranceName" maxlength="100" />
-              </label>
-              <label>
-                توضیحات پرونده
-                <textarea [(ngModel)]="patientProfileForm.notes" name="patientNotes" rows="3"></textarea>
-              </label>
-            </div>
-          </section>
+          <div class="switch-row">
+            <label><input [(ngModel)]="patientProfileForm.isCompleteProfile" name="patientComplete" type="checkbox" /> پروفایل کامل است</label>
+          </div>
 
           <div class="dialog-actions">
-            <button class="secondary-action" type="button" (click)="closePatientProfileDialog()">بعداً</button>
+            @if (!patientProfileRequired) {
+              <button class="secondary-action" type="button" (click)="closePatientProfileDialog()">بعداً</button>
+            } @else {
+              <p class="required-step-note">تشکیل پرونده بیمار برای تکمیل رزرو الزامی است و این پنجره تا ثبت بیمار بسته نمی‌شود.</p>
+            }
             <button class="primary-action" type="submit" [disabled]="patientProfileSaving">
               {{ patientProfileSaving ? 'در حال ثبت...' : 'ثبت پرونده' }}
             </button>
@@ -621,7 +608,7 @@ interface ConsultantDashboardLink {
     .consultant-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.consultant-overview button{display:grid;gap:12px;text-align:start;border:1px solid var(--line);border-radius:30px;padding:22px;background:color-mix(in srgb,var(--surface) 86%,transparent);color:var(--text);box-shadow:0 18px 54px rgba(0,0,0,.18)}.consultant-overview span{display:grid;place-items:center;width:52px;height:52px;border-radius:20px;background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand);font-size:1.25rem}.consultant-overview strong{font-size:1.1rem}.consultant-overview small{color:var(--muted);font-weight:900;line-height:1.8}
     .profile-lock-card,.status-card,.lead-panel,.reservation-panel,.consultant-panel{display:grid;gap:16px;padding:18px;border-radius:30px}.lock-icon{display:grid;place-items:center;width:58px;height:58px;border-radius:22px;background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand);font-size:1.35rem}.profile-lock-card h2,.panel-heading h2,.locked-panel h2{margin:0;font-size:1.35rem}.profile-lock-card p,.panel-heading p,.locked-panel p{margin:0;color:var(--muted)}
     .locked-panel{grid-template-columns:auto minmax(0,1fr) auto;align-items:center}
-    .profile-form,.dialog-form{display:grid;gap:14px}.patient-profile-form{gap:16px}.form-section{display:grid;gap:12px;padding:14px;border:1px solid var(--line);border-radius:22px;background:color-mix(in srgb,var(--surface-muted) 44%,transparent)}.form-section h3{margin:0;color:var(--text);font-size:1rem}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:grid;gap:8px;color:var(--muted);font-weight:950}.field-note{color:var(--muted);font-weight:800;line-height:1.7}input[readonly]{opacity:.78;background:color-mix(in srgb,var(--surface-muted) 72%,transparent)}.primary-action,.secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;border-radius:18px;padding:12px 16px;font:inherit;font-weight:950}.primary-action{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712}.secondary-action{border:1px solid var(--line);background:var(--surface-muted);color:var(--text)}.secondary-action.danger{background:color-mix(in srgb,var(--danger) 15%,var(--surface-muted));color:#fecaca}.primary-action:disabled,.secondary-action:disabled{cursor:not-allowed;opacity:.55}.full{width:100%}.compact{min-height:40px;border-radius:999px;padding:9px 13px;font-size:.86rem}
+    .profile-form,.dialog-form{display:grid;gap:14px}.patient-profile-form{gap:16px}.form-section{display:grid;gap:12px;padding:14px;border:1px solid var(--line);border-radius:22px;background:color-mix(in srgb,var(--surface-muted) 44%,transparent)}.form-section h3{margin:0;color:var(--text);font-size:1rem}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:grid;gap:8px;color:var(--muted);font-weight:950}.required-step-note{margin:0;padding:10px 12px;border-radius:16px;background:color-mix(in srgb,#f59e0b 14%,transparent);color:#fde68a;font-weight:950;line-height:1.8}.field-note{color:var(--muted);font-weight:800;line-height:1.7}input[readonly]{opacity:.78;background:color-mix(in srgb,var(--surface-muted) 72%,transparent)}.primary-action,.secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;border-radius:18px;padding:12px 16px;font:inherit;font-weight:950}.primary-action{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712}.secondary-action{border:1px solid var(--line);background:var(--surface-muted);color:var(--text)}.secondary-action.danger{background:color-mix(in srgb,var(--danger) 15%,var(--surface-muted));color:#fecaca}.primary-action:disabled,.secondary-action:disabled{cursor:not-allowed;opacity:.55}.full{width:100%}.compact{min-height:40px;border-radius:999px;padding:9px 13px;font-size:.86rem}
     .status-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.status-summary div{padding:14px;border:1px solid var(--line);border-radius:22px;background:color-mix(in srgb,var(--surface-muted) 70%,transparent)}.status-summary span{display:block;color:var(--muted);font-size:.82rem;font-weight:900}.status-summary strong{display:block;color:var(--text);font-size:1.05rem}.status-summary .good{color:#bbf7d0}.status-summary .bad{color:#fecaca}
     .action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.queue-warning{margin:0;padding:12px 14px;border-radius:18px;background:color-mix(in srgb,#f59e0b 14%,transparent);color:#fde68a;font-weight:950}
     .panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.lead-filters{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}.loading-copy,.empty-copy{margin:0;padding:18px;border:1px dashed var(--line);border-radius:22px;color:var(--muted);text-align:center;font-weight:900}
@@ -742,6 +729,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private router: Router,
     private consultantApi: ConsultantDashboardService,
+    private adminApi: AdminDashboardService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -1109,7 +1097,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.patientProfileSaving = true;
     this.clearFeedback();
 
-    this.auth.register(payload)
+    this.adminApi.addUser(payload)
       .pipe(finalize(() => {
         this.patientProfileSaving = false;
         this.markViewDirty();
@@ -1671,10 +1659,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ? this.reservationPatientPhone(this.selectedPatientProfileReservation).trim()
       : phoneNumber;
     const expectedPhoneNumber = expectedPhoneNumberValue && expectedPhoneNumberValue !== '-' ? expectedPhoneNumberValue : phoneNumber;
-    const nationalCode = this.patientProfileForm.nationalCode.trim();
-    const address = this.patientProfileForm.address.trim();
-    const emergencyPhoneNumber = this.patientProfileForm.emergencyPhoneNumber.trim();
-
     if (!firstName) return 'نام بیمار الزامی است';
     if (firstName.length > 100) return 'نام بیمار نباید بیشتر از ۱۰۰ کاراکتر باشد';
     if (!lastName) return 'نام خانوادگی بیمار الزامی است';
@@ -1688,23 +1672,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!this.patientProfileForm.birthDate || new Date(`${this.patientProfileForm.birthDate}T00:00:00`).getTime() >= Date.now()) {
       return 'تاریخ تولد بیمار معتبر نیست';
     }
-    if (!/^\d{10}$/.test(nationalCode)) return 'کد ملی بیمار باید ۱۰ رقم باشد';
-    if (!address || address.length < 5) return 'آدرس بیمار الزامی است';
-    if (emergencyPhoneNumber && !/^09\d{9}$/.test(emergencyPhoneNumber)) return 'شماره اضطراری معتبر نیست';
-
     return null;
   }
 
-  private buildPatientRegisterRequest(): RegisterRequest {
+  private buildPatientRegisterRequest(): SaveUserRequest {
     return {
       firstName: this.patientProfileForm.firstName.trim(),
       lastName: this.patientProfileForm.lastName.trim(),
       phoneNumber: this.patientProfileForm.phoneNumber.trim(),
       passwordHash: this.patientProfileForm.password,
-      isCompleteProfile: false,
-      avatarImageName: null,
+      isCompleteProfile: Boolean(this.patientProfileForm.isCompleteProfile),
+      avatarImageName: this.patientProfileForm.avatarImageName?.trim() || null,
       gender: Number(this.patientProfileForm.gender),
-      birthDate: `${this.patientProfileForm.birthDate}T00:00:00`
+      birthDate: `${this.patientProfileForm.birthDate}T00:00:00`,
+      roleName: 'Patient'
     };
   }
 
@@ -1716,11 +1697,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       password: '',
       gender: 1,
       birthDate: '',
-      nationalCode: '',
-      address: '',
-      emergencyPhoneNumber: '',
-      insuranceName: '',
-      notes: ''
+      isCompleteProfile: false,
+      avatarImageName: null
     };
   }
 
