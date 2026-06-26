@@ -17,7 +17,7 @@ import { FaIconComponent } from '../../ui/fa-icon/fa-icon.component';
         [attr.aria-label]="title"
         (click)="$event.stopPropagation()"
       >
-        <button class="dialog-close" type="button" (click)="close()" [attr.aria-label]="language === 'fa' ? 'بستن' : 'Close'">
+        <button *ngIf="closable" class="dialog-close" type="button" (click)="close()" [attr.aria-label]="language === 'fa' ? 'بستن' : 'Close'">
           <app-fa-icon name="close"></app-fa-icon>
         </button>
         <header *ngIf="title || subtitle">
@@ -48,6 +48,7 @@ export class BaseDialogComponent {
   @Input() title = '';
   @Input() subtitle = '';
   @Input() showFooter = true;
+  @Input() closable = true;
   @Input() size: 'default' | 'wide' = 'default';
   @Input() confirmText = 'تایید';
   @Input() cancelText = 'انصراف';
@@ -60,6 +61,8 @@ export class BaseDialogComponent {
   }
 
   close(): void {
+    if (!this.closable) return;
+
     this.open = false;
     this.openChange.emit(this.open);
     this.closed.emit();
