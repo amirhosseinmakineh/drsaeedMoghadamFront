@@ -3,9 +3,8 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed } from '@angu
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize, switchMap, tap } from 'rxjs';
-import { AuthService } from '../../core/auth/auth.service';
+import { AuthService, RegisterRequest } from '../../core/auth/auth.service';
 import {
-  CompletePatientProfileRequest,
   ConsultantDashboardService,
   ConsultantLead,
   ConsultantReservation,
@@ -1094,28 +1093,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload: CompletePatientProfileRequest = {
-      reservationId,
-      firstName: this.patientProfileForm.firstName.trim(),
-      lastName: this.patientProfileForm.lastName.trim(),
-      phoneNumber: this.patientProfileForm.phoneNumber.trim(),
-      passwordHash: this.patientProfileForm.password,
-      gender: Number(this.patientProfileForm.gender),
-      birthDate: `${this.patientProfileForm.birthDate}T00:00:00`,
-      nationalCode: this.patientProfileForm.nationalCode.trim(),
-      address: this.patientProfileForm.address.trim()
-    };
-    const emergencyPhoneNumber = this.patientProfileForm.emergencyPhoneNumber.trim();
-    const insuranceName = this.patientProfileForm.insuranceName.trim();
-    const notes = this.patientProfileForm.notes.trim();
-    if (emergencyPhoneNumber) payload.emergencyPhoneNumber = emergencyPhoneNumber;
-    if (insuranceName) payload.insuranceName = insuranceName;
-    if (notes) payload.notes = notes;
+    const payload = this.buildPatientRegisterRequest();
 
     this.patientProfileSaving = true;
     this.clearFeedback();
 
-    this.consultantApi.completePatientProfile(payload)
+    this.auth.register(payload)
       .pipe(finalize(() => {
         this.patientProfileSaving = false;
         this.markViewDirty();
@@ -1645,6 +1628,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (emergencyPhoneNumber && !/^09\d{9}$/.test(emergencyPhoneNumber)) return 'شماره اضطراری معتبر نیست';
 
     return null;
+  }
+
+  private buildPatientRegisterRequest(): RegisterRequest {
+    return {
+      firstName: this.patientProfileForm.firstName.trim(),
+      lastName: this.patientProfileForm.lastName.trim(),
+      phoneNumber: this.patientProfileForm.phoneNumber.trim(),
+      passwordHash: this.patientProfileForm.password,
+      isCompleteProfile: false,
+      avatarImageName: null,
+      gender: Number(this.patientProfileForm.gender),
+      birthDate: `${this.patientProfileForm.birthDate}T00:00:00`
+    };
   }
 
   private emptyPatientProfileForm(): PatientProfileForm {
