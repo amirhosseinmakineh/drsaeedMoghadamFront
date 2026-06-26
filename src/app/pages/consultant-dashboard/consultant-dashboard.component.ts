@@ -11,6 +11,7 @@ import {
   ConsultantLead,
   ConsultantReservation,
   CreateReservationRequest,
+  ConfirmAttendanceRequest,
   SubmitLeadCallReportRequest
 } from '../../core/consultant/consultant-dashboard.service';
 import { BaseDialogComponent } from '../../shared/base/base-dialog/base-dialog.component';
@@ -47,6 +48,9 @@ interface LeadReportForm {
 interface ReservationForm {
   reservationDate: Date | null;
   reservationTime: string;
+  patientCity: string;
+  attendanceProbabilityPercent: number;
+  attendancePrediction: string;
   description: string;
 }
 
@@ -296,6 +300,27 @@ interface ConsultantDashboardLink {
               </section>
             } @else {
               <section class="lead-panel">
+                @if (dueConfirmations.length) {
+                  <div class="queue-warning attendance-lock">
+                    <strong>برای مشاهده لید لحظه‌ای ابتدا حضورهای موعددار را تعیین تکلیف کنید.</strong>
+                    <div class="reservation-list">
+                      @for (reservation of dueConfirmations; track reservationId(reservation)) {
+                        <article>
+                          <strong>{{ reservationPatientName(reservation) }}</strong>
+                          <span>{{ reservationPatientPhone(reservation) }} - {{ reservationPatientCity(reservation) }}</span>
+                          <time>{{ formatDateTime(reservationDateTime(reservation)) }}</time>
+                          <div class="dialog-actions">
+                            <button class="primary-action compact" type="button" [disabled]="attendanceSavingId === reservationId(reservation)" (click)="confirmAttendance(reservation, true)">بیمار آمد</button>
+                            <button class="secondary-action compact danger" type="button" [disabled]="attendanceSavingId === reservationId(reservation)" (click)="confirmAttendance(reservation, false)">بیمار نیامد</button>
+                          </div>
+                        </article>
+                      }
+                    </div>
+                  </div>
+                }
+                @if (!dueConfirmations.length && realtimeBlockedByOfflineQueue()) {
+                  <p class="queue-warning">ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید.</p>
+                }
                 <header class="panel-heading">
                   <div>
                     <span>لیدهای من</span>
@@ -483,6 +508,20 @@ interface ConsultantDashboardLink {
           <label>
             ساعت رزرو
             <input [(ngModel)]="reservationForm.reservationTime" name="reservationTime" type="time" />
+          </label>
+          <div class="two-col">
+            <label>
+              شهر بیمار
+              <input [(ngModel)]="reservationForm.patientCity" name="reservationPatientCity" maxlength="80" placeholder="تهران" />
+            </label>
+            <label>
+              درصد احتمال حضور
+              <input [(ngModel)]="reservationForm.attendanceProbabilityPercent" name="reservationAttendanceProbability" type="number" min="0" max="100" />
+            </label>
+          </div>
+          <label>
+            پیش‌بینی حضور
+            <textarea [(ngModel)]="reservationForm.attendancePrediction" name="reservationAttendancePrediction" rows="3" placeholder="بیمار گفت روز و ساعت رزرو شده داخل مطب حاضر می‌شود."></textarea>
           </label>
           <label>
             توضیحات
@@ -688,9 +727,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reservationForm: ReservationForm = {
     reservationDate: null,
     reservationTime: '',
+    patientCity: '',
+    attendanceProbabilityPercent: 80,
+    attendancePrediction: '',
     description: ''
   };
   reservations: ConsultantReservation[] = [];
+  dueConfirmations: ConsultantReservation[] = [];
+  attendanceSavingId: number | null = null;
   reservationsLoading = false;
   readonly reservationDatePickerLabel = { fa: 'تاریخ رزرو', en: 'Reservation date' };
 
@@ -718,10 +762,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private leadRequestId = 0;
   private pendingOfflineRequestId = 0;
   private reservationRequestId = 0;
+  private dueConfirmationRequestId = 0;
   private visibleLeadLoadingRequestId = 0;
   private pendingOfflineLoadSubscription: Subscription | null = null;
   private leadLoadSubscription: Subscription | null = null;
   private reservationLoadSubscription: Subscription | null = null;
+  private dueConfirmationLoadSubscription: Subscription | null = null;
   private dashboardStatusSubscription: Subscription | null = null;
   private destroyed = false;
 
@@ -759,6 +805,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.pendingOfflineLoadSubscription?.unsubscribe();
     this.leadLoadSubscription?.unsubscribe();
     this.reservationLoadSubscription?.unsubscribe();
+    this.dueConfirmationLoadSubscription?.unsubscribe();
     this.dashboardStatusSubscription?.unsubscribe();
   }
 
@@ -901,6 +948,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   refreshDashboard(): void {
     if (!this.isProfileReady()) return;
     this.loadDashboardStatus(() => {
+      this.loadDueConfirmations();
       this.loadPendingOfflineLeads();
       this.loadLeads();
       this.loadReservations();
@@ -1013,6 +1061,40 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return reservation.reservationAt || reservation.ReservationAt || '';
   }
 
+  reservationPatientCity(reservation: ConsultantReservation): string {
+    return reservation.patientCity || reservation.PatientCity || 'شهر ثبت نشده';
+  }
+
+  realtimeBlockedByOfflineQueue(): boolean {
+    return this.pendingOfflineCount > 0 && this.leadTypeFilter === LEAD_TYPE.RealTime;
+  }
+
+  confirmAttendance(reservation: ConsultantReservation, patientAttended: boolean): void {
+    const profileId = this.requireProfileId();
+    const reservationId = this.reservationId(reservation);
+    if (!profileId || !reservationId) return;
+
+    const payload: ConfirmAttendanceRequest = {
+      reservationId,
+      consultantProfileId: profileId,
+      patientAttended,
+      note: patientAttended ? 'بیمار در مطب حاضر شد.' : 'بیمار در زمان رزرو حاضر نشد.'
+    };
+
+    this.attendanceSavingId = reservationId;
+    this.consultantApi.confirmAttendance(payload).pipe(finalize(() => {
+      this.attendanceSavingId = null;
+      this.markViewDirty();
+    })).subscribe({
+      next: response => {
+        this.showFeedback(response.message || 'وضعیت حضور بیمار ثبت شد و منتظر بررسی منشی است', 'success');
+        this.loadDueConfirmations();
+        this.loadLeads();
+      },
+      error: error => this.showFeedback(this.errorMessage(error, 'ثبت تایید حضور انجام نشد'), 'error')
+    });
+  }
+
   canCompletePatientProfile(reservation: ConsultantReservation): boolean {
     return (reservation.requiresPatientProfile ?? reservation.RequiresPatientProfile) === true
       && !(reservation.patientUserId ?? reservation.PatientUserId)
@@ -1037,10 +1119,22 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const patientCity = this.reservationForm.patientCity.trim();
+    const attendancePrediction = this.reservationForm.attendancePrediction.trim();
+    const attendanceProbabilityPercent = Number(this.reservationForm.attendanceProbabilityPercent);
+    if (!patientCity) { this.showFeedback('شهر بیمار اجباری است', 'error'); return; }
+    if (!attendancePrediction) { this.showFeedback('پیش‌بینی حضور بیمار اجباری است', 'error'); return; }
+    if (!Number.isFinite(attendanceProbabilityPercent) || attendanceProbabilityPercent < 0 || attendanceProbabilityPercent > 100) {
+      this.showFeedback('درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد', 'error'); return;
+    }
+
     const payload: CreateReservationRequest = {
       leadAssignmentId,
       consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
+      patientCity,
+      attendanceProbabilityPercent,
+      attendancePrediction,
       description: this.reservationForm.description.trim() || null
     };
 
@@ -1340,6 +1434,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+
+  private loadDueConfirmations(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    const requestId = ++this.dueConfirmationRequestId;
+    this.dueConfirmationLoadSubscription?.unsubscribe();
+    this.dueConfirmationLoadSubscription = this.consultantApi.getDueConfirmations(profileId)
+      .pipe(finalize(() => this.markViewDirty()))
+      .subscribe({
+        next: items => {
+          if (requestId === this.dueConfirmationRequestId) this.dueConfirmations = items ?? [];
+        },
+        error: () => {
+          if (requestId === this.dueConfirmationRequestId) this.dueConfirmations = [];
+        }
+      });
+  }
+
   private loadLeads(quiet = false): void {
     const profileId = this.currentProfileId();
     if (!profileId) return;
@@ -1551,6 +1664,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
+      patientCity: '',
+      attendanceProbabilityPercent: 80,
+      attendancePrediction: '',
       description: 'رزرو اولیه پس از تماس موفق'
     };
     this.reservationDialogOpen = true;

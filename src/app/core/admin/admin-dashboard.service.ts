@@ -146,6 +146,38 @@ export interface LeadFilters {
   pageSize: number;
 }
 
+export interface ReservationAttendanceReview {
+  id?: number;
+  Id?: number;
+  reservationId?: number;
+  ReservationId?: number;
+  patientName?: string | null;
+  PatientName?: string | null;
+  patientPhoneNumber?: string | null;
+  PatientPhoneNumber?: string | null;
+  patientCity?: string | null;
+  PatientCity?: string | null;
+  consultantName?: string | null;
+  ConsultantName?: string | null;
+  reservationAt?: string | null;
+  ReservationAt?: string | null;
+  attendanceProbabilityPercent?: number | null;
+  AttendanceProbabilityPercent?: number | null;
+  attendancePrediction?: string | null;
+  AttendancePrediction?: string | null;
+  attendanceConfirmationStatus?: number | null;
+  AttendanceConfirmationStatus?: number | null;
+  consultantAttendanceNote?: string | null;
+  ConsultantAttendanceNote?: string | null;
+}
+
+export interface ReviewAttendanceRequest {
+  reservationId: number;
+  secretaryUserId: string;
+  approved: boolean;
+  note: string | null;
+}
+
 export interface ScoreRequest {
   consultantProfileId: number;
   source: number;
@@ -230,6 +262,19 @@ export class AdminDashboardService {
       headers: this.authHeaders(),
       params: this.toParams(filters)
     }).pipe(map(response => this.normalizePaginatedResponse<LeadAssignmentItem>(response, filters)));
+  }
+
+  getReservationAttendanceReviews(pageNumber = 1, pageSize = 20): Observable<PaginatedResponse<ReservationAttendanceReview>> {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/Reservation/AttendanceReviews`, {
+      headers: this.authHeaders(),
+      params: this.toParams({ pageNumber, pageSize })
+    }).pipe(map(response => this.normalizePaginatedResponse<ReservationAttendanceReview>(response, { pageNumber, pageSize })));
+  }
+
+  reviewAttendance(payload: ReviewAttendanceRequest): Observable<ApiCommandResponse> {
+    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/Reservation/ReviewAttendance`, payload, {
+      headers: this.authHeaders()
+    }).pipe(this.ensureCommandSucceeded('ثبت بررسی حضور انجام نشد'));
   }
 
   getSystemLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
