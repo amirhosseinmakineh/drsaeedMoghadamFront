@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export type AuthRole = 'admin' | 'consultant' | 'patient';
 
@@ -60,7 +61,7 @@ interface StoredSession {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiBaseUrl = 'http://localhost:5182';
+  private readonly apiBaseUrl = environment.apiBaseUrl;
   private readonly sessionStorageKey = 'clinic-auth-session';
   private readonly currentUser = signal<AuthUser | null>(this.readSession());
 
@@ -70,7 +71,7 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   register(payload: RegisterRequest): Observable<ApiResponse<{ userId: string; role: string } | null>> {
-    return this.http.post<ApiResponse<{ userId: string; role: string } | null>>(`${this.apiBaseUrl}/api/Auth`, payload).pipe(
+    return this.http.post<ApiResponse<{ userId: string; role: string } | null>>(`${this.apiBaseUrl}/Auth`, payload).pipe(
       map(response => {
         if (!response.isSuccess) {
           throw new Error(response.message || 'ثبت نام انجام نشد');
@@ -85,7 +86,7 @@ export class AuthService {
   login(phoneNumber: string, password: string): Observable<AuthUser> {
     const payload: LoginPayload = { phoneNumber, passwordHash: password };
 
-    return this.http.post<ApiResponse<TokenResponseData | null>>(`${this.apiBaseUrl}/api/Auth/Login`, payload).pipe(
+    return this.http.post<ApiResponse<TokenResponseData | null>>(`${this.apiBaseUrl}/Auth/Login`, payload).pipe(
       map(response => {
         if (!response.isSuccess) {
           throw new Error(response.message || 'ورود انجام نشد');

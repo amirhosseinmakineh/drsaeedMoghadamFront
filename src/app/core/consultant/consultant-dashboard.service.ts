@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface ApiCommandResponse<T = unknown> {
   isSuccess: boolean;
@@ -211,61 +212,61 @@ interface LeadPerson {
 
 @Injectable({ providedIn: 'root' })
 export class ConsultantDashboardService {
-  private readonly apiBaseUrl = 'http://localhost:5182';
+  private readonly apiBaseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
   completeProfile(payload: CompleteConsultantProfileRequest): Observable<ApiCommandResponse<number>> {
-    return this.http.post<ApiCommandResponse<number>>(`${this.apiBaseUrl}/api/Consultant`, payload, {
+    return this.http.post<ApiCommandResponse<number>>(`${this.apiBaseUrl}/Consultant`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('تکمیل پروفایل مشاور انجام نشد'));
   }
 
   setAvailability(payload: AvailabilityRequest): Observable<ApiCommandResponse> {
-    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/api/Consultant/SetAvalableConsultant`, payload, {
+    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/Consultant/SetAvalableConsultant`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('ثبت حضور انجام نشد'));
   }
 
   setOnlineStatus(payload: OnlineRequest): Observable<ApiCommandResponse> {
-    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/api/Consultant/SetOnlineOfflineConsultant`, payload, {
+    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/Consultant/SetOnlineOfflineConsultant`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('تغییر وضعیت آنلاین انجام نشد'));
   }
 
   getLeads(filters: LeadFilters): Observable<PaginatedResponse<ConsultantLead>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Consultant/GetLeads`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/Consultant/GetLeads`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
     }).pipe(map(response => this.normalizePaginatedResponse<ConsultantLead>(response, filters)));
   }
 
   submitLeadCallReport(payload: SubmitLeadCallReportRequest): Observable<ApiCommandResponse<LeadCallReportResponse>> {
-    return this.http.post<ApiCommandResponse<LeadCallReportResponse>>(`${this.apiBaseUrl}/api/Consultant/SubmitLeadCallReport`, payload, {
+    return this.http.post<ApiCommandResponse<LeadCallReportResponse>>(`${this.apiBaseUrl}/Consultant/SubmitLeadCallReport`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('ثبت گزارش تماس انجام نشد'));
   }
 
   expireLeadNoCall(payload: ExpireLeadNoCallRequest): Observable<ApiCommandResponse<ExpireLeadNoCallResponse>> {
-    return this.http.post<ApiCommandResponse<ExpireLeadNoCallResponse>>(`${this.apiBaseUrl}/api/Consultant/ExpireLeadNoCall`, payload, {
+    return this.http.post<ApiCommandResponse<ExpireLeadNoCallResponse>>(`${this.apiBaseUrl}/Consultant/ExpireLeadNoCall`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('منقضی کردن لید انجام نشد'));
   }
 
   createReservation(payload: CreateReservationRequest): Observable<ApiCommandResponse<ConsultantReservation>> {
-    return this.http.post<ApiCommandResponse<ConsultantReservation>>(`${this.apiBaseUrl}/api/Reservation`, payload, {
+    return this.http.post<ApiCommandResponse<ConsultantReservation>>(`${this.apiBaseUrl}/Reservation`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('ثبت رزرو انجام نشد'));
   }
 
   completePatientProfile(payload: CompletePatientProfileRequest): Observable<ApiCommandResponse<CompletePatientProfileResponse>> {
-    return this.http.post<ApiCommandResponse<CompletePatientProfileResponse>>(`${this.apiBaseUrl}/api/Reservation/CompletePatientProfile`, payload, {
+    return this.http.post<ApiCommandResponse<CompletePatientProfileResponse>>(`${this.apiBaseUrl}/Reservation/CompletePatientProfile`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('تشکیل پرونده بیمار انجام نشد'));
   }
 
   getReservations(filters: ReservationFilters): Observable<PaginatedResponse<ConsultantReservation>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Reservation/GetConsultantReservations`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/Reservation/GetConsultantReservations`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
     }).pipe(map(response => this.normalizePaginatedResponse<ConsultantReservation>(response, filters)));

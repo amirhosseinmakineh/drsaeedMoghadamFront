@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface ApiCommandResponse<T = unknown> {
   isSuccess: boolean;
@@ -174,65 +175,65 @@ interface LeadPerson {
 
 @Injectable({ providedIn: 'root' })
 export class AdminDashboardService {
-  private readonly apiBaseUrl = 'http://localhost:5182';
+  private readonly apiBaseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
   getUsers(filters: UserFilters): Observable<PaginatedResponse<AdminUser>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/api/User`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/User`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
     }).pipe(map(response => this.normalizePaginatedResponse<AdminUser>(response, filters)));
   }
 
   addUser(payload: SaveUserRequest): Observable<ApiCommandResponse> {
-    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/api/User`, payload, {
+    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/User`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('ثبت کاربر انجام نشد'));
   }
 
   updateUser(payload: SaveUserRequest): Observable<ApiCommandResponse> {
-    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/api/User`, payload, {
+    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/User`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('ویرایش کاربر انجام نشد'));
   }
 
   deleteUser(userId: string): Observable<ApiCommandResponse<boolean>> {
-    return this.http.delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/api/User`, {
+    return this.http.delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User`, {
       headers: this.authHeaders(),
       params: this.toParams({ userId })
     }).pipe(this.ensureCommandSucceeded('حذف کاربر انجام نشد'));
   }
 
   getConsultants(filters: ConsultantFilters): Observable<PaginatedResponse<Consultant>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Consultant/GetConsultants`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
     }).pipe(map(response => this.normalizePaginatedResponse<Consultant>(response, filters)));
   }
 
   createScore(payload: ScoreRequest): Observable<ApiCommandResponse> {
-    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/api/ScoreLog`, payload, {
+    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/ScoreLog`, payload, {
       headers: this.authHeaders()
     }).pipe(this.ensureCommandSucceeded('ثبت امتیاز انجام نشد'));
   }
 
   getAttendance(consultantProfileId: number, pageNumber = 1, pageSize = 10): Observable<PaginatedResponse<AttendanceItem>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Attendance`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/Attendance`, {
       headers: this.authHeaders(),
       params: this.toParams({ consultantProfileId, pageNumber, pageSize })
     }).pipe(map(response => this.normalizePaginatedResponse<AttendanceItem>(response, { pageNumber, pageSize })));
   }
 
   getConsultantLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/api/Consultant/GetLeads`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/Consultant/GetLeads`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
     }).pipe(map(response => this.normalizePaginatedResponse<LeadAssignmentItem>(response, filters)));
   }
 
   getSystemLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/api/LeadAssignment`, {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/LeadAssignment`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
     }).pipe(map(response => this.normalizePaginatedResponse<LeadAssignmentItem>(response, filters)));
