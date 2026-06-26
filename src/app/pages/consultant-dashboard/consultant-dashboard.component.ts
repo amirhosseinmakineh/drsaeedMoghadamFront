@@ -787,9 +787,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   canGoOnline(): boolean {
-    return this.dashboardStatusLoaded
-      ? this.canGoOnlineFromStatus
-      : this.isAvailable && this.pendingOfflineCount === 0;
+    if (!this.isAvailable || this.pendingOfflineCount > 0) return false;
+    return this.dashboardStatusLoaded ? this.canGoOnlineFromStatus || !this.onlineStatusBlockReason : true;
   }
 
   setSection(section: ConsultantDashboardSection): void {
@@ -926,7 +925,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   changeLeadPage(page: number): void {
-    this.leadPageNumber = page;
+    this.leadPageNumber = Math.min(Math.max(1, page), Math.max(1, this.leadTotalPages));
     this.loadLeads();
   }
 
@@ -976,7 +975,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.isOnline = response.data.isConsultantOnline;
           }
           this.markLeadReported(leadAssignmentId, response.data?.leadAssignmentState ?? LEAD_STATE.Contacted);
-          if (wasBlockingOfflineLead) this.pendingOfflineCount = Math.max(0, this.pendingOfflineCount - 1);
+          if (wasBlockingOfflineLead) this.updatePendingOfflineCount(Math.max(0, this.pendingOfflineCount - 1));
           this.closeReportDialog();
           this.showFeedback(response.message || 'گزارش تماس ثبت شد', 'success');
           this.refreshDashboard();
@@ -1320,7 +1319,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.profileId = status.profileId || this.profileId;
     this.isAvailable = status.isAvailable;
     this.isOnline = status.isOnline;
-    this.pendingOfflineCount = status.pendingOfflineLeadCount;
+    this.updatePendingOfflineCount(status.pendingOfflineLeadCount);
     this.currentScore = status.currentScore;
     this.canGoOnlineFromStatus = status.canGoOnline;
     this.dashboardStatusLoaded = true;
@@ -1345,10 +1344,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       next: response => {
         if (requestId !== this.pendingOfflineRequestId) return;
         this.applyConsultantStatusFrom(response.source, response.raw);
-        this.pendingOfflineCount = response.totalCount ?? response.items.length;
+        this.updatePendingOfflineCount(response.totalCount ?? response.items.length);
       },
       error: () => {
-        if (requestId === this.pendingOfflineRequestId) this.pendingOfflineCount = 0;
+        if (requestId === this.pendingOfflineRequestId) this.updatePendingOfflineCount(0);
       }
     });
   }
@@ -1382,7 +1381,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         this.applyConsultantStatusFrom(response.source, response.raw);
         this.leads = response.items ?? [];
         this.leadTotalCount = response.totalCount ?? this.leads.length;
+        this.leadPageSize = response.pageSize || this.leadPageSize;
         this.leadTotalPages = Math.max(1, response.totalPages || Math.ceil(this.leadTotalCount / this.leadPageSize));
+        const normalizedPageNumber = Math.min(Math.max(1, response.pageNumber || this.leadPageNumber), this.leadTotalPages);
+        if (!quiet && this.leadPageNumber !== normalizedPageNumber) {
+          this.leadPageNumber = normalizedPageNumber;
+          if (!this.leads.length && this.leadTotalCount > 0) {
+            this.loadLeads();
+            return;
+          }
+        } else {
+          this.leadPageNumber = normalizedPageNumber;
+        }
         this.hydrateRealtimeTimers();
         this.notifyNewRealtimeLeads();
         this.expireDueRealtimeLeads();
@@ -1596,6 +1606,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         state: nextState
       };
     });
+  }
+
+  private updatePendingOfflineCount(count: number): void {
+    this.pendingOfflineCount = Math.max(0, count);
+
+    if (this.pendingOfflineCount === 0) {
+      this.onlineStatusBlockReason = null;
+      this.canGoOnlineFromStatus = this.isAvailable;
+      return;
+    }
+
+    this.canGoOnlineFromStatus = false;
   }
 
   private selectedReservationDateTime(): Date | null {
