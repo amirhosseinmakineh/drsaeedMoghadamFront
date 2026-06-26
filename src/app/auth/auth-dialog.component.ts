@@ -193,7 +193,8 @@ export class AuthDialogComponent {
       passwordHash: this.form.password,
       isCompleteProfile: false,
       avatarImageName: null,
-      gender: Number(this.form.gender)
+      gender: Number(this.form.gender),
+      roleName: 'Patient'
     };
   }
 
