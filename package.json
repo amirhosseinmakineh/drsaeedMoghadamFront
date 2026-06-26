@@ -5,7 +5,8 @@
   "scripts": {
     "ng": "ng",
     "build": "ng build --configuration production",
-    "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0"
+    "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
+    "dev": "ng serve --configuration development --host 0.0.0.0"
   },
   "dependencies": {
     "@angular/animations": "^20.3.0",
