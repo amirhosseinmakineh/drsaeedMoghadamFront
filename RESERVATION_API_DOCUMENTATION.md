@@ -7,7 +7,7 @@
 ## Base URL
 
 ```text
-https://drsaeedback-drmoghadam.runflare.run
+https://drsaeedback.drmoghadam.runflare.run
 ```
 
 همه آدرس‌ها نسبت به base URL بالا هستند.
