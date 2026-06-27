@@ -180,10 +180,28 @@ export interface ConsultantReservation {
   AttendancePrediction?: string | null;
   attendanceConfirmationStatus?: number | null;
   AttendanceConfirmationStatus?: number | null;
+  consultantAttendanceConfirmedAt?: string | null;
+  ConsultantAttendanceConfirmedAt?: string | null;
+  consultantSaysPatientAttended?: boolean | null;
+  ConsultantSaysPatientAttended?: boolean | null;
   consultantAttendanceNote?: string | null;
   ConsultantAttendanceNote?: string | null;
-  consultantClaimedPatientAttended?: boolean | null;
-  ConsultantClaimedPatientAttended?: boolean | null;
+  secretaryReviewedAt?: string | null;
+  SecretaryReviewedAt?: string | null;
+  secretaryUserId?: string | null;
+  SecretaryUserId?: string | null;
+  secretaryApprovedConsultantConfirmation?: boolean | null;
+  SecretaryApprovedConsultantConfirmation?: boolean | null;
+  secretaryReviewNote?: string | null;
+  SecretaryReviewNote?: string | null;
+  isAttendanceScoreApplied?: boolean | null;
+  IsAttendanceScoreApplied?: boolean | null;
+  attendanceScoreValue?: number | null;
+  AttendanceScoreValue?: number | null;
+  attendanceScoreAppliedAt?: string | null;
+  AttendanceScoreAppliedAt?: string | null;
+  isDueForConsultantConfirmation?: boolean | null;
+  IsDueForConsultantConfirmation?: boolean | null;
   consultantName?: string | null;
   ConsultantName?: string | null;
   description?: string | null;
@@ -332,12 +350,17 @@ export class ConsultantDashboardService {
     return this.http.get<unknown>(`${this.apiBaseUrl}/Reservation/GetConsultantReservations`, {
       headers: this.authHeaders(),
       params: this.toParams(filters)
-    }).pipe(map(response => this.normalizePaginatedResponse<ConsultantReservation>(response, filters)));
+    }).pipe(
+      map(response => this.normalizePaginatedResponse<ConsultantReservation>(response, filters)),
+      catchError(error => throwError(() => this.toUserFacingError(error, 'دریافت رزروها انجام نشد')))
+    );
   }
 
   private authHeaders(): HttpHeaders {
     const token = this.auth.authToken();
-    return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
+    const baseHeaders: Record<string, string> = { Accept: 'application/json' };
+    if (token) baseHeaders['Authorization'] = `Bearer ${token}`;
+    return new HttpHeaders(baseHeaders);
   }
 
   private toParams(source: object): HttpParams {

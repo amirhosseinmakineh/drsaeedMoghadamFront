@@ -445,8 +445,11 @@ interface ConsultantDashboardLink {
                     @for (reservation of reservations; track reservationId(reservation)) {
                       <article>
                         <strong>{{ reservationPatientName(reservation) }}</strong>
-                        <span>{{ reservationPatientPhone(reservation) }}</span>
+                        <span>{{ reservationPatientPhone(reservation) }} - {{ reservationPatientCity(reservation) }}</span>
                         <time>{{ formatDateTime(reservationDateTime(reservation)) }}</time>
+                        <small>احتمال حضور: {{ reservationAttendanceProbability(reservation) }}٪</small>
+                        <small>پیش‌بینی حضور: {{ reservationAttendancePrediction(reservation) }}</small>
+                        <b [class]="reservationStatusClass(reservation)">{{ reservationAttendanceStatusLabel(reservation) }}</b>
                         @if (canCompletePatientProfile(reservation)) {
                           <button class="secondary-action compact" type="button" (click)="openPatientProfileFromReservation(reservation)">
                             تکمیل پرونده
@@ -681,7 +684,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     { id: 'overview', label: 'نمای کلی', icon: 'dashboard' },
     { id: 'profile', label: 'پروفایل', icon: 'shield' },
     { id: 'leads', label: 'لیدها', icon: 'clipboard' },
-    // Reservations are temporarily hidden from the consultant dashboard navigation.
+    { id: 'reservations', label: 'رزروها', icon: 'calendar' }
   ];
 
   readonly displayName = computed(() => {
@@ -1084,6 +1087,33 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return reservation.patientCity || reservation.PatientCity || 'شهر ثبت نشده';
   }
 
+  reservationAttendanceProbability(reservation: ConsultantReservation): number | string {
+    return reservation.attendanceProbabilityPercent ?? reservation.AttendanceProbabilityPercent ?? '-';
+  }
+
+  reservationAttendancePrediction(reservation: ConsultantReservation): string {
+    return reservation.attendancePrediction || reservation.AttendancePrediction || 'ثبت نشده';
+  }
+
+  reservationAttendanceStatusLabel(reservation: ConsultantReservation): string {
+    switch (reservation.attendanceConfirmationStatus ?? reservation.AttendanceConfirmationStatus) {
+      case 1: return 'منتظر تایید مشاور';
+      case 2: return 'مشاور: بیمار آمد';
+      case 3: return 'مشاور: بیمار نیامد';
+      case 4: return 'تایید نهایی منشی';
+      case 5: return 'رد شده توسط منشی';
+      default: return 'نامشخص';
+    }
+  }
+
+  reservationStatusClass(reservation: ConsultantReservation): string {
+    const status = reservation.attendanceConfirmationStatus ?? reservation.AttendanceConfirmationStatus;
+    if (status === 4) return 'badge success';
+    if (status === 5) return 'badge danger';
+    if (status === 2 || status === 3) return 'badge warn';
+    return 'badge info';
+  }
+
   realtimeBlockedByOfflineQueue(): boolean {
     return this.pendingOfflineCount > 0 && this.leadTypeFilter === LEAD_TYPE.RealTime;
   }
@@ -1171,7 +1201,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.reservationRequired = false;
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
-          const requiresPatientProfile = Boolean(reservation && (reservation.requiresPatientProfile ?? reservation.RequiresPatientProfile) === true && this.reservationId(reservation));
+          const requiresPatientProfile = Boolean(reservation && this.canCompletePatientProfile(reservation));
           this.showFeedback(response.message || 'رزرو با موفقیت ثبت شد', 'success');
           this.loadReservations();
 
@@ -1541,7 +1571,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.reservationLoadSubscription = this.consultantApi.getReservations({
       consultantProfileId: profileId,
-      from: new Date().toISOString(),
+      from: this.startOfTodayIso(),
+      to: this.endOfTodayIso(),
       includeCanceled: false,
       pageNumber: 1,
       pageSize: 5
@@ -1558,6 +1589,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         if (requestId === this.reservationRequestId) this.reservations = [];
       }
     });
+  }
+
+  private startOfTodayIso(): string {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date.toISOString();
+  }
+
+  private endOfTodayIso(): string {
+    const date = new Date();
+    date.setHours(23, 59, 59, 999);
+    return date.toISOString();
   }
 
   private startTimers(): void {
