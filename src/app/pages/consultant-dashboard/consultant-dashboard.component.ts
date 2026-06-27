@@ -481,7 +481,7 @@ interface ConsultantDashboardLink {
           </label>
           <label>
             توضیحات گزارش
-            <textarea [(ngModel)]="reportForm.reportDescription" name="leadReportDescription" rows="4"></textarea>
+            <textarea [(ngModel)]="reportForm.reportDescription" [ngModelOptions]="{ updateOn: 'blur' }" name="leadReportDescription" rows="4"></textarea>
           </label>
           <div class="dialog-actions">
             <button class="secondary-action" type="button" (click)="closeReportDialog()">انصراف</button>
@@ -737,8 +737,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private readonly reportedLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
   private timerStarts: Record<string, number> = {};
-  private notifiedRealtimeLeadIds = new Set<number>();
-  private notifiedAssignedLeadIds = new Set<number>();
+  private notifiedLeadIds = new Set<number>();
   private leadRequestId = 0;
   private pendingOfflineRequestId = 0;
   private reservationRequestId = 0;
@@ -748,6 +747,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private leadLoadSubscription: Subscription | null = null;
   private reservationLoadSubscription: Subscription | null = null;
   private dueConfirmationLoadSubscription: Subscription | null = null;
+  private leadNotificationLoadSubscription: Subscription | null = null;
   private dashboardStatusSubscription: Subscription | null = null;
   private destroyed = false;
 
@@ -772,8 +772,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.profileId = this.currentProfileId();
     this.timerStarts = this.readJson<Record<string, number>>(this.timerStorageKey(), {});
-    this.notifiedRealtimeLeadIds = new Set(this.readJson<number[]>(this.notificationStorageKey(), []));
-    this.notifiedAssignedLeadIds = new Set(this.readJson<number[]>(this.assignmentNotificationStorageKey(), []));
+    this.notifiedLeadIds = new Set([
+      ...this.readJson<number[]>(this.notificationStorageKey(), []),
+      ...this.readJson<number[]>(this.assignmentNotificationStorageKey(), [])
+    ]);
+    this.requestNotificationPermission();
 
     if (this.isProfileReady()) {
       this.refreshDashboard();
@@ -791,6 +794,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.leadLoadSubscription?.unsubscribe();
     this.reservationLoadSubscription?.unsubscribe();
     this.dueConfirmationLoadSubscription?.unsubscribe();
+    this.leadNotificationLoadSubscription?.unsubscribe();
     this.dashboardStatusSubscription?.unsubscribe();
   }
 
@@ -933,6 +937,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.loadDueConfirmations();
       this.loadPendingOfflineLeads();
       this.loadLeads();
+      this.loadLeadNotifications();
       this.loadReservations();
     });
   }
@@ -1513,8 +1518,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.leadPageNumber = normalizedPageNumber;
         }
         this.hydrateRealtimeTimers();
-        this.notifyNewRealtimeLeads();
-        this.notifyNewAssignedLeads();
+        this.notifyNewLeads(this.leads);
         this.expireDueRealtimeLeads();
       },
       error: error => {
@@ -1583,6 +1587,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         this.pollId = setInterval(() => {
           if (this.isProfileReady()) {
             this.loadLeads(true);
+            this.loadLeadNotifications();
             this.loadPendingOfflineLeads();
           }
         }, 30000);
@@ -1612,44 +1617,46 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (changed) this.writeJson(this.timerStorageKey(), this.timerStarts);
   }
 
-  private notifyNewRealtimeLeads(): void {
-    let changed = false;
+  private loadLeadNotifications(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
 
-    this.leads.forEach(lead => {
-      const leadAssignmentId = this.leadId(lead);
-      if (!leadAssignmentId || !this.isRealtimeTimedLead(lead) || this.notifiedRealtimeLeadIds.has(leadAssignmentId) || this.isLeadExpired(lead)) {
-        return;
-      }
-
-      this.notifiedRealtimeLeadIds.add(leadAssignmentId);
-      changed = true;
-      this.showRealtimeLeadNotification(lead);
+    this.leadNotificationLoadSubscription?.unsubscribe();
+    this.leadNotificationLoadSubscription = this.consultantApi.getLeads({
+      profileId,
+      leadAssignmentState: null,
+      leadAssignmentType: null,
+      pageNumber: 1,
+      pageSize: 50
+    }).subscribe({
+      next: response => this.notifyNewLeads(response.items ?? []),
+      error: () => undefined
     });
-
-    if (changed) this.writeJson(this.notificationStorageKey(), [...this.notifiedRealtimeLeadIds]);
   }
 
-  private showRealtimeLeadNotification(lead: ConsultantLead): void {
-    this.showLeadNotification('لید لحظه‌ای جدید', `${this.leadName(lead)} - ${this.leadPhone(lead)}؛ مهلت تماس ۳ دقیقه است.`);
-  }
-
-  private notifyNewAssignedLeads(): void {
+  private notifyNewLeads(leads: ConsultantLead[]): void {
     let changed = false;
 
-    this.leads.forEach(lead => {
+    leads.forEach(lead => {
       const leadAssignmentId = this.leadId(lead);
-      if (!leadAssignmentId || this.notifiedAssignedLeadIds.has(leadAssignmentId) || this.isLeadExpired(lead)) return;
+      if (!leadAssignmentId || this.notifiedLeadIds.has(leadAssignmentId) || this.isLeadExpired(lead)) return;
+
       const state = this.leadState(lead);
-      if (![LEAD_STATE.Assigned, LEAD_STATE.Pending, LEAD_STATE.New].includes(state as 1 | 2 | 4)) return;
-      if (this.isRealtimeTimedLead(lead)) return;
+      if (![LEAD_STATE.New, LEAD_STATE.Assigned, LEAD_STATE.Pending].includes(state as 1 | 2 | 4)) return;
 
-      this.notifiedAssignedLeadIds.add(leadAssignmentId);
+      this.notifiedLeadIds.add(leadAssignmentId);
       changed = true;
-      const typeLabel = this.leadType(lead) === LEAD_TYPE.OfflineQueue ? 'صف آفلاین' : 'تخصیص جدید';
-      this.showLeadNotification('لید جدید برای شما assign شد', `${this.leadName(lead)} - ${this.leadPhone(lead)}؛ ${typeLabel}`);
+      this.showNewLeadNotification(lead);
     });
 
-    if (changed) this.writeJson(this.assignmentNotificationStorageKey(), [...this.notifiedAssignedLeadIds]);
+    if (changed) this.writeJson(this.notificationStorageKey(), [...this.notifiedLeadIds]);
+  }
+
+  private showNewLeadNotification(lead: ConsultantLead): void {
+    const isRealtime = this.leadType(lead) === LEAD_TYPE.RealTime;
+    const title = isRealtime ? 'لید لحظه‌ای جدید' : 'لید جدید برای شما';
+    const timing = isRealtime && this.isRealtimeTimedLead(lead) ? '؛ مهلت تماس ۳ دقیقه است.' : '';
+    this.showLeadNotification(title, `${this.leadName(lead)} - ${this.leadPhone(lead)}${timing}`);
   }
 
   private showLeadNotification(title: string, body: string): void {
