@@ -35,6 +35,15 @@ const LEAD_TYPE = {
 
 const THREE_MINUTES_MS = 3 * 60 * 1000;
 
+const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
+  1: 'تماس برقرار شد',
+  2: 'تبدیل/موفق شد',
+  3: 'رد شد',
+  4: 'پاسخ نداد',
+  5: 'شماره اشتباه بود',
+  6: 'نیاز به پیگیری دارد'
+};
+
 interface ConsultantProfileForm {
   nationalityCode: string;
   address: string;
@@ -977,7 +986,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentId,
       consultantProfileId: profileId,
       callResult: Number(this.reportForm.callResult),
-      reportDescription: this.reportForm.reportDescription.trim() || null
+      reportDescription: this.normalizedReportDescription(Number(this.reportForm.callResult))
     };
 
     this.consultantApi.submitLeadCallReport(payload)
@@ -1007,6 +1016,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         },
         error: error => this.showFeedback(this.errorMessage(error, 'ثبت گزارش تماس انجام نشد'), 'error')
       });
+  }
+
+
+  private normalizedReportDescription(callResult: number): string {
+    return this.reportForm.reportDescription.trim() || CALL_RESULT_DEFAULT_DESCRIPTIONS[callResult] || 'گزارش تماس ثبت شد';
   }
 
   closeReservationDialog(): void {
@@ -1139,6 +1153,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.selectedReservationLead = null;
           const requiresPatientProfile = reservation && (reservation.requiresPatientProfile ?? reservation.RequiresPatientProfile) === true && this.reservationId(reservation);
           this.showFeedback(response.message || 'رزرو با موفقیت ثبت شد', 'success');
+          this.restoreOnlineAfterRequiredAction();
           this.loadReservations();
 
           if (requiresPatientProfile) {
