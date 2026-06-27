@@ -658,6 +658,7 @@
     width: 76%;
     height: 200px;
     border-radius: 32px;
+    box-shadow: 0 14px 34px rgba(5, 20, 30, .12);
   }
 
   .hero-slide-controls button {
@@ -673,6 +674,7 @@
 
   .portfolio-image-card {
     min-height: 300px;
+    box-shadow: 0 12px 30px rgba(91, 64, 38, .10);
   }
 
   .phone-mock {

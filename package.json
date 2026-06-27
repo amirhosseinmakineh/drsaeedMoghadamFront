@@ -4,9 +4,10 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "build": "ng build --configuration production",
+    "build": "npm run optimize:images && ng build --configuration production",
     "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
-    "dev": "ng serve --configuration development --host 0.0.0.0"
+    "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
+    "optimize:images": "python3 scripts/optimize-images.py"
   },
   "dependencies": {
     "@angular/animations": "^20.3.0",

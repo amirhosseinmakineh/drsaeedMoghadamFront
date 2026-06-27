@@ -25,7 +25,9 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
           @switch (service.id) {
             @case ('laminate') {
               <img
-                src="/2.png"
+                src="/images/2-640.png"
+                srcset="/images/2-360.png 360w, /images/2-640.png 640w, /images/2-960.png 960w"
+                sizes="(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw"
                 width="1310"
                 height="1200"
                 [alt]="pickText(service.title, language())"
@@ -36,7 +38,9 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
             }
             @case ('composite') {
               <img
-                src="/3.png"
+                src="/images/3-640.png"
+                srcset="/images/3-360.png 360w, /images/3-640.png 640w, /images/3-960.png 960w"
+                sizes="(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw"
                 width="1310"
                 height="1201"
                 [alt]="pickText(service.title, language())"
@@ -47,7 +51,9 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
             }
             @case ('whitening') {
               <img
-                src="/5.png"
+                src="/images/5-640.png"
+                srcset="/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w"
+                sizes="(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw"
                 width="1310"
                 height="1201"
                 [alt]="pickText(service.title, language())"
@@ -58,7 +64,9 @@ import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
             }
             @default {
               <img
-                src="/1.png"
+                src="/images/1-640.png"
+                srcset="/images/1-360.png 360w, /images/1-640.png 640w, /images/1-960.png 960w"
+                sizes="(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw"
                 width="1361"
                 height="1156"
                 [alt]="pickText(service.title, language())"
