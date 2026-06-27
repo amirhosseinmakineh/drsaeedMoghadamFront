@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnDestro
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize } from 'rxjs';
-import { AuthService } from '../../core/auth/auth.service';
+import { AuthService, RegisterRequest } from '../../core/auth/auth.service';
 import {
   ConsultantDashboardService,
   ConsultantDashboardStatus,
@@ -11,8 +11,7 @@ import {
   ConsultantReservation,
   CreateReservationRequest,
   ConfirmAttendanceRequest,
-  SubmitLeadCallReportRequest,
-  CompletePatientProfileRequest
+  SubmitLeadCallReportRequest
 } from '../../core/consultant/consultant-dashboard.service';
 import { BaseDialogComponent } from '../../shared/base/base-dialog/base-dialog.component';
 import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-datepicker.component';
@@ -69,10 +68,6 @@ interface PatientProfileForm {
   phoneNumber: string;
   password: string;
   gender: number;
-  birthDate: string;
-  avatarImageName: string | null;
-  nationalCode: string;
-  address: string;
 }
 
 interface ConsultantStatusUpdate {
@@ -595,36 +590,13 @@ interface ConsultantDashboardLink {
               </label>
             </div>
 
-            <div class="two-col">
-              <label>
-                جنسیت
-                <select [(ngModel)]="patientProfileForm.gender" name="patientGender">
-                  <option [ngValue]="1">مرد</option>
-                  <option [ngValue]="2">زن</option>
-                </select>
-              </label>
-              <label>
-                تاریخ تولد
-                <app-base-datepicker
-                  [label]="patientBirthDatePickerLabel"
-                  [selectedDate]="selectedPatientBirthDate"
-                  [minDate]="patientBirthDateMinDate"
-                  [maxDate]="patientBirthDateMaxDate"
-                  (dateChange)="setPatientBirthDate($event)"
-                ></app-base-datepicker>
-              </label>
-            </div>
-
-            <div class="two-col">
-              <label>
-                کد ملی
-                <input [(ngModel)]="patientProfileForm.nationalCode" name="patientNationalCode" inputmode="numeric" maxlength="10" />
-              </label>
-              <label>
-                آدرس
-                <input [(ngModel)]="patientProfileForm.address" name="patientAddress" maxlength="300" />
-              </label>
-            </div>
+            <label>
+              جنسیت
+              <select [(ngModel)]="patientProfileForm.gender" name="patientGender">
+                <option [ngValue]="1">مرد</option>
+                <option [ngValue]="2">زن</option>
+              </select>
+            </label>
           </section>
 
           <div class="dialog-actions">
@@ -754,10 +726,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   patientProfileRequired = false;
   selectedPatientProfileReservation: ConsultantReservation | null = null;
   patientProfileForm: PatientProfileForm = this.emptyPatientProfileForm();
-  selectedPatientBirthDate?: Date;
-  readonly patientBirthDatePickerLabel = { fa: 'تاریخ تولد', en: 'Birth date' };
-  readonly patientBirthDateMinDate = this.createRelativeYearDate(-120);
-  readonly patientBirthDateMaxDate = this.createYesterday();
 
   feedbackMessage = '';
   feedbackType: 'success' | 'error' = 'success';
@@ -1062,11 +1030,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm.reservationDate = date;
   }
 
-  setPatientBirthDate(date: Date): void {
-    this.selectedPatientBirthDate = date;
-    this.patientProfileForm.birthDate = this.toDateInputValue(date);
-  }
-
   reservationId(reservation: ConsultantReservation): number | null {
     return this.numberOrNull(reservation.id ?? reservation.Id ?? reservation.reservationId ?? reservation.ReservationId ?? null);
   }
@@ -1238,12 +1201,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload = this.buildCompletePatientProfileRequest();
+    const payload = this.buildPatientRegistrationRequest(reservationId);
 
     this.patientProfileSaving = true;
     this.clearFeedback();
 
-    this.consultantApi.completePatientProfile(payload)
+    this.auth.register(payload)
       .pipe(finalize(() => {
         this.patientProfileSaving = false;
         this.markViewDirty();
@@ -1251,7 +1214,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: response => {
           this.resetPatientProfileState();
-          this.showFeedback(response.message || 'پرونده بیمار برای رزرو با موفقیت تشکیل شد', 'success');
+          this.showFeedback(response.message || 'ثبت‌نام بیمار و تشکیل پرونده رزرو با موفقیت انجام شد', 'success');
           this.restoreOnlineAfterRequiredAction();
           this.loadReservations();
         },
@@ -1783,7 +1746,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       lastName: names.lastName,
       phoneNumber: phoneNumber === '-' ? '' : phoneNumber
     };
-    this.selectedPatientBirthDate = undefined;
     this.patientProfileDialogOpen = true;
   }
 
@@ -1808,7 +1770,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.patientProfileRequired = false;
     this.selectedPatientProfileReservation = null;
     this.patientProfileForm = this.emptyPatientProfileForm();
-    this.selectedPatientBirthDate = undefined;
   }
 
   private markLeadReported(leadAssignmentId: number, nextState: number): void {
@@ -1946,26 +1907,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.patientProfileForm.password.length < 6) return 'رمز عبور باید حداقل ۶ کاراکتر باشد';
     if (this.patientProfileForm.password.length > 100) return 'رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد';
     if (![1, 2].includes(Number(this.patientProfileForm.gender))) return 'جنسیت بیمار معتبر نیست';
-    if (!this.patientProfileForm.birthDate || new Date(`${this.patientProfileForm.birthDate}T00:00:00`).getTime() >= Date.now()) {
-      return 'تاریخ تولد بیمار معتبر نیست';
-    }
-    if (!/^\d{10}$/.test(this.patientProfileForm.nationalCode.trim())) return 'کد ملی بیمار باید ۱۰ رقم باشد';
-    if (!this.patientProfileForm.address.trim()) return 'آدرس بیمار الزامی است';
     return null;
   }
 
-  private buildCompletePatientProfileRequest(): CompletePatientProfileRequest {
+  private buildPatientRegistrationRequest(reservationId: number): RegisterRequest {
     return {
-      reservationId: this.reservationId(this.selectedPatientProfileReservation as ConsultantReservation) ?? 0,
       firstName: this.patientProfileForm.firstName.trim(),
       lastName: this.patientProfileForm.lastName.trim(),
       phoneNumber: this.patientProfileForm.phoneNumber.trim(),
       passwordHash: this.patientProfileForm.password,
+      isCompleteProfile: true,
       avatarImageName: this.defaultPatientAvatarImageName(),
       gender: Number(this.patientProfileForm.gender),
-      birthDate: `${this.patientProfileForm.birthDate}T00:00:00`,
-      nationalCode: this.patientProfileForm.nationalCode.trim(),
-      address: this.patientProfileForm.address.trim()
+      roleName: 'Patient',
+      reservationId
     };
   }
 
@@ -1975,11 +1930,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       lastName: '',
       phoneNumber: '',
       password: '',
-      gender: 1,
-      birthDate: '',
-      avatarImageName: this.defaultPatientAvatarImageName(),
-      nationalCode: '',
-      address: ''
+      gender: 1
     };
   }
 
