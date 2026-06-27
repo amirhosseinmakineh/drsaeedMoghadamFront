@@ -44,7 +44,9 @@
     @switch (heroSlides[activeSlide()].id) {
       @case ('mobile-first') {
         <img
-          src="/5.png"
+          src="/images/5-640.png"
+          srcset="/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w"
+          sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
           width="1310"
           height="1201"
           [alt]="pickText(heroSlides[activeSlide()].title, language())"
@@ -55,7 +57,9 @@
       }
       @default {
         <img
-          src="/1.png"
+          src="/images/1-640.png"
+          srcset="/images/1-360.png 360w, /images/1-640.png 640w, /images/1-960.png 960w"
+          sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
           width="1361"
           height="1156"
           [alt]="pickText(heroSlides[activeSlide()].title, language())"
@@ -139,7 +143,9 @@
       @switch (service.id) {
         @case ('laminate') {
           <img
-            src="/2.png"
+            src="/images/2-640.png"
+            srcset="/images/2-360.png 360w, /images/2-640.png 640w, /images/2-960.png 960w"
+            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1200"
             [alt]="pickText(service.title, language())"
@@ -150,7 +156,9 @@
         }
         @case ('composite') {
           <img
-            src="/3.png"
+            src="/images/3-640.png"
+            srcset="/images/3-360.png 360w, /images/3-640.png 640w, /images/3-960.png 960w"
+            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
             [alt]="pickText(service.title, language())"
@@ -161,7 +169,9 @@
         }
         @case ('whitening') {
           <img
-            src="/5.png"
+            src="/images/5-640.png"
+            srcset="/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w"
+            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
             [alt]="pickText(service.title, language())"
@@ -172,7 +182,9 @@
         }
         @default {
           <img
-            src="/1.png"
+            src="/images/1-640.png"
+            srcset="/images/1-360.png 360w, /images/1-640.png 640w, /images/1-960.png 960w"
+            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1361"
             height="1156"
             [alt]="pickText(service.title, language())"
@@ -205,7 +217,9 @@
       @switch (workSamples[activeWorkSample()].id) {
         @case ('whitening-shade') {
           <img
-            src="/5.png"
+            src="/images/5-640.png"
+            srcset="/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w"
+            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
             [alt]="pickText(workSamples[activeWorkSample()].title, language())"
@@ -216,7 +230,9 @@
         }
         @case ('composite-shape') {
           <img
-            src="/3.png"
+            src="/images/3-640.png"
+            srcset="/images/3-360.png 360w, /images/3-640.png 640w, /images/3-960.png 960w"
+            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
             [alt]="pickText(workSamples[activeWorkSample()].title, language())"
@@ -227,7 +243,9 @@
         }
         @default {
           <img
-            src="/2.png"
+            src="/images/2-640.png"
+            srcset="/images/2-360.png 360w, /images/2-640.png 640w, /images/2-960.png 960w"
+            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1200"
             [alt]="pickText(workSamples[activeWorkSample()].title, language())"

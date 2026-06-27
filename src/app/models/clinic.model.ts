@@ -137,10 +137,10 @@ const PUBLIC_IMAGE_SIZES = {
 } as const;
 
 const PUBLIC_IMAGES = {
-  clinic: { src: '/1.png', width: 1361, height: 1156 },
-  laminate: { src: '/2.png', width: 1310, height: 1200 },
-  composite: { src: '/3.png', width: 1310, height: 1201 },
-  whitening: { src: '/5.png', width: 1310, height: 1201 }
+  clinic: { src: '/images/1-640.png', srcset: '/images/1-360.png 360w, /images/1-640.png 640w, /images/1-960.png 960w', width: 1361, height: 1156 },
+  laminate: { src: '/images/2-640.png', srcset: '/images/2-360.png 360w, /images/2-640.png 640w, /images/2-960.png 960w', width: 1310, height: 1200 },
+  composite: { src: '/images/3-640.png', srcset: '/images/3-360.png 360w, /images/3-640.png 640w, /images/3-960.png 960w', width: 1310, height: 1201 },
+  whitening: { src: '/images/5-640.png', srcset: '/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w', width: 1310, height: 1201 }
 } as const;
 
 export type PublicClinicImageKey = keyof typeof PUBLIC_IMAGES;
