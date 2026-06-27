@@ -140,6 +140,14 @@ export class AuthService {
     return `/dashboard/${user.role}`;
   }
 
+
+  authToken(): string | null {
+    const currentToken = this.currentUser()?.token;
+    if (currentToken?.trim()) return currentToken;
+
+    return this.readStoredToken();
+  }
+
   roleLabel(role: AuthRole, language: 'fa' | 'en'): string {
     const labels: Record<AuthRole, { fa: string; en: string }> = {
       admin: { fa: 'ادمین', en: 'Admin' },
@@ -291,6 +299,61 @@ export class AuthService {
     } catch {
       // The in-memory session remains available until page refresh.
     }
+  }
+
+
+  private readStoredToken(): string | null {
+    const storageKeys = ['clinic-auth-session', 'token', 'accessToken', 'authToken', 'jwt'];
+
+    try {
+      for (const storage of [localStorage, sessionStorage]) {
+        for (const key of storageKeys) {
+          const token = this.extractTokenFromStoredValue(storage.getItem(key));
+          if (token) return token;
+        }
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
+  private extractTokenFromStoredValue(value: string | null): string | null {
+    if (!value) return null;
+
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (this.looksLikeJwt(trimmed)) return trimmed;
+
+    try {
+      return this.findTokenInObject(JSON.parse(trimmed));
+    } catch {
+      return null;
+    }
+  }
+
+  private findTokenInObject(value: unknown, depth = 0): string | null {
+    if (depth > 4 || value === null || value === undefined) return null;
+    if (typeof value === 'string') return this.looksLikeJwt(value) ? value : null;
+    if (typeof value !== 'object') return null;
+
+    const record = value as Record<string, unknown>;
+    for (const key of ['token', 'accessToken', 'access_token', 'jwt']) {
+      const token = record[key];
+      if (typeof token === 'string' && token.trim()) return token.trim();
+    }
+
+    for (const nested of Object.values(record)) {
+      const token = this.findTokenInObject(nested, depth + 1);
+      if (token) return token;
+    }
+
+    return null;
+  }
+
+  private looksLikeJwt(value: string): boolean {
+    return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value.trim());
   }
 
   private readSession(): AuthUser | null {

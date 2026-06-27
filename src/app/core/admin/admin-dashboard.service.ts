@@ -285,7 +285,7 @@ export class AdminDashboardService {
   }
 
   private authHeaders(): HttpHeaders {
-    const token = this.auth.user()?.token;
+    const token = this.auth.authToken();
     return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
   }
 
