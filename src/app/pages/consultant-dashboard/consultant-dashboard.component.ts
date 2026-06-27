@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
-import { AdminDashboardService, SaveUserRequest } from '../../core/admin/admin-dashboard.service';
 import {
   ConsultantDashboardService,
   ConsultantDashboardStatus,
@@ -12,7 +11,8 @@ import {
   ConsultantReservation,
   CreateReservationRequest,
   ConfirmAttendanceRequest,
-  SubmitLeadCallReportRequest
+  SubmitLeadCallReportRequest,
+  CompletePatientProfileRequest
 } from '../../core/consultant/consultant-dashboard.service';
 import { BaseDialogComponent } from '../../shared/base/base-dialog/base-dialog.component';
 import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-datepicker.component';
@@ -71,6 +71,8 @@ interface PatientProfileForm {
   gender: number;
   birthDate: string;
   avatarImageName: string | null;
+  nationalCode: string;
+  address: string;
 }
 
 interface ConsultantStatusUpdate {
@@ -609,6 +611,17 @@ interface ConsultantDashboardLink {
                 ></app-base-datepicker>
               </label>
             </div>
+
+            <div class="two-col">
+              <label>
+                کد ملی
+                <input [(ngModel)]="patientProfileForm.nationalCode" name="patientNationalCode" inputmode="numeric" maxlength="10" />
+              </label>
+              <label>
+                آدرس
+                <input [(ngModel)]="patientProfileForm.address" name="patientAddress" maxlength="300" />
+              </label>
+            </div>
           </section>
 
           <div class="dialog-actions">
@@ -754,6 +767,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private readonly expirationRetryAfter = new Map<number, number>();
   private timerStarts: Record<string, number> = {};
   private notifiedRealtimeLeadIds = new Set<number>();
+  private notifiedAssignedLeadIds = new Set<number>();
   private leadRequestId = 0;
   private pendingOfflineRequestId = 0;
   private reservationRequestId = 0;
@@ -770,7 +784,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private router: Router,
     private consultantApi: ConsultantDashboardService,
-    private adminApi: AdminDashboardService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
   ) {}
@@ -789,6 +802,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.profileId = this.currentProfileId();
     this.timerStarts = this.readJson<Record<string, number>>(this.timerStorageKey(), {});
     this.notifiedRealtimeLeadIds = new Set(this.readJson<number[]>(this.notificationStorageKey(), []));
+    this.notifiedAssignedLeadIds = new Set(this.readJson<number[]>(this.assignmentNotificationStorageKey(), []));
 
     if (this.isProfileReady()) {
       this.refreshDashboard();
@@ -1153,16 +1167,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       }))
       .subscribe({
         next: response => {
-          const reservation = response.data;
+          const reservation = this.extractReservation(response.data) ?? this.extractReservation(response);
           this.reservationRequired = false;
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
-          const requiresPatientProfile = reservation && (reservation.requiresPatientProfile ?? reservation.RequiresPatientProfile) === true && this.reservationId(reservation);
+          const requiresPatientProfile = Boolean(reservation && (reservation.requiresPatientProfile ?? reservation.RequiresPatientProfile) === true && this.reservationId(reservation));
           this.showFeedback(response.message || 'رزرو با موفقیت ثبت شد', 'success');
-          this.restoreOnlineAfterRequiredAction();
           this.loadReservations();
 
-          if (requiresPatientProfile) {
+          if (requiresPatientProfile && reservation) {
             this.openPatientProfileDialog(reservation);
           } else {
             this.restoreOnlineAfterRequiredAction();
@@ -1195,12 +1208,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload = this.buildPatientRegisterRequest();
+    const payload = this.buildCompletePatientProfileRequest();
 
     this.patientProfileSaving = true;
     this.clearFeedback();
 
-    this.adminApi.addUser(payload)
+    this.consultantApi.completePatientProfile(payload)
       .pipe(finalize(() => {
         this.patientProfileSaving = false;
         this.markViewDirty();
@@ -1508,6 +1521,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         }
         this.hydrateRealtimeTimers();
         this.notifyNewRealtimeLeads();
+        this.notifyNewAssignedLeads();
         this.expireDueRealtimeLeads();
       },
       error: error => {
@@ -1551,6 +1565,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       if (!this.timerId) {
         this.timerId = setInterval(() => {
           this.ngZone.run(() => {
+            if (!this.hasActiveRealtimeTimers()) return;
             this.currentTime = Date.now();
             this.expireDueRealtimeLeads();
             this.markViewDirty();
@@ -1567,6 +1582,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         }, 30000);
       }
     });
+  }
+
+
+  private hasActiveRealtimeTimers(): boolean {
+    return this.leads.some(lead => this.isRealtimeTimedLead(lead) && !this.isLeadExpired(lead));
   }
 
   private hydrateRealtimeTimers(): void {
@@ -1604,9 +1624,29 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private showRealtimeLeadNotification(lead: ConsultantLead): void {
-    const title = 'لید لحظه‌ای جدید';
-    const body = `${this.leadName(lead)} - ${this.leadPhone(lead)}؛ مهلت تماس ۳ دقیقه است.`;
+    this.showLeadNotification('لید لحظه‌ای جدید', `${this.leadName(lead)} - ${this.leadPhone(lead)}؛ مهلت تماس ۳ دقیقه است.`);
+  }
 
+  private notifyNewAssignedLeads(): void {
+    let changed = false;
+
+    this.leads.forEach(lead => {
+      const leadAssignmentId = this.leadId(lead);
+      if (!leadAssignmentId || this.notifiedAssignedLeadIds.has(leadAssignmentId) || this.isLeadExpired(lead)) return;
+      const state = this.leadState(lead);
+      if (![LEAD_STATE.Assigned, LEAD_STATE.Pending, LEAD_STATE.New].includes(state as 1 | 2 | 4)) return;
+      if (this.isRealtimeTimedLead(lead)) return;
+
+      this.notifiedAssignedLeadIds.add(leadAssignmentId);
+      changed = true;
+      const typeLabel = this.leadType(lead) === LEAD_TYPE.OfflineQueue ? 'صف آفلاین' : 'تخصیص جدید';
+      this.showLeadNotification('لید جدید برای شما assign شد', `${this.leadName(lead)} - ${this.leadPhone(lead)}؛ ${typeLabel}`);
+    });
+
+    if (changed) this.writeJson(this.assignmentNotificationStorageKey(), [...this.notifiedAssignedLeadIds]);
+  }
+
+  private showLeadNotification(title: string, body: string): void {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, { body });
     } else {
@@ -1702,6 +1742,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     };
     this.selectedPatientBirthDate = undefined;
     this.patientProfileDialogOpen = true;
+  }
+
+
+  private extractReservation(source: unknown): ConsultantReservation | null {
+    if (!this.isRecord(source)) return null;
+
+    if (this.reservationId(source as ConsultantReservation)) return source as ConsultantReservation;
+
+    for (const key of ['reservation', 'Reservation', 'data', 'Data', 'result', 'Result', 'value', 'Value', 'payload', 'Payload']) {
+      const nested = this.readValue(source, key);
+      const reservation = this.extractReservation(nested);
+      if (reservation) return reservation;
+    }
+
+    return null;
   }
 
   private resetPatientProfileState(): void {
@@ -1851,20 +1906,23 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!this.patientProfileForm.birthDate || new Date(`${this.patientProfileForm.birthDate}T00:00:00`).getTime() >= Date.now()) {
       return 'تاریخ تولد بیمار معتبر نیست';
     }
+    if (!/^\d{10}$/.test(this.patientProfileForm.nationalCode.trim())) return 'کد ملی بیمار باید ۱۰ رقم باشد';
+    if (!this.patientProfileForm.address.trim()) return 'آدرس بیمار الزامی است';
     return null;
   }
 
-  private buildPatientRegisterRequest(): SaveUserRequest {
+  private buildCompletePatientProfileRequest(): CompletePatientProfileRequest {
     return {
+      reservationId: this.reservationId(this.selectedPatientProfileReservation as ConsultantReservation) ?? 0,
       firstName: this.patientProfileForm.firstName.trim(),
       lastName: this.patientProfileForm.lastName.trim(),
       phoneNumber: this.patientProfileForm.phoneNumber.trim(),
       passwordHash: this.patientProfileForm.password,
-      isCompleteProfile: true,
       avatarImageName: this.defaultPatientAvatarImageName(),
       gender: Number(this.patientProfileForm.gender),
       birthDate: `${this.patientProfileForm.birthDate}T00:00:00`,
-      roleName: 'Patient'
+      nationalCode: this.patientProfileForm.nationalCode.trim(),
+      address: this.patientProfileForm.address.trim()
     };
   }
 
@@ -1876,7 +1934,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       password: '',
       gender: 1,
       birthDate: '',
-      avatarImageName: this.defaultPatientAvatarImageName()
+      avatarImageName: this.defaultPatientAvatarImageName(),
+      nationalCode: '',
+      address: ''
     };
   }
 
@@ -1944,6 +2004,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private notificationStorageKey(): string {
     return `consultant-realtime-notifications:${this.userKey()}`;
+  }
+
+  private assignmentNotificationStorageKey(): string {
+    return `consultant-assignment-notifications:${this.userKey()}`;
   }
 
   private userKey(): string {
