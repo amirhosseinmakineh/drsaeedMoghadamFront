@@ -108,7 +108,7 @@ export interface SubmitLeadCallReportRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
   callResult: number;
-  reportDescription: string | null;
+  reportDescription: string;
 }
 
 export interface LeadCallReportResponse {
