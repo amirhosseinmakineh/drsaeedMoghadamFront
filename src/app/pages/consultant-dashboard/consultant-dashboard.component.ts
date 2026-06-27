@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, finalize } from 'rxjs';
@@ -90,6 +90,7 @@ interface ConsultantDashboardLink {
   selector: 'app-consultant-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, BaseDialogComponent, BaseDatepickerComponent, FaIconComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="dashboard-layout consultant-mode">
       <aside class="dashboard-sidebar mobile-app-nav">
@@ -109,7 +110,7 @@ interface ConsultantDashboardLink {
 
         <nav class="dashboard-nav" aria-label="داشبورد مشاور">
           <button
-            *ngFor="let item of visibleDashboardLinks"
+            *ngFor="let item of visibleDashboardLinks; trackBy: trackDashboardLink"
             type="button"
             [class.active]="activeSection === item.id"
             (click)="setSection(item.id)"
@@ -770,13 +771,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private consultantApi: ConsultantDashboardService,
     private adminApi: AdminDashboardService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
 
   get visibleDashboardLinks(): ConsultantDashboardLink[] {
     return this.isProfileReady()
       ? this.dashboardLinks.filter(item => item.id !== 'profile' && item.id !== 'reservations')
       : this.dashboardLinks.filter(item => item.id !== 'reservations');
+  }
+
+  trackDashboardLink(_: number, item: ConsultantDashboardLink): ConsultantDashboardSection {
+    return item.id;
   }
 
   ngOnInit(): void {
@@ -1541,22 +1547,26 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private startTimers(): void {
-    if (!this.timerId) {
-      this.timerId = setInterval(() => {
-        this.currentTime = Date.now();
-        this.expireDueRealtimeLeads();
-        this.markViewDirty();
-      }, 1000);
-    }
+    this.ngZone.runOutsideAngular(() => {
+      if (!this.timerId) {
+        this.timerId = setInterval(() => {
+          this.ngZone.run(() => {
+            this.currentTime = Date.now();
+            this.expireDueRealtimeLeads();
+            this.markViewDirty();
+          });
+        }, 1000);
+      }
 
-    if (!this.pollId) {
-      this.pollId = setInterval(() => {
-        if (this.isProfileReady()) {
-          this.loadLeads(true);
-          this.loadPendingOfflineLeads();
-        }
-      }, 30000);
-    }
+      if (!this.pollId) {
+        this.pollId = setInterval(() => {
+          if (this.isProfileReady()) {
+            this.loadLeads(true);
+            this.loadPendingOfflineLeads();
+          }
+        }, 30000);
+      }
+    });
   }
 
   private hydrateRealtimeTimers(): void {
