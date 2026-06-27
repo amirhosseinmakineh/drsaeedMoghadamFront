@@ -70,7 +70,6 @@ interface PatientProfileForm {
   password: string;
   gender: number;
   birthDate: string;
-  isCompleteProfile: boolean;
   avatarImageName: string | null;
 }
 
@@ -1005,14 +1004,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
           this.markLeadReported(leadAssignmentId, response.data?.leadAssignmentState ?? LEAD_STATE.Contacted);
           if (wasBlockingOfflineLead) this.updatePendingOfflineCount(Math.max(0, this.pendingOfflineCount - 1));
+          const shouldOpenReservation = response.data?.shouldOpenReservationPage === true;
           this.closeReportDialog();
           this.showFeedback(response.message || 'گزارش تماس ثبت شد', 'success');
-          this.restoreOnlineAfterRequiredAction();
-          this.refreshDashboard();
-
-          if (response.data?.shouldOpenReservationPage === true) {
+          if (shouldOpenReservation) {
             this.openReservationDialog(lead, true);
+          } else {
+            this.restoreOnlineAfterRequiredAction();
           }
+          this.refreshDashboard();
         },
         error: error => this.showFeedback(this.errorMessage(error, 'ثبت گزارش تماس انجام نشد'), 'error')
       });
@@ -1151,12 +1151,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.reservationRequired = false;
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
+          const requiresPatientProfile = reservation && (reservation.requiresPatientProfile ?? reservation.RequiresPatientProfile) === true && this.reservationId(reservation);
           this.showFeedback(response.message || 'رزرو با موفقیت ثبت شد', 'success');
           this.restoreOnlineAfterRequiredAction();
           this.loadReservations();
 
-          if (reservation && (reservation.requiresPatientProfile ?? reservation.RequiresPatientProfile) === true && this.reservationId(reservation)) {
+          if (requiresPatientProfile) {
             this.openPatientProfileDialog(reservation);
+          } else {
+            this.restoreOnlineAfterRequiredAction();
           }
         },
         error: error => this.showFeedback(this.errorMessage(error, 'ثبت رزرو انجام نشد'), 'error')
@@ -1768,6 +1771,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId || !this.isOnline) return;
 
     this.onlineSaving = true;
+    this.isOnline = false;
     this.consultantApi.setOnlineStatus({ profileId, isOnline: false, isOffline: true })
       .pipe(finalize(() => {
         this.onlineSaving = false;
@@ -1862,7 +1866,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       password: '',
       gender: 1,
       birthDate: '',
-      isCompleteProfile: true,
       avatarImageName: this.defaultPatientAvatarImageName()
     };
   }
