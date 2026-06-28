@@ -123,7 +123,6 @@ export interface LeadCallReportResponse {
   leadAssignmentState: number;
   callResult: number;
   isConsultantOnline: boolean;
-  shouldOpenReservationPage?: boolean;
 }
 
 export interface ExpireLeadNoCallRequest {

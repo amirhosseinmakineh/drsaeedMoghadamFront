@@ -412,7 +412,7 @@ interface ConsultantDashboardLink {
                           <button class="secondary-action compact" type="button" [disabled]="isReportDisabled(lead)" (click)="openReportDialog(lead)">
                             ثبت گزارش
                           </button>
-                          <button class="secondary-action compact" type="button" [disabled]="isReservationDisabled(lead)" (click)="openReservationDialog(lead, false)">
+                          <button class="secondary-action compact" type="button" [disabled]="isReservationDisabled(lead)" (click)="openReservationDialog(lead)">
                             رزرو وقت
                           </button>
                         </div>
@@ -1322,7 +1322,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   reservationDialogOpen = false;
   reservationSaving = false;
-  reservationRequired = false;
   selectedReservationLead: ConsultantLead | null = null;
   reservationForm: ReservationForm = {
     reservationDate: null,
@@ -1653,7 +1652,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   closeReservationDialog(): void {
     this.reservationDialogOpen = false;
     this.reservationSaving = false;
-    this.reservationRequired = false;
     this.selectedReservationLead = null;
   }
 
@@ -1781,7 +1779,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: response => {
           const reservation = this.extractReservation(response.data) ?? this.extractReservation(response);
-          this.reservationRequired = false;
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           const shouldOpenPatientProfile = Boolean(reservation);
@@ -2345,10 +2342,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  openReservationDialog(lead: ConsultantLead, required: boolean): void {
+  openReservationDialog(lead: ConsultantLead): void {
     const minimumReservationAt = this.minimumReservationDateTime();
     this.selectedReservationLead = lead;
-    this.reservationRequired = required;
     this.reservationForm = {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
