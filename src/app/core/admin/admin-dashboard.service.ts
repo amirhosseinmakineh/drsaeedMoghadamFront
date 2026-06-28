@@ -138,6 +138,11 @@ export interface LeadAssignmentItem {
   Lead?: LeadPerson | null;
 }
 
+export interface LeadCallReportExportFilters {
+  from?: string;
+  to?: string;
+}
+
 export interface LeadFilters {
   profileId?: number;
   leadAssignmentState?: number | null;
@@ -255,6 +260,14 @@ export class AdminDashboardService {
       headers: this.authHeaders(),
       params: this.toParams({ consultantProfileId, pageNumber, pageSize })
     }).pipe(map(response => this.normalizePaginatedResponse<AttendanceItem>(response, { pageNumber, pageSize })));
+  }
+
+  exportLeadCallReports(filters: LeadCallReportExportFilters): Observable<Blob> {
+    return this.http.get(`${this.apiBaseUrl}/admin/reports/lead-call-reports/export`, {
+      headers: this.authHeaders(),
+      params: this.toParams(filters),
+      responseType: 'blob'
+    });
   }
 
   getConsultantLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {

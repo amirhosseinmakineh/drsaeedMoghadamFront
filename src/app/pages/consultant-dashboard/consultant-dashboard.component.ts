@@ -60,6 +60,7 @@ interface LeadReportForm {
 interface ReservationForm {
   reservationDate: Date | null;
   reservationTime: string;
+  secondaryPhoneNumber: string;
   description: string;
 }
 
@@ -550,6 +551,11 @@ interface ConsultantDashboardLink {
           <label>
             ساعت رزرو
             <input [(ngModel)]="reservationForm.reservationTime" name="reservationTime" type="time" />
+          </label>
+
+          <label>
+            شماره تماس دوم بیمار
+            <input [(ngModel)]="reservationForm.secondaryPhoneNumber" name="reservationSecondaryPhoneNumber" inputmode="tel" maxlength="20" placeholder="09120000000" />
           </label>
 
           <label>
@@ -1326,6 +1332,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reservationForm: ReservationForm = {
     reservationDate: null,
     reservationTime: '',
+    secondaryPhoneNumber: '',
     description: ''
   };
   reservations: ConsultantReservation[] = [];
@@ -1764,7 +1771,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentId,
       consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
-      secondaryPhoneNumber: null,
+      secondaryPhoneNumber: this.reservationForm.secondaryPhoneNumber.trim() || null,
       description: this.reservationForm.description.trim() || null
     };
 
@@ -2348,6 +2355,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
+      secondaryPhoneNumber: '',
       description: 'رزرو اولیه برای لید'
     };
     this.reservationDialogOpen = true;

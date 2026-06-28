@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AdminDashboardService, LeadAssignmentItem, LeadFilters } from '../../core/admin/admin-dashboard.service';
@@ -195,7 +195,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     { key: 'leadAssignmentType', label: 'نوع', value: row => this.typeLabel(this.leadType(row)), badge: () => 'info' }
   ];
 
-  constructor(private adminApi: AdminDashboardService) {}
+  constructor(private adminApi: AdminDashboardService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     if (!this.hasRequestedLoad) this.load();
@@ -225,6 +225,8 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       this.items = [];
       this.totalCount = 0;
       this.totalPages = 1;
+      this.loading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -242,16 +244,23 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       : this.adminApi.getSystemLeads(query);
 
     request.pipe(finalize(() => {
-      if (requestId === this.loadRequestId) this.loading = false;
+      if (requestId === this.loadRequestId) {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
     })).subscribe({
       next: response => {
         if (requestId !== this.loadRequestId) return;
         this.items = response.items ?? [];
         this.totalCount = response.totalCount ?? this.items.length;
         this.totalPages = Math.max(1, response.totalPages || Math.ceil(this.totalCount / this.filters.pageSize));
+        this.cdr.markForCheck();
       },
       error: error => {
-        if (requestId === this.loadRequestId) this.feedback = this.errorMessage(error, 'دریافت لیدها انجام نشد');
+        if (requestId === this.loadRequestId) {
+          this.feedback = this.errorMessage(error, 'دریافت لیدها انجام نشد');
+          this.cdr.markForCheck();
+        }
       }
     });
   }

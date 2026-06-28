@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -14,6 +14,7 @@ import {
 } from '../../core/admin/admin-dashboard.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { AdminAttendanceTableComponent } from '../admin-dashboard/admin-attendance-table.component';
+import { AdminLeadCallReportsComponent } from '../admin-dashboard/admin-lead-call-reports.component';
 import { AdminLeadsTableComponent } from '../admin-dashboard/admin-leads-table.component';
 import { SecretaryReservationAttendanceReviewsComponent } from '../admin-dashboard/secretary-reservation-attendance-reviews.component';
 import { BaseDialogComponent } from '../../shared/base/base-dialog/base-dialog.component';
@@ -21,7 +22,7 @@ import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-
 import { TableActionClick, TableColumn, TableComponent } from '../../shared/base/table/table.component';
 import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
 
-type DashboardSection = 'overview' | 'users' | 'consultants' | 'leads' | 'attendanceReviews';
+type DashboardSection = 'overview' | 'users' | 'consultants' | 'leads' | 'leadReports' | 'attendanceReviews';
 type UserDialogMode = 'add' | 'edit';
 
 interface DashboardLink {
@@ -62,6 +63,7 @@ interface ScoreFormModel {
     BaseDatepickerComponent,
     TableComponent,
     AdminLeadsTableComponent,
+    AdminLeadCallReportsComponent,
     AdminAttendanceTableComponent,
     SecretaryReservationAttendanceReviewsComponent,
     FaIconComponent
@@ -134,6 +136,11 @@ interface ScoreFormModel {
                   <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                   <strong>مدیریت لیدهای سیستم</strong>
                   <small>لیست کامل لیدها همراه فیلتر وضعیت و نوع</small>
+                </button>
+                <button type="button" (click)="setSection('leadReports')">
+                  <span><app-fa-icon name="clipboard"></app-fa-icon></span>
+                  <strong>گزارش تماس لیدها</strong>
+                  <small>دانلود CSV گزارش تماس‌ها با فیلتر تاریخ</small>
                 </button>
                 <button type="button" (click)="setSection('attendanceReviews')">
                   <span><app-fa-icon name="calendar"></app-fa-icon></span>
@@ -266,6 +273,10 @@ interface ScoreFormModel {
                 title="مدیریت کامل لیدهای سیستم"
                 description="مشاهده همه لیدهای سیستم همراه فیلتر وضعیت و نوع تخصیص"
               ></app-admin-leads-table>
+            }
+
+            @if (activeSection === 'leadReports') {
+              <app-admin-lead-call-reports></app-admin-lead-call-reports>
             }
 
             @if (activeSection === 'attendanceReviews') {
@@ -807,6 +818,7 @@ export class DashboardComponent implements OnInit {
     { id: 'users', label: 'کاربران', icon: 'users' },
     { id: 'consultants', label: 'مشاوران', icon: 'doctor' },
     { id: 'leads', label: 'لیدها', icon: 'clipboard' },
+    { id: 'leadReports', label: 'گزارش تماس', icon: 'clipboard' },
     { id: 'attendanceReviews', label: 'تایید حضور', icon: 'calendar' }
   ];
   readonly regularLinks: DashboardLink[] = [
@@ -891,7 +903,12 @@ export class DashboardComponent implements OnInit {
     { action: 'leads', label: 'لیدها', icon: 'clipboard' }
   ];
 
-  constructor(private auth: AuthService, private router: Router, private adminApi: AdminDashboardService) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private adminApi: AdminDashboardService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     if (this.isAdmin()) {
@@ -1053,14 +1070,21 @@ export class DashboardComponent implements OnInit {
     this.clearFeedback();
 
     this.adminApi.getConsultants(this.consultantFilters)
-      .pipe(finalize(() => this.consultantsLoading = false))
+      .pipe(finalize(() => {
+        this.consultantsLoading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: response => {
           this.consultants = (response.items ?? []).map(consultant => this.normalizeConsultant(consultant));
           this.consultantsTotalCount = response.totalCount ?? this.consultants.length;
           this.consultantsTotalPages = Math.max(1, response.totalPages || Math.ceil(this.consultantsTotalCount / this.consultantFilters.pageSize));
+          this.cdr.markForCheck();
         },
-        error: error => this.showFeedback(this.errorMessage(error, 'دریافت مشاوران انجام نشد'), 'error')
+        error: error => {
+          this.showFeedback(this.errorMessage(error, 'دریافت مشاوران انجام نشد'), 'error');
+          this.cdr.markForCheck();
+        }
       });
   }
 
