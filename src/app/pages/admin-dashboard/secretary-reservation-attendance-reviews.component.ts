@@ -58,12 +58,155 @@ import { AuthService } from '../../core/auth/auth.service';
     </section>
   `,
   styles: [`
-    .admin-panel{display:grid;gap:16px;padding:18px;border:1px solid var(--line);border-radius:30px;background:color-mix(in srgb,var(--surface) 88%,transparent);box-shadow:var(--shadow)}
-    .panel-heading{display:flex;justify-content:space-between;gap:12px}.panel-heading span{display:inline-flex;margin-bottom:8px;padding:5px 12px;border-radius:999px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);font-weight:950}.panel-heading h2{margin:0;font-size:1.35rem}.panel-heading p{margin:8px 0 0;color:var(--muted)}
-    .secondary-action,.primary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:18px;padding:12px 16px;color:var(--text);font:inherit;font-weight:950}.primary-action{border:0;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712}.secondary-action{background:var(--surface-muted)}.danger{color:#fecaca}.compact{min-height:40px;border-radius:999px;padding:9px 13px;font-size:.86rem}.secondary-action:disabled,.primary-action:disabled{cursor:not-allowed;opacity:.55}
-    .feedback,.empty-copy{margin:0;padding:12px 14px;border-radius:20px;font-weight:950}.feedback.success{background:color-mix(in srgb,#22c55e 16%,transparent);color:#bbf7d0}.feedback.error{background:color-mix(in srgb,var(--danger) 15%,transparent);color:#fecaca}.empty-copy{border:1px dashed var(--line);color:var(--muted);text-align:center}
-    .review-table{display:grid;gap:12px}.review-table article{display:grid;gap:12px;padding:14px;border:1px solid var(--line);border-radius:24px;background:color-mix(in srgb,var(--surface-muted) 58%,transparent)}.review-table header{display:flex;justify-content:space-between;gap:12px}.review-table strong,.review-table small{display:block}.review-table small,dt{color:var(--muted);font-weight:900}dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}dt,dd{margin:0}dd{font-weight:950}.success{color:#bbf7d0}.warn{color:#fde68a}.danger{color:#fecaca}label{display:grid;gap:8px;color:var(--muted);font-weight:950}.dialog-actions{display:flex;gap:10px;flex-wrap:wrap}@media(max-width:760px){.panel-heading,.review-table header{display:grid}dl{grid-template-columns:1fr}}
-  `]
+  .admin-panel {
+    display:grid;
+    gap:16px;
+    padding:18px;
+    border:1px solid var(--line);
+    border-radius:30px;
+    background:color-mix(in srgb,var(--surface) 88%,transparent);
+    box-shadow:var(--shadow)
+  }
+  .panel-heading {
+    display:flex;
+    justify-content:space-between;
+    gap:12px
+  }
+  .panel-heading span {
+    display:inline-flex;
+    margin-bottom:8px;
+    padding:5px 12px;
+    border-radius:999px;
+    background:color-mix(in srgb,var(--brand) 14%,transparent);
+    color:var(--brand);
+    font-weight:950
+  }
+  .panel-heading h2 {
+    margin:0;
+    font-size:1.35rem
+  }
+  .panel-heading p {
+    margin:8px 0 0;
+    color:var(--muted)
+  }
+  .secondary-action,.primary-action {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:48px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:12px 16px;
+    color:var(--text);
+    font:inherit;
+    font-weight:950
+  }
+  .primary-action {
+    border:0;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    color:#1b1712
+  }
+  .secondary-action {
+    background:var(--surface-muted)
+  }
+  .danger {
+    color:#fecaca
+  }
+  .compact {
+    min-height:40px;
+    border-radius:999px;
+    padding:9px 13px;
+    font-size:.86rem
+  }
+  .secondary-action:disabled,.primary-action:disabled {
+    cursor:not-allowed;
+    opacity:.55
+  }
+  .feedback,.empty-copy {
+    margin:0;
+    padding:12px 14px;
+    border-radius:20px;
+    font-weight:950
+  }
+  .feedback.success {
+    background:color-mix(in srgb,#22c55e 16%,transparent);
+    color:#bbf7d0
+  }
+  .feedback.error {
+    background:color-mix(in srgb,var(--danger) 15%,transparent);
+    color:#fecaca
+  }
+  .empty-copy {
+    border:1px dashed var(--line);
+    color:var(--muted);
+    text-align:center
+  }
+  .review-table {
+    display:grid;
+    gap:12px
+  }
+  .review-table article {
+    display:grid;
+    gap:12px;
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:24px;
+    background:color-mix(in srgb,var(--surface-muted) 58%,transparent)
+  }
+  .review-table header {
+    display:flex;
+    justify-content:space-between;
+    gap:12px
+  }
+  .review-table strong,.review-table small {
+    display:block
+  }
+  .review-table small,dt {
+    color:var(--muted);
+    font-weight:900
+  }
+  dl {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    margin:0
+  }
+  dt,dd {
+    margin:0
+  }
+  dd {
+    font-weight:950
+  }
+  .success {
+    color:#bbf7d0
+  }
+  .warn {
+    color:#fde68a
+  }
+  .danger {
+    color:#fecaca
+  }
+  label {
+    display:grid;
+    gap:8px;
+    color:var(--muted);
+    font-weight:950
+  }
+  .dialog-actions {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap
+  }
+  @media(max-width:760px) {
+    .panel-heading,.review-table header {
+      display:grid
+    }
+    dl {
+      grid-template-columns:1fr
+    }
+  }
+    `]
 })
 export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
   items: ReservationAttendanceReview[] = [];
