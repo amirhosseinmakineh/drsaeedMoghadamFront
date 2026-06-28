@@ -109,6 +109,10 @@ export interface SubmitLeadCallReportRequest {
   consultantProfileId: number;
   callResult: number;
   reportDescription: string;
+  patientCity: string;
+  patientRegion: string;
+  businessName: string;
+  attendanceProbabilityPercent?: number;
 }
 
 export interface LeadCallReportResponse {
@@ -140,9 +144,7 @@ export interface CreateReservationRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
   reservationAt: string;
-  patientCity: string;
-  attendanceProbabilityPercent: number;
-  attendancePrediction: string;
+  secondaryPhoneNumber: string | null;
   description: string | null;
 }
 

@@ -51,14 +51,15 @@ interface ConsultantProfileForm {
 interface LeadReportForm {
   callResult: number;
   reportDescription: string;
+  patientCity: string;
+  patientRegion: string;
+  businessName: string;
+  attendanceProbabilityPercent: number | null | '';
 }
 
 interface ReservationForm {
   reservationDate: Date | null;
   reservationTime: string;
-  patientCity: string;
-  attendanceProbabilityPercent: number;
-  attendancePrediction: string;
   description: string;
 }
 
@@ -411,6 +412,9 @@ interface ConsultantDashboardLink {
                           <button class="secondary-action compact" type="button" [disabled]="isReportDisabled(lead)" (click)="openReportDialog(lead)">
                             ثبت گزارش
                           </button>
+                          <button class="secondary-action compact" type="button" [disabled]="isReservationDisabled(lead)" (click)="openReservationDialog(lead, false)">
+                            رزرو وقت
+                          </button>
                         </div>
                       </article>
                     }
@@ -497,6 +501,26 @@ interface ConsultantDashboardLink {
             توضیحات گزارش
             <textarea [(ngModel)]="reportForm.reportDescription" [ngModelOptions]="{ updateOn: 'blur' }" name="leadReportDescription" rows="4"></textarea>
           </label>
+          <div class="two-col">
+            <label>
+              شهر بیمار
+              <input [(ngModel)]="reportForm.patientCity" name="leadReportPatientCity" maxlength="80" placeholder="تهران" />
+            </label>
+            <label>
+              منطقه بیمار
+              <input [(ngModel)]="reportForm.patientRegion" name="leadReportPatientRegion" maxlength="80" placeholder="سعادت‌آباد" />
+            </label>
+          </div>
+          <div class="two-col">
+            <label>
+              نام بیزینس/کلینیک
+              <input [(ngModel)]="reportForm.businessName" name="leadReportBusinessName" maxlength="120" placeholder="کلینیک/بیزینس نمونه" />
+            </label>
+            <label>
+              درصد احتمال حضور
+              <input [(ngModel)]="reportForm.attendanceProbabilityPercent" name="leadReportAttendanceProbability" type="number" min="0" max="100" />
+            </label>
+          </div>
           <div class="dialog-actions">
             <button class="secondary-action" type="button" (click)="closeReportDialog()">انصراف</button>
             <button class="primary-action" type="submit" [disabled]="reportSaving">{{ reportSaving ? 'در حال ثبت...' : 'ثبت گزارش' }}</button>
@@ -508,8 +532,8 @@ interface ConsultantDashboardLink {
         [open]="reservationDialogOpen"
         [showFooter]="false"
         [title]="selectedReservationLead ? 'رزرو برای ' + leadName(selectedReservationLead) : 'ثبت رزرو'"
-        subtitle="برای تماس‌های موفق، ثبت رزرو مرحله بعدی اجباری است."
-        [closable]="!reservationRequired && !reservationSaving"
+        subtitle="زمان رزرو لید را ثبت کنید."
+        [closable]="!reservationSaving"
         (closed)="closeReservationDialog()"
       >
         <form class="dialog-form" (ngSubmit)="submitReservation()">
@@ -527,35 +551,13 @@ interface ConsultantDashboardLink {
             ساعت رزرو
             <input [(ngModel)]="reservationForm.reservationTime" name="reservationTime" type="time" />
           </label>
-          <div class="two-col">
-            <label>
-              شهر بیمار
-              <input [(ngModel)]="reservationForm.patientCity" name="reservationPatientCity" maxlength="80" placeholder="تهران" />
-            </label>
-            <label>
-              درصد احتمال حضور
-              <input [(ngModel)]="reservationForm.attendanceProbabilityPercent" name="reservationAttendanceProbability" type="number" min="0" max="100" />
-            </label>
-          </div>
-          <label>
-            پیش‌بینی حضور
-            <textarea
-              [(ngModel)]="reservationForm.attendancePrediction"
-              name="reservationAttendancePrediction"
-              rows="3"
-              placeholder="بیمار گفت روز و ساعت رزرو شده داخل مطب حاضر می‌شود."
-            ></textarea>
-          </label>
+
           <label>
             توضیحات
             <textarea [(ngModel)]="reservationForm.description" name="reservationDescription" rows="3"></textarea>
           </label>
           <div class="dialog-actions">
-            @if (!reservationRequired) {
-              <button class="secondary-action" type="button" (click)="closeReservationDialog()">بعداً</button>
-            } @else {
-              <p class="required-step-note">ثبت رزرو بعد از تماس موفق الزامی است و این پنجره تا ثبت رزرو بسته نمی‌شود.</p>
-            }
+            <button class="secondary-action" type="button" (click)="closeReservationDialog()">بعداً</button>
             <button class="primary-action" type="submit" [disabled]="reservationSaving">{{ reservationSaving ? 'در حال ثبت...' : 'ثبت رزرو' }}</button>
           </div>
         </form>
@@ -1316,10 +1318,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reportDialogOpen = false;
   reportSaving = false;
   selectedLead: ConsultantLead | null = null;
-  reportForm: LeadReportForm = {
-    callResult: 1,
-    reportDescription: ''
-  };
+  reportForm: LeadReportForm = this.emptyLeadReportForm();
 
   reservationDialogOpen = false;
   reservationSaving = false;
@@ -1328,9 +1327,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reservationForm: ReservationForm = {
     reservationDate: null,
     reservationTime: '',
-    patientCity: '',
-    attendanceProbabilityPercent: 80,
-    attendancePrediction: '',
     description: ''
   };
   reservations: ConsultantReservation[] = [];
@@ -1574,10 +1570,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.isReportDisabled(lead)) return;
     this.forceOfflineForReport();
     this.selectedLead = lead;
-    this.reportForm = {
-      callResult: 1,
-      reportDescription: ''
-    };
+    this.reportForm = this.emptyLeadReportForm();
     this.reportDialogOpen = true;
   }
 
@@ -1596,11 +1589,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportSaving = true;
     this.clearFeedback();
 
+    const rawAttendanceProbability = this.reportForm.attendanceProbabilityPercent;
+    const attendanceProbabilityPercent = rawAttendanceProbability === null || rawAttendanceProbability === undefined || rawAttendanceProbability === ''
+      ? null
+      : Number(rawAttendanceProbability);
+    if (attendanceProbabilityPercent !== null && (!Number.isFinite(attendanceProbabilityPercent) || attendanceProbabilityPercent < 0 || attendanceProbabilityPercent > 100)) {
+      this.showFeedback('درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد', 'error');
+      this.reportSaving = false;
+      return;
+    }
+
     const payload: SubmitLeadCallReportRequest = {
       leadAssignmentId,
       consultantProfileId: profileId,
       callResult: Number(this.reportForm.callResult),
-      reportDescription: this.normalizedReportDescription(Number(this.reportForm.callResult))
+      reportDescription: this.normalizedReportDescription(Number(this.reportForm.callResult)),
+      patientCity: this.reportForm.patientCity.trim(),
+      patientRegion: this.reportForm.patientRegion.trim(),
+      businessName: this.reportForm.businessName.trim(),
+      ...(attendanceProbabilityPercent === null ? {} : { attendanceProbabilityPercent })
     };
 
     this.consultantApi.submitLeadCallReport(payload)
@@ -1618,14 +1625,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
           this.markLeadReported(leadAssignmentId, response.data?.leadAssignmentState ?? LEAD_STATE.Contacted);
           if (wasBlockingOfflineLead) this.updatePendingOfflineCount(Math.max(0, this.pendingOfflineCount - 1));
-          const shouldOpenReservation = response.data?.shouldOpenReservationPage === true;
           this.closeReportDialog();
           this.showFeedback(response.message || 'گزارش تماس ثبت شد', 'success');
-          if (shouldOpenReservation) {
-            this.openReservationDialog(lead, true);
-          } else {
-            this.restoreOnlineAfterRequiredAction();
-          }
+          this.restoreOnlineAfterRequiredAction();
           this.refreshDashboard();
         },
         error: error => this.showFeedback(this.errorMessage(error, 'ثبت گزارش تماس انجام نشد'), 'error')
@@ -1633,20 +1635,26 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
 
+  private emptyLeadReportForm(): LeadReportForm {
+    return {
+      callResult: 1,
+      reportDescription: '',
+      patientCity: '',
+      patientRegion: '',
+      businessName: '',
+      attendanceProbabilityPercent: null
+    };
+  }
+
   private normalizedReportDescription(callResult: number): string {
     return this.reportForm.reportDescription.trim() || CALL_RESULT_DEFAULT_DESCRIPTIONS[callResult] || 'گزارش تماس ثبت شد';
   }
 
   closeReservationDialog(): void {
-    const wasRequired = this.reservationRequired;
     this.reservationDialogOpen = false;
     this.reservationSaving = false;
     this.reservationRequired = false;
     this.selectedReservationLead = null;
-
-    if (wasRequired) {
-      this.showFeedback('برای تماس موفق، ثبت رزرو مرحله بعدی الزامی است', 'error');
-    }
   }
 
   setReservationDate(date: Date): void {
@@ -1754,22 +1762,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const patientCity = this.reservationForm.patientCity.trim();
-    const attendancePrediction = this.reservationForm.attendancePrediction.trim();
-    const attendanceProbabilityPercent = Number(this.reservationForm.attendanceProbabilityPercent);
-    if (!patientCity) { this.showFeedback('شهر بیمار اجباری است', 'error'); return; }
-    if (!attendancePrediction) { this.showFeedback('پیش‌بینی حضور بیمار اجباری است', 'error'); return; }
-    if (!Number.isFinite(attendanceProbabilityPercent) || attendanceProbabilityPercent < 0 || attendanceProbabilityPercent > 100) {
-      this.showFeedback('درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد', 'error'); return;
-    }
-
     const payload: CreateReservationRequest = {
       leadAssignmentId,
       consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
-      patientCity,
-      attendanceProbabilityPercent,
-      attendancePrediction,
+      secondaryPhoneNumber: null,
       description: this.reservationForm.description.trim() || null
     };
 
@@ -1787,11 +1784,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.reservationRequired = false;
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
-          const requiresPatientProfile = Boolean(reservation && this.canCompletePatientProfile(reservation));
+          const shouldOpenPatientProfile = Boolean(reservation);
           this.showFeedback(response.message || 'رزرو با موفقیت ثبت شد', 'success');
           this.loadReservations();
 
-          if (requiresPatientProfile && reservation) {
+          if (shouldOpenPatientProfile && reservation) {
             this.openPatientProfileDialog(reservation);
           } else {
             this.restoreOnlineAfterRequiredAction();
@@ -1997,6 +1994,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       || state === LEAD_STATE.Contacted
       || state === LEAD_STATE.Converted
       || state === LEAD_STATE.Rejected;
+  }
+
+  isReservationDisabled(lead: ConsultantLead): boolean {
+    return !this.leadId(lead) || this.isLeadExpired(lead);
   }
 
   minReservationDateTime(): string {
@@ -2344,17 +2345,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private openReservationDialog(lead: ConsultantLead, required: boolean): void {
+  openReservationDialog(lead: ConsultantLead, required: boolean): void {
     const minimumReservationAt = this.minimumReservationDateTime();
     this.selectedReservationLead = lead;
     this.reservationRequired = required;
     this.reservationForm = {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
-      patientCity: '',
-      attendanceProbabilityPercent: 80,
-      attendancePrediction: '',
-      description: 'رزرو اولیه پس از تماس موفق'
+      description: 'رزرو اولیه برای لید'
     };
     this.reservationDialogOpen = true;
   }
