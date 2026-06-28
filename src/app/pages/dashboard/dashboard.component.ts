@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -903,7 +903,12 @@ export class DashboardComponent implements OnInit {
     { action: 'leads', label: 'لیدها', icon: 'clipboard' }
   ];
 
-  constructor(private auth: AuthService, private router: Router, private adminApi: AdminDashboardService) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private adminApi: AdminDashboardService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     if (this.isAdmin()) {
@@ -1065,14 +1070,21 @@ export class DashboardComponent implements OnInit {
     this.clearFeedback();
 
     this.adminApi.getConsultants(this.consultantFilters)
-      .pipe(finalize(() => this.consultantsLoading = false))
+      .pipe(finalize(() => {
+        this.consultantsLoading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: response => {
           this.consultants = (response.items ?? []).map(consultant => this.normalizeConsultant(consultant));
           this.consultantsTotalCount = response.totalCount ?? this.consultants.length;
           this.consultantsTotalPages = Math.max(1, response.totalPages || Math.ceil(this.consultantsTotalCount / this.consultantFilters.pageSize));
+          this.cdr.markForCheck();
         },
-        error: error => this.showFeedback(this.errorMessage(error, 'دریافت مشاوران انجام نشد'), 'error')
+        error: error => {
+          this.showFeedback(this.errorMessage(error, 'دریافت مشاوران انجام نشد'), 'error');
+          this.cdr.markForCheck();
+        }
       });
   }
 

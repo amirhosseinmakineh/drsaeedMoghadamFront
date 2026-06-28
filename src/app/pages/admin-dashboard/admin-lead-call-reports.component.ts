@@ -47,17 +47,12 @@ import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-
       @if (feedback) {
         <p class="feedback" [class.error]="feedbackType === 'error'" [class.success]="feedbackType === 'success'">{{ feedback }}</p>
       }
-
-      <div class="report-hint">
-        <strong>ستون‌های خروجی:</strong>
-        <span>LeadId، LeadName، LeadPhone، ConsultantName، ConsultantPhone، CallResult، ReportDescription، ReportSubmittedAt، ContactedAt، PatientCity، PatientRegion، BusinessName، AttendanceProbabilityPercent، AssignmentType، LeadState</span>
-      </div>
     </section>
   `,
   styles: [`
     .report-panel{display:grid;gap:16px;padding:18px;border:1px solid var(--line);border-radius:30px;background:color-mix(in srgb,var(--surface) 88%,transparent);box-shadow:var(--shadow)}
     .panel-heading{display:flex;justify-content:space-between;gap:12px}.panel-heading span{display:inline-flex;margin-bottom:8px;padding:5px 12px;border-radius:999px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);font-weight:950}.panel-heading h2{margin:0;font-size:1.35rem}.panel-heading p{margin:8px 0 0;color:var(--muted)}
-    .filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}label{display:grid;gap:8px;color:var(--muted);font-weight:950}.primary-filter{min-height:50px;border:0;border-radius:18px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712;font:inherit;font-weight:950}.secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:18px;padding:12px 16px;background:var(--surface-muted);color:var(--text);font:inherit;font-weight:950}.compact{min-height:40px;border-radius:999px;padding:9px 13px;font-size:.86rem}.feedback{margin:0;padding:10px 12px;border-radius:18px;font-weight:900}.feedback.error{background:color-mix(in srgb,var(--danger) 14%,transparent);color:#fecaca}.feedback.success{background:color-mix(in srgb,var(--success) 14%,transparent);color:#bbf7d0}.report-hint{display:grid;gap:8px;padding:14px;border:1px dashed var(--line);border-radius:22px;color:var(--muted);line-height:1.9}.report-hint strong{color:var(--text)}@media (max-width:760px){.report-panel{padding:14px;border-radius:24px}.filter-grid{grid-template-columns:1fr}}
+    .filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}label{display:grid;gap:8px;color:var(--muted);font-weight:950}.primary-filter{min-height:50px;border:0;border-radius:18px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712;font:inherit;font-weight:950}.secondary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:18px;padding:12px 16px;background:var(--surface-muted);color:var(--text);font:inherit;font-weight:950}.compact{min-height:40px;border-radius:999px;padding:9px 13px;font-size:.86rem}.feedback{margin:0;padding:10px 12px;border-radius:18px;font-weight:900}.feedback.error{background:color-mix(in srgb,var(--danger) 14%,transparent);color:#fecaca}.feedback.success{background:color-mix(in srgb,var(--success) 14%,transparent);color:#bbf7d0}@media (max-width:760px){.report-panel{padding:14px;border-radius:24px}.filter-grid{grid-template-columns:1fr}}
   `]
 })
 export class AdminLeadCallReportsComponent {
