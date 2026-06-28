@@ -429,8 +429,83 @@ interface ScoreFormModel {
     .dialog-form{display:grid;gap:14px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}.switch-row{display:grid;gap:8px}.switch-row label{display:flex;align-items:center;gap:8px}.switch-row input{width:auto}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}.ghost-action,.solid-action{border:0;border-radius:999px;padding:12px 18px;font:inherit;font-weight:950}.ghost-action{background:var(--surface-muted);color:var(--text)}.solid-action{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#1b1712}.solid-action:disabled{opacity:.6;cursor:not-allowed}.delete-copy{margin:0;color:var(--muted)}
     @media (max-width: 980px){.dashboard-layout{grid-template-columns:1fr;width:min(100% - 24px,760px);padding-top:14px}.dashboard-sidebar{position:relative;top:0;min-height:0}.dashboard-grid,.admin-overview{grid-template-columns:1fr}.filter-grid,.users-filter{grid-template-columns:1fr 1fr}}
     @media (max-width: 760px){
-      .dashboard-layout.admin-mode{width:100%;padding:0 10px 96px}.dashboard-layout.admin-mode .dashboard-sidebar{position:fixed;z-index:80;inset-inline:10px;bottom:10px;top:auto;min-height:0;padding:8px;border-radius:28px}.admin-mode .dashboard-brand,.admin-mode .dashboard-user-card,.admin-mode .logout-btn{display:none}.admin-mode .dashboard-nav{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.admin-mode .dashboard-nav button{display:grid;place-items:center;gap:3px;min-height:58px;padding:7px;border-radius:20px;text-align:center;font-size:.72rem}.admin-mode .dashboard-nav app-fa-icon{font-size:1.1rem;color:var(--brand)}
-      .dashboard-content{padding-top:10px}.dashboard-hero,.admin-panel{border-radius:24px}.admin-panel{padding:14px}.filter-grid,.users-filter,.two-col{grid-template-columns:1fr}.dialog-actions{display:grid;grid-template-columns:1fr 1fr}.panel-heading{display:grid}
+      .dashboard-layout.admin-mode {
+        width: 100%;
+        padding: 0 10px 96px;
+      }
+
+      .dashboard-layout.admin-mode .dashboard-sidebar {
+        position: fixed;
+        z-index: 80;
+        inset-inline: 10px;
+        bottom: 10px;
+        top: auto;
+        min-height: 0;
+        padding: 8px;
+        border-radius: 28px;
+        background: var(--surface);
+        box-shadow: 0 8px 22px rgba(93, 64, 32, .08);
+        contain: layout paint;
+      }
+
+      .admin-mode .dashboard-brand,
+      .admin-mode .dashboard-user-card,
+      .admin-mode .logout-btn {
+        display: none;
+      }
+
+      .admin-mode .dashboard-nav {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .admin-mode .dashboard-nav button {
+        display: grid;
+        place-items: center;
+        gap: 3px;
+        min-height: 58px;
+        padding: 7px;
+        border-radius: 20px;
+        text-align: center;
+        font-size: .72rem;
+      }
+
+      .admin-mode .dashboard-nav app-fa-icon {
+        color: var(--brand);
+        font-size: 1.1rem;
+      }
+
+      .dashboard-content {
+        padding-top: 10px;
+      }
+
+      .dashboard-hero,
+      .admin-panel {
+        border-radius: 24px;
+        background: var(--surface);
+        box-shadow: 0 8px 22px rgba(93, 64, 32, .06);
+        contain: paint;
+        overflow: hidden;
+      }
+
+      .admin-panel {
+        padding: 14px;
+      }
+
+      .filter-grid,
+      .users-filter,
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .dialog-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .panel-heading {
+        display: grid;
+      }
     }
   `]
 })
