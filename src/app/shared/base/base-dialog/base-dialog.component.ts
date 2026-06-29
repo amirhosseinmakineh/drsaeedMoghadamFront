@@ -40,7 +40,12 @@ import { FaIconComponent } from "../../ui/fa-icon/fa-icon.component";
           <button class="dialog-btn ghost" type="button" (click)="close()">
             {{ cancelText }}
           </button>
-          <button class="dialog-btn solid" type="button" (click)="confirm()">
+          <button
+            class="dialog-btn solid"
+            type="button"
+            [disabled]="confirmDisabled"
+            (click)="confirm()"
+          >
             {{ confirmText }}
           </button>
         </footer>
@@ -146,6 +151,11 @@ import { FaIconComponent } from "../../ui/fa-icon/fa-icon.component";
         font-weight: 900;
         cursor: pointer;
       }
+      .dialog-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+        box-shadow: none;
+      }
       .ghost {
         background: var(--surface-muted, #efe2d0);
         color: var(--text, #2c241b);
@@ -198,6 +208,7 @@ export class BaseDialogComponent {
   @Input() subtitle = "";
   @Input() showFooter = true;
   @Input() closable = true;
+  @Input() confirmDisabled = false;
   @Input() size: "default" | "wide" = "default";
   @Input() confirmText = "تایید";
   @Input() cancelText = "انصراف";
@@ -206,6 +217,7 @@ export class BaseDialogComponent {
   @Output() closed = new EventEmitter<void>();
 
   confirm(): void {
+    if (this.confirmDisabled) return;
     this.confirmClick.emit();
   }
 

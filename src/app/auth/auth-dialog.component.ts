@@ -115,7 +115,7 @@ import { FaIconComponent } from "../shared/ui/fa-icon/fa-icon.component";
           </div>
         }
 
-        <button class="primary full" type="submit" [disabled]="loading()">
+        <button class="primary full" type="submit" [disabled]="loading() || validate() !== null">
           <app-fa-icon name="user"></app-fa-icon>
           {{
             loading()
@@ -342,7 +342,7 @@ export class AuthDialogComponent {
       });
   }
 
-  private validate(): string | null {
+  validate(): string | null {
     const phone = this.form.phone.trim();
     if (!phone)
       return this.language === "fa"

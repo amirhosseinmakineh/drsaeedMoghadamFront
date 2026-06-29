@@ -39,6 +39,8 @@ export class HomeComponent {
   activeWorkSample = signal(0);
   activeTestimonial = signal(0);
   leadSent = signal(false);
+  leadFeedback = signal("");
+  leadFeedbackType = signal<"success" | "error">("success");
   services = DENTAL_SERVICES;
   featuredServices = FEATURED_DENTAL_SERVICES;
   heroSlides = HERO_SLIDES;
@@ -94,8 +96,43 @@ export class HomeComponent {
   }
 
   submitLead(): void {
-    if (!this.lead.fullName || !this.lead.phone) return;
+    const validationError = this.validateLeadForm();
+    if (validationError) {
+      this.showLeadFeedback(validationError, "error");
+      return;
+    }
+
     this.leadSent.set(true);
+    this.showLeadFeedback(
+      this.language() === "fa"
+        ? "درخواست تماس شما ثبت شد."
+        : "Your call request has been recorded.",
+      "success",
+    );
+  }
+
+  validateLeadForm(): string | null {
+    const isFa = this.language() === "fa";
+    if (!this.lead.fullName.trim())
+      return isFa ? "نام و نام خانوادگی الزامی است" : "Full name is required";
+    if (this.lead.fullName.trim().length > 100)
+      return isFa
+        ? "نام نباید بیشتر از ۱۰۰ کاراکتر باشد"
+        : "Full name must be at most 100 characters";
+    if (!/^09\d{9}$/.test(this.lead.phone.trim()))
+      return isFa ? "شماره تماس معتبر نیست" : "Phone number is invalid";
+    if (!this.services.some((service) => service.id === this.lead.serviceId))
+      return isFa ? "درمان مورد نظر معتبر نیست" : "Selected service is invalid";
+    if (this.lead.message.trim().length > 1000)
+      return isFa
+        ? "توضیح کوتاه نباید بیشتر از ۱۰۰۰ کاراکتر باشد"
+        : "Short note must be at most 1000 characters";
+    return null;
+  }
+
+  private showLeadFeedback(message: string, type: "success" | "error"): void {
+    this.leadFeedback.set(message);
+    this.leadFeedbackType.set(type);
   }
 
   private updateSeo(): void {
