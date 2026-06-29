@@ -151,6 +151,107 @@ export interface LeadFilters {
   pageSize: number;
 }
 
+export interface SecretaryReservation {
+  id?: number;
+  Id?: number;
+  leadAssignmentId?: number;
+  LeadAssignmentId?: number;
+  consultantProfileId?: number;
+  ConsultantProfileId?: number;
+  consultantUserId?: string | null;
+  ConsultantUserId?: string | null;
+  consultantFullName?: string | null;
+  ConsultantFullName?: string | null;
+  patientUserId?: string | null;
+  PatientUserId?: string | null;
+  requiresPatientProfile?: boolean;
+  RequiresPatientProfile?: boolean;
+  reservationAt?: string | null;
+  ReservationAt?: string | null;
+  patientName?: string | null;
+  PatientName?: string | null;
+  patientPhoneNumber?: string | null;
+  PatientPhoneNumber?: string | null;
+  secondaryPhoneNumber?: string | null;
+  SecondaryPhoneNumber?: string | null;
+  patientCity?: string | null;
+  PatientCity?: string | null;
+  patientRegion?: string | null;
+  PatientRegion?: string | null;
+  businessName?: string | null;
+  BusinessName?: string | null;
+  attendanceProbabilityPercent?: number | null;
+  AttendanceProbabilityPercent?: number | null;
+  attendanceConfirmationStatus?: number | null;
+  AttendanceConfirmationStatus?: number | null;
+  consultantAttendanceConfirmedAt?: string | null;
+  ConsultantAttendanceConfirmedAt?: string | null;
+  consultantSaysPatientAttended?: boolean | null;
+  ConsultantSaysPatientAttended?: boolean | null;
+  consultantAttendanceNote?: string | null;
+  ConsultantAttendanceNote?: string | null;
+  isWaitingForSecretaryReview?: boolean | null;
+  IsWaitingForSecretaryReview?: boolean | null;
+  secretaryReviewedAt?: string | null;
+  SecretaryReviewedAt?: string | null;
+  secretaryUserId?: string | null;
+  SecretaryUserId?: string | null;
+  secretaryApprovedConsultantConfirmation?: boolean | null;
+  SecretaryApprovedConsultantConfirmation?: boolean | null;
+  secretaryReviewNote?: string | null;
+  SecretaryReviewNote?: string | null;
+  isAttendanceScoreApplied?: boolean | null;
+  IsAttendanceScoreApplied?: boolean | null;
+  attendanceScoreValue?: number | null;
+  AttendanceScoreValue?: number | null;
+  attendanceScoreAppliedAt?: string | null;
+  AttendanceScoreAppliedAt?: string | null;
+  description?: string | null;
+  Description?: string | null;
+  isCanceled?: boolean;
+  IsCanceled?: boolean;
+}
+
+export interface SecretaryReservationFilters {
+  consultantProfileId?: number | null;
+  from?: string;
+  to?: string;
+  attendanceConfirmationStatus?: number | null;
+  onlyWaitingForSecretaryReview?: boolean;
+  includeCanceled?: boolean;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface CompletePatientProfileRequest {
+  reservationId: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  passwordHash: string;
+  avatarImageName?: string | null;
+  gender: number;
+  birthDate: string;
+  nationalCode: string;
+  address: string;
+  emergencyPhoneNumber?: string | null;
+  insuranceName?: string | null;
+  notes?: string | null;
+}
+
+export interface CompletePatientProfileResponse {
+  reservationId: number;
+  patientUserId: string;
+  patientProfileId: number;
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  reservationAt: string;
+  patientName: string;
+  patientPhoneNumber: string;
+  isCompleteProfile: boolean;
+  roleName: string;
+}
+
 export interface ReservationAttendanceReview {
   id?: number;
   Id?: number;
@@ -331,23 +432,47 @@ export class AdminDashboardService {
       );
   }
 
-  getReservationAttendanceReviews(
-    pageNumber = 1,
-    pageSize = 20,
-  ): Observable<PaginatedResponse<ReservationAttendanceReview>> {
+  getSecretaryReservations(
+    filters: SecretaryReservationFilters,
+  ): Observable<PaginatedResponse<SecretaryReservation>> {
     return this.http
-      .get<unknown>(`${this.apiBaseUrl}/Reservation/AttendanceReviews`, {
+      .get<unknown>(`${this.apiBaseUrl}/Reservation/SecretaryReservations`, {
         headers: this.authHeaders(),
-        params: this.toParams({ pageNumber, pageSize }),
+        params: this.toParams(filters),
       })
       .pipe(
         map((response) =>
-          this.normalizePaginatedResponse<ReservationAttendanceReview>(
+          this.normalizePaginatedResponse<SecretaryReservation>(
             response,
-            { pageNumber, pageSize },
+            filters,
           ),
         ),
       );
+  }
+
+  getReservationAttendanceReviews(
+    pageNumber = 1,
+    pageSize = 20,
+  ): Observable<PaginatedResponse<SecretaryReservation>> {
+    return this.getSecretaryReservations({
+      onlyWaitingForSecretaryReview: true,
+      pageNumber,
+      pageSize,
+    });
+  }
+
+  completePatientProfile(
+    payload: CompletePatientProfileRequest,
+  ): Observable<ApiCommandResponse<CompletePatientProfileResponse>> {
+    return this.http
+      .post<ApiCommandResponse<CompletePatientProfileResponse>>(
+        `${this.apiBaseUrl}/Reservation/CompletePatientProfile`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("تشکیل پرونده بیمار انجام نشد"));
   }
 
   reviewAttendance(

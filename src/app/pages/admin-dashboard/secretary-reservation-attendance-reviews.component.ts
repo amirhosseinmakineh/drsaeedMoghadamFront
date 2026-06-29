@@ -4,7 +4,8 @@ import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
 import {
   AdminDashboardService,
-  ReservationAttendanceReview,
+  CompletePatientProfileRequest,
+  SecretaryReservation,
 } from "../../core/admin/admin-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
 
@@ -17,7 +18,7 @@ import { AuthService } from "../../core/auth/auth.service";
       <header class="panel-heading">
         <div>
           <span>بررسی منشی</span>
-          <h2>بررسی تایید حضور مشاورها</h2>
+          <h2>داشبورد رزروها و بررسی تایید حضور</h2>
         </div>
         <button
           class="secondary-action compact"
@@ -74,7 +75,7 @@ import { AuthService } from "../../core/auth/auth.service";
                 <div>
                   <dt>مشاور</dt>
                   <dd>
-                    {{ value(item.consultantName, item.ConsultantName, "-") }}
+                    {{ value(item.consultantFullName, item.ConsultantFullName, "-") }}
                   </dd>
                 </div>
                 <div>
@@ -96,8 +97,8 @@ import { AuthService } from "../../core/auth/auth.service";
                   <dd>
                     {{
                       value(
-                        item.attendancePrediction,
-                        item.AttendancePrediction,
+                        consultantAttendanceText(item),
+                        null,
                         "-"
                       )
                     }}
@@ -124,6 +125,16 @@ import { AuthService } from "../../core/auth/auth.service";
                 ></textarea>
               </label>
               <div class="dialog-actions">
+                @if (requiresPatientProfile(item)) {
+                  <button
+                    class="secondary-action compact"
+                    type="button"
+                    (click)="openProfileDialog(item)"
+                  >
+                    تکمیل پرونده
+                  </button>
+                }
+                @if (isWaitingForSecretaryReview(item)) {
                 <button
                   class="primary-action compact"
                   type="button"
@@ -140,12 +151,44 @@ import { AuthService } from "../../core/auth/auth.service";
                 >
                   رد ادعای مشاور
                 </button>
+                }
               </div>
             </article>
           }
         </div>
       }
     </section>
+
+      @if (profileDialogOpen) {
+        <div class="inline-dialog-backdrop" (click)="closeProfileDialog()">
+          <form class="inline-dialog" (click)="$event.stopPropagation()" (ngSubmit)="submitProfile()">
+            <h3>تکمیل پرونده بیمار</h3>
+            <div class="two-col">
+              <label>نام<input [(ngModel)]="profileForm.firstName" name="secPatientFirstName" maxlength="100" /></label>
+              <label>نام خانوادگی<input [(ngModel)]="profileForm.lastName" name="secPatientLastName" maxlength="100" /></label>
+            </div>
+            <div class="two-col">
+              <label>موبایل<input [(ngModel)]="profileForm.phoneNumber" name="secPatientPhone" readonly /></label>
+              <label>رمز عبور<input [(ngModel)]="profileForm.passwordHash" name="secPatientPassword" type="password" minlength="6" /></label>
+            </div>
+            <div class="two-col">
+              <label>کد ملی<input [(ngModel)]="profileForm.nationalCode" name="secPatientNationalCode" maxlength="10" inputmode="numeric" /></label>
+              <label>تاریخ تولد<input [(ngModel)]="profileForm.birthDate" name="secPatientBirthDate" type="date" /></label>
+            </div>
+            <label>آدرس<textarea [(ngModel)]="profileForm.address" name="secPatientAddress" rows="3"></textarea></label>
+            <div class="two-col">
+              <label>جنسیت<select [(ngModel)]="profileForm.gender" name="secPatientGender"><option [ngValue]="1">مرد</option><option [ngValue]="2">زن</option></select></label>
+              <label>شماره اضطراری<input [(ngModel)]="profileForm.emergencyPhoneNumber" name="secEmergencyPhone" inputmode="tel" /></label>
+            </div>
+            <label>بیمه<input [(ngModel)]="profileForm.insuranceName" name="secInsurance" /></label>
+            <label>توضیحات<textarea [(ngModel)]="profileForm.notes" name="secProfileNotes" rows="2"></textarea></label>
+            <div class="dialog-actions">
+              <button class="secondary-action" type="button" (click)="closeProfileDialog()">انصراف</button>
+              <button class="primary-action" type="submit" [disabled]="profileSaving || validateProfileForm() !== null">{{ profileSaving ? "در حال ثبت..." : "ثبت پرونده" }}</button>
+            </div>
+          </form>
+        </div>
+      }
   `,
   styles: [
     `
@@ -240,6 +283,12 @@ import { AuthService } from "../../core/auth/auth.service";
         display: grid;
         gap: 12px;
       }
+      .inline-dialog-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.58); }
+      .inline-dialog { width: min(760px, 100%); max-height: 92vh; overflow: auto; display: grid; gap: 12px; padding: 18px; border-radius: 28px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
+      .inline-dialog h3 { margin: 0; }
+      .two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      label { display: grid; gap: 7px; color: var(--muted); font-weight: 850; }
+      input, select, textarea { width: 100%; border: 1px solid var(--line); border-radius: 16px; padding: 11px 12px; background: var(--surface-muted); color: var(--text); font: inherit; }
       .review-table article {
         display: grid;
         gap: 12px;
@@ -308,7 +357,11 @@ import { AuthService } from "../../core/auth/auth.service";
   ],
 })
 export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
-  items: ReservationAttendanceReview[] = [];
+  items: SecretaryReservation[] = [];
+  profileDialogOpen = false;
+  profileSaving = false;
+  selectedProfileReservation: SecretaryReservation | null = null;
+  profileForm = this.emptyProfileForm();
   notes: Record<number, string> = {};
   loading = false;
   savingId: number | null = null;
@@ -328,7 +381,7 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
     this.loading = true;
     this.feedback = "";
     this.adminApi
-      .getReservationAttendanceReviews()
+      .getSecretaryReservations({ pageNumber: 1, pageSize: 50, includeCanceled: false })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (response) => (this.items = response.items ?? []),
@@ -342,7 +395,7 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
       });
   }
 
-  review(item: ReservationAttendanceReview, approved: boolean): void {
+  review(item: SecretaryReservation, approved: boolean): void {
     const reservationId = this.reservationId(item);
     const secretaryUserId = this.auth.user()?.userId;
     if (!reservationId || !secretaryUserId) {
@@ -377,21 +430,102 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
       });
   }
 
-  reservationId(item: ReservationAttendanceReview): number | null {
-    const value =
-      item.id ?? item.Id ?? item.reservationId ?? item.ReservationId;
+  requiresPatientProfile(item: SecretaryReservation): boolean {
+    return (item.requiresPatientProfile ?? item.RequiresPatientProfile) === true;
+  }
+
+  isWaitingForSecretaryReview(item: SecretaryReservation): boolean {
+    return (item.isWaitingForSecretaryReview ?? item.IsWaitingForSecretaryReview) === true;
+  }
+
+  openProfileDialog(item: SecretaryReservation): void {
+    const [firstName, ...rest] = this.value(item.patientName, item.PatientName, "").split(" ").filter(Boolean);
+    this.selectedProfileReservation = item;
+    this.profileForm = {
+      ...this.emptyProfileForm(),
+      firstName: firstName || "",
+      lastName: rest.join(" "),
+      phoneNumber: this.value(item.patientPhoneNumber, item.PatientPhoneNumber, ""),
+    };
+    this.profileDialogOpen = true;
+  }
+
+  closeProfileDialog(): void {
+    if (this.profileSaving) return;
+    this.profileDialogOpen = false;
+    this.selectedProfileReservation = null;
+    this.profileForm = this.emptyProfileForm();
+  }
+
+  submitProfile(): void {
+    const reservationId = this.selectedProfileReservation ? this.reservationId(this.selectedProfileReservation) : null;
+    const validation = this.validateProfileForm();
+    if (!reservationId || validation) {
+      this.showFeedback(validation || "شناسه رزرو در دسترس نیست", "error");
+      return;
+    }
+    const payload: CompletePatientProfileRequest = {
+      reservationId,
+      firstName: this.profileForm.firstName.trim(),
+      lastName: this.profileForm.lastName.trim(),
+      phoneNumber: this.profileForm.phoneNumber.trim(),
+      passwordHash: this.profileForm.passwordHash,
+      avatarImageName: null,
+      gender: Number(this.profileForm.gender),
+      birthDate: new Date(this.profileForm.birthDate).toISOString(),
+      nationalCode: this.profileForm.nationalCode.trim(),
+      address: this.profileForm.address.trim(),
+      emergencyPhoneNumber: this.profileForm.emergencyPhoneNumber.trim() || null,
+      insuranceName: this.profileForm.insuranceName.trim() || null,
+      notes: this.profileForm.notes.trim() || null,
+    };
+    this.profileSaving = true;
+    this.adminApi.completePatientProfile(payload).pipe(finalize(() => (this.profileSaving = false))).subscribe({
+      next: (response) => {
+        this.showFeedback(response.message || "پرونده بیمار ثبت شد", "success");
+        this.closeProfileDialog();
+        this.load();
+      },
+      error: (error) => this.showFeedback(error instanceof Error && error.message ? error.message : "ثبت پرونده انجام نشد", "error"),
+    });
+  }
+
+  validateProfileForm(): string | null {
+    if (!this.profileForm.firstName.trim()) return "نام بیمار الزامی است";
+    if (!this.profileForm.lastName.trim()) return "نام خانوادگی بیمار الزامی است";
+    if (!/^09\d{9}$/.test(this.profileForm.phoneNumber.trim())) return "شماره موبایل بیمار معتبر نیست";
+    if (this.profileForm.passwordHash.length < 6) return "رمز عبور باید حداقل ۶ کاراکتر باشد";
+    if (!/^\d{10}$/.test(this.profileForm.nationalCode.trim())) return "کد ملی بیمار باید ۱۰ رقم باشد";
+    if (!this.profileForm.address.trim()) return "آدرس بیمار الزامی است";
+    if (!this.profileForm.birthDate) return "تاریخ تولد بیمار الزامی است";
+    return null;
+  }
+
+  private emptyProfileForm() {
+    return { firstName: "", lastName: "", phoneNumber: "", passwordHash: "123456", avatarImageName: null, gender: 1, birthDate: "1995-01-01", nationalCode: "", address: "", emergencyPhoneNumber: "", insuranceName: "", notes: "" };
+  }
+
+  reservationId(item: SecretaryReservation): number | null {
+    const value = item.id ?? item.Id;
     const numeric = Number(value);
     return Number.isFinite(numeric) ? numeric : null;
   }
 
-  status(item: ReservationAttendanceReview): number | null {
+  consultantAttendanceText(item: SecretaryReservation): string {
+    const value = item.consultantSaysPatientAttended ?? item.ConsultantSaysPatientAttended;
+    if (value === true) return "بیمار آمده است";
+    if (value === false) return "بیمار نیامده است";
+    return "-";
+  }
+
+  status(item: SecretaryReservation): number | null {
     const numeric = Number(
       item.attendanceConfirmationStatus ?? item.AttendanceConfirmationStatus,
     );
     return Number.isFinite(numeric) ? numeric : null;
   }
 
-  probability(item: ReservationAttendanceReview): number | string {
+  probability(item: SecretaryReservation): number | string {
     return (
       item.attendanceProbabilityPercent ??
       item.AttendanceProbabilityPercent ??
