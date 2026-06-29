@@ -1,21 +1,29 @@
 <section class="hero-section page-section">
   <div class="hero-copy">
     <h1>{{ pickText(heroSlides[activeSlide()].title, language()) }}</h1>
-    <p class="hero-text">{{ pickText(heroSlides[activeSlide()].text, language()) }}</p>
+    <p class="hero-text">
+      {{ pickText(heroSlides[activeSlide()].text, language()) }}
+    </p>
 
     <div class="hero-actions">
       <button class="primary-btn" type="button" (click)="openAuth()">
         <app-fa-icon name="user"></app-fa-icon>
-        {{ language() === 'fa' ? 'ورود / عضویت' : 'Sign in / Join' }}
+        {{ language() === "fa" ? "ورود / عضویت" : "Sign in / Join" }}
       </button>
       <a class="secondary-btn" routerLink="/services">
-        {{ language() === 'fa' ? 'مشاهده خدمات' : 'Explore services' }}
+        {{ language() === "fa" ? "مشاهده خدمات" : "Explore services" }}
         <app-fa-icon name="arrowLeft"></app-fa-icon>
       </a>
     </div>
 
     <div class="hero-slide-controls" aria-label="Hero slider controls">
-      <button *ngFor="let slide of heroSlides; let i = index" type="button" [class.active]="i === activeSlide()" [attr.aria-label]="pickText(slide.title, language())" (click)="activeSlide.set(i)">
+      <button
+        *ngFor="let slide of heroSlides; let i = index"
+        type="button"
+        [class.active]="i === activeSlide()"
+        [attr.aria-label]="pickText(slide.title, language())"
+        (click)="activeSlide.set(i)"
+      >
         <span></span>
       </button>
     </div>
@@ -35,17 +43,24 @@
       <span></span>
       <span></span>
       <svg viewBox="0 0 420 260" role="img" aria-label="Smile motion graphic">
-        <path class="face-line" d="M74 116c28-62 102-86 171-62 47 16 82 53 103 101" />
+        <path
+          class="face-line"
+          d="M74 116c28-62 102-86 171-62 47 16 82 53 103 101"
+        />
         <path class="smile-line" d="M112 147c45 58 143 67 204 5" />
         <circle class="focus-dot" cx="118" cy="145" r="8" />
         <circle class="focus-dot delay" cx="298" cy="148" r="8" />
       </svg>
     </div>
     @switch (heroSlides[activeSlide()].id) {
-      @case ('mobile-first') {
+      @case ("mobile-first") {
         <img
           src="/images/5-640.png"
-          srcset="/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w"
+          srcset="
+            /images/5-360.png 360w,
+            /images/5-640.png 640w,
+            /images/5-960.png 960w
+          "
           sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
           width="1310"
           height="1201"
@@ -58,7 +73,11 @@
       @default {
         <img
           src="/images/1-640.png"
-          srcset="/images/1-360.png 360w, /images/1-640.png 640w, /images/1-960.png 960w"
+          srcset="
+            /images/1-360.png 360w,
+            /images/1-640.png 640w,
+            /images/1-960.png 960w
+          "
           sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
           width="1361"
           height="1156"
@@ -74,20 +93,44 @@
 
 <section class="page-section care-access-panel consultation-demo">
   <div>
-    <h2>{{ language() === 'fa' ? 'شماره تماس را ثبت کنید؛ مشاوران برای راهنمایی با شما تماس می‌گیرند' : 'Submit your phone number and consultants will call to guide you' }}</h2>
-    <p>{{ language() === 'fa' ? 'در فرم پایین، نام، شماره تماس و درمان مورد نظر را وارد می‌کنید. اگر درمان دقیق را نمی‌دانید، فقط مشکل اصلی را در توضیح کوتاه بنویسید.' : 'In the form below, enter your name, phone number and service of interest. If you are unsure about the exact service, describe your main concern in the short note.' }}</p>
+    <h2>
+      {{
+        language() === "fa"
+          ? "شماره تماس را ثبت کنید؛ مشاوران برای راهنمایی با شما تماس می‌گیرند"
+          : "Submit your phone number and consultants will call to guide you"
+      }}
+    </h2>
+    <p>
+      {{
+        language() === "fa"
+          ? "در فرم پایین، نام، شماره تماس و درمان مورد نظر را وارد می‌کنید. اگر درمان دقیق را نمی‌دانید، فقط مشکل اصلی را در توضیح کوتاه بنویسید."
+          : "In the form below, enter your name, phone number and service of interest. If you are unsure about the exact service, describe your main concern in the short note."
+      }}
+    </p>
     <div class="consultation-steps">
       <article>
         <strong>01</strong>
-        <span>{{ language() === 'fa' ? 'نام و شماره تماس را وارد کنید' : 'Enter your name and phone number' }}</span>
+        <span>{{
+          language() === "fa"
+            ? "نام و شماره تماس را وارد کنید"
+            : "Enter your name and phone number"
+        }}</span>
       </article>
       <article>
         <strong>02</strong>
-        <span>{{ language() === 'fa' ? 'درمان یا مشکل دندان را انتخاب کنید' : 'Choose the service or dental concern' }}</span>
+        <span>{{
+          language() === "fa"
+            ? "درمان یا مشکل دندان را انتخاب کنید"
+            : "Choose the service or dental concern"
+        }}</span>
       </article>
       <article>
         <strong>03</strong>
-        <span>{{ language() === 'fa' ? 'درخواست را ثبت کنید و منتظر تماس مشاور بمانید' : 'Submit the request and wait for the consultant call' }}</span>
+        <span>{{
+          language() === "fa"
+            ? "درخواست را ثبت کنید و منتظر تماس مشاور بمانید"
+            : "Submit the request and wait for the consultant call"
+        }}</span>
       </article>
     </div>
   </div>
@@ -97,54 +140,92 @@
       <div class="phone-hero-card">
         <span><app-fa-icon name="phone"></app-fa-icon></span>
         <div>
-          <h3>{{ language() === 'fa' ? 'نمونه ثبت شماره' : 'Phone submission demo' }}</h3>
-          <p>{{ language() === 'fa' ? 'این شبیه‌سازی نشان می‌دهد فرم تماس چطور کامل می‌شود.' : 'This simulation shows how the call form is completed.' }}</p>
+          <h3>
+            {{
+              language() === "fa" ? "نمونه ثبت شماره" : "Phone submission demo"
+            }}
+          </h3>
+          <p>
+            {{
+              language() === "fa"
+                ? "این شبیه‌سازی نشان می‌دهد فرم تماس چطور کامل می‌شود."
+                : "This simulation shows how the call form is completed."
+            }}
+          </p>
         </div>
       </div>
       <div class="phone-form-demo">
         <div class="demo-field name-field">
           <app-fa-icon name="user"></app-fa-icon>
           <div>
-            <span>{{ language() === 'fa' ? 'نام و نام خانوادگی' : 'Full name' }}</span>
-            <b>{{ language() === 'fa' ? 'سارا محمدی' : 'Sara Mohammadi' }}</b>
+            <span>{{
+              language() === "fa" ? "نام و نام خانوادگی" : "Full name"
+            }}</span>
+            <b>{{ language() === "fa" ? "سارا محمدی" : "Sara Mohammadi" }}</b>
           </div>
         </div>
         <div class="demo-field phone-field">
           <app-fa-icon name="phone"></app-fa-icon>
           <div>
-            <span>{{ language() === 'fa' ? 'شماره تماس' : 'Phone number' }}</span>
+            <span>{{
+              language() === "fa" ? "شماره تماس" : "Phone number"
+            }}</span>
             <b>09•• ••• ••42</b>
           </div>
         </div>
         <div class="demo-field service-field">
           <app-fa-icon name="tooth"></app-fa-icon>
           <div>
-            <span>{{ language() === 'fa' ? 'درمان مورد نظر' : 'Service of interest' }}</span>
-            <b>{{ language() === 'fa' ? 'کامپوزیت ونیر' : 'Composite veneers' }}</b>
+            <span>{{
+              language() === "fa" ? "درمان مورد نظر" : "Service of interest"
+            }}</span>
+            <b>{{
+              language() === "fa" ? "کامپوزیت ونیر" : "Composite veneers"
+            }}</b>
           </div>
         </div>
         <button class="demo-submit" type="button">
           <app-fa-icon name="check"></app-fa-icon>
-          {{ language() === 'fa' ? 'ثبت درخواست تماس' : 'Submit call request' }}
+          {{ language() === "fa" ? "ثبت درخواست تماس" : "Submit call request" }}
         </button>
       </div>
-      <p class="call-status">{{ language() === 'fa' ? 'پس از ثبت، مشاور کلینیک برای توضیح مسیر مراجعه تماس می‌گیرد.' : 'After submission, a clinic consultant calls to explain the visit path.' }}</p>
+      <p class="call-status">
+        {{
+          language() === "fa"
+            ? "پس از ثبت، مشاور کلینیک برای توضیح مسیر مراجعه تماس می‌گیرد."
+            : "After submission, a clinic consultant calls to explain the visit path."
+        }}
+      </p>
     </div>
   </div>
 </section>
 
 <section class="page-section service-showcase" id="services">
   <div class="section-heading">
-    <h2>{{ language() === 'fa' ? 'خدمات زیبایی کلینیک دندان‌پزشکی دکتر سعید مقدم' : 'Cosmetic dental services at the clinic' }}</h2>
+    <h2>
+      {{
+        language() === "fa"
+          ? "خدمات زیبایی کلینیک دندان‌پزشکی دکتر سعید مقدم"
+          : "Cosmetic dental services at the clinic"
+      }}
+    </h2>
   </div>
 
   <div class="service-grid">
-    <article class="service-card" *ngFor="let service of featuredServices" [style.--accent]="service.accent">
+    <article
+      class="service-card"
+      *ngFor="let service of featuredServices"
+      [style.--accent]="service.accent"
+    >
       @switch (service.id) {
-        @case ('laminate') {
+        @case ("laminate") {
           <img
             src="/images/2-640.png"
-            srcset="/images/2-360.png 360w, /images/2-640.png 640w, /images/2-960.png 960w"
+            srcset="
+              /images/2-360.png 360w,
+              /images/2-640.png 640w,
+              /images/2-960.png 960w
+            "
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1200"
@@ -154,10 +235,14 @@
             fetchpriority="low"
           />
         }
-        @case ('composite') {
+        @case ("composite") {
           <img
             src="/images/3-640.png"
-            srcset="/images/3-360.png 360w, /images/3-640.png 640w, /images/3-960.png 960w"
+            srcset="
+              /images/3-360.png 360w,
+              /images/3-640.png 640w,
+              /images/3-960.png 960w
+            "
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
@@ -167,10 +252,14 @@
             fetchpriority="low"
           />
         }
-        @case ('whitening') {
+        @case ("whitening") {
           <img
             src="/images/5-640.png"
-            srcset="/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w"
+            srcset="
+              /images/5-360.png 360w,
+              /images/5-640.png 640w,
+              /images/5-960.png 960w
+            "
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
@@ -183,7 +272,11 @@
         @default {
           <img
             src="/images/1-640.png"
-            srcset="/images/1-360.png 360w, /images/1-640.png 640w, /images/1-960.png 960w"
+            srcset="
+              /images/1-360.png 360w,
+              /images/1-640.png 640w,
+              /images/1-960.png 960w
+            "
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1361"
             height="1156"
@@ -194,12 +287,18 @@
           />
         }
       }
-      <span class="icon-bubble"><app-fa-icon [name]="service.icon"></app-fa-icon></span>
+      <span class="icon-bubble"
+        ><app-fa-icon [name]="service.icon"></app-fa-icon
+      ></span>
       <h3>{{ pickText(service.title, language()) }}</h3>
       <b>{{ pickText(service.subtitle, language()) }}</b>
       <p>{{ pickText(service.summary, language()) }}</p>
       <a [routerLink]="['/services', service.id]">
-        {{ language() === 'fa' ? 'مشاهده ' + pickText(service.title, language()) : 'View ' + pickText(service.title, language()) }}
+        {{
+          language() === "fa"
+            ? "مشاهده " + pickText(service.title, language())
+            : "View " + pickText(service.title, language())
+        }}
         <app-fa-icon name="arrowLeft"></app-fa-icon>
       </a>
     </article>
@@ -208,17 +307,33 @@
 
 <section class="portfolio-slider page-section">
   <div class="section-heading">
-    <h2>{{ language() === 'fa' ? 'نمونه‌کارها برای آشنایی با روند درمان' : 'Work samples to understand treatment changes' }}</h2>
-    <p>{{ language() === 'fa' ? 'این تصاویر فقط برای آشنایی با نوع تغییرات کامپوزیت، لمینت و بلیچینگ هستند؛ نتیجه هر فرد بعد از معاینه مشخص می‌شود.' : 'These images are only a guide to the kinds of changes in composite, veneers and bleaching; each patient result is defined after examination.' }}</p>
+    <h2>
+      {{
+        language() === "fa"
+          ? "نمونه‌کارها برای آشنایی با روند درمان"
+          : "Work samples to understand treatment changes"
+      }}
+    </h2>
+    <p>
+      {{
+        language() === "fa"
+          ? "این تصاویر فقط برای آشنایی با نوع تغییرات کامپوزیت، لمینت و بلیچینگ هستند؛ نتیجه هر فرد بعد از معاینه مشخص می‌شود."
+          : "These images are only a guide to the kinds of changes in composite, veneers and bleaching; each patient result is defined after examination."
+      }}
+    </p>
   </div>
 
   <div class="portfolio-stage">
     <div class="portfolio-image-card">
       @switch (workSamples[activeWorkSample()].id) {
-        @case ('whitening-shade') {
+        @case ("whitening-shade") {
           <img
             src="/images/5-640.png"
-            srcset="/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w"
+            srcset="
+              /images/5-360.png 360w,
+              /images/5-640.png 640w,
+              /images/5-960.png 960w
+            "
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
@@ -228,10 +343,14 @@
             fetchpriority="low"
           />
         }
-        @case ('composite-shape') {
+        @case ("composite-shape") {
           <img
             src="/images/3-640.png"
-            srcset="/images/3-360.png 360w, /images/3-640.png 640w, /images/3-960.png 960w"
+            srcset="
+              /images/3-360.png 360w,
+              /images/3-640.png 640w,
+              /images/3-960.png 960w
+            "
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
@@ -244,7 +363,11 @@
         @default {
           <img
             src="/images/2-640.png"
-            srcset="/images/2-360.png 360w, /images/2-640.png 640w, /images/2-960.png 960w"
+            srcset="
+              /images/2-360.png 360w,
+              /images/2-640.png 640w,
+              /images/2-960.png 960w
+            "
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1200"
@@ -260,31 +383,58 @@
     <article class="portfolio-copy">
       <span>0{{ activeWorkSample() + 1 }}</span>
       <h3>{{ pickText(workSamples[activeWorkSample()].title, language()) }}</h3>
-      <p>{{ pickText(workSamples[activeWorkSample()].description, language()) }}</p>
+      <p>
+        {{ pickText(workSamples[activeWorkSample()].description, language()) }}
+      </p>
       <b>{{ pickText(workSamples[activeWorkSample()].result, language()) }}</b>
     </article>
   </div>
 
   <div class="portfolio-thumbs">
-    <button *ngFor="let sample of workSamples; let i = index" type="button" [class.active]="i === activeWorkSample()" (click)="activeWorkSample.set(i)">
+    <button
+      *ngFor="let sample of workSamples; let i = index"
+      type="button"
+      [class.active]="i === activeWorkSample()"
+      (click)="activeWorkSample.set(i)"
+    >
       <span>0{{ i + 1 }}</span>
       {{ pickText(sample.service, language()) }}
     </button>
   </div>
 
   <div class="slider-controls">
-    <button type="button" (click)="nextWorkSample(-1)" aria-label="Previous work sample"><app-fa-icon name="arrowRight"></app-fa-icon></button>
-    <button type="button" (click)="nextWorkSample(1)" aria-label="Next work sample"><app-fa-icon name="arrowLeft"></app-fa-icon></button>
+    <button
+      type="button"
+      (click)="nextWorkSample(-1)"
+      aria-label="Previous work sample"
+    >
+      <app-fa-icon name="arrowRight"></app-fa-icon>
+    </button>
+    <button
+      type="button"
+      (click)="nextWorkSample(1)"
+      aria-label="Next work sample"
+    >
+      <app-fa-icon name="arrowLeft"></app-fa-icon>
+    </button>
   </div>
 </section>
 
 <section class="page-section">
   <div class="section-heading center">
-    <h2>{{ language() === 'fa' ? 'قبل از شروع درمان چه چیزهایی برای بیمار روشن می‌شود؟' : 'What becomes clear before treatment starts?' }}</h2>
+    <h2>
+      {{
+        language() === "fa"
+          ? "قبل از شروع درمان چه چیزهایی برای بیمار روشن می‌شود؟"
+          : "What becomes clear before treatment starts?"
+      }}
+    </h2>
   </div>
   <div class="benefit-grid">
     <article *ngFor="let item of benefits" class="glass-card">
-      <span class="icon-bubble"><app-fa-icon [name]="item.icon"></app-fa-icon></span>
+      <span class="icon-bubble"
+        ><app-fa-icon [name]="item.icon"></app-fa-icon
+      ></span>
       <h3>{{ pickText(item.title, language()) }}</h3>
       <p>{{ pickText(item.text, language()) }}</p>
     </article>
@@ -293,84 +443,174 @@
 
 <section class="page-section dental-graphics">
   <div class="section-heading center">
-    <h2>{{ language() === 'fa' ? 'مسیر مراجعه در کلینیک: بررسی، طرح درمان و پیگیری' : 'Clinic visit path: exam, treatment plan and follow-up' }}</h2>
+    <h2>
+      {{
+        language() === "fa"
+          ? "مسیر مراجعه در کلینیک: بررسی، طرح درمان و پیگیری"
+          : "Clinic visit path: exam, treatment plan and follow-up"
+      }}
+    </h2>
   </div>
 
   <div class="dental-map">
     <article>
       <span><app-fa-icon name="tooth"></app-fa-icon></span>
-      <h3>{{ language() === 'fa' ? 'معاینه و عکس' : 'Exam and imaging' }}</h3>
-      <p>{{ language() === 'fa' ? 'سلامت دندان، لثه، مینا، ترمیم‌های قبلی و حساسیت پیش از تصمیم زیبایی بررسی می‌شود.' : 'Tooth, gum, enamel, existing restorations and sensitivity are reviewed before cosmetic decisions.' }}</p>
+      <h3>{{ language() === "fa" ? "معاینه و عکس" : "Exam and imaging" }}</h3>
+      <p>
+        {{
+          language() === "fa"
+            ? "سلامت دندان، لثه، مینا، ترمیم‌های قبلی و حساسیت پیش از تصمیم زیبایی بررسی می‌شود."
+            : "Tooth, gum, enamel, existing restorations and sensitivity are reviewed before cosmetic decisions."
+        }}
+      </p>
     </article>
     <article>
       <span><app-fa-icon name="smile"></app-fa-icon></span>
-      <h3>{{ language() === 'fa' ? 'طراحی لبخند' : 'Smile planning' }}</h3>
-      <p>{{ language() === 'fa' ? 'فرم، رنگ و تناسب دندان‌ها با چهره برای نتیجه طبیعی تحلیل می‌شود.' : 'Shape, shade and tooth proportions are analyzed for a natural result.' }}</p>
+      <h3>{{ language() === "fa" ? "طراحی لبخند" : "Smile planning" }}</h3>
+      <p>
+        {{
+          language() === "fa"
+            ? "فرم، رنگ و تناسب دندان‌ها با چهره برای نتیجه طبیعی تحلیل می‌شود."
+            : "Shape, shade and tooth proportions are analyzed for a natural result."
+        }}
+      </p>
     </article>
     <article>
       <span><app-fa-icon name="shield"></app-fa-icon></span>
-      <h3>{{ language() === 'fa' ? 'مراقبت و پیگیری' : 'Aftercare follow-up' }}</h3>
-      <p>{{ language() === 'fa' ? 'بعد از درمان، توصیه‌های ساده برای ماندگاری نتیجه و سلامت دهان ارائه می‌شود.' : 'After treatment, simple guidance supports lasting results and oral health.' }}</p>
+      <h3>
+        {{ language() === "fa" ? "مراقبت و پیگیری" : "Aftercare follow-up" }}
+      </h3>
+      <p>
+        {{
+          language() === "fa"
+            ? "بعد از درمان، توصیه‌های ساده برای ماندگاری نتیجه و سلامت دهان ارائه می‌شود."
+            : "After treatment, simple guidance supports lasting results and oral health."
+        }}
+      </p>
     </article>
   </div>
 </section>
 
 <section class="page-section lead-section">
   <div>
-    <h2>{{ language() === 'fa' ? 'فرم ثبت شماره تماس برای دریافت راهنمایی' : 'Phone number form for guidance' }}</h2>
-    <p>{{ language() === 'fa' ? 'اگر نمی‌دانید کدام درمان مناسب‌تر است، شماره و توضیح کوتاه را ثبت کنید تا تماس اولیه دقیق‌تر انجام شود.' : 'If you are unsure which treatment fits best, submit your number and a short note so the first call can be more useful.' }}</p>
-    <app-base-datepicker [language]="language()" [selectedDate]="lead.preferredDate" (dateChange)="lead.preferredDate = $event"></app-base-datepicker>
+    <h2>
+      {{
+        language() === "fa"
+          ? "فرم ثبت شماره تماس برای دریافت راهنمایی"
+          : "Phone number form for guidance"
+      }}
+    </h2>
+    <p>
+      {{
+        language() === "fa"
+          ? "اگر نمی‌دانید کدام درمان مناسب‌تر است، شماره و توضیح کوتاه را ثبت کنید تا تماس اولیه دقیق‌تر انجام شود."
+          : "If you are unsure which treatment fits best, submit your number and a short note so the first call can be more useful."
+      }}
+    </p>
+    <app-base-datepicker
+      [language]="language()"
+      [selectedDate]="lead.preferredDate"
+      (dateChange)="lead.preferredDate = $event"
+    ></app-base-datepicker>
   </div>
 
   <form class="lead-form" (ngSubmit)="submitLead()">
     <label>
-      {{ language() === 'fa' ? 'نام و نام خانوادگی' : 'Full name' }}
-      <input [(ngModel)]="lead.fullName" name="leadFullName" required autocomplete="name" />
+      {{ language() === "fa" ? "نام و نام خانوادگی" : "Full name" }}
+      <input
+        [(ngModel)]="lead.fullName"
+        name="leadFullName"
+        required
+        autocomplete="name"
+      />
     </label>
     <label>
-      {{ language() === 'fa' ? 'شماره تماس' : 'Phone number' }}
-      <input [(ngModel)]="lead.phone" name="leadPhone" required inputmode="tel" autocomplete="tel" />
+      {{ language() === "fa" ? "شماره تماس" : "Phone number" }}
+      <input
+        [(ngModel)]="lead.phone"
+        name="leadPhone"
+        required
+        inputmode="tel"
+        autocomplete="tel"
+      />
     </label>
     <label>
-      {{ language() === 'fa' ? 'درمان مورد نظر' : 'Service of interest' }}
+      {{ language() === "fa" ? "درمان مورد نظر" : "Service of interest" }}
       <select [(ngModel)]="lead.serviceId" name="leadService">
-        <option *ngFor="let service of services" [value]="service.id">{{ pickText(service.title, language()) }}</option>
+        <option *ngFor="let service of services" [value]="service.id">
+          {{ pickText(service.title, language()) }}
+        </option>
       </select>
     </label>
     <label>
-      {{ language() === 'fa' ? 'توضیح کوتاه' : 'Short note' }}
-      <textarea [(ngModel)]="lead.message" name="leadMessage" rows="4"></textarea>
+      {{ language() === "fa" ? "توضیح کوتاه" : "Short note" }}
+      <textarea
+        [(ngModel)]="lead.message"
+        name="leadMessage"
+        rows="4"
+      ></textarea>
     </label>
     <button class="primary-btn" type="submit">
       <app-fa-icon name="phone"></app-fa-icon>
-      {{ language() === 'fa' ? 'ثبت درخواست تماس' : 'Submit call request' }}
+      {{ language() === "fa" ? "ثبت درخواست تماس" : "Submit call request" }}
     </button>
     <p *ngIf="leadSent()" class="success-message">
-      {{ language() === 'fa' ? 'درخواست تماس شما ثبت شد. مشاور کلینیک برای راهنمایی با شما تماس می‌گیرد.' : 'Your call request has been recorded. A clinic consultant will contact you for guidance.' }}
+      {{
+        language() === "fa"
+          ? "درخواست تماس شما ثبت شد. مشاور کلینیک برای راهنمایی با شما تماس می‌گیرد."
+          : "Your call request has been recorded. A clinic consultant will contact you for guidance."
+      }}
     </p>
   </form>
 </section>
 
 <section class="page-section">
   <div class="section-heading">
-    <h2>{{ language() === 'fa' ? 'تجربه بیماران از روند مراجعه و درمان' : 'Patient experiences with visits and treatment' }}</h2>
+    <h2>
+      {{
+        language() === "fa"
+          ? "تجربه بیماران از روند مراجعه و درمان"
+          : "Patient experiences with visits and treatment"
+      }}
+    </h2>
   </div>
   <div class="testimonial-slider">
     <article class="quote-card active-quote">
       <span class="quote-icon"><app-fa-icon name="quote"></app-fa-icon></span>
       <span class="stars">★★★★★</span>
-      <p>“{{ pickText(testimonials[activeTestimonial()].text, language()) }}”</p>
+      <p>
+        “{{ pickText(testimonials[activeTestimonial()].text, language()) }}”
+      </p>
       <b>{{ pickText(testimonials[activeTestimonial()].name, language()) }}</b>
-      <small>{{ pickText(testimonials[activeTestimonial()].service, language()) }}</small>
+      <small>{{
+        pickText(testimonials[activeTestimonial()].service, language())
+      }}</small>
     </article>
     <div class="testimonial-side">
-      <button *ngFor="let item of testimonials; let i = index" type="button" [class.active]="i === activeTestimonial()" (click)="activeTestimonial.set(i)">
+      <button
+        *ngFor="let item of testimonials; let i = index"
+        type="button"
+        [class.active]="i === activeTestimonial()"
+        (click)="activeTestimonial.set(i)"
+      >
         <span>0{{ i + 1 }}</span>
         {{ pickText(item.service, language()) }}
       </button>
       <div class="slider-controls">
-        <button type="button" (click)="nextTestimonial(-1)" aria-label="Previous review"><app-fa-icon name="arrowRight"></app-fa-icon></button>
-        <button type="button" (click)="nextTestimonial(1)" aria-label="Next review"><app-fa-icon name="arrowLeft"></app-fa-icon></button>
+        <button
+          type="button"
+          (click)="nextTestimonial(-1)"
+          aria-label="Previous review"
+        >
+          <app-fa-icon name="arrowRight"></app-fa-icon>
+        </button>
+        <button
+          type="button"
+          (click)="nextTestimonial(1)"
+          aria-label="Next review"
+        >
+          <app-fa-icon name="arrowLeft"></app-fa-icon>
+        </button>
       </div>
     </div>
   </div>
@@ -378,7 +618,13 @@
 
 <section class="page-section faq-section">
   <div class="section-heading center">
-    <h2>{{ language() === 'fa' ? 'پرسش‌های پرتکرار قبل از ثبت درخواست تماس' : 'Common questions before submitting a call request' }}</h2>
+    <h2>
+      {{
+        language() === "fa"
+          ? "پرسش‌های پرتکرار قبل از ثبت درخواست تماس"
+          : "Common questions before submitting a call request"
+      }}
+    </h2>
   </div>
   <div class="faq-list">
     <details *ngFor="let item of faqs">

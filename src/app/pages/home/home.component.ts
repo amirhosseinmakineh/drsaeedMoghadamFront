@@ -1,8 +1,8 @@
-import { NgFor, NgIf } from '@angular/common';
-import { Component, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Meta, Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { NgFor, NgIf } from "@angular/common";
+import { Component, signal } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { Meta, Title } from "@angular/platform-browser";
+import { RouterLink } from "@angular/router";
 import {
   BENEFIT_CARDS,
   DENTAL_SERVICES,
@@ -14,20 +14,27 @@ import {
   STATS,
   TESTIMONIALS,
   WORK_SAMPLES,
-  pickText
-} from '../../models/clinic.model';
-import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-datepicker.component';
-import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
+  pickText,
+} from "../../models/clinic.model";
+import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 
 @Component({
-  selector: 'app-home',
+  selector: "app-home",
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, RouterLink, FaIconComponent, BaseDatepickerComponent],
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.scss'
+  imports: [
+    NgFor,
+    NgIf,
+    FormsModule,
+    RouterLink,
+    FaIconComponent,
+    BaseDatepickerComponent,
+  ],
+  templateUrl: "./home.component.html",
+  styleUrl: "./home.component.scss",
 })
 export class HomeComponent {
-  language = signal<LanguageCode>('fa');
+  language = signal<LanguageCode>("fa");
   activeSlide = signal(0);
   activeWorkSample = signal(0);
   activeTestimonial = signal(0);
@@ -41,15 +48,18 @@ export class HomeComponent {
   testimonials = TESTIMONIALS;
   faqs = GLOBAL_FAQS;
   lead: LeadFormModel = {
-    fullName: '',
-    phone: '',
+    fullName: "",
+    phone: "",
     serviceId: DENTAL_SERVICES[0].id,
-    message: ''
+    message: "",
   };
 
   protected readonly pickText = pickText;
 
-  constructor(private title: Title, private meta: Meta) {
+  constructor(
+    private title: Title,
+    private meta: Meta,
+  ) {
     this.updateSeo();
   }
 
@@ -59,22 +69,28 @@ export class HomeComponent {
   }
 
   nextSlide(direction: number): void {
-    const next = (this.activeSlide() + direction + this.heroSlides.length) % this.heroSlides.length;
+    const next =
+      (this.activeSlide() + direction + this.heroSlides.length) %
+      this.heroSlides.length;
     this.activeSlide.set(next);
   }
 
   nextWorkSample(direction: number): void {
-    const next = (this.activeWorkSample() + direction + this.workSamples.length) % this.workSamples.length;
+    const next =
+      (this.activeWorkSample() + direction + this.workSamples.length) %
+      this.workSamples.length;
     this.activeWorkSample.set(next);
   }
 
   nextTestimonial(direction: number): void {
-    const next = (this.activeTestimonial() + direction + this.testimonials.length) % this.testimonials.length;
+    const next =
+      (this.activeTestimonial() + direction + this.testimonials.length) %
+      this.testimonials.length;
     this.activeTestimonial.set(next);
   }
 
   openAuth(): void {
-    window.dispatchEvent(new CustomEvent('open-auth-dialog'));
+    window.dispatchEvent(new CustomEvent("open-auth-dialog"));
   }
 
   submitLead(): void {
@@ -83,15 +99,17 @@ export class HomeComponent {
   }
 
   private updateSeo(): void {
-    const isFa = this.language() === 'fa';
-    this.title.setTitle(isFa
-      ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم | کامپوزیت، لمینت و بلیچینگ'
-      : 'Dr. Saeed Moghaddam Dental Clinic | Composite, veneers and bleaching');
+    const isFa = this.language() === "fa";
+    this.title.setTitle(
+      isFa
+        ? "کلینیک دندان‌پزشکی دکتر سعید مقدم | کامپوزیت، لمینت و بلیچینگ"
+        : "Dr. Saeed Moghaddam Dental Clinic | Composite, veneers and bleaching",
+    );
     this.meta.updateTag({
-      name: 'description',
+      name: "description",
       content: isFa
-        ? 'کلینیک دندان‌پزشکی دکتر سعید مقدم؛ خدمات زیبایی دندان شامل کامپوزیت ونیر، لمینت سرامیکی، بلیچینگ دندان و درخواست تماس برای راهنمایی اولیه.'
-        : 'Dr. Saeed Moghaddam Dental Clinic for composite veneers, porcelain veneers, dental bleaching and initial consultant call requests.'
+        ? "کلینیک دندان‌پزشکی دکتر سعید مقدم؛ خدمات زیبایی دندان شامل کامپوزیت ونیر، لمینت سرامیکی، بلیچینگ دندان و درخواست تماس برای راهنمایی اولیه."
+        : "Dr. Saeed Moghaddam Dental Clinic for composite veneers, porcelain veneers, dental bleaching and initial consultant call requests.",
     });
   }
 }

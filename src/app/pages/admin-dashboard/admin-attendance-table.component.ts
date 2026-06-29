@@ -1,11 +1,23 @@
-import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
-import { finalize } from 'rxjs';
-import { AdminDashboardService, AttendanceItem } from '../../core/admin/admin-dashboard.service';
-import { TableColumn, TableComponent } from '../../shared/base/table/table.component';
+import { CommonModule } from "@angular/common";
+import {
+  Component,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges,
+} from "@angular/core";
+import { finalize } from "rxjs";
+import {
+  AdminDashboardService,
+  AttendanceItem,
+} from "../../core/admin/admin-dashboard.service";
+import {
+  TableColumn,
+  TableComponent,
+} from "../../shared/base/table/table.component";
 
 @Component({
-  selector: 'app-admin-attendance-table',
+  selector: "app-admin-attendance-table",
   standalone: true,
   imports: [CommonModule, TableComponent],
   template: `
@@ -16,7 +28,14 @@ import { TableColumn, TableComponent } from '../../shared/base/table/table.compo
           <h2>{{ title }}</h2>
           <p>نمایش رکوردهای حضور مشاور بر اساس profileId انتخاب‌شده.</p>
         </div>
-        <button class="secondary-action compact" type="button" [disabled]="loading" (click)="load()">بروزرسانی</button>
+        <button
+          class="secondary-action compact"
+          type="button"
+          [disabled]="loading"
+          (click)="load()"
+        >
+          بروزرسانی
+        </button>
       </header>
 
       @if (feedback) {
@@ -39,87 +58,89 @@ import { TableColumn, TableComponent } from '../../shared/base/table/table.compo
       ></app-base-table>
     </section>
   `,
-  styles: [`
-  .admin-panel {
-    display:grid;
-    gap:16px;
-    padding:18px;
-    border:1px solid var(--line);
-    border-radius:30px;
-    background:color-mix(in srgb,var(--surface) 88%,transparent);
-    box-shadow:var(--shadow)
-  }
-  .panel-heading {
-    display:flex;
-    justify-content:space-between;
-    gap:12px
-  }
-  .panel-heading span {
-    display:inline-flex;
-    margin-bottom:8px;
-    padding:5px 12px;
-    border-radius:999px;
-    background:color-mix(in srgb,var(--brand) 14%,transparent);
-    color:var(--brand);
-    font-weight:950
-  }
-  .panel-heading h2 {
-    margin:0;
-    font-size:1.35rem
-  }
-  .panel-heading p {
-    margin:8px 0 0;
-    color:var(--muted)
-  }
-  .secondary-action {
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    min-height:48px;
-    border:1px solid var(--line);
-    border-radius:18px;
-    padding:12px 16px;
-    background:var(--surface-muted);
-    color:var(--text);
-    font:inherit;
-    font-weight:950
-  }
-  .secondary-action:disabled {
-    cursor:not-allowed;
-    opacity:.55
-  }
-  .compact {
-    min-height:40px;
-    border-radius:999px;
-    padding:9px 13px;
-    font-size:.86rem
-  }
-  .feedback {
-    margin:0;
-    padding:10px 12px;
-    border-radius:18px;
-    font-weight:900
-  }
-  .feedback.error {
-    background:color-mix(in srgb,var(--danger) 14%,transparent);
-    color:#fecaca
-  }
-  @media (max-width:760px) {
-    .admin-panel {
-      padding:14px;
-      border-radius:24px
-    }
-  }
-    `]
+  styles: [
+    `
+      .admin-panel {
+        display: grid;
+        gap: 16px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 30px;
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        box-shadow: var(--shadow);
+      }
+      .panel-heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .panel-heading span {
+        display: inline-flex;
+        margin-bottom: 8px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--brand) 14%, transparent);
+        color: var(--brand);
+        font-weight: 950;
+      }
+      .panel-heading h2 {
+        margin: 0;
+        font-size: 1.35rem;
+      }
+      .panel-heading p {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+      .secondary-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 12px 16px;
+        background: var(--surface-muted);
+        color: var(--text);
+        font: inherit;
+        font-weight: 950;
+      }
+      .secondary-action:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+      .compact {
+        min-height: 40px;
+        border-radius: 999px;
+        padding: 9px 13px;
+        font-size: 0.86rem;
+      }
+      .feedback {
+        margin: 0;
+        padding: 10px 12px;
+        border-radius: 18px;
+        font-weight: 900;
+      }
+      .feedback.error {
+        background: color-mix(in srgb, var(--danger) 14%, transparent);
+        color: #fecaca;
+      }
+      @media (max-width: 760px) {
+        .admin-panel {
+          padding: 14px;
+          border-radius: 24px;
+        }
+      }
+    `,
+  ],
 })
 export class AdminAttendanceTableComponent implements OnChanges, OnInit {
   @Input() consultantProfileId: number | null = null;
-  @Input() title = 'حضور و غیاب مشاور';
+  @Input() title = "حضور و غیاب مشاور";
 
   items: AttendanceItem[] = [];
   loading = false;
-  feedback = '';
+  feedback = "";
   pageNumber = 1;
   pageSize = 10;
   totalCount = 0;
@@ -128,11 +149,20 @@ export class AdminAttendanceTableComponent implements OnChanges, OnInit {
   private loadRequestId = 0;
 
   readonly columns: TableColumn<AttendanceItem>[] = [
-    { key: 'attendanceDate', label: 'تاریخ' },
-    { key: 'checkInTime', label: 'ورود' },
-    { key: 'checkOutTime', label: 'خروج' },
-    { key: 'status', label: 'وضعیت', value: row => this.statusLabel(row.status), badge: row => this.statusBadge(row.status) },
-    { key: 'description', label: 'توضیح', value: row => row.description || 'بدون توضیح' }
+    { key: "attendanceDate", label: "تاریخ" },
+    { key: "checkInTime", label: "ورود" },
+    { key: "checkOutTime", label: "خروج" },
+    {
+      key: "status",
+      label: "وضعیت",
+      value: (row) => this.statusLabel(row.status),
+      badge: (row) => this.statusBadge(row.status),
+    },
+    {
+      key: "description",
+      label: "توضیح",
+      value: (row) => row.description || "بدون توضیح",
+    },
   ];
 
   constructor(private adminApi: AdminDashboardService) {}
@@ -142,7 +172,7 @@ export class AdminAttendanceTableComponent implements OnChanges, OnInit {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['consultantProfileId']) {
+    if (changes["consultantProfileId"]) {
       this.pageNumber = 1;
       this.load();
     }
@@ -165,43 +195,53 @@ export class AdminAttendanceTableComponent implements OnChanges, OnInit {
 
     const requestId = ++this.loadRequestId;
     this.loading = true;
-    this.feedback = '';
+    this.feedback = "";
 
-    this.adminApi.getAttendance(this.consultantProfileId, this.pageNumber, this.pageSize)
-      .pipe(finalize(() => {
-        if (requestId === this.loadRequestId) this.loading = false;
-      }))
+    this.adminApi
+      .getAttendance(this.consultantProfileId, this.pageNumber, this.pageSize)
+      .pipe(
+        finalize(() => {
+          if (requestId === this.loadRequestId) this.loading = false;
+        }),
+      )
       .subscribe({
-        next: response => {
+        next: (response) => {
           if (requestId !== this.loadRequestId) return;
           this.items = response.items ?? [];
           this.totalCount = response.totalCount ?? this.items.length;
-          this.totalPages = Math.max(1, response.totalPages || Math.ceil(this.totalCount / this.pageSize));
+          this.totalPages = Math.max(
+            1,
+            response.totalPages || Math.ceil(this.totalCount / this.pageSize),
+          );
         },
-        error: error => {
-          if (requestId === this.loadRequestId) this.feedback = this.errorMessage(error, 'دریافت حضور و غیاب انجام نشد');
-        }
+        error: (error) => {
+          if (requestId === this.loadRequestId)
+            this.feedback = this.errorMessage(
+              error,
+              "دریافت حضور و غیاب انجام نشد",
+            );
+        },
       });
   }
 
   private statusLabel(value: number): string {
     const labels: Record<number, string> = {
-      1: 'حاضر',
-      2: 'غایب',
-      3: 'مرخصی',
-      4: 'مرخصی استعلاجی',
-      5: 'تأخیر',
-      6: 'مأموریت'
+      1: "حاضر",
+      2: "غایب",
+      3: "مرخصی",
+      4: "مرخصی استعلاجی",
+      5: "تأخیر",
+      6: "مأموریت",
     };
 
-    return labels[value] ?? 'نامشخص';
+    return labels[value] ?? "نامشخص";
   }
 
   private statusBadge(value: number): string {
-    if (value === 1) return 'success';
-    if ([3, 4, 6].includes(value)) return 'info';
-    if (value === 5) return 'warn';
-    return 'danger';
+    if (value === 1) return "success";
+    if ([3, 4, 6].includes(value)) return "info";
+    if (value === 5) return "warn";
+    return "danger";
   }
 
   private errorMessage(error: unknown, fallback: string): string {
