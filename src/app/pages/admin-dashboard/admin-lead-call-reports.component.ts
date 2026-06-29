@@ -19,8 +19,9 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
           <span>گزارش‌ها</span>
           <h2>خروجی گزارش تماس لیدها</h2>
           <p>
-            بازه تاریخ را انتخاب کنید و فایل CSV قابل باز شدن در Excel را دریافت
-            کنید. اگر تاریخی انتخاب نشود، گزارش روز جاری دانلود می‌شود.
+            گزارش تماس لیدها فقط با درخواست دستی ادمین تولید می‌شود؛ با کلیک
+            روی دکمه دانلود، فایل CSV مستقیماً از endpoint گزارش‌گیری دریافت
+            می‌شود و هیچ گزارش روزانه‌ای به‌صورت خودکار ساخته یا ذخیره نمی‌شود.
           </p>
         </div>
         <button
@@ -32,6 +33,11 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
           پاک‌سازی
         </button>
       </header>
+
+      <p class="manual-report-note">
+        این صفحه سرویس بک‌گراند یا زمان‌بندی‌شده‌ای اجرا نمی‌کند و فقط در لحظه
+        درخواست ادمین، خروجی CSV برگشتی سرور را دانلود می‌کند.
+      </p>
 
       <form class="filter-grid" (ngSubmit)="download()">
         <label>
@@ -102,6 +108,16 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
       .panel-heading p {
         margin: 8px 0 0;
         color: var(--muted);
+      }
+      .manual-report-note {
+        margin: 0;
+        padding: 12px 14px;
+        border: 1px solid color-mix(in srgb, var(--brand) 24%, var(--line));
+        border-radius: 18px;
+        background: color-mix(in srgb, var(--brand) 10%, transparent);
+        color: var(--text);
+        font-weight: 850;
+        line-height: 1.9;
       }
       .filter-grid {
         display: grid;
