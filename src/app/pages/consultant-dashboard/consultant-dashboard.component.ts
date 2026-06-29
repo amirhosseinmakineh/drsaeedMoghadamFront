@@ -61,7 +61,6 @@ interface LeadReportForm {
   reportDescription: string;
   patientCity: string;
   patientRegion: string;
-  businessName: string;
   attendanceProbabilityPercent: number | null | "";
 }
 
@@ -302,7 +301,7 @@ interface ConsultantDashboardLink {
                   <button
                     class="primary-action full"
                     type="submit"
-                    [disabled]="profileSaving"
+                    [disabled]="profileSaving || validateProfileForm() !== null"
                   >
                     {{
                       profileSaving
@@ -750,27 +749,16 @@ interface ConsultantDashboardLink {
               />
             </label>
           </div>
-          <div class="two-col">
-            <label>
-              نام بیزینس/کلینیک
-              <input
-                [(ngModel)]="reportForm.businessName"
-                name="leadReportBusinessName"
-                maxlength="120"
-                placeholder="کلینیک/بیزینس نمونه"
-              />
-            </label>
-            <label>
-              درصد احتمال حضور
-              <input
-                [(ngModel)]="reportForm.attendanceProbabilityPercent"
-                name="leadReportAttendanceProbability"
-                type="number"
-                min="0"
-                max="100"
-              />
-            </label>
-          </div>
+          <label>
+            درصد احتمال حضور
+            <input
+              [(ngModel)]="reportForm.attendanceProbabilityPercent"
+              name="leadReportAttendanceProbability"
+              type="number"
+              min="0"
+              max="100"
+            />
+          </label>
           <div class="dialog-actions">
             <button
               class="secondary-action"
@@ -782,7 +770,7 @@ interface ConsultantDashboardLink {
             <button
               class="primary-action"
               type="submit"
-              [disabled]="reportSaving"
+              [disabled]="reportSaving || validateLeadReportForm() !== null"
             >
               {{ reportSaving ? "در حال ثبت..." : "ثبت گزارش" }}
             </button>
@@ -851,7 +839,7 @@ interface ConsultantDashboardLink {
             <button
               class="primary-action"
               type="submit"
-              [disabled]="reservationSaving"
+              [disabled]="reservationSaving || validateReservationForm() !== null"
             >
               {{ reservationSaving ? "در حال ثبت..." : "ثبت رزرو" }}
             </button>
@@ -943,7 +931,7 @@ interface ConsultantDashboardLink {
             <button
               class="primary-action"
               type="submit"
-              [disabled]="patientProfileSaving"
+              [disabled]="patientProfileSaving || validatePatientProfileForm() !== null"
             >
               {{ patientProfileSaving ? "در حال ثبت..." : "ثبت پرونده" }}
             </button>
@@ -1692,6 +1680,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private currentTime = Date.now();
   private timerId: ReturnType<typeof setInterval> | null = null;
   private pollId: ReturnType<typeof setInterval> | null = null;
+  private autoAbsenceId: ReturnType<typeof setInterval> | null = null;
+  private autoAbsenceRunning = false;
   private readonly expiringLeadIds = new Set<number>();
   private readonly reportedLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
@@ -1757,6 +1747,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.destroyed = true;
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
+    if (this.autoAbsenceId) clearInterval(this.autoAbsenceId);
     this.pendingOfflineLoadSubscription?.unsubscribe();
     this.leadLoadSubscription?.unsubscribe();
     this.reservationLoadSubscription?.unsubscribe();
@@ -1987,6 +1978,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   submitLeadReport(): void {
+    const validationError = this.validateLeadReportForm();
+    if (validationError) {
+      this.showFeedback(validationError, "error");
+      return;
+    }
+
     const profileId = this.requireProfileId();
     const lead = this.selectedLead;
     const leadAssignmentId = lead ? this.leadId(lead) : null;
@@ -2023,7 +2020,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ),
       patientCity: this.reportForm.patientCity.trim(),
       patientRegion: this.reportForm.patientRegion.trim(),
-      businessName: this.reportForm.businessName.trim(),
       ...(attendanceProbabilityPercent === null
         ? {}
         : { attendanceProbabilityPercent }),
@@ -2080,7 +2076,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       reportDescription: "",
       patientCity: "",
       patientRegion: "",
-      businessName: "",
       attendanceProbabilityPercent: null,
     };
   }
@@ -2218,6 +2213,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               "وضعیت حضور بیمار ثبت شد و منتظر بررسی منشی است",
             "success",
           );
+          if (patientAttended) {
+            this.showLeadNotification(
+              "حضور بیمار ثبت شد",
+              `${this.reservationPatientName(reservation)} با شماره ${this.reservationPatientPhone(reservation)} حاضر شد.`,
+            );
+          }
           this.loadDueConfirmations();
           this.loadLeads();
         },
@@ -2250,15 +2251,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = lead ? this.leadId(lead) : null;
     if (!profileId || !leadAssignmentId) return;
 
-    const reservationAt = this.selectedReservationDateTime();
-    if (
-      !reservationAt ||
-      !Number.isFinite(reservationAt.getTime()) ||
-      reservationAt.getTime() <= Date.now()
-    ) {
-      this.showFeedback("زمان رزرو باید در آینده باشد", "error");
+    const validationError = this.validateReservationForm();
+    if (validationError) {
+      this.showFeedback(validationError, "error");
       return;
     }
+
+    const reservationAt = this.selectedReservationDateTime();
+    if (!reservationAt) return;
 
     const payload: CreateReservationRequest = {
       leadAssignmentId,
@@ -2841,7 +2841,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           });
         }, 30000);
       }
+
+      if (!this.autoAbsenceId) {
+        this.autoAbsenceId = setInterval(() => {
+          if (!this.isProfileReady() || this.destroyed) return;
+          this.ngZone.run(() => this.runDailyAutoAbsenceIfDue());
+        }, 60000);
+      }
     });
+
+    this.runDailyAutoAbsenceIfDue();
   }
 
   private hasActiveRealtimeTimers(): boolean {
@@ -2891,19 +2900,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     leads.forEach((lead) => {
       const leadAssignmentId = this.leadId(lead);
-      if (
-        !leadAssignmentId ||
-        this.notifiedLeadIds.has(leadAssignmentId) ||
-        this.isLeadExpired(lead)
-      )
-        return;
-
-      const state = this.leadState(lead);
-      if (
-        ![LEAD_STATE.New, LEAD_STATE.Assigned, LEAD_STATE.Pending].includes(
-          state as 1 | 2 | 4,
-        )
-      )
+      if (!leadAssignmentId || this.notifiedLeadIds.has(leadAssignmentId))
         return;
 
       this.notifiedLeadIds.add(leadAssignmentId);
@@ -2945,6 +2942,73 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!("Notification" in window) || Notification.permission !== "default")
       return;
     Notification.requestPermission().catch(() => undefined);
+  }
+
+  private runDailyAutoAbsenceIfDue(): void {
+    if (this.autoAbsenceRunning) return;
+
+    const now = new Date();
+    if (now.getHours() < 21) return;
+
+    const storageKey = this.autoAbsenceStorageKey();
+    const todayKey = this.dateStorageKey(now);
+    if (this.readJson<string | null>(storageKey, null) === todayKey) return;
+
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    this.autoAbsenceRunning = true;
+    const finish = () => {
+      this.writeJson(storageKey, todayKey);
+      this.autoAbsenceRunning = false;
+      this.refreshDashboard();
+      this.markViewDirty();
+    };
+
+    const setAbsent = () => {
+      this.consultantApi
+        .setAvailability({ profileId, isAvailable: false })
+        .subscribe({
+          next: () => {
+            this.isAvailable = false;
+            this.showLeadNotification(
+              "عدم حضور خودکار ثبت شد",
+              "سیستم ساعت ۲۱ عدم حضور امروز شما را ثبت کرد.",
+            );
+            finish();
+          },
+          error: () => {
+            this.autoAbsenceRunning = false;
+            this.markViewDirty();
+          },
+        });
+    };
+
+    if (this.isOnline) {
+      this.consultantApi
+        .setOnlineStatus({ profileId, isOnline: false, isOffline: true })
+        .subscribe({
+          next: () => {
+            this.isOnline = false;
+            setAbsent();
+          },
+          error: () => setAbsent(),
+        });
+      return;
+    }
+
+    setAbsent();
+  }
+
+  private autoAbsenceStorageKey(): string {
+    return `consultant-auto-absence:${this.userKey()}`;
+  }
+
+  private dateStorageKey(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0",
+    )}-${String(date.getDate()).padStart(2, "0")}`;
   }
 
   private expireDueRealtimeLeads(): void {
@@ -3239,7 +3303,62 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return "default-patient-avatar.png";
   }
 
-  private validateProfileForm(): string | null {
+  validateLeadReportForm(): string | null {
+    const callResult = Number(this.reportForm.callResult);
+    if (![1, 2, 3, 4, 5, 6].includes(callResult))
+      return "نتیجه تماس معتبر نیست";
+
+    const description = this.reportForm.reportDescription.trim();
+    if (description.length > 1000)
+      return "توضیحات گزارش نباید بیشتر از ۱۰۰۰ کاراکتر باشد";
+
+    if (this.reportForm.patientCity.trim().length > 80)
+      return "شهر بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
+    if (this.reportForm.patientRegion.trim().length > 80)
+      return "منطقه بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
+
+    const rawAttendanceProbability =
+      this.reportForm.attendanceProbabilityPercent;
+    const attendanceProbabilityPercent =
+      rawAttendanceProbability === null ||
+      rawAttendanceProbability === undefined ||
+      rawAttendanceProbability === ""
+        ? null
+        : Number(rawAttendanceProbability);
+    if (
+      attendanceProbabilityPercent !== null &&
+      (!Number.isFinite(attendanceProbabilityPercent) ||
+        attendanceProbabilityPercent < 0 ||
+        attendanceProbabilityPercent > 100)
+    )
+      return "درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد";
+
+    return null;
+  }
+
+  validateReservationForm(): string | null {
+    if (!this.reservationForm.reservationDate) return "تاریخ رزرو الزامی است";
+    if (!this.reservationForm.reservationTime) return "ساعت رزرو الزامی است";
+
+    const reservationAt = this.selectedReservationDateTime();
+    if (
+      !reservationAt ||
+      !Number.isFinite(reservationAt.getTime()) ||
+      reservationAt.getTime() <= Date.now()
+    )
+      return "زمان رزرو باید در آینده باشد";
+
+    const secondaryPhone = this.reservationForm.secondaryPhoneNumber.trim();
+    if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone))
+      return "شماره تماس دوم بیمار معتبر نیست";
+
+    if (this.reservationForm.description.trim().length > 1000)
+      return "توضیحات رزرو نباید بیشتر از ۱۰۰۰ کاراکتر باشد";
+
+    return null;
+  }
+
+  validateProfileForm(): string | null {
     const code = this.profileForm.nationalityCode.trim();
     if (!/^\d{10}$/.test(code)) return "کد ملی باید ۱۰ رقم باشد";
     if (
@@ -3250,7 +3369,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  private validatePatientProfileForm(): string | null {
+  validatePatientProfileForm(): string | null {
     const firstName = this.patientProfileForm.firstName.trim();
     const lastName = this.patientProfileForm.lastName.trim();
     const phoneNumber = this.patientProfileForm.phoneNumber.trim();

@@ -117,12 +117,15 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
             rows="4"
           ></textarea>
         </label>
-        <button class="primary-btn" type="submit">
+        <button class="primary-btn" type="submit" [disabled]="validateContactForm() !== null">
           <app-fa-icon name="phone"></app-fa-icon
           >{{
             language() === "fa" ? "ثبت درخواست تماس" : "Submit call request"
           }}
         </button>
+        <p *ngIf="feedback()" class="success-message" [class.error]="feedbackType() === 'error'">
+          {{ feedback() }}
+        </p>
         <p *ngIf="sent()" class="success-message">
           {{
             language() === "fa"
@@ -236,6 +239,8 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 export class ContactComponent {
   language = signal<LanguageCode>("fa");
   sent = signal(false);
+  feedback = signal("");
+  feedbackType = signal<"success" | "error">("success");
   services = DENTAL_SERVICES;
   form: ContactFormModel = {
     fullName: "",
@@ -284,8 +289,43 @@ export class ContactComponent {
   }
 
   submit(): void {
-    if (!this.form.fullName || !this.form.phone) return;
+    const validationError = this.validateContactForm();
+    if (validationError) {
+      this.showFeedback(validationError, "error");
+      return;
+    }
+
     this.sent.set(true);
+    this.showFeedback(
+      this.language() === "fa"
+        ? "درخواست شما ثبت شد."
+        : "Your request has been recorded.",
+      "success",
+    );
+  }
+
+  validateContactForm(): string | null {
+    const isFa = this.language() === "fa";
+    if (!this.form.fullName.trim())
+      return isFa ? "نام و نام خانوادگی الزامی است" : "Full name is required";
+    if (this.form.fullName.trim().length > 100)
+      return isFa
+        ? "نام نباید بیشتر از ۱۰۰ کاراکتر باشد"
+        : "Full name must be at most 100 characters";
+    if (!/^09\d{9}$/.test(this.form.phone.trim()))
+      return isFa ? "شماره موبایل معتبر نیست" : "Mobile number is invalid";
+    if (!this.services.some((service) => service.id === this.form.serviceId))
+      return isFa ? "درمان مورد نظر معتبر نیست" : "Selected service is invalid";
+    if (this.form.message.trim().length > 1000)
+      return isFa
+        ? "پیام کوتاه نباید بیشتر از ۱۰۰۰ کاراکتر باشد"
+        : "Short message must be at most 1000 characters";
+    return null;
+  }
+
+  private showFeedback(message: string, type: "success" | "error"): void {
+    this.feedback.set(message);
+    this.feedbackType.set(type);
   }
 
   openAuth(): void {

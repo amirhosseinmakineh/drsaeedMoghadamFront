@@ -111,7 +111,7 @@ export interface SubmitLeadCallReportRequest {
   reportDescription: string;
   patientCity: string;
   patientRegion: string;
-  businessName: string;
+  businessName?: string;
   attendanceProbabilityPercent?: number;
 }
 

@@ -465,7 +465,7 @@ interface ScoreFormModel {
             >
               انصراف
             </button>
-            <button class="solid-action" type="submit" [disabled]="userSaving">
+            <button class="solid-action" type="submit" [disabled]="userSaving || validateUserForm() !== null">
               {{ userSaving ? "در حال ذخیره..." : "ذخیره" }}
             </button>
           </div>
@@ -524,7 +524,7 @@ interface ScoreFormModel {
             >
               انصراف
             </button>
-            <button class="solid-action" type="submit" [disabled]="scoreSaving">
+            <button class="solid-action" type="submit" [disabled]="scoreSaving || validateScoreForm() !== null">
               {{ scoreSaving ? "در حال ثبت..." : "ثبت امتیاز" }}
             </button>
           </div>
@@ -541,6 +541,7 @@ interface ScoreFormModel {
         "
         confirmText="حذف"
         cancelText="انصراف"
+        [confirmDisabled]="!userToDelete"
         (confirmClick)="confirmDeleteUser()"
         (closed)="closeDeleteDialog()"
       >
@@ -1349,27 +1350,19 @@ export class DashboardComponent implements OnInit {
   }
 
   submitScoreForm(): void {
-    if (!this.selectedScoreConsultant?.profileId) {
-      this.showFeedback("شناسه پروفایل مشاور یافت نشد", "error");
+    const validationError = this.validateScoreForm();
+    if (validationError) {
+      this.showFeedback(validationError, "error");
       return;
     }
 
     const scoreValue = Number(this.scoreForm.scoreValue);
-    if (this.scoreForm.reason === 5 && scoreValue <= 0) {
-      this.showFeedback("امتیاز تشویقی مدیر باید مثبت باشد", "error");
-      return;
-    }
-
-    if (this.scoreForm.reason === 6 && scoreValue >= 0) {
-      this.showFeedback("امتیاز جریمه مدیر باید منفی باشد", "error");
-      return;
-    }
 
     this.scoreSaving = true;
     this.clearFeedback();
 
     const payload: ScoreRequest = {
-      consultantProfileId: this.selectedScoreConsultant.profileId,
+      consultantProfileId: this.selectedScoreConsultant!.profileId,
       source: 2,
       reason: Number(this.scoreForm.reason),
       scoreValue,
@@ -1424,7 +1417,33 @@ export class DashboardComponent implements OnInit {
     return labels[roleName] ?? roleName;
   }
 
-  private validateUserForm(): string | null {
+  validateScoreForm(): string | null {
+    if (!this.selectedScoreConsultant?.profileId)
+      return "شناسه پروفایل مشاور یافت نشد";
+
+    const scoreValue = Number(this.scoreForm.scoreValue);
+    if (!Number.isFinite(scoreValue) || scoreValue === 0)
+      return "مقدار امتیاز معتبر نیست";
+    if (this.scoreForm.reason === 5 && scoreValue <= 0)
+      return "امتیاز تشویقی مدیر باید مثبت باشد";
+    if (this.scoreForm.reason === 6 && scoreValue >= 0)
+      return "امتیاز جریمه مدیر باید منفی باشد";
+
+    const leadAssignmentId = this.scoreForm.leadAssignmentId;
+    if (
+      leadAssignmentId !== null &&
+      leadAssignmentId !== undefined &&
+      (!Number.isInteger(Number(leadAssignmentId)) ||
+        Number(leadAssignmentId) <= 0)
+    )
+      return "شناسه لید مرتبط معتبر نیست";
+
+    if (!this.scoreForm.description.trim()) return "توضیح امتیاز الزامی است";
+
+    return null;
+  }
+
+  validateUserForm(): string | null {
     if (!this.userForm.firstName.trim()) return "نام الزامی است";
     if (this.userForm.firstName.trim().length > 100)
       return "نام نباید بیشتر از ۱۰۰ کاراکتر باشد";

@@ -27,7 +27,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
         <button
           class="secondary-action compact"
           type="button"
-          [disabled]="downloading"
+          [disabled]="downloading || validateFilters() !== null"
           (click)="resetFilters()"
         >
           پاک‌سازی
@@ -60,7 +60,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
             (dateChange)="setToDate($event)"
           ></app-base-datepicker>
         </label>
-        <button class="primary-filter" type="submit" [disabled]="downloading">
+        <button class="primary-filter" type="submit" [disabled]="downloading || validateFilters() !== null">
           {{ downloading ? "در حال دانلود..." : "دانلود Excel/CSV" }}
         </button>
       </form>
@@ -210,14 +210,22 @@ export class AdminLeadCallReportsComponent {
     this.feedback = "";
   }
 
-  download(): void {
+  validateFilters(): string | null {
     if (
       this.fromDate &&
       this.toDate &&
       this.startOfDay(this.fromDate).getTime() >
         this.startOfDay(this.toDate).getTime()
-    ) {
-      this.showFeedback("تاریخ شروع نباید بعد از تاریخ پایان باشد", "error");
+    )
+      return "تاریخ شروع نباید بعد از تاریخ پایان باشد";
+
+    return null;
+  }
+
+  download(): void {
+    const validationError = this.validateFilters();
+    if (validationError) {
+      this.showFeedback(validationError, "error");
       return;
     }
 
