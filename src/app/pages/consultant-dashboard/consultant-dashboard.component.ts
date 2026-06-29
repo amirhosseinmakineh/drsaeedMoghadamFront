@@ -158,10 +158,6 @@ interface ConsultantDashboardLink {
           <header class="dashboard-hero consultant-hero">
             <span>داشبورد مشاور</span>
             <h2>مدیریت مشاوره، {{ displayName() }}</h2>
-            <p>
-              پروفایل، حضور، وضعیت آنلاین، لیدها و رزروهای مشاور از همین فضای
-              مشابه داشبورد ادمین مدیریت می‌شوند.
-            </p>
           </header>
 
           @if (feedbackMessage) {
@@ -180,19 +176,11 @@ interface ConsultantDashboardLink {
                 <button type="button" (click)="setSection('profile')">
                   <span><app-fa-icon name="shield"></app-fa-icon></span>
                   <strong>تکمیل پروفایل</strong>
-                  <small
-                    >برای فعال شدن لیدها، تکمیل یک‌باره پروفایل ضروری
-                    است.</small
-                  >
                 </button>
               }
               <button type="button" (click)="setSection('leads')">
                 <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                 <strong>لیدهای من</strong>
-                <small
-                  >{{ leadTotalCount }} لید قابل نمایش؛ تماس، گزارش و رزرو از
-                  این بخش انجام می‌شود.</small
-                >
               </button>
             </section>
 
@@ -203,10 +191,6 @@ interface ConsultantDashboardLink {
                 ></span>
                 <div>
                   <h2>داشبورد برای دریافت لید آماده نیست</h2>
-                  <p>
-                    ابتدا اطلاعات پروفایل مشاور را تکمیل کنید تا حضور، آنلاین
-                    شدن، لیدها و رزروها فعال شوند.
-                  </p>
                 </div>
                 <button
                   class="primary-action compact"
@@ -294,11 +278,6 @@ interface ConsultantDashboardLink {
                   ><app-fa-icon name="shield"></app-fa-icon
                 ></span>
                 <h2>تکمیل پروفایل مشاور</h2>
-                <p>
-                  تا زمانی که پروفایل مشاور کامل نباشد، دسترسی به حضور، آنلاین
-                  شدن و لیدها قفل می‌ماند. اطلاعات زیر طبق قرارداد API مشاور ثبت
-                  می‌شود.
-                </p>
 
                 <form class="profile-form" (ngSubmit)="submitProfile()">
                   <label>
@@ -339,10 +318,6 @@ interface ConsultantDashboardLink {
                   <div>
                     <span>پروفایل و وضعیت</span>
                     <h2>حضور و دریافت لید</h2>
-                    <p>
-                      برای دریافت لیدهای لحظه‌ای، ابتدا حضور را ثبت و سپس وضعیت
-                      آنلاین را فعال کنید.
-                    </p>
                   </div>
                 </header>
 
@@ -424,10 +399,6 @@ interface ConsultantDashboardLink {
                 ></span>
                 <div>
                   <h2>لیدها قفل هستند</h2>
-                  <p>
-                    برای مشاهده و تعیین‌تکلیف لیدها ابتدا پروفایل مشاور را کامل
-                    کنید.
-                  </p>
                 </div>
                 <button
                   class="primary-action compact"
@@ -501,10 +472,6 @@ interface ConsultantDashboardLink {
                   <div>
                     <span>لیدهای من</span>
                     <h2>تماس، گزارش و رزرو لیدها</h2>
-                    <p>
-                      روی شماره هر لید بزنید تا صفحه تماس گوشی باز شود، سپس
-                      نتیجه تماس را ثبت کنید.
-                    </p>
                   </div>
                   <button
                     class="secondary-action compact"
@@ -657,10 +624,6 @@ interface ConsultantDashboardLink {
                 ></span>
                 <div>
                   <h2>رزروها قفل هستند</h2>
-                  <p>
-                    رزروهای مشاور پس از تکمیل پروفایل و ثبت گزارش تماس‌های موفق
-                    نمایش داده می‌شوند.
-                  </p>
                 </div>
                 <button
                   class="primary-action compact"
@@ -744,7 +707,6 @@ interface ConsultantDashboardLink {
             ? 'ثبت گزارش برای ' + leadName(selectedLead)
             : 'ثبت گزارش تماس'
         "
-        subtitle="بعد از تماس با لید، نتیجه و توضیحات را ثبت کنید."
         (closed)="closeReportDialog()"
       >
         <form class="dialog-form" (ngSubmit)="submitLeadReport()">
@@ -836,7 +798,6 @@ interface ConsultantDashboardLink {
             ? 'رزرو برای ' + leadName(selectedReservationLead)
             : 'ثبت رزرو'
         "
-        subtitle="زمان رزرو لید را ثبت کنید."
         [closable]="!reservationSaving"
         (closed)="closeReservationDialog()"
       >
@@ -903,7 +864,6 @@ interface ConsultantDashboardLink {
         [showFooter]="false"
         size="wide"
         title="تشکیل پرونده بیمار"
-        subtitle="برای تکمیل رزرو، اطلاعات ثبت‌نام و پرونده بیمار را وارد کنید."
         [closable]="!patientProfileRequired && !patientProfileSaving"
         (closed)="closePatientProfileDialog()"
       >
@@ -944,9 +904,6 @@ interface ConsultantDashboardLink {
                   autocomplete="tel"
                   readonly
                 />
-                <small class="field-note"
-                  >شماره باید با شماره لید رزرو شده یکسان باشد.</small
-                >
               </label>
               <label>
                 رمز عبور
@@ -982,11 +939,6 @@ interface ConsultantDashboardLink {
               >
                 بعداً
               </button>
-            } @else {
-              <p class="required-step-note">
-                تشکیل پرونده بیمار برای تکمیل رزرو الزامی است و این پنجره تا ثبت
-                بیمار بسته نمی‌شود.
-              </p>
             }
             <button
               class="primary-action"
@@ -1255,20 +1207,6 @@ interface ConsultantDashboardLink {
         gap: 8px;
         color: var(--muted);
         font-weight: 950;
-      }
-      .required-step-note {
-        margin: 0;
-        padding: 10px 12px;
-        border-radius: 16px;
-        background: color-mix(in srgb, #f59e0b 16%, var(--surface));
-        color: #92400e;
-        font-weight: 950;
-        line-height: 1.8;
-      }
-      .field-note {
-        color: var(--muted);
-        font-weight: 800;
-        line-height: 1.7;
       }
       input[readonly] {
         opacity: 0.78;
@@ -2884,8 +2822,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.ngZone.runOutsideAngular(() => {
       if (!this.timerId) {
         this.timerId = setInterval(() => {
+          if (!this.hasActiveRealtimeTimers()) return;
           this.ngZone.run(() => {
-            if (!this.hasActiveRealtimeTimers()) return;
             this.currentTime = Date.now();
             this.expireDueRealtimeLeads();
             this.markViewDirty();
@@ -2895,11 +2833,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
       if (!this.pollId) {
         this.pollId = setInterval(() => {
-          if (this.isProfileReady()) {
+          if (!this.isProfileReady() || this.destroyed) return;
+          this.ngZone.run(() => {
             this.loadLeads(true);
             this.loadLeadNotifications();
             this.loadPendingOfflineLeads();
-          }
+          });
         }, 30000);
       }
     });
