@@ -99,7 +99,7 @@ interface ScoreFormModel {
 
         <nav class="dashboard-nav" aria-label="داشبورد">
           <button
-            *ngFor="let item of visibleLinks"
+            *ngFor="let item of visibleLinks; trackBy: trackDashboardLink"
             type="button"
             [class.active]="activeSection === item.id"
             (click)="setSection(item.id)"
@@ -125,10 +125,6 @@ interface ScoreFormModel {
             <header class="dashboard-hero admin-hero">
               <span>داشبورد ادمین</span>
               <h2>مدیریت کلینیک، {{ displayName() }}</h2>
-              <p>
-                کاربران، مشاوران، امتیازدهی، حضور و غیاب و لیدهای سیستم از همین
-                صفحه مدیریت می‌شوند.
-              </p>
             </header>
 
             @if (feedbackMessage) {
@@ -146,27 +142,22 @@ interface ScoreFormModel {
                 <button type="button" (click)="setSection('users')">
                   <span><app-fa-icon name="users"></app-fa-icon></span>
                   <strong>مدیریت کاربران</strong>
-                  <small>افزودن، ویرایش، حذف و تغییر نقش کاربر</small>
                 </button>
                 <button type="button" (click)="setSection('consultants')">
                   <span><app-fa-icon name="doctor"></app-fa-icon></span>
                   <strong>مدیریت مشاوران</strong>
-                  <small>ثبت امتیاز، مشاهده حضور و لیدهای مشاور</small>
                 </button>
                 <button type="button" (click)="setSection('leads')">
                   <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                   <strong>مدیریت لیدهای سیستم</strong>
-                  <small>لیست کامل لیدها همراه فیلتر وضعیت و نوع</small>
                 </button>
                 <button type="button" (click)="setSection('leadReports')">
                   <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                   <strong>گزارش تماس لیدها</strong>
-                  <small>دانلود CSV گزارش تماس‌ها با فیلتر تاریخ</small>
                 </button>
                 <button type="button" (click)="setSection('attendanceReviews')">
                   <span><app-fa-icon name="calendar"></app-fa-icon></span>
                   <strong>بررسی تایید حضور</strong>
-                  <small>تایید یا رد ادعای مشاور و اعمال امتیاز خودکار</small>
                 </button>
               </section>
             }
@@ -177,7 +168,6 @@ interface ScoreFormModel {
                   <div>
                     <span>کاربران</span>
                     <h2>مدیریت کاربران سیستم</h2>
-                    <p>برای ساخت مشاور، کاربر را با نقش Consultant ثبت کنید.</p>
                   </div>
                 </header>
 
@@ -239,7 +229,6 @@ interface ScoreFormModel {
 
                 <app-base-table
                   title="لیست کاربران"
-                  subtitle="Add / Update / Delete از اکشن‌های پیش‌فرض BaseTable هستند."
                   [columns]="userColumns"
                   [data]="users"
                   [showAdd]="true"
@@ -265,10 +254,6 @@ interface ScoreFormModel {
                   <div>
                     <span>مشاوران</span>
                     <h2>مدیریت مشاوران</h2>
-                    <p>
-                      افزودن و ویرایش مستقیم مشاور وجود ندارد؛ این کار از مدیریت
-                      کاربران و نقش Consultant انجام می‌شود.
-                    </p>
                   </div>
                 </header>
 
@@ -355,10 +340,6 @@ interface ScoreFormModel {
           <div class="dashboard-hero">
             <span>{{ roleLabel() }}</span>
             <h2>{{ displayName() }}</h2>
-            <p>
-              خوش آمدید. این داشبورد بر اساس نقش حساب شما نمایش داده شده و
-              دسترسی‌های بعدی هر نقش از همین بخش توسعه داده می‌شود.
-            </p>
           </div>
 
           <div class="dashboard-grid">
@@ -366,30 +347,18 @@ interface ScoreFormModel {
               <span><app-fa-icon name="shield"></app-fa-icon></span>
               <h3>نقش حساب</h3>
               <strong>{{ roleLabel() }}</strong>
-              <p>
-                مسیر فعلی با guard نقش کنترل می‌شود و کاربر نقش دیگر به داشبورد
-                خودش هدایت می‌شود.
-              </p>
             </article>
 
             <article>
               <span><app-fa-icon name="user"></app-fa-icon></span>
               <h3>نام کاربر</h3>
               <strong>{{ displayName() }}</strong>
-              <p>
-                نام و نام خانوادگی از توکن ورود خوانده می‌شود و در هدر سایت هم
-                نمایش داده می‌شود.
-              </p>
             </article>
 
             <article>
               <span><app-fa-icon name="dashboard"></app-fa-icon></span>
               <h3>فضای اختصاصی</h3>
               <strong>{{ dashboardTitle() }}</strong>
-              <p>
-                سایدبار داشبورد مستقل از هدر اصلی سایت است؛ فوتر عمومی در انتهای
-                صفحه حفظ شده است.
-              </p>
             </article>
           </div>
         }
@@ -399,7 +368,6 @@ interface ScoreFormModel {
         [open]="userDialogOpen"
         [showFooter]="false"
         [title]="userDialogMode === 'add' ? 'افزودن کاربر' : 'ویرایش کاربر'"
-        subtitle="اطلاعات کاربر را طبق قرارداد API وارد کنید."
         (closed)="closeUserDialog()"
       >
         <form class="dialog-form" (ngSubmit)="submitUserForm()">
@@ -512,7 +480,6 @@ interface ScoreFormModel {
             ? 'ثبت امتیاز برای ' + fullName(selectedScoreConsultant)
             : 'ثبت امتیاز'
         "
-        subtitle="برای پاداش مقدار امتیاز مثبت و برای جریمه مقدار منفی ثبت کنید."
         (closed)="closeScoreDialog()"
       >
         <form class="dialog-form" (ngSubmit)="submitScoreForm()">
@@ -1137,6 +1104,10 @@ export class DashboardComponent implements OnInit {
 
   get visibleLinks(): DashboardLink[] {
     return this.isAdmin() ? this.adminLinks : this.regularLinks;
+  }
+
+  trackDashboardLink(_: number, item: DashboardLink): DashboardSection {
+    return item.id;
   }
 
   isAdmin(): boolean {

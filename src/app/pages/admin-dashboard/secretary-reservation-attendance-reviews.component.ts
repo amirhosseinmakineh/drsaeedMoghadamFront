@@ -18,9 +18,6 @@ import { AuthService } from "../../core/auth/auth.service";
         <div>
           <span>بررسی منشی</span>
           <h2>بررسی تایید حضور مشاورها</h2>
-          <p>
-            ادعای حضور/عدم حضور ثبت‌شده توسط مشاور را بررسی و تایید یا رد کنید.
-          </p>
         </div>
         <button
           class="secondary-action compact"

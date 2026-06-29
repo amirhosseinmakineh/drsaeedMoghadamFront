@@ -26,7 +26,6 @@ import {
         <div>
           <span>حضور و غیاب</span>
           <h2>{{ title }}</h2>
-          <p>نمایش رکوردهای حضور مشاور بر اساس profileId انتخاب‌شده.</p>
         </div>
         <button
           class="secondary-action compact"

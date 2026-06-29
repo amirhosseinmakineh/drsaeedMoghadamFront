@@ -18,10 +18,6 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
         <div>
           <span>گزارش‌ها</span>
           <h2>خروجی گزارش تماس لیدها</h2>
-          <p>
-            بازه تاریخ را انتخاب کنید و فایل CSV قابل باز شدن در Excel را دریافت
-            کنید. اگر تاریخی انتخاب نشود، گزارش روز جاری دانلود می‌شود.
-          </p>
         </div>
         <button
           class="secondary-action compact"

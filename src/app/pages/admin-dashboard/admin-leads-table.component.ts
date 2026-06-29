@@ -33,7 +33,6 @@ type LeadTableMode = "system" | "consultant";
             mode === "system" ? "همه سیستم" : "مشاور انتخاب‌شده"
           }}</span>
           <h2>{{ title }}</h2>
-          <p>{{ description }}</p>
         </div>
         <button
           class="secondary-action compact"
