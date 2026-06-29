@@ -533,8 +533,8 @@ interface ConsultantDashboardLink {
                             <span>{{ leadTypeLabel(leadType(lead)) }}</span>
                             <h3>{{ leadName(lead) }}</h3>
                           </div>
-                          <b [class]="stateBadgeClass(leadState(lead))">{{
-                            stateLabel(leadState(lead))
+                          <b [class]="leadDisplayBadgeClass(lead)">{{
+                            leadDisplayStatus(lead)
                           }}</b>
                         </header>
 
@@ -839,7 +839,9 @@ interface ConsultantDashboardLink {
             <button
               class="primary-action"
               type="submit"
-              [disabled]="reservationSaving || validateReservationForm() !== null"
+              [disabled]="
+                reservationSaving || validateReservationForm() !== null
+              "
             >
               {{ reservationSaving ? "در حال ثبت..." : "ثبت رزرو" }}
             </button>
@@ -931,7 +933,9 @@ interface ConsultantDashboardLink {
             <button
               class="primary-action"
               type="submit"
-              [disabled]="patientProfileSaving || validatePatientProfileForm() !== null"
+              [disabled]="
+                patientProfileSaving || validatePatientProfileForm() !== null
+              "
             >
               {{ patientProfileSaving ? "در حال ثبت..." : "ثبت پرونده" }}
             </button>
@@ -1684,6 +1688,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private autoAbsenceRunning = false;
   private readonly expiringLeadIds = new Set<number>();
   private readonly reportedLeadIds = new Set<number>();
+  private readonly reportingLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
   private timerStarts: Record<string, number> = {};
   private notifiedLeadIds = new Set<number>();
@@ -1964,17 +1969,34 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   openReportDialog(lead: ConsultantLead): void {
-    if (this.isReportDisabled(lead)) return;
+    const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId || this.isReportDisabled(lead)) return;
+
+    this.reportingLeadIds.add(leadAssignmentId);
     this.forceOfflineForReport();
     this.selectedLead = lead;
     this.reportForm = this.emptyLeadReportForm();
     this.reportDialogOpen = true;
   }
 
-  closeReportDialog(): void {
+  closeReportDialog(options: { releaseReportLock?: boolean } = {}): void {
+    const releaseReportLock = options.releaseReportLock ?? true;
+    const leadAssignmentId = this.selectedLead
+      ? this.leadId(this.selectedLead)
+      : null;
+
     this.reportDialogOpen = false;
     this.reportSaving = false;
     this.selectedLead = null;
+
+    if (
+      releaseReportLock &&
+      leadAssignmentId &&
+      !this.reportedLeadIds.has(leadAssignmentId)
+    ) {
+      this.reportingLeadIds.delete(leadAssignmentId);
+      this.restoreOnlineAfterRequiredAction();
+    }
   }
 
   submitLeadReport(): void {
@@ -2039,6 +2061,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.leadType(lead) === LEAD_TYPE.OfflineQueue &&
             this.leadState(lead) === LEAD_STATE.Pending;
           this.reportedLeadIds.add(leadAssignmentId);
+          this.reportingLeadIds.delete(leadAssignmentId);
           const status = this.applyConsultantStatusFrom(
             response,
             response.data,
@@ -2057,7 +2080,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.updatePendingOfflineCount(
               Math.max(0, this.pendingOfflineCount - 1),
             );
-          this.closeReportDialog();
+          this.closeReportDialog({ releaseReportLock: false });
           this.showFeedback(response.message || "گزارش تماس ثبت شد", "success");
           this.restoreOnlineAfterRequiredAction();
           this.refreshDashboard();
@@ -2518,6 +2541,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return "نامشخص";
   }
 
+  leadDisplayStatus(lead: ConsultantLead): string {
+    if (this.isLeadInReportProgress(lead)) return "در حال ثبت گزارش";
+    if (this.isLeadExpired(lead)) return "منقضی شده";
+    if (this.isRealtimeTimedLead(lead)) return "در انتظار تماس";
+    return this.stateLabel(this.leadState(lead));
+  }
+
+  leadDisplayBadgeClass(lead: ConsultantLead): string {
+    if (this.isLeadInReportProgress(lead)) return "badge info";
+    if (this.isLeadExpired(lead)) return "badge warn";
+    if (this.isRealtimeTimedLead(lead)) return "badge info";
+    return this.stateBadgeClass(this.leadState(lead));
+  }
+
   stateBadgeClass(value: number | null): string {
     if (value === LEAD_STATE.New || value === LEAD_STATE.Assigned)
       return "badge info";
@@ -2531,7 +2568,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   isRealtimeTimedLead(lead: ConsultantLead): boolean {
     const leadAssignmentId = this.leadId(lead);
     if (
-      (leadAssignmentId && this.reportedLeadIds.has(leadAssignmentId)) ||
+      (leadAssignmentId &&
+        (this.reportedLeadIds.has(leadAssignmentId) ||
+          this.reportingLeadIds.has(leadAssignmentId))) ||
       Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)
     )
       return false;
@@ -2566,6 +2605,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   isLeadPhoneDisabled(lead: ConsultantLead): boolean {
     return (
+      this.isLeadInReportProgress(lead) ||
       this.isLeadExpired(lead) ||
       this.leadPhone(lead) === "-" ||
       this.expiringLeadIds.has(this.leadId(lead) ?? -1)
@@ -2578,6 +2618,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return (
       !leadAssignmentId ||
       this.isLeadExpired(lead) ||
+      this.reportingLeadIds.has(leadAssignmentId) ||
       this.reportedLeadIds.has(leadAssignmentId) ||
       Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted) ||
       state === LEAD_STATE.Contacted ||
@@ -2587,7 +2628,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isReservationDisabled(lead: ConsultantLead): boolean {
-    return !this.leadId(lead) || this.isLeadExpired(lead);
+    return (
+      !this.leadId(lead) ||
+      this.isLeadInReportProgress(lead) ||
+      this.isLeadExpired(lead)
+    );
+  }
+
+  isLeadInReportProgress(lead: ConsultantLead): boolean {
+    const leadAssignmentId = this.leadId(lead);
+    return Boolean(
+      leadAssignmentId && this.reportingLeadIds.has(leadAssignmentId),
+    );
   }
 
   minReservationDateTime(): string {
@@ -3024,6 +3076,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!leadAssignmentId || !this.isRealtimeTimedLead(lead)) return false;
     if (
       this.reportedLeadIds.has(leadAssignmentId) ||
+      this.reportingLeadIds.has(leadAssignmentId) ||
       this.expiringLeadIds.has(leadAssignmentId)
     )
       return false;
