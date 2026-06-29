@@ -1,9 +1,9 @@
-import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, signal } from '@angular/core';
-import { Observable, catchError, map, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { HttpClient } from "@angular/common/http";
+import { Injectable, computed, signal } from "@angular/core";
+import { Observable, catchError, map, throwError } from "rxjs";
+import { environment } from "../../../environments/environment";
 
-export type AuthRole = 'admin' | 'consultant' | 'patient';
+export type AuthRole = "admin" | "consultant" | "patient";
 
 export interface AuthUser {
   firstName: string;
@@ -47,29 +47,31 @@ type LoginPayload = {
   passwordHash: string;
 };
 
-type TokenResponseData = string | {
-  token?: string;
-  accessToken?: string;
-  access_token?: string;
-  jwt?: string;
-  userId?: string;
-  role?: string;
-  firstName?: string;
-  lastName?: string;
-  profileId?: number | string;
-  consultantProfileId?: number | string;
-  isCompleteProfile?: boolean | string;
-};
+type TokenResponseData =
+  | string
+  | {
+      token?: string;
+      accessToken?: string;
+      access_token?: string;
+      jwt?: string;
+      userId?: string;
+      role?: string;
+      firstName?: string;
+      lastName?: string;
+      profileId?: number | string;
+      consultantProfileId?: number | string;
+      isCompleteProfile?: boolean | string;
+    };
 
 interface StoredSession {
   token: string;
-  user: Omit<AuthUser, 'token'>;
+  user: Omit<AuthUser, "token">;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class AuthService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
-  private readonly sessionStorageKey = 'clinic-auth-session';
+  private readonly sessionStorageKey = "clinic-auth-session";
   private readonly currentUser = signal<AuthUser | null>(this.readSession());
 
   readonly user = this.currentUser.asReadonly();
@@ -77,39 +79,53 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  register(payload: RegisterRequest): Observable<ApiResponse<{ userId: string; role: string } | null>> {
-    return this.http.post<ApiResponse<{ userId: string; role: string } | null>>(`${this.apiBaseUrl}/Auth`, payload).pipe(
-      map(response => {
-        if (!response.isSuccess) {
-          throw new Error(response.message || 'ثبت نام انجام نشد');
-        }
+  register(
+    payload: RegisterRequest,
+  ): Observable<ApiResponse<{ userId: string; role: string } | null>> {
+    return this.http
+      .post<
+        ApiResponse<{ userId: string; role: string } | null>
+      >(`${this.apiBaseUrl}/Auth`, payload)
+      .pipe(
+        map((response) => {
+          if (!response.isSuccess) {
+            throw new Error(response.message || "ثبت نام انجام نشد");
+          }
 
-        return response;
-      }),
-      catchError(error => throwError(() => this.toUserFacingError(error, 'خطا در ثبت نام')))
-    );
+          return response;
+        }),
+        catchError((error) =>
+          throwError(() => this.toUserFacingError(error, "خطا در ثبت نام")),
+        ),
+      );
   }
 
   login(phoneNumber: string, password: string): Observable<AuthUser> {
     const payload: LoginPayload = { phoneNumber, passwordHash: password };
 
-    return this.http.post<ApiResponse<TokenResponseData | null>>(`${this.apiBaseUrl}/Auth/Login`, payload).pipe(
-      map(response => {
-        if (!response.isSuccess) {
-          throw new Error(response.message || 'ورود انجام نشد');
-        }
+    return this.http
+      .post<
+        ApiResponse<TokenResponseData | null>
+      >(`${this.apiBaseUrl}/Auth/Login`, payload)
+      .pipe(
+        map((response) => {
+          if (!response.isSuccess) {
+            throw new Error(response.message || "ورود انجام نشد");
+          }
 
-        const token = this.extractToken(response);
-        if (!token) {
-          throw new Error('توکن ورود از سمت سرور دریافت نشد');
-        }
+          const token = this.extractToken(response);
+          if (!token) {
+            throw new Error("توکن ورود از سمت سرور دریافت نشد");
+          }
 
-        const decodedUser = this.userFromToken(token, response.data);
-        this.saveSession(decodedUser);
-        return decodedUser;
-      }),
-      catchError(error => throwError(() => this.toUserFacingError(error, 'خطا در ورود')))
-    );
+          const decodedUser = this.userFromToken(token, response.data);
+          this.saveSession(decodedUser);
+          return decodedUser;
+        }),
+        catchError((error) =>
+          throwError(() => this.toUserFacingError(error, "خطا در ورود")),
+        ),
+      );
   }
 
   logout(): void {
@@ -130,16 +146,15 @@ export class AuthService {
       ...user,
       profileId,
       consultantProfileId: profileId,
-      isCompleteProfile
+      isCompleteProfile,
     });
   }
 
   dashboardUrl(user: AuthUser | null = this.currentUser()): string {
-    if (!user) return '/';
+    if (!user) return "/";
 
     return `/dashboard/${user.role}`;
   }
-
 
   authToken(): string | null {
     const currentToken = this.currentUser()?.token;
@@ -148,17 +163,19 @@ export class AuthService {
     return this.readStoredToken();
   }
 
-  roleLabel(role: AuthRole, language: 'fa' | 'en'): string {
+  roleLabel(role: AuthRole, language: "fa" | "en"): string {
     const labels: Record<AuthRole, { fa: string; en: string }> = {
-      admin: { fa: 'ادمین', en: 'Admin' },
-      consultant: { fa: 'مشاور', en: 'Consultant' },
-      patient: { fa: 'بیمار', en: 'Patient' }
+      admin: { fa: "ادمین", en: "Admin" },
+      consultant: { fa: "مشاور", en: "Consultant" },
+      patient: { fa: "بیمار", en: "Patient" },
     };
 
     return labels[role][language];
   }
 
-  private extractToken(response: ApiResponse<TokenResponseData | null>): string | null {
+  private extractToken(
+    response: ApiResponse<TokenResponseData | null>,
+  ): string | null {
     const root = response as ApiResponse<TokenResponseData | null> & {
       token?: string;
       accessToken?: string;
@@ -166,64 +183,119 @@ export class AuthService {
       jwt?: string;
     };
 
-    if (typeof response.data === 'string') return response.data;
+    if (typeof response.data === "string") return response.data;
     if (response.data?.accessToken) return response.data.accessToken;
     if (response.data?.token) return response.data.token;
     if (response.data?.access_token) return response.data.access_token;
     if (response.data?.jwt) return response.data.jwt;
-    return root.accessToken ?? root.token ?? root.access_token ?? root.jwt ?? null;
+    return (
+      root.accessToken ?? root.token ?? root.access_token ?? root.jwt ?? null
+    );
   }
 
-  private userFromToken(token: string, responseData: TokenResponseData | null): AuthUser {
+  private userFromToken(
+    token: string,
+    responseData: TokenResponseData | null,
+  ): AuthUser {
     const claims = this.decodeJwtPayload(token);
-    const data = typeof responseData === 'object' && responseData !== null ? responseData : {};
-    const roleName = this.claimValue(claims, [
-      'role',
-      'Role',
-      'roles',
-      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
-    ]) ?? data.role ?? 'Patient';
+    const data =
+      typeof responseData === "object" && responseData !== null
+        ? responseData
+        : {};
+    const roleName =
+      this.claimValue(claims, [
+        "role",
+        "Role",
+        "roles",
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+      ]) ??
+      data.role ??
+      "Patient";
 
     return {
       token,
-      firstName: this.claimValue(claims, ['firstName', 'FirstName', 'given_name', 'name']) ?? data.firstName ?? '',
-      lastName: this.claimValue(claims, ['lastName', 'LastName', 'family_name', 'surname']) ?? data.lastName ?? '',
-      phoneNumber: this.claimValue(claims, ['phoneNumber', 'PhoneNumber', 'phone_number', 'phone']),
-      userId: this.claimValue(claims, [
-        'userId',
-        'UserId',
-        'sub',
-        'nameid',
-        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
-      ]) ?? data.userId,
-      profileId: this.claimNumber(claims, ['profileId', 'ProfileId', 'consultantProfileId', 'ConsultantProfileId'])
-        ?? this.dataNumber(data, 'profileId', 'consultantProfileId'),
-      consultantProfileId: this.claimNumber(claims, ['consultantProfileId', 'ConsultantProfileId', 'profileId', 'ProfileId'])
-        ?? this.dataNumber(data, 'consultantProfileId', 'profileId'),
-      isCompleteProfile: this.claimBoolean(claims, ['isCompleteProfile', 'IsCompleteProfile', 'profileComplete', 'ProfileComplete'])
-        ?? this.dataBoolean(data, 'isCompleteProfile'),
+      firstName:
+        this.claimValue(claims, [
+          "firstName",
+          "FirstName",
+          "given_name",
+          "name",
+        ]) ??
+        data.firstName ??
+        "",
+      lastName:
+        this.claimValue(claims, [
+          "lastName",
+          "LastName",
+          "family_name",
+          "surname",
+        ]) ??
+        data.lastName ??
+        "",
+      phoneNumber: this.claimValue(claims, [
+        "phoneNumber",
+        "PhoneNumber",
+        "phone_number",
+        "phone",
+      ]),
+      userId:
+        this.claimValue(claims, [
+          "userId",
+          "UserId",
+          "sub",
+          "nameid",
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
+        ]) ?? data.userId,
+      profileId:
+        this.claimNumber(claims, [
+          "profileId",
+          "ProfileId",
+          "consultantProfileId",
+          "ConsultantProfileId",
+        ]) ?? this.dataNumber(data, "profileId", "consultantProfileId"),
+      consultantProfileId:
+        this.claimNumber(claims, [
+          "consultantProfileId",
+          "ConsultantProfileId",
+          "profileId",
+          "ProfileId",
+        ]) ?? this.dataNumber(data, "consultantProfileId", "profileId"),
+      isCompleteProfile:
+        this.claimBoolean(claims, [
+          "isCompleteProfile",
+          "IsCompleteProfile",
+          "profileComplete",
+          "ProfileComplete",
+        ]) ?? this.dataBoolean(data, "isCompleteProfile"),
       roleName,
-      role: this.normalizeRole(roleName)
+      role: this.normalizeRole(roleName),
     };
   }
 
   private normalizeRole(role: string): AuthRole {
     const normalized = role.trim().toLowerCase();
 
-    if (['admin', 'administrator', 'ادمین'].includes(normalized)) return 'admin';
-    if (['consultant', 'advisor', 'مشاور'].includes(normalized)) return 'consultant';
-    return 'patient';
+    if (["admin", "administrator", "ادمین"].includes(normalized))
+      return "admin";
+    if (["consultant", "advisor", "مشاور"].includes(normalized))
+      return "consultant";
+    return "patient";
   }
 
   private decodeJwtPayload(token: string): Record<string, unknown> {
     try {
-      const payload = token.split('.')[1];
+      const payload = token.split(".")[1];
       if (!payload) return {};
 
-      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized.padEnd(
+        Math.ceil(normalized.length / 4) * 4,
+        "=",
+      );
       const decoded = atob(padded);
-      const bytes = Uint8Array.from(decoded, character => character.charCodeAt(0));
+      const bytes = Uint8Array.from(decoded, (character) =>
+        character.charCodeAt(0),
+      );
       const json = new TextDecoder().decode(bytes);
       return JSON.parse(json) as Record<string, unknown>;
     } catch {
@@ -231,58 +303,88 @@ export class AuthService {
     }
   }
 
-  private claimValue(claims: Record<string, unknown>, keys: string[]): string | undefined {
+  private claimValue(
+    claims: Record<string, unknown>,
+    keys: string[],
+  ): string | undefined {
     for (const key of keys) {
       const value = claims[key];
-      if (typeof value === 'string' && value.trim()) return value;
-      if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) return value[0];
+      if (typeof value === "string" && value.trim()) return value;
+      if (
+        Array.isArray(value) &&
+        typeof value[0] === "string" &&
+        value[0].trim()
+      )
+        return value[0];
     }
 
     return undefined;
   }
 
-  private claimNumber(claims: Record<string, unknown>, keys: string[]): number | undefined {
+  private claimNumber(
+    claims: Record<string, unknown>,
+    keys: string[],
+  ): number | undefined {
     for (const key of keys) {
       const value = claims[key];
-      const numeric = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+      const numeric =
+        typeof value === "number"
+          ? value
+          : typeof value === "string"
+            ? Number(value)
+            : NaN;
       if (Number.isFinite(numeric) && numeric > 0) return numeric;
     }
 
     return undefined;
   }
 
-  private claimBoolean(claims: Record<string, unknown>, keys: string[]): boolean | undefined {
+  private claimBoolean(
+    claims: Record<string, unknown>,
+    keys: string[],
+  ): boolean | undefined {
     for (const key of keys) {
       const value = claims[key];
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') {
+      if (typeof value === "boolean") return value;
+      if (typeof value === "string") {
         const normalized = value.trim().toLowerCase();
-        if (['true', '1', 'yes'].includes(normalized)) return true;
-        if (['false', '0', 'no'].includes(normalized)) return false;
+        if (["true", "1", "yes"].includes(normalized)) return true;
+        if (["false", "0", "no"].includes(normalized)) return false;
       }
     }
 
     return undefined;
   }
 
-  private dataNumber(data: Record<string, unknown>, ...keys: string[]): number | undefined {
+  private dataNumber(
+    data: Record<string, unknown>,
+    ...keys: string[]
+  ): number | undefined {
     for (const key of keys) {
       const value = data[key];
-      const numeric = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+      const numeric =
+        typeof value === "number"
+          ? value
+          : typeof value === "string"
+            ? Number(value)
+            : NaN;
       if (Number.isFinite(numeric) && numeric > 0) return numeric;
     }
 
     return undefined;
   }
 
-  private dataBoolean(data: Record<string, unknown>, ...keys: string[]): boolean | undefined {
+  private dataBoolean(
+    data: Record<string, unknown>,
+    ...keys: string[]
+  ): boolean | undefined {
     for (const key of keys) {
       const value = data[key];
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') {
+      if (typeof value === "boolean") return value;
+      if (typeof value === "string") {
         const normalized = value.trim().toLowerCase();
-        if (['true', '1', 'yes'].includes(normalized)) return true;
-        if (['false', '0', 'no'].includes(normalized)) return false;
+        if (["true", "1", "yes"].includes(normalized)) return true;
+        if (["false", "0", "no"].includes(normalized)) return false;
       }
     }
 
@@ -301,9 +403,14 @@ export class AuthService {
     }
   }
 
-
   private readStoredToken(): string | null {
-    const storageKeys = ['clinic-auth-session', 'token', 'accessToken', 'authToken', 'jwt'];
+    const storageKeys = [
+      "clinic-auth-session",
+      "token",
+      "accessToken",
+      "authToken",
+      "jwt",
+    ];
 
     try {
       for (const storage of [localStorage, sessionStorage]) {
@@ -335,13 +442,14 @@ export class AuthService {
 
   private findTokenInObject(value: unknown, depth = 0): string | null {
     if (depth > 4 || value === null || value === undefined) return null;
-    if (typeof value === 'string') return this.looksLikeJwt(value) ? value : null;
-    if (typeof value !== 'object') return null;
+    if (typeof value === "string")
+      return this.looksLikeJwt(value) ? value : null;
+    if (typeof value !== "object") return null;
 
     const record = value as Record<string, unknown>;
-    for (const key of ['token', 'accessToken', 'access_token', 'jwt']) {
+    for (const key of ["token", "accessToken", "access_token", "jwt"]) {
       const token = record[key];
-      if (typeof token === 'string' && token.trim()) return token.trim();
+      if (typeof token === "string" && token.trim()) return token.trim();
     }
 
     for (const nested of Object.values(record)) {
@@ -353,7 +461,9 @@ export class AuthService {
   }
 
   private looksLikeJwt(value: string): boolean {
-    return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value.trim());
+    return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(
+      value.trim(),
+    );
   }
 
   private readSession(): AuthUser | null {
@@ -374,11 +484,13 @@ export class AuthService {
         phoneNumber: tokenUser.phoneNumber || session.user.phoneNumber,
         userId: tokenUser.userId || session.user.userId,
         profileId: session.user.profileId ?? tokenUser.profileId,
-        consultantProfileId: session.user.consultantProfileId ?? tokenUser.consultantProfileId,
-        isCompleteProfile: session.user.isCompleteProfile ?? tokenUser.isCompleteProfile,
+        consultantProfileId:
+          session.user.consultantProfileId ?? tokenUser.consultantProfileId,
+        isCompleteProfile:
+          session.user.isCompleteProfile ?? tokenUser.isCompleteProfile,
         roleName: session.user.roleName || tokenUser.roleName,
         role: session.user.role || tokenUser.role,
-        token: session.token
+        token: session.token,
       };
     } catch {
       return null;
@@ -387,10 +499,15 @@ export class AuthService {
 
   private toUserFacingError(error: unknown, fallback: string): Error {
     if (error instanceof Error && error.message) return error;
-    if (typeof error === 'object' && error !== null && 'error' in error) {
-      const httpError = error as { error?: { message?: string } | string; message?: string };
-      if (typeof httpError.error === 'object' && httpError.error?.message) return new Error(httpError.error.message);
-      if (typeof httpError.error === 'string' && httpError.error) return new Error(httpError.error);
+    if (typeof error === "object" && error !== null && "error" in error) {
+      const httpError = error as {
+        error?: { message?: string } | string;
+        message?: string;
+      };
+      if (typeof httpError.error === "object" && httpError.error?.message)
+        return new Error(httpError.error.message);
+      if (typeof httpError.error === "string" && httpError.error)
+        return new Error(httpError.error);
       if (httpError.message) return new Error(httpError.message);
     }
 

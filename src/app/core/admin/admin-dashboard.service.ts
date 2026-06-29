@@ -1,8 +1,8 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable, catchError, map, throwError } from 'rxjs';
-import { AuthService } from '../auth/auth.service';
-import { environment } from '../../../environments/environment';
+import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { Observable, catchError, map, throwError } from "rxjs";
+import { AuthService } from "../auth/auth.service";
+import { environment } from "../../../environments/environment";
 
 export interface ApiCommandResponse<T = unknown> {
   isSuccess: boolean;
@@ -210,131 +210,236 @@ interface LeadPerson {
   Mobile?: string | null;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class AdminDashboardService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+  ) {}
 
   getUsers(filters: UserFilters): Observable<PaginatedResponse<AdminUser>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/User`, {
-      headers: this.authHeaders(),
-      params: this.toParams(filters)
-    }).pipe(map(response => this.normalizePaginatedResponse<AdminUser>(response, filters)));
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/User`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<AdminUser>(response, filters),
+        ),
+      );
   }
 
   addUser(payload: SaveUserRequest): Observable<ApiCommandResponse> {
-    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/User`, payload, {
-      headers: this.authHeaders()
-    }).pipe(this.ensureCommandSucceeded('ثبت کاربر انجام نشد'));
+    return this.http
+      .post<ApiCommandResponse>(`${this.apiBaseUrl}/User`, payload, {
+        headers: this.authHeaders(),
+      })
+      .pipe(this.ensureCommandSucceeded("ثبت کاربر انجام نشد"));
   }
 
   updateUser(payload: SaveUserRequest): Observable<ApiCommandResponse> {
-    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/User`, payload, {
-      headers: this.authHeaders()
-    }).pipe(this.ensureCommandSucceeded('ویرایش کاربر انجام نشد'));
+    return this.http
+      .put<ApiCommandResponse>(`${this.apiBaseUrl}/User`, payload, {
+        headers: this.authHeaders(),
+      })
+      .pipe(this.ensureCommandSucceeded("ویرایش کاربر انجام نشد"));
   }
 
   deleteUser(userId: string): Observable<ApiCommandResponse<boolean>> {
-    return this.http.delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User`, {
-      headers: this.authHeaders(),
-      params: this.toParams({ userId })
-    }).pipe(this.ensureCommandSucceeded('حذف کاربر انجام نشد'));
+    return this.http
+      .delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User`, {
+        headers: this.authHeaders(),
+        params: this.toParams({ userId }),
+      })
+      .pipe(this.ensureCommandSucceeded("حذف کاربر انجام نشد"));
   }
 
-  getConsultants(filters: ConsultantFilters): Observable<PaginatedResponse<Consultant>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
-      headers: this.authHeaders(),
-      params: this.toParams(filters)
-    }).pipe(map(response => this.normalizePaginatedResponse<Consultant>(response, filters)));
+  getConsultants(
+    filters: ConsultantFilters,
+  ): Observable<PaginatedResponse<Consultant>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<Consultant>(response, filters),
+        ),
+      );
   }
 
   createScore(payload: ScoreRequest): Observable<ApiCommandResponse> {
-    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/ScoreLog`, payload, {
-      headers: this.authHeaders()
-    }).pipe(this.ensureCommandSucceeded('ثبت امتیاز انجام نشد'));
+    return this.http
+      .post<ApiCommandResponse>(`${this.apiBaseUrl}/ScoreLog`, payload, {
+        headers: this.authHeaders(),
+      })
+      .pipe(this.ensureCommandSucceeded("ثبت امتیاز انجام نشد"));
   }
 
-  getAttendance(consultantProfileId: number, pageNumber = 1, pageSize = 10): Observable<PaginatedResponse<AttendanceItem>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/Attendance`, {
-      headers: this.authHeaders(),
-      params: this.toParams({ consultantProfileId, pageNumber, pageSize })
-    }).pipe(map(response => this.normalizePaginatedResponse<AttendanceItem>(response, { pageNumber, pageSize })));
+  getAttendance(
+    consultantProfileId: number,
+    pageNumber = 1,
+    pageSize = 10,
+  ): Observable<PaginatedResponse<AttendanceItem>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Attendance`, {
+        headers: this.authHeaders(),
+        params: this.toParams({ consultantProfileId, pageNumber, pageSize }),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<AttendanceItem>(response, {
+            pageNumber,
+            pageSize,
+          }),
+        ),
+      );
   }
 
-  exportLeadCallReports(filters: LeadCallReportExportFilters): Observable<Blob> {
-    return this.http.get(`${this.apiBaseUrl}/admin/reports/lead-call-reports/export`, {
-      headers: this.authHeaders(),
-      params: this.toParams(filters),
-      responseType: 'blob'
-    });
+  exportLeadCallReports(
+    filters: LeadCallReportExportFilters,
+  ): Observable<Blob> {
+    return this.http.get(
+      `${this.apiBaseUrl}/admin/reports/lead-call-reports/export`,
+      {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+        responseType: "blob",
+      },
+    );
   }
 
-  getConsultantLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/Consultant/GetLeads`, {
-      headers: this.authHeaders(),
-      params: this.toParams(filters)
-    }).pipe(map(response => this.normalizePaginatedResponse<LeadAssignmentItem>(response, filters)));
+  getConsultantLeads(
+    filters: LeadFilters,
+  ): Observable<PaginatedResponse<LeadAssignmentItem>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetLeads`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<LeadAssignmentItem>(
+            response,
+            filters,
+          ),
+        ),
+      );
   }
 
-  getReservationAttendanceReviews(pageNumber = 1, pageSize = 20): Observable<PaginatedResponse<ReservationAttendanceReview>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/Reservation/AttendanceReviews`, {
-      headers: this.authHeaders(),
-      params: this.toParams({ pageNumber, pageSize })
-    }).pipe(map(response => this.normalizePaginatedResponse<ReservationAttendanceReview>(response, { pageNumber, pageSize })));
+  getReservationAttendanceReviews(
+    pageNumber = 1,
+    pageSize = 20,
+  ): Observable<PaginatedResponse<ReservationAttendanceReview>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Reservation/AttendanceReviews`, {
+        headers: this.authHeaders(),
+        params: this.toParams({ pageNumber, pageSize }),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<ReservationAttendanceReview>(
+            response,
+            { pageNumber, pageSize },
+          ),
+        ),
+      );
   }
 
-  reviewAttendance(payload: ReviewAttendanceRequest): Observable<ApiCommandResponse> {
-    return this.http.post<ApiCommandResponse>(`${this.apiBaseUrl}/Reservation/ReviewAttendance`, payload, {
-      headers: this.authHeaders()
-    }).pipe(this.ensureCommandSucceeded('ثبت بررسی حضور انجام نشد'));
+  reviewAttendance(
+    payload: ReviewAttendanceRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .post<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Reservation/ReviewAttendance`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت بررسی حضور انجام نشد"));
   }
 
-  getSystemLeads(filters: LeadFilters): Observable<PaginatedResponse<LeadAssignmentItem>> {
-    return this.http.get<unknown>(`${this.apiBaseUrl}/LeadAssignment`, {
-      headers: this.authHeaders(),
-      params: this.toParams(filters)
-    }).pipe(map(response => this.normalizePaginatedResponse<LeadAssignmentItem>(response, filters)));
+  getSystemLeads(
+    filters: LeadFilters,
+  ): Observable<PaginatedResponse<LeadAssignmentItem>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/LeadAssignment`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<LeadAssignmentItem>(
+            response,
+            filters,
+          ),
+        ),
+      );
   }
 
   private authHeaders(): HttpHeaders {
     const token = this.auth.authToken();
-    return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
+    return token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
   }
 
   private toParams(source: object): HttpParams {
     let params = new HttpParams();
 
-    Object.entries(source as Record<string, unknown>).forEach(([key, value]) => {
-      if (value === null || value === undefined || value === '') return;
-      params = params.set(key, String(value));
-    });
+    Object.entries(source as Record<string, unknown>).forEach(
+      ([key, value]) => {
+        if (value === null || value === undefined || value === "") return;
+        params = params.set(key, String(value));
+      },
+    );
 
     return params;
   }
 
   private ensureCommandSucceeded<T>(fallback: string) {
-    return (source: Observable<ApiCommandResponse<T>>) => source.pipe(
-      map(response => this.normalizeCommandResponse(response, fallback)),
-      catchError(error => throwError(() => this.toUserFacingError(error, fallback)))
-    );
+    return (source: Observable<ApiCommandResponse<T>>) =>
+      source.pipe(
+        map((response) => this.normalizeCommandResponse(response, fallback)),
+        catchError((error) =>
+          throwError(() => this.toUserFacingError(error, fallback)),
+        ),
+      );
   }
 
-  private normalizePaginatedResponse<T>(response: unknown, filters: { pageNumber: number; pageSize: number }): PaginatedResponse<T> {
+  private normalizePaginatedResponse<T>(
+    response: unknown,
+    filters: { pageNumber: number; pageSize: number },
+  ): PaginatedResponse<T> {
     const source = this.unwrapResponseData(response);
     const items = this.readItems<T>(source);
-    const totalCount = this.readNumber(source, 'totalCount', 'total', 'count', 'recordsTotal')
-      ?? this.readNumber(response, 'totalCount', 'total', 'count', 'recordsTotal')
-      ?? items.length;
-    const pageSize = this.readNumber(source, 'pageSize', 'take', 'limit')
-      ?? this.readNumber(response, 'pageSize', 'take', 'limit')
-      ?? filters.pageSize;
-    const pageNumber = this.readNumber(source, 'pageNumber', 'page', 'currentPage')
-      ?? this.readNumber(response, 'pageNumber', 'page', 'currentPage')
-      ?? filters.pageNumber;
-    const totalPages = this.readNumber(source, 'totalPages', 'pages', 'pageCount')
-      ?? this.readNumber(response, 'totalPages', 'pages', 'pageCount')
-      ?? Math.ceil(totalCount / Math.max(1, pageSize));
+    const totalCount =
+      this.readNumber(source, "totalCount", "total", "count", "recordsTotal") ??
+      this.readNumber(
+        response,
+        "totalCount",
+        "total",
+        "count",
+        "recordsTotal",
+      ) ??
+      items.length;
+    const pageSize =
+      this.readNumber(source, "pageSize", "take", "limit") ??
+      this.readNumber(response, "pageSize", "take", "limit") ??
+      filters.pageSize;
+    const pageNumber =
+      this.readNumber(source, "pageNumber", "page", "currentPage") ??
+      this.readNumber(response, "pageNumber", "page", "currentPage") ??
+      filters.pageNumber;
+    const totalPages =
+      this.readNumber(source, "totalPages", "pages", "pageCount") ??
+      this.readNumber(response, "totalPages", "pages", "pageCount") ??
+      Math.ceil(totalCount / Math.max(1, pageSize));
 
     return {
       items,
@@ -343,7 +448,7 @@ export class AdminDashboardService {
       pageSize,
       totalPages: Math.max(1, totalPages),
       raw: response,
-      source
+      source,
     };
   }
 
@@ -351,7 +456,13 @@ export class AdminDashboardService {
     if (Array.isArray(response)) return response;
     if (!this.isRecord(response)) return response;
 
-    const payload = this.readValue(response, 'data', 'result', 'value', 'payload');
+    const payload = this.readValue(
+      response,
+      "data",
+      "result",
+      "value",
+      "payload",
+    );
     if (payload !== null && payload !== undefined) {
       return payload;
     }
@@ -363,7 +474,14 @@ export class AdminDashboardService {
     if (Array.isArray(source)) return source as T[];
     if (!this.isRecord(source)) return [];
 
-    for (const key of ['items', 'data', 'result', 'values', 'records', 'list']) {
+    for (const key of [
+      "items",
+      "data",
+      "result",
+      "values",
+      "records",
+      "list",
+    ]) {
       const value = this.readValue(source, key);
       if (Array.isArray(value)) return value as T[];
       const nestedItems = this.readItems<T>(value);
@@ -371,7 +489,7 @@ export class AdminDashboardService {
     }
 
     const firstArray = Object.values(source).find(Array.isArray);
-    return Array.isArray(firstArray) ? firstArray as T[] : [];
+    return Array.isArray(firstArray) ? (firstArray as T[]) : [];
   }
 
   private readNumber(source: unknown, ...keys: string[]): number | null {
@@ -379,17 +497,26 @@ export class AdminDashboardService {
 
     for (const key of keys) {
       const value = this.readValue(source, key);
-      if (value === null || value === undefined || value === '') continue;
-      const numeric = typeof value === 'number' ? value : Number(value);
+      if (value === null || value === undefined || value === "") continue;
+      const numeric = typeof value === "number" ? value : Number(value);
       if (Number.isFinite(numeric)) return numeric;
     }
 
     return null;
   }
 
-  private normalizeCommandResponse<T>(response: ApiCommandResponse<T>, fallback: string): ApiCommandResponse<T> {
-    const success = this.readBoolean(response, 'isSuccess', 'success', 'succeeded');
-    const message = this.readString(response, 'message', 'error') ?? response.message ?? '';
+  private normalizeCommandResponse<T>(
+    response: ApiCommandResponse<T>,
+    fallback: string,
+  ): ApiCommandResponse<T> {
+    const success = this.readBoolean(
+      response,
+      "isSuccess",
+      "success",
+      "succeeded",
+    );
+    const message =
+      this.readString(response, "message", "error") ?? response.message ?? "";
 
     if (success === false) {
       throw new Error(message || fallback);
@@ -399,7 +526,9 @@ export class AdminDashboardService {
       ...response,
       isSuccess: success ?? true,
       message,
-      data: this.readValue(response, 'data', 'result', 'value') as T | undefined
+      data: this.readValue(response, "data", "result", "value") as
+        | T
+        | undefined,
     };
   }
 
@@ -408,11 +537,11 @@ export class AdminDashboardService {
 
     for (const key of keys) {
       const value = this.readValue(source, key);
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') {
+      if (typeof value === "boolean") return value;
+      if (typeof value === "string") {
         const normalized = value.trim().toLowerCase();
-        if (['true', '1', 'yes'].includes(normalized)) return true;
-        if (['false', '0', 'no'].includes(normalized)) return false;
+        if (["true", "1", "yes"].includes(normalized)) return true;
+        if (["false", "0", "no"].includes(normalized)) return false;
       }
     }
 
@@ -424,7 +553,7 @@ export class AdminDashboardService {
 
     for (const key of keys) {
       const value = this.readValue(source, key);
-      if (typeof value === 'string' && value.trim()) return value;
+      if (typeof value === "string" && value.trim()) return value;
     }
 
     return null;
@@ -439,7 +568,9 @@ export class AdminDashboardService {
 
     const entries = Object.entries(source);
     for (const key of keys) {
-      const match = entries.find(([entryKey]) => entryKey.toLowerCase() === key.toLowerCase());
+      const match = entries.find(
+        ([entryKey]) => entryKey.toLowerCase() === key.toLowerCase(),
+      );
       if (match) return match[1];
     }
 
@@ -447,15 +578,20 @@ export class AdminDashboardService {
   }
 
   private isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
+    return typeof value === "object" && value !== null;
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {
     if (error instanceof Error && error.message) return error;
-    if (typeof error === 'object' && error !== null && 'error' in error) {
-      const httpError = error as { error?: { message?: string } | string; message?: string };
-      if (typeof httpError.error === 'object' && httpError.error?.message) return new Error(httpError.error.message);
-      if (typeof httpError.error === 'string' && httpError.error) return new Error(httpError.error);
+    if (typeof error === "object" && error !== null && "error" in error) {
+      const httpError = error as {
+        error?: { message?: string } | string;
+        message?: string;
+      };
+      if (typeof httpError.error === "object" && httpError.error?.message)
+        return new Error(httpError.error.message);
+      if (typeof httpError.error === "string" && httpError.error)
+        return new Error(httpError.error);
       if (httpError.message) return new Error(httpError.message);
     }
 

@@ -1,9 +1,17 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { Subscription, finalize } from 'rxjs';
-import { AuthService, RegisterRequest } from '../../core/auth/auth.service';
+import { CommonModule } from "@angular/common";
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  computed,
+} from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
+import { Subscription, finalize } from "rxjs";
+import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
   ConsultantDashboardService,
   ConsultantDashboardStatus,
@@ -11,11 +19,11 @@ import {
   ConsultantReservation,
   CreateReservationRequest,
   ConfirmAttendanceRequest,
-  SubmitLeadCallReportRequest
-} from '../../core/consultant/consultant-dashboard.service';
-import { BaseDialogComponent } from '../../shared/base/base-dialog/base-dialog.component';
-import { BaseDatepickerComponent } from '../../shared/base/base-datepicker/base-datepicker.component';
-import { FaIconComponent } from '../../shared/ui/fa-icon/fa-icon.component';
+  SubmitLeadCallReportRequest,
+} from "../../core/consultant/consultant-dashboard.service";
+import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
+import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 
 const LEAD_STATE = {
   New: 1,
@@ -24,23 +32,23 @@ const LEAD_STATE = {
   Pending: 4,
   Converted: 5,
   Expired: 6,
-  Rejected: 7
+  Rejected: 7,
 } as const;
 
 const LEAD_TYPE = {
   RealTime: 1,
-  OfflineQueue: 2
+  OfflineQueue: 2,
 } as const;
 
 const THREE_MINUTES_MS = 3 * 60 * 1000;
 
 const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
-  1: 'تماس برقرار شد',
-  2: 'تبدیل/موفق شد',
-  3: 'رد شد',
-  4: 'پاسخ نداد',
-  5: 'شماره اشتباه بود',
-  6: 'نیاز به پیگیری دارد'
+  1: "تماس برقرار شد",
+  2: "تبدیل/موفق شد",
+  3: "رد شد",
+  4: "پاسخ نداد",
+  5: "شماره اشتباه بود",
+  6: "نیاز به پیگیری دارد",
 };
 
 interface ConsultantProfileForm {
@@ -54,7 +62,7 @@ interface LeadReportForm {
   patientCity: string;
   patientRegion: string;
   businessName: string;
-  attendanceProbabilityPercent: number | null | '';
+  attendanceProbabilityPercent: number | null | "";
 }
 
 interface ReservationForm {
@@ -77,7 +85,11 @@ interface ConsultantStatusUpdate {
   isOnline: boolean | null;
 }
 
-type ConsultantDashboardSection = 'overview' | 'profile' | 'leads' | 'reservations';
+type ConsultantDashboardSection =
+  | "overview"
+  | "profile"
+  | "leads"
+  | "reservations";
 
 interface ConsultantDashboardLink {
   id: ConsultantDashboardSection;
@@ -86,15 +98,24 @@ interface ConsultantDashboardLink {
 }
 
 @Component({
-  selector: 'app-consultant-dashboard',
+  selector: "app-consultant-dashboard",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BaseDialogComponent, BaseDatepickerComponent, FaIconComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    BaseDialogComponent,
+    BaseDatepickerComponent,
+    FaIconComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="dashboard-layout consultant-mode">
       <aside class="dashboard-sidebar mobile-app-nav">
         <a class="dashboard-brand" routerLink="/">
-          <span class="brand-mark"><app-fa-icon name="tooth"></app-fa-icon></span>
+          <span class="brand-mark"
+            ><app-fa-icon name="tooth"></app-fa-icon
+          ></span>
           <strong>کلینیک دکتر سعید مقدم</strong>
         </a>
 
@@ -109,7 +130,10 @@ interface ConsultantDashboardLink {
 
         <nav class="dashboard-nav" aria-label="داشبورد مشاور">
           <button
-            *ngFor="let item of visibleDashboardLinks; trackBy: trackDashboardLink"
+            *ngFor="
+              let item of visibleDashboardLinks;
+              trackBy: trackDashboardLink
+            "
             type="button"
             [class.active]="activeSection === item.id"
             (click)="setSection(item.id)"
@@ -119,7 +143,11 @@ interface ConsultantDashboardLink {
           </button>
         </nav>
 
-        <button class="secondary-btn logout-btn" type="button" (click)="logout()">
+        <button
+          class="secondary-btn logout-btn"
+          type="button"
+          (click)="logout()"
+        >
           <app-fa-icon name="logout"></app-fa-icon>
           خروج از حساب کاربری
         </button>
@@ -130,39 +158,63 @@ interface ConsultantDashboardLink {
           <header class="dashboard-hero consultant-hero">
             <span>داشبورد مشاور</span>
             <h2>مدیریت مشاوره، {{ displayName() }}</h2>
-            <p>پروفایل، حضور، وضعیت آنلاین، لیدها و رزروهای مشاور از همین فضای مشابه داشبورد ادمین مدیریت می‌شوند.</p>
+            <p>
+              پروفایل، حضور، وضعیت آنلاین، لیدها و رزروهای مشاور از همین فضای
+              مشابه داشبورد ادمین مدیریت می‌شوند.
+            </p>
           </header>
 
           @if (feedbackMessage) {
-            <p class="feedback" [class.error]="feedbackType === 'error'" [class.success]="feedbackType === 'success'">
+            <p
+              class="feedback"
+              [class.error]="feedbackType === 'error'"
+              [class.success]="feedbackType === 'success'"
+            >
               {{ feedbackMessage }}
             </p>
           }
 
-          @if (activeSection === 'overview') {
+          @if (activeSection === "overview") {
             <section class="consultant-overview">
               @if (!isProfileReady()) {
                 <button type="button" (click)="setSection('profile')">
                   <span><app-fa-icon name="shield"></app-fa-icon></span>
                   <strong>تکمیل پروفایل</strong>
-                  <small>برای فعال شدن لیدها، تکمیل یک‌باره پروفایل ضروری است.</small>
+                  <small
+                    >برای فعال شدن لیدها، تکمیل یک‌باره پروفایل ضروری
+                    است.</small
+                  >
                 </button>
               }
               <button type="button" (click)="setSection('leads')">
                 <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                 <strong>لیدهای من</strong>
-                <small>{{ leadTotalCount }} لید قابل نمایش؛ تماس، گزارش و رزرو از این بخش انجام می‌شود.</small>
+                <small
+                  >{{ leadTotalCount }} لید قابل نمایش؛ تماس، گزارش و رزرو از
+                  این بخش انجام می‌شود.</small
+                >
               </button>
             </section>
 
             @if (!isProfileReady()) {
               <section class="consultant-panel locked-panel">
-                <span class="lock-icon"><app-fa-icon name="shield"></app-fa-icon></span>
+                <span class="lock-icon"
+                  ><app-fa-icon name="shield"></app-fa-icon
+                ></span>
                 <div>
                   <h2>داشبورد برای دریافت لید آماده نیست</h2>
-                  <p>ابتدا اطلاعات پروفایل مشاور را تکمیل کنید تا حضور، آنلاین شدن، لیدها و رزروها فعال شوند.</p>
+                  <p>
+                    ابتدا اطلاعات پروفایل مشاور را تکمیل کنید تا حضور، آنلاین
+                    شدن، لیدها و رزروها فعال شوند.
+                  </p>
                 </div>
-                <button class="primary-action compact" type="button" (click)="setSection('profile')">تکمیل پروفایل</button>
+                <button
+                  class="primary-action compact"
+                  type="button"
+                  (click)="setSection('profile')"
+                >
+                  تکمیل پروفایل
+                </button>
               </section>
             } @else {
               <section class="status-card">
@@ -173,27 +225,53 @@ interface ConsultantDashboardLink {
                   </div>
                   <div>
                     <span>حضور</span>
-                    <strong [class.good]="isAvailable" [class.bad]="!isAvailable">{{ isAvailable ? 'حاضر' : 'ثبت نشده' }}</strong>
+                    <strong
+                      [class.good]="isAvailable"
+                      [class.bad]="!isAvailable"
+                      >{{ isAvailable ? "حاضر" : "ثبت نشده" }}</strong
+                    >
                   </div>
                   <div>
                     <span>وضعیت دریافت لید</span>
-                    <strong [class.good]="isOnline" [class.bad]="!isOnline">{{ isOnline ? 'آنلاین' : 'آفلاین' }}</strong>
+                    <strong [class.good]="isOnline" [class.bad]="!isOnline">{{
+                      isOnline ? "آنلاین" : "آفلاین"
+                    }}</strong>
                   </div>
                 </div>
                 <div class="action-grid">
-                  <button class="primary-action" type="button" [disabled]="availabilitySaving || isAvailable" (click)="setAvailability(true)">
+                  <button
+                    class="primary-action"
+                    type="button"
+                    [disabled]="availabilitySaving || isAvailable"
+                    (click)="setAvailability(true)"
+                  >
                     <app-fa-icon name="check"></app-fa-icon>
                     ثبت حضور
                   </button>
-                  <button class="secondary-action danger" type="button" [disabled]="availabilitySaving || !isAvailable || isOnline" (click)="setAvailability(false)">
+                  <button
+                    class="secondary-action danger"
+                    type="button"
+                    [disabled]="availabilitySaving || !isAvailable || isOnline"
+                    (click)="setAvailability(false)"
+                  >
                     <app-fa-icon name="moon"></app-fa-icon>
                     عدم حضور
                   </button>
-                  <button class="primary-action" type="button" [disabled]="onlineSaving || !canGoOnline()" (click)="setOnlineStatus(true)">
+                  <button
+                    class="primary-action"
+                    type="button"
+                    [disabled]="onlineSaving || !canGoOnline()"
+                    (click)="setOnlineStatus(true)"
+                  >
                     <app-fa-icon name="mobile"></app-fa-icon>
                     آنلاین
                   </button>
-                  <button class="secondary-action" type="button" [disabled]="onlineSaving || !isOnline" (click)="setOnlineStatus(false)">
+                  <button
+                    class="secondary-action"
+                    type="button"
+                    [disabled]="onlineSaving || !isOnline"
+                    (click)="setOnlineStatus(false)"
+                  >
                     <app-fa-icon name="close"></app-fa-icon>
                     آفلاین
                   </button>
@@ -201,21 +279,25 @@ interface ConsultantDashboardLink {
 
                 @if (pendingOfflineCount > 0) {
                   <p class="queue-warning">
-                    {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
+                    {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده
+                    دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
                   </p>
                 }
               </section>
             }
           }
 
-          @if (activeSection === 'profile') {
+          @if (activeSection === "profile") {
             @if (!isProfileReady()) {
               <section class="profile-lock-card">
-                <span class="lock-icon"><app-fa-icon name="shield"></app-fa-icon></span>
+                <span class="lock-icon"
+                  ><app-fa-icon name="shield"></app-fa-icon
+                ></span>
                 <h2>تکمیل پروفایل مشاور</h2>
                 <p>
-                  تا زمانی که پروفایل مشاور کامل نباشد، دسترسی به حضور، آنلاین شدن و لیدها قفل می‌ماند.
-                  اطلاعات زیر طبق قرارداد API مشاور ثبت می‌شود.
+                  تا زمانی که پروفایل مشاور کامل نباشد، دسترسی به حضور، آنلاین
+                  شدن و لیدها قفل می‌ماند. اطلاعات زیر طبق قرارداد API مشاور ثبت
+                  می‌شود.
                 </p>
 
                 <form class="profile-form" (ngSubmit)="submitProfile()">
@@ -231,10 +313,23 @@ interface ConsultantDashboardLink {
                   </label>
                   <label>
                     آدرس
-                    <textarea [(ngModel)]="profileForm.address" name="consultantAddress" rows="4" placeholder="آدرس کامل محل سکونت"></textarea>
+                    <textarea
+                      [(ngModel)]="profileForm.address"
+                      name="consultantAddress"
+                      rows="4"
+                      placeholder="آدرس کامل محل سکونت"
+                    ></textarea>
                   </label>
-                  <button class="primary-action full" type="submit" [disabled]="profileSaving">
-                    {{ profileSaving ? 'در حال ثبت...' : 'تکمیل پروفایل و ورود به داشبورد' }}
+                  <button
+                    class="primary-action full"
+                    type="submit"
+                    [disabled]="profileSaving"
+                  >
+                    {{
+                      profileSaving
+                        ? "در حال ثبت..."
+                        : "تکمیل پروفایل و ورود به داشبورد"
+                    }}
                   </button>
                 </form>
               </section>
@@ -244,7 +339,10 @@ interface ConsultantDashboardLink {
                   <div>
                     <span>پروفایل و وضعیت</span>
                     <h2>حضور و دریافت لید</h2>
-                    <p>برای دریافت لیدهای لحظه‌ای، ابتدا حضور را ثبت و سپس وضعیت آنلاین را فعال کنید.</p>
+                    <p>
+                      برای دریافت لیدهای لحظه‌ای، ابتدا حضور را ثبت و سپس وضعیت
+                      آنلاین را فعال کنید.
+                    </p>
                   </div>
                 </header>
 
@@ -255,28 +353,54 @@ interface ConsultantDashboardLink {
                   </div>
                   <div>
                     <span>حضور</span>
-                    <strong [class.good]="isAvailable" [class.bad]="!isAvailable">{{ isAvailable ? 'حاضر' : 'ثبت نشده' }}</strong>
+                    <strong
+                      [class.good]="isAvailable"
+                      [class.bad]="!isAvailable"
+                      >{{ isAvailable ? "حاضر" : "ثبت نشده" }}</strong
+                    >
                   </div>
                   <div>
                     <span>وضعیت دریافت لید</span>
-                    <strong [class.good]="isOnline" [class.bad]="!isOnline">{{ isOnline ? 'آنلاین' : 'آفلاین' }}</strong>
+                    <strong [class.good]="isOnline" [class.bad]="!isOnline">{{
+                      isOnline ? "آنلاین" : "آفلاین"
+                    }}</strong>
                   </div>
                 </div>
 
                 <div class="action-grid">
-                  <button class="primary-action" type="button" [disabled]="availabilitySaving || isAvailable" (click)="setAvailability(true)">
+                  <button
+                    class="primary-action"
+                    type="button"
+                    [disabled]="availabilitySaving || isAvailable"
+                    (click)="setAvailability(true)"
+                  >
                     <app-fa-icon name="check"></app-fa-icon>
                     ثبت حضور
                   </button>
-                  <button class="secondary-action danger" type="button" [disabled]="availabilitySaving || !isAvailable || isOnline" (click)="setAvailability(false)">
+                  <button
+                    class="secondary-action danger"
+                    type="button"
+                    [disabled]="availabilitySaving || !isAvailable || isOnline"
+                    (click)="setAvailability(false)"
+                  >
                     <app-fa-icon name="moon"></app-fa-icon>
                     عدم حضور
                   </button>
-                  <button class="primary-action" type="button" [disabled]="onlineSaving || !canGoOnline()" (click)="setOnlineStatus(true)">
+                  <button
+                    class="primary-action"
+                    type="button"
+                    [disabled]="onlineSaving || !canGoOnline()"
+                    (click)="setOnlineStatus(true)"
+                  >
                     <app-fa-icon name="mobile"></app-fa-icon>
                     آنلاین
                   </button>
-                  <button class="secondary-action" type="button" [disabled]="onlineSaving || !isOnline" (click)="setOnlineStatus(false)">
+                  <button
+                    class="secondary-action"
+                    type="button"
+                    [disabled]="onlineSaving || !isOnline"
+                    (click)="setOnlineStatus(false)"
+                  >
                     <app-fa-icon name="close"></app-fa-icon>
                     آفلاین
                   </button>
@@ -284,39 +408,67 @@ interface ConsultantDashboardLink {
 
                 @if (pendingOfflineCount > 0) {
                   <p class="queue-warning">
-                    {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
+                    {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده
+                    دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
                   </p>
                 }
               </section>
             }
           }
 
-          @if (activeSection === 'leads') {
+          @if (activeSection === "leads") {
             @if (!isProfileReady()) {
               <section class="consultant-panel locked-panel">
-                <span class="lock-icon"><app-fa-icon name="shield"></app-fa-icon></span>
+                <span class="lock-icon"
+                  ><app-fa-icon name="shield"></app-fa-icon
+                ></span>
                 <div>
                   <h2>لیدها قفل هستند</h2>
-                  <p>برای مشاهده و تعیین‌تکلیف لیدها ابتدا پروفایل مشاور را کامل کنید.</p>
+                  <p>
+                    برای مشاهده و تعیین‌تکلیف لیدها ابتدا پروفایل مشاور را کامل
+                    کنید.
+                  </p>
                 </div>
-                <button class="primary-action compact" type="button" (click)="setSection('profile')">تکمیل پروفایل</button>
+                <button
+                  class="primary-action compact"
+                  type="button"
+                  (click)="setSection('profile')"
+                >
+                  تکمیل پروفایل
+                </button>
               </section>
             } @else {
               <section class="lead-panel">
                 @if (dueConfirmations.length) {
                   <div class="queue-warning attendance-lock">
-                    <strong>برای مشاهده لید لحظه‌ای ابتدا حضورهای موعددار را تعیین تکلیف کنید.</strong>
+                    <strong
+                      >برای مشاهده لید لحظه‌ای ابتدا حضورهای موعددار را تعیین
+                      تکلیف کنید.</strong
+                    >
                     <div class="reservation-list">
-                      @for (reservation of dueConfirmations; track reservationId(reservation)) {
+                      @for (
+                        reservation of dueConfirmations;
+                        track reservationId(reservation)
+                      ) {
                         <article>
-                          <strong>{{ reservationPatientName(reservation) }}</strong>
-                          <span>{{ reservationPatientPhone(reservation) }} - {{ reservationPatientCity(reservation) }}</span>
-                          <time>{{ formatDateTime(reservationDateTime(reservation)) }}</time>
+                          <strong>{{
+                            reservationPatientName(reservation)
+                          }}</strong>
+                          <span
+                            >{{ reservationPatientPhone(reservation) }} -
+                            {{ reservationPatientCity(reservation) }}</span
+                          >
+                          <time>{{
+                            formatDateTime(reservationDateTime(reservation))
+                          }}</time>
                           <div class="dialog-actions">
                             <button
                               class="primary-action compact"
                               type="button"
-                              [disabled]="attendanceSavingId === reservationId(reservation)"
+                              [disabled]="
+                                attendanceSavingId ===
+                                reservationId(reservation)
+                              "
                               (click)="confirmAttendance(reservation, true)"
                             >
                               بیمار آمد
@@ -324,7 +476,10 @@ interface ConsultantDashboardLink {
                             <button
                               class="secondary-action compact danger"
                               type="button"
-                              [disabled]="attendanceSavingId === reservationId(reservation)"
+                              [disabled]="
+                                attendanceSavingId ===
+                                reservationId(reservation)
+                              "
                               (click)="confirmAttendance(reservation, false)"
                             >
                               بیمار نیامد
@@ -335,16 +490,28 @@ interface ConsultantDashboardLink {
                     </div>
                   </div>
                 }
-                @if (!dueConfirmations.length && realtimeBlockedByOfflineQueue()) {
-                  <p class="queue-warning">ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید.</p>
+                @if (
+                  !dueConfirmations.length && realtimeBlockedByOfflineQueue()
+                ) {
+                  <p class="queue-warning">
+                    ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید.
+                  </p>
                 }
                 <header class="panel-heading">
                   <div>
                     <span>لیدهای من</span>
                     <h2>تماس، گزارش و رزرو لیدها</h2>
-                    <p>روی شماره هر لید بزنید تا صفحه تماس گوشی باز شود، سپس نتیجه تماس را ثبت کنید.</p>
+                    <p>
+                      روی شماره هر لید بزنید تا صفحه تماس گوشی باز شود، سپس
+                      نتیجه تماس را ثبت کنید.
+                    </p>
                   </div>
-                  <button class="secondary-action compact" type="button" [disabled]="leadsLoading" (click)="refreshDashboard()">
+                  <button
+                    class="secondary-action compact"
+                    type="button"
+                    [disabled]="leadsLoading"
+                    (click)="refreshDashboard()"
+                  >
                     بروزرسانی
                   </button>
                 </header>
@@ -352,7 +519,10 @@ interface ConsultantDashboardLink {
                 <form class="lead-filters" (ngSubmit)="applyLeadFilters()">
                   <label>
                     وضعیت
-                    <select [(ngModel)]="leadStateFilter" name="consultantLeadState">
+                    <select
+                      [(ngModel)]="leadStateFilter"
+                      name="consultantLeadState"
+                    >
                       <option [ngValue]="null">همه</option>
                       <option [ngValue]="1">جدید</option>
                       <option [ngValue]="3">تماس گرفته شده</option>
@@ -362,14 +532,21 @@ interface ConsultantDashboardLink {
                   </label>
                   <label>
                     نوع
-                    <select [(ngModel)]="leadTypeFilter" name="consultantLeadType">
+                    <select
+                      [(ngModel)]="leadTypeFilter"
+                      name="consultantLeadType"
+                    >
                       <option [ngValue]="null">همه</option>
                       <option [ngValue]="1">لحظه‌ای</option>
                       <option [ngValue]="2">صف آفلاین</option>
                     </select>
                   </label>
-                  <button class="primary-action compact" type="submit" [disabled]="leadsLoading">
-                    {{ leadsLoading ? 'در حال اعمال...' : 'اعمال' }}
+                  <button
+                    class="primary-action compact"
+                    type="submit"
+                    [disabled]="leadsLoading"
+                  >
+                    {{ leadsLoading ? "در حال اعمال..." : "اعمال" }}
                   </button>
                 </form>
 
@@ -380,17 +557,26 @@ interface ConsultantDashboardLink {
                 } @else {
                   <div class="lead-list">
                     @for (lead of leads; track leadId(lead)) {
-                      <article class="lead-card" [class.realtime]="leadType(lead) === 1" [class.expired]="isLeadExpired(lead)">
+                      <article
+                        class="lead-card"
+                        [class.realtime]="leadType(lead) === 1"
+                        [class.expired]="isLeadExpired(lead)"
+                      >
                         <header>
                           <div>
                             <span>{{ leadTypeLabel(leadType(lead)) }}</span>
                             <h3>{{ leadName(lead) }}</h3>
                           </div>
-                          <b [class]="stateBadgeClass(leadState(lead))">{{ stateLabel(leadState(lead)) }}</b>
+                          <b [class]="stateBadgeClass(leadState(lead))">{{
+                            stateLabel(leadState(lead))
+                          }}</b>
                         </header>
 
                         @if (isRealtimeTimedLead(lead)) {
-                          <div class="timer-row" [class.danger]="leadRemainingMs(lead) <= 30000">
+                          <div
+                            class="timer-row"
+                            [class.danger]="leadRemainingMs(lead) <= 30000"
+                          >
                             <span>مهلت تماس لحظه‌ای</span>
                             <strong>{{ realtimeCountdown(lead) }}</strong>
                           </div>
@@ -400,20 +586,36 @@ interface ConsultantDashboardLink {
                           <a
                             class="call-action"
                             [class.disabled]="isLeadPhoneDisabled(lead)"
-                            [attr.href]="isLeadPhoneDisabled(lead) ? null : 'tel:' + leadPhone(lead)"
+                            [attr.href]="
+                              isLeadPhoneDisabled(lead)
+                                ? null
+                                : 'tel:' + leadPhone(lead)
+                            "
                             [attr.aria-label]="'تماس با ' + leadName(lead)"
                             (click)="handleCallClick($event, lead)"
                           >
-                            <span class="call-icon"><app-fa-icon name="phone"></app-fa-icon></span>
+                            <span class="call-icon"
+                              ><app-fa-icon name="phone"></app-fa-icon
+                            ></span>
                             <span>
                               <small>تماس با لید</small>
                               <b>{{ leadPhone(lead) }}</b>
                             </span>
                           </a>
-                          <button class="secondary-action compact" type="button" [disabled]="isReportDisabled(lead)" (click)="openReportDialog(lead)">
+                          <button
+                            class="secondary-action compact"
+                            type="button"
+                            [disabled]="isReportDisabled(lead)"
+                            (click)="openReportDialog(lead)"
+                          >
                             ثبت گزارش
                           </button>
-                          <button class="secondary-action compact" type="button" [disabled]="isReservationDisabled(lead)" (click)="openReservationDialog(lead)">
+                          <button
+                            class="secondary-action compact"
+                            type="button"
+                            [disabled]="isReservationDisabled(lead)"
+                            (click)="openReservationDialog(lead)"
+                          >
                             رزرو وقت
                           </button>
                         </div>
@@ -422,24 +624,51 @@ interface ConsultantDashboardLink {
                   </div>
 
                   <nav class="pager" aria-label="صفحه بندی لیدهای مشاور">
-                    <button type="button" [disabled]="leadPageNumber <= 1 || leadsLoading" (click)="changeLeadPage(leadPageNumber - 1)">قبلی</button>
-                    <span>صفحه {{ leadPageNumber }} از {{ leadTotalPages }}</span>
-                    <button type="button" [disabled]="leadPageNumber >= leadTotalPages || leadsLoading" (click)="changeLeadPage(leadPageNumber + 1)">بعدی</button>
+                    <button
+                      type="button"
+                      [disabled]="leadPageNumber <= 1 || leadsLoading"
+                      (click)="changeLeadPage(leadPageNumber - 1)"
+                    >
+                      قبلی
+                    </button>
+                    <span
+                      >صفحه {{ leadPageNumber }} از {{ leadTotalPages }}</span
+                    >
+                    <button
+                      type="button"
+                      [disabled]="
+                        leadPageNumber >= leadTotalPages || leadsLoading
+                      "
+                      (click)="changeLeadPage(leadPageNumber + 1)"
+                    >
+                      بعدی
+                    </button>
                   </nav>
                 }
               </section>
             }
           }
 
-          @if (activeSection === 'reservations') {
+          @if (activeSection === "reservations") {
             @if (!isProfileReady()) {
               <section class="consultant-panel locked-panel">
-                <span class="lock-icon"><app-fa-icon name="shield"></app-fa-icon></span>
+                <span class="lock-icon"
+                  ><app-fa-icon name="shield"></app-fa-icon
+                ></span>
                 <div>
                   <h2>رزروها قفل هستند</h2>
-                  <p>رزروهای مشاور پس از تکمیل پروفایل و ثبت گزارش تماس‌های موفق نمایش داده می‌شوند.</p>
+                  <p>
+                    رزروهای مشاور پس از تکمیل پروفایل و ثبت گزارش تماس‌های موفق
+                    نمایش داده می‌شوند.
+                  </p>
                 </div>
-                <button class="primary-action compact" type="button" (click)="setSection('profile')">تکمیل پروفایل</button>
+                <button
+                  class="primary-action compact"
+                  type="button"
+                  (click)="setSection('profile')"
+                >
+                  تکمیل پروفایل
+                </button>
               </section>
             } @else {
               <section class="reservation-panel">
@@ -456,16 +685,44 @@ interface ConsultantDashboardLink {
                   <p class="empty-copy">رزرو فعالی برای نمایش وجود ندارد.</p>
                 } @else {
                   <div class="reservation-list">
-                    @for (reservation of reservations; track reservationId(reservation)) {
+                    @for (
+                      reservation of reservations;
+                      track reservationId(reservation)
+                    ) {
                       <article>
-                        <strong>{{ reservationPatientName(reservation) }}</strong>
-                        <span>{{ reservationPatientPhone(reservation) }} - {{ reservationPatientCity(reservation) }}</span>
-                        <time>{{ formatDateTime(reservationDateTime(reservation)) }}</time>
-                        <small>احتمال حضور: {{ reservationAttendanceProbability(reservation) }}٪</small>
-                        <small>پیش‌بینی حضور: {{ reservationAttendancePrediction(reservation) }}</small>
-                        <b [class]="reservationStatusClass(reservation)">{{ reservationAttendanceStatusLabel(reservation) }}</b>
+                        <strong>{{
+                          reservationPatientName(reservation)
+                        }}</strong>
+                        <span
+                          >{{ reservationPatientPhone(reservation) }} -
+                          {{ reservationPatientCity(reservation) }}</span
+                        >
+                        <time>{{
+                          formatDateTime(reservationDateTime(reservation))
+                        }}</time>
+                        <small
+                          >احتمال حضور:
+                          {{
+                            reservationAttendanceProbability(reservation)
+                          }}٪</small
+                        >
+                        <small
+                          >پیش‌بینی حضور:
+                          {{
+                            reservationAttendancePrediction(reservation)
+                          }}</small
+                        >
+                        <b [class]="reservationStatusClass(reservation)">{{
+                          reservationAttendanceStatusLabel(reservation)
+                        }}</b>
                         @if (canCompletePatientProfile(reservation)) {
-                          <button class="secondary-action compact" type="button" (click)="openPatientProfileFromReservation(reservation)">
+                          <button
+                            class="secondary-action compact"
+                            type="button"
+                            (click)="
+                              openPatientProfileFromReservation(reservation)
+                            "
+                          >
                             تکمیل پرونده
                           </button>
                         }
@@ -482,7 +739,11 @@ interface ConsultantDashboardLink {
       <app-base-dialog
         [open]="reportDialogOpen"
         [showFooter]="false"
-        [title]="selectedLead ? 'ثبت گزارش برای ' + leadName(selectedLead) : 'ثبت گزارش تماس'"
+        [title]="
+          selectedLead
+            ? 'ثبت گزارش برای ' + leadName(selectedLead)
+            : 'ثبت گزارش تماس'
+        "
         subtitle="بعد از تماس با لید، نتیجه و توضیحات را ثبت کنید."
         (closed)="closeReportDialog()"
       >
@@ -500,31 +761,69 @@ interface ConsultantDashboardLink {
           </label>
           <label>
             توضیحات گزارش
-            <textarea [(ngModel)]="reportForm.reportDescription" [ngModelOptions]="{ updateOn: 'blur' }" name="leadReportDescription" rows="4"></textarea>
+            <textarea
+              [(ngModel)]="reportForm.reportDescription"
+              [ngModelOptions]="{ updateOn: 'blur' }"
+              name="leadReportDescription"
+              rows="4"
+            ></textarea>
           </label>
           <div class="two-col">
             <label>
               شهر بیمار
-              <input [(ngModel)]="reportForm.patientCity" name="leadReportPatientCity" maxlength="80" placeholder="تهران" />
+              <input
+                [(ngModel)]="reportForm.patientCity"
+                name="leadReportPatientCity"
+                maxlength="80"
+                placeholder="تهران"
+              />
             </label>
             <label>
               منطقه بیمار
-              <input [(ngModel)]="reportForm.patientRegion" name="leadReportPatientRegion" maxlength="80" placeholder="سعادت‌آباد" />
+              <input
+                [(ngModel)]="reportForm.patientRegion"
+                name="leadReportPatientRegion"
+                maxlength="80"
+                placeholder="سعادت‌آباد"
+              />
             </label>
           </div>
           <div class="two-col">
             <label>
               نام بیزینس/کلینیک
-              <input [(ngModel)]="reportForm.businessName" name="leadReportBusinessName" maxlength="120" placeholder="کلینیک/بیزینس نمونه" />
+              <input
+                [(ngModel)]="reportForm.businessName"
+                name="leadReportBusinessName"
+                maxlength="120"
+                placeholder="کلینیک/بیزینس نمونه"
+              />
             </label>
             <label>
               درصد احتمال حضور
-              <input [(ngModel)]="reportForm.attendanceProbabilityPercent" name="leadReportAttendanceProbability" type="number" min="0" max="100" />
+              <input
+                [(ngModel)]="reportForm.attendanceProbabilityPercent"
+                name="leadReportAttendanceProbability"
+                type="number"
+                min="0"
+                max="100"
+              />
             </label>
           </div>
           <div class="dialog-actions">
-            <button class="secondary-action" type="button" (click)="closeReportDialog()">انصراف</button>
-            <button class="primary-action" type="submit" [disabled]="reportSaving">{{ reportSaving ? 'در حال ثبت...' : 'ثبت گزارش' }}</button>
+            <button
+              class="secondary-action"
+              type="button"
+              (click)="closeReportDialog()"
+            >
+              انصراف
+            </button>
+            <button
+              class="primary-action"
+              type="submit"
+              [disabled]="reportSaving"
+            >
+              {{ reportSaving ? "در حال ثبت..." : "ثبت گزارش" }}
+            </button>
           </div>
         </form>
       </app-base-dialog>
@@ -532,7 +831,11 @@ interface ConsultantDashboardLink {
       <app-base-dialog
         [open]="reservationDialogOpen"
         [showFooter]="false"
-        [title]="selectedReservationLead ? 'رزرو برای ' + leadName(selectedReservationLead) : 'ثبت رزرو'"
+        [title]="
+          selectedReservationLead
+            ? 'رزرو برای ' + leadName(selectedReservationLead)
+            : 'ثبت رزرو'
+        "
         subtitle="زمان رزرو لید را ثبت کنید."
         [closable]="!reservationSaving"
         (closed)="closeReservationDialog()"
@@ -550,21 +853,47 @@ interface ConsultantDashboardLink {
           </label>
           <label>
             ساعت رزرو
-            <input [(ngModel)]="reservationForm.reservationTime" name="reservationTime" type="time" />
+            <input
+              [(ngModel)]="reservationForm.reservationTime"
+              name="reservationTime"
+              type="time"
+            />
           </label>
 
           <label>
             شماره تماس دوم بیمار
-            <input [(ngModel)]="reservationForm.secondaryPhoneNumber" name="reservationSecondaryPhoneNumber" inputmode="tel" maxlength="20" placeholder="09120000000" />
+            <input
+              [(ngModel)]="reservationForm.secondaryPhoneNumber"
+              name="reservationSecondaryPhoneNumber"
+              inputmode="tel"
+              maxlength="20"
+              placeholder="09120000000"
+            />
           </label>
 
           <label>
             توضیحات
-            <textarea [(ngModel)]="reservationForm.description" name="reservationDescription" rows="3"></textarea>
+            <textarea
+              [(ngModel)]="reservationForm.description"
+              name="reservationDescription"
+              rows="3"
+            ></textarea>
           </label>
           <div class="dialog-actions">
-            <button class="secondary-action" type="button" (click)="closeReservationDialog()">بعداً</button>
-            <button class="primary-action" type="submit" [disabled]="reservationSaving">{{ reservationSaving ? 'در حال ثبت...' : 'ثبت رزرو' }}</button>
+            <button
+              class="secondary-action"
+              type="button"
+              (click)="closeReservationDialog()"
+            >
+              بعداً
+            </button>
+            <button
+              class="primary-action"
+              type="submit"
+              [disabled]="reservationSaving"
+            >
+              {{ reservationSaving ? "در حال ثبت..." : "ثبت رزرو" }}
+            </button>
           </div>
         </form>
       </app-base-dialog>
@@ -578,17 +907,30 @@ interface ConsultantDashboardLink {
         [closable]="!patientProfileRequired && !patientProfileSaving"
         (closed)="closePatientProfileDialog()"
       >
-        <form class="dialog-form patient-profile-form" (ngSubmit)="submitPatientProfile()">
+        <form
+          class="dialog-form patient-profile-form"
+          (ngSubmit)="submitPatientProfile()"
+        >
           <section class="form-section">
             <h3>اطلاعات کاربر بیمار</h3>
             <div class="two-col">
               <label>
                 نام
-                <input [(ngModel)]="patientProfileForm.firstName" name="patientFirstName" autocomplete="given-name" maxlength="100" />
+                <input
+                  [(ngModel)]="patientProfileForm.firstName"
+                  name="patientFirstName"
+                  autocomplete="given-name"
+                  maxlength="100"
+                />
               </label>
               <label>
                 نام خانوادگی
-                <input [(ngModel)]="patientProfileForm.lastName" name="patientLastName" autocomplete="family-name" maxlength="100" />
+                <input
+                  [(ngModel)]="patientProfileForm.lastName"
+                  name="patientLastName"
+                  autocomplete="family-name"
+                  maxlength="100"
+                />
               </label>
             </div>
 
@@ -602,7 +944,9 @@ interface ConsultantDashboardLink {
                   autocomplete="tel"
                   readonly
                 />
-                <small class="field-note">شماره باید با شماره لید رزرو شده یکسان باشد.</small>
+                <small class="field-note"
+                  >شماره باید با شماره لید رزرو شده یکسان باشد.</small
+                >
               </label>
               <label>
                 رمز عبور
@@ -619,7 +963,10 @@ interface ConsultantDashboardLink {
 
             <label>
               جنسیت
-              <select [(ngModel)]="patientProfileForm.gender" name="patientGender">
+              <select
+                [(ngModel)]="patientProfileForm.gender"
+                name="patientGender"
+              >
                 <option [ngValue]="1">مرد</option>
                 <option [ngValue]="2">زن</option>
               </select>
@@ -628,676 +975,727 @@ interface ConsultantDashboardLink {
 
           <div class="dialog-actions">
             @if (!patientProfileRequired) {
-              <button class="secondary-action" type="button" (click)="closePatientProfileDialog()">بعداً</button>
+              <button
+                class="secondary-action"
+                type="button"
+                (click)="closePatientProfileDialog()"
+              >
+                بعداً
+              </button>
             } @else {
-              <p class="required-step-note">تشکیل پرونده بیمار برای تکمیل رزرو الزامی است و این پنجره تا ثبت بیمار بسته نمی‌شود.</p>
+              <p class="required-step-note">
+                تشکیل پرونده بیمار برای تکمیل رزرو الزامی است و این پنجره تا ثبت
+                بیمار بسته نمی‌شود.
+              </p>
             }
-            <button class="primary-action" type="submit" [disabled]="patientProfileSaving">
-              {{ patientProfileSaving ? 'در حال ثبت...' : 'ثبت پرونده' }}
+            <button
+              class="primary-action"
+              type="submit"
+              [disabled]="patientProfileSaving"
+            >
+              {{ patientProfileSaving ? "در حال ثبت..." : "ثبت پرونده" }}
             </button>
           </div>
         </form>
       </app-base-dialog>
     </section>
   `,
-  styles: [`
-  .dashboard-layout {
-    display:grid;
-    grid-template-columns:300px minmax(0,1fr);
-    gap:18px;
-    width:min(1180px,calc(100% - 36px));
-    margin:0 auto;
-    padding:36px 0 86px
-  }
-  .dashboard-sidebar,.dashboard-hero,.profile-lock-card,.status-card,.lead-panel,.reservation-panel,.consultant-panel {
-    border:1px solid var(--line);
-    background:color-mix(in srgb,var(--surface) 86%,transparent);
-    box-shadow:var(--shadow)
-  }
-  .dashboard-sidebar {
-    position:sticky;
-    top:18px;
-    display:grid;
-    align-content:start;
-    gap:18px;
-    min-height:calc(100vh - 72px);
-    padding:20px;
-    border-radius:34px
-  }
-  .dashboard-brand {
-    display:flex;
-    align-items:center;
-    gap:10px;
-    color:var(--text);
-    font-weight:950
-  }
-  .dashboard-user-card {
-    display:grid;
-    gap:12px;
-    padding:18px;
-    border:1px solid var(--line);
-    border-radius:28px;
-    background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 12%,transparent),color-mix(in srgb,var(--surface-muted) 84%,transparent))
-  }
-  .avatar {
-    display:grid;
-    place-items:center;
-    width:62px;
-    height:62px;
-    border-radius:24px;
-    background:color-mix(in srgb,var(--brand) 18%,transparent);
-    color:var(--brand);
-    font-size:1.45rem
-  }
-  .dashboard-user-card small {
-    display:block;
-    color:var(--muted);
-    font-weight:900
-  }
-  .dashboard-user-card h1 {
-    margin:4px 0;
-    font-size:1.35rem
-  }
-  .dashboard-user-card b {
-    color:var(--brand)
-  }
-  .dashboard-nav {
-    display:grid;
-    gap:10px
-  }
-  .dashboard-nav button {
-    display:flex;
-    align-items:center;
-    gap:10px;
-    width:100%;
-    border:0;
-    padding:12px 14px;
-    border-radius:18px;
-    background:var(--surface-muted);
-    color:var(--muted);
-    font:inherit;
-    font-weight:900;
-    text-align:start
-  }
-  .dashboard-nav button.active {
-    color:var(--text);
-    background:color-mix(in srgb,var(--brand) 16%,var(--surface-muted))
-  }
-  .logout-btn {
-    width:100%;
-    margin-top:auto
-  }
-  .dashboard-content {
-    display:grid;
-    align-content:start;
-    gap:18px
-  }
-  .consultant-shell {
-    display:grid;
-    gap:18px
-  }
-  .dashboard-hero {
-    padding:clamp(24px,4vw,42px);
-    border-radius:36px;
-    background:
-      radial-gradient(circle at 10% 0, color-mix(in srgb, var(--brand-2) 24%, transparent), transparent 36%),
-      linear-gradient(135deg, color-mix(in srgb, var(--surface) 88%, transparent), var(--cream))
-  }
-  .dashboard-hero span,.panel-heading span {
-    display:inline-flex;
-    margin-bottom:12px;
-    padding:6px 14px;
-    border-radius:999px;
-    background:color-mix(in srgb,var(--brand) 18%,transparent);
-    color:var(--brand);
-    font-weight:950
-  }
-  .dashboard-hero h2 {
-    margin:0 0 10px;
-    font-size:clamp(1.65rem,4vw,2.45rem)
-  }
-  .dashboard-hero p {
-    max-width:720px;
-    margin:0
-  }
-  .feedback {
-    margin:0;
-    padding:12px 14px;
-    border-radius:20px;
-    font-weight:950
-  }
-  .feedback.success {
-    background:color-mix(in srgb,#22c55e 16%,var(--surface));
-    color:#166534
-  }
-  .feedback.error {
-    background:color-mix(in srgb,var(--danger) 12%,var(--surface));
-    color:#991b1b
-  }
-  .consultant-overview {
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:14px
-  }
-  .consultant-overview button {
-    display:grid;
-    gap:12px;
-    text-align:start;
-    border:1px solid var(--line);
-    border-radius:30px;
-    padding:22px;
-    background:color-mix(in srgb,var(--surface) 86%,transparent);
-    color:var(--text);
-    box-shadow:0 18px 54px rgba(0,0,0,.18)
-  }
-  .consultant-overview span {
-    display:grid;
-    place-items:center;
-    width:52px;
-    height:52px;
-    border-radius:20px;
-    background:color-mix(in srgb,var(--brand) 16%,transparent);
-    color:var(--brand);
-    font-size:1.25rem
-  }
-  .consultant-overview strong {
-    font-size:1.1rem
-  }
-  .consultant-overview small {
-    color:var(--muted);
-    font-weight:900;
-    line-height:1.8
-  }
-  .profile-lock-card,.status-card,.lead-panel,.reservation-panel,.consultant-panel {
-    display:grid;
-    gap:16px;
-    padding:18px;
-    border-radius:30px
-  }
-  .lock-icon {
-    display:grid;
-    place-items:center;
-    width:58px;
-    height:58px;
-    border-radius:22px;
-    background:color-mix(in srgb,var(--brand) 16%,transparent);
-    color:var(--brand);
-    font-size:1.35rem
-  }
-  .profile-lock-card h2,.panel-heading h2,.locked-panel h2 {
-    margin:0;
-    font-size:1.35rem
-  }
-  .profile-lock-card p,.panel-heading p,.locked-panel p {
-    margin:0;
-    color:var(--muted)
-  }
-  .locked-panel {
-    grid-template-columns:auto minmax(0,1fr) auto;
-    align-items:center
-  }
-  .profile-form,.dialog-form {
-    display:grid;
-    gap:14px
-  }
-  .patient-profile-form {
-    gap:16px
-  }
-  .form-section {
-    display:grid;
-    gap:12px;
-    padding:14px;
-    border:1px solid var(--line);
-    border-radius:22px;
-    background:color-mix(in srgb,var(--surface-muted) 44%,transparent)
-  }
-  .form-section h3 {
-    margin:0;
-    color:var(--text);
-    font-size:1rem
-  }
-  .two-col {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px
-  }
-  label {
-    display:grid;
-    gap:8px;
-    color:var(--muted);
-    font-weight:950
-  }
-  .required-step-note {
-    margin:0;
-    padding:10px 12px;
-    border-radius:16px;
-    background:color-mix(in srgb,#f59e0b 16%,var(--surface));
-    color:#92400e;
-    font-weight:950;
-    line-height:1.8
-  }
-  .field-note {
-    color:var(--muted);
-    font-weight:800;
-    line-height:1.7
-  }
-  input[readonly] {
-    opacity:.78;
-    background:color-mix(in srgb,var(--surface-muted) 72%,transparent)
-  }
-  .primary-action,.secondary-action {
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    min-height:48px;
-    border:0;
-    border-radius:18px;
-    padding:12px 16px;
-    font:inherit;
-    font-weight:950
-  }
-  .primary-action {
-    background:linear-gradient(135deg,var(--brand),var(--brand-2));
-    color:#1b1712
-  }
-  .secondary-action {
-    border:1px solid var(--line);
-    background:var(--surface-muted);
-    color:var(--text)
-  }
-  .secondary-action.danger {
-    background:color-mix(in srgb,var(--danger) 10%,var(--surface-muted));
-    color:#991b1b
-  }
-  .primary-action:disabled,.secondary-action:disabled {
-    cursor:not-allowed;
-    opacity:.55
-  }
-  .full {
-    width:100%
-  }
-  .compact {
-    min-height:40px;
-    border-radius:999px;
-    padding:9px 13px;
-    font-size:.86rem
-  }
-  .status-summary {
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:10px
-  }
-  .status-summary div {
-    padding:14px;
-    border:1px solid var(--line);
-    border-radius:22px;
-    background:color-mix(in srgb,var(--surface-muted) 70%,transparent)
-  }
-  .status-summary span {
-    display:block;
-    color:var(--muted);
-    font-size:.82rem;
-    font-weight:900
-  }
-  .status-summary strong {
-    display:block;
-    color:var(--text);
-    font-size:1.05rem
-  }
-  .status-summary .good {
-    color:#166534
-  }
-  .status-summary .bad {
-    color:#991b1b
-  }
-  .action-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    isolation: isolate;
-  }
-  .action-grid > button {
-    position: relative;
-    z-index: 0;
-    min-width: 0;
-    background-clip: padding-box;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-  .queue-warning {
-    margin: 0;
-    padding: 12px 14px;
-    border-radius: 18px;
-    background: color-mix(in srgb, #f59e0b 16%, var(--surface));
-    color: #92400e;
-    font-weight: 950;
-  }
-  .panel-heading {
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:12px
-  }
-  .lead-filters {
-    display:grid;
-    grid-template-columns:1fr 1fr auto;
-    gap:10px;
-    align-items:end
-  }
-  .loading-copy,.empty-copy {
-    margin:0;
-    padding:18px;
-    border:1px dashed var(--line);
-    border-radius:22px;
-    color:var(--muted);
-    text-align:center;
-    font-weight:900
-  }
-  .lead-list {
-    display:grid;
-    gap:12px
-  }
-  .lead-card {
-    display:grid;
-    gap:12px;
-    padding:14px;
-    border:1px solid var(--line);
-    border-radius:24px;
-    background:color-mix(in srgb,var(--surface-muted) 56%,transparent)
-  }
-  .lead-card.realtime {
-    border-color:color-mix(in srgb,var(--brand) 44%,var(--line))
-  }
-  .lead-card.expired {
-    opacity:.72
-  }
-  .lead-card header {
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px
-  }
-  .lead-card h3 {
-    margin:0;
-    font-size:1.1rem
-  }
-  .lead-card header span {
-    color:var(--brand);
-    font-weight:950;
-    font-size:.82rem
-  }
-  .badge {
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-height:30px;
-    border-radius:999px;
-    padding:5px 10px;
-    font-size:.8rem;
-    font-weight:950
-  }
-  .badge.info {
-    background:color-mix(in srgb,var(--brand) 16%,transparent);
-    color:var(--brand)
-  }
-  .badge.success {
-    background:color-mix(in srgb,#22c55e 16%,var(--surface));
-    color:#166534
-  }
-  .badge.warn {
-    background:color-mix(in srgb,#f59e0b 16%,var(--surface));
-    color:#92400e
-  }
-  .badge.danger {
-    background:color-mix(in srgb,var(--danger) 12%,var(--surface));
-    color:#991b1b
-  }
-  .timer-row {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    padding:10px 12px;
-    border-radius:18px;
-    background:color-mix(in srgb,var(--brand) 10%,transparent);
-    color:var(--brand);
-    font-weight:950
-  }
-  .timer-row.danger {
-    background:color-mix(in srgb,var(--danger) 12%,var(--surface));
-    color:#991b1b
-  }
-  .lead-actions {
-    display:grid;
-    grid-template-columns:1fr auto;
-    gap:10px
-  }
-  .call-action {
-    display:inline-flex;
-    align-items:center;
-    justify-content:flex-start;
-    gap:10px;
-    min-height:52px;
-    border-radius:20px;
-    padding:8px 12px;
-    background:color-mix(in srgb,#22c55e 18%,var(--surface-muted));
-    color:#bbf7d0;
-    font-weight:950
-  }
-  .call-action small,.call-action b {
-    display:block
-  }
-  .call-action small {
-    color:color-mix(in srgb,#bbf7d0 78%,var(--muted));
-    font-size:.76rem
-  }
-  .call-action b {
-    direction:ltr;
-    text-align:right;
-    font-size:1rem
-  }
-  .call-icon {
-    display:grid;
-    place-items:center;
-    flex:0 0 38px;
-    width:38px;
-    height:38px;
-    border-radius:15px;
-    background:color-mix(in srgb,#22c55e 22%,transparent);
-    font-size:1.1rem
-  }
-  .call-action.disabled {
-    pointer-events:none;
-    opacity:.5
-  }
-  .pager {
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px
-  }
-  .pager button {
-    border:1px solid var(--line);
-    border-radius:999px;
-    padding:9px 16px;
-    background:var(--surface-muted);
-    color:var(--text);
-    font:inherit;
-    font-weight:950
-  }
-  .pager button:disabled {
-    opacity:.45;
-    cursor:not-allowed
-  }
-  .pager span {
-    color:var(--muted);
-    font-weight:950
-  }
-  .reservation-list {
-    display:grid;
-    gap:10px
-  }
-  .reservation-list article {
-    display:grid;
-    gap:3px;
-    padding:12px;
-    border:1px solid var(--line);
-    border-radius:20px;
-    background:color-mix(in srgb,var(--surface-muted) 58%,transparent)
-  }
-  .reservation-list strong {
-    color:var(--text)
-  }
-  .reservation-list span,.reservation-list time {
-    color:var(--muted);
-    font-weight:900
-  }
-  .dialog-actions {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px
-  }
-  @media (max-width:980px) {
-    .dashboard-layout {
-      grid-template-columns:1fr;
-      width:min(100% - 24px,760px);
-      padding-top:14px
-    }
-    .dashboard-sidebar {
-      position:relative;
-      top:0;
-      min-height:0
-    }
-    .consultant-overview {
-      grid-template-columns:1fr
-    }
-    .lead-filters {
-      grid-template-columns:1fr 1fr auto
-    }
-    .locked-panel {
-      grid-template-columns:1fr
-    }
-  }
-  @media (max-width:760px) {
-    .dashboard-layout.consultant-mode {
-      width: 100%;
-      padding: 0 10px 96px;
-    }
-    .dashboard-layout.consultant-mode .dashboard-sidebar {
-      position: fixed;
-      z-index: 80;
-      inset-inline: 10px;
-      bottom: 10px;
-      top: auto;
-      min-height: 0;
-      padding: 8px;
-      border-radius: 28px;
-      background: var(--surface);
-      box-shadow: 0 8px 22px rgba(93, 64, 32, .08);
-      contain: layout paint;
-    }
-    .consultant-mode .dashboard-brand,
-    .consultant-mode .dashboard-user-card,
-    .consultant-mode .logout-btn {
-      display: none;
-    }
-    .consultant-mode .dashboard-nav {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
-    }
-    .consultant-mode .dashboard-nav button {
-      display: grid;
-      place-items: center;
-      gap: 3px;
-      min-height: 58px;
-      padding: 7px;
-      border-radius: 20px;
-      text-align: center;
-      font-size: .72rem;
-    }
-    .consultant-mode .dashboard-nav app-fa-icon {
-      color: var(--brand);
-      font-size: 1.1rem;
-    }
-    .dashboard-content {
-      padding-top: 10px;
-    }
-    .dashboard-hero,
-    .profile-lock-card,
-    .status-card,
-    .lead-panel,
-    .reservation-panel,
-    .consultant-panel {
-      border-radius: 24px;
-      padding: 14px;
-      background: var(--surface);
-      box-shadow: 0 8px 22px rgba(93, 64, 32, .06);
-      contain: paint;
-      overflow: hidden;
-    }
-    .status-summary div,
-    .lead-card,
-    .reservation-list article,
-    .form-section {
-      background: var(--surface-muted);
-    }
-    .status-summary,
-    .action-grid,
-    .lead-filters,
-    .lead-actions,
-    .two-col {
-      grid-template-columns: 1fr;
-    }
-    .primary-action,
-    .secondary-action,
-    .call-action {
-      transform: translateZ(0);
-      backface-visibility: hidden;
-    }
-    .panel-heading {
-      display: grid;
-    }
-    .dialog-actions {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  @media (max-width:560px) {
-    .form-section {
-      padding:12px;
-      border-radius:18px
-    }
-    .dialog-actions {
-      grid-template-columns:1fr
-    }
-  }
-    `]
+  styles: [
+    `
+      .dashboard-layout {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 18px;
+        width: min(1180px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 36px 0 86px;
+      }
+      .dashboard-sidebar,
+      .dashboard-hero,
+      .profile-lock-card,
+      .status-card,
+      .lead-panel,
+      .reservation-panel,
+      .consultant-panel {
+        border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--surface) 86%, transparent);
+        box-shadow: var(--shadow);
+      }
+      .dashboard-sidebar {
+        position: sticky;
+        top: 18px;
+        display: grid;
+        align-content: start;
+        gap: 18px;
+        min-height: calc(100vh - 72px);
+        padding: 20px;
+        border-radius: 34px;
+      }
+      .dashboard-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text);
+        font-weight: 950;
+      }
+      .dashboard-user-card {
+        display: grid;
+        gap: 12px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--brand) 12%, transparent),
+          color-mix(in srgb, var(--surface-muted) 84%, transparent)
+        );
+      }
+      .avatar {
+        display: grid;
+        place-items: center;
+        width: 62px;
+        height: 62px;
+        border-radius: 24px;
+        background: color-mix(in srgb, var(--brand) 18%, transparent);
+        color: var(--brand);
+        font-size: 1.45rem;
+      }
+      .dashboard-user-card small {
+        display: block;
+        color: var(--muted);
+        font-weight: 900;
+      }
+      .dashboard-user-card h1 {
+        margin: 4px 0;
+        font-size: 1.35rem;
+      }
+      .dashboard-user-card b {
+        color: var(--brand);
+      }
+      .dashboard-nav {
+        display: grid;
+        gap: 10px;
+      }
+      .dashboard-nav button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        border: 0;
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: var(--surface-muted);
+        color: var(--muted);
+        font: inherit;
+        font-weight: 900;
+        text-align: start;
+      }
+      .dashboard-nav button.active {
+        color: var(--text);
+        background: color-mix(in srgb, var(--brand) 16%, var(--surface-muted));
+      }
+      .logout-btn {
+        width: 100%;
+        margin-top: auto;
+      }
+      .dashboard-content {
+        display: grid;
+        align-content: start;
+        gap: 18px;
+      }
+      .consultant-shell {
+        display: grid;
+        gap: 18px;
+      }
+      .dashboard-hero {
+        padding: clamp(24px, 4vw, 42px);
+        border-radius: 36px;
+        background:
+          radial-gradient(
+            circle at 10% 0,
+            color-mix(in srgb, var(--brand-2) 24%, transparent),
+            transparent 36%
+          ),
+          linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--surface) 88%, transparent),
+            var(--cream)
+          );
+      }
+      .dashboard-hero span,
+      .panel-heading span {
+        display: inline-flex;
+        margin-bottom: 12px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--brand) 18%, transparent);
+        color: var(--brand);
+        font-weight: 950;
+      }
+      .dashboard-hero h2 {
+        margin: 0 0 10px;
+        font-size: clamp(1.65rem, 4vw, 2.45rem);
+      }
+      .dashboard-hero p {
+        max-width: 720px;
+        margin: 0;
+      }
+      .feedback {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 20px;
+        font-weight: 950;
+      }
+      .feedback.success {
+        background: color-mix(in srgb, #22c55e 16%, var(--surface));
+        color: #166534;
+      }
+      .feedback.error {
+        background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+        color: #991b1b;
+      }
+      .consultant-overview {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .consultant-overview button {
+        display: grid;
+        gap: 12px;
+        text-align: start;
+        border: 1px solid var(--line);
+        border-radius: 30px;
+        padding: 22px;
+        background: color-mix(in srgb, var(--surface) 86%, transparent);
+        color: var(--text);
+        box-shadow: 0 18px 54px rgba(0, 0, 0, 0.18);
+      }
+      .consultant-overview span {
+        display: grid;
+        place-items: center;
+        width: 52px;
+        height: 52px;
+        border-radius: 20px;
+        background: color-mix(in srgb, var(--brand) 16%, transparent);
+        color: var(--brand);
+        font-size: 1.25rem;
+      }
+      .consultant-overview strong {
+        font-size: 1.1rem;
+      }
+      .consultant-overview small {
+        color: var(--muted);
+        font-weight: 900;
+        line-height: 1.8;
+      }
+      .profile-lock-card,
+      .status-card,
+      .lead-panel,
+      .reservation-panel,
+      .consultant-panel {
+        display: grid;
+        gap: 16px;
+        padding: 18px;
+        border-radius: 30px;
+      }
+      .lock-icon {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        border-radius: 22px;
+        background: color-mix(in srgb, var(--brand) 16%, transparent);
+        color: var(--brand);
+        font-size: 1.35rem;
+      }
+      .profile-lock-card h2,
+      .panel-heading h2,
+      .locked-panel h2 {
+        margin: 0;
+        font-size: 1.35rem;
+      }
+      .profile-lock-card p,
+      .panel-heading p,
+      .locked-panel p {
+        margin: 0;
+        color: var(--muted);
+      }
+      .locked-panel {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+      }
+      .profile-form,
+      .dialog-form {
+        display: grid;
+        gap: 14px;
+      }
+      .patient-profile-form {
+        gap: 16px;
+      }
+      .form-section {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: color-mix(in srgb, var(--surface-muted) 44%, transparent);
+      }
+      .form-section h3 {
+        margin: 0;
+        color: var(--text);
+        font-size: 1rem;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      label {
+        display: grid;
+        gap: 8px;
+        color: var(--muted);
+        font-weight: 950;
+      }
+      .required-step-note {
+        margin: 0;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: color-mix(in srgb, #f59e0b 16%, var(--surface));
+        color: #92400e;
+        font-weight: 950;
+        line-height: 1.8;
+      }
+      .field-note {
+        color: var(--muted);
+        font-weight: 800;
+        line-height: 1.7;
+      }
+      input[readonly] {
+        opacity: 0.78;
+        background: color-mix(in srgb, var(--surface-muted) 72%, transparent);
+      }
+      .primary-action,
+      .secondary-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 48px;
+        border: 0;
+        border-radius: 18px;
+        padding: 12px 16px;
+        font: inherit;
+        font-weight: 950;
+      }
+      .primary-action {
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        color: #1b1712;
+      }
+      .secondary-action {
+        border: 1px solid var(--line);
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+      .secondary-action.danger {
+        background: color-mix(in srgb, var(--danger) 10%, var(--surface-muted));
+        color: #991b1b;
+      }
+      .primary-action:disabled,
+      .secondary-action:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+      .full {
+        width: 100%;
+      }
+      .compact {
+        min-height: 40px;
+        border-radius: 999px;
+        padding: 9px 13px;
+        font-size: 0.86rem;
+      }
+      .status-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .status-summary div {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+      }
+      .status-summary span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 900;
+      }
+      .status-summary strong {
+        display: block;
+        color: var(--text);
+        font-size: 1.05rem;
+      }
+      .status-summary .good {
+        color: #166534;
+      }
+      .status-summary .bad {
+        color: #991b1b;
+      }
+      .action-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        isolation: isolate;
+      }
+      .action-grid > button {
+        position: relative;
+        z-index: 0;
+        min-width: 0;
+        background-clip: padding-box;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      .queue-warning {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: color-mix(in srgb, #f59e0b 16%, var(--surface));
+        color: #92400e;
+        font-weight: 950;
+      }
+      .panel-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .lead-filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: end;
+      }
+      .loading-copy,
+      .empty-copy {
+        margin: 0;
+        padding: 18px;
+        border: 1px dashed var(--line);
+        border-radius: 22px;
+        color: var(--muted);
+        text-align: center;
+        font-weight: 900;
+      }
+      .lead-list {
+        display: grid;
+        gap: 12px;
+      }
+      .lead-card {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: color-mix(in srgb, var(--surface-muted) 56%, transparent);
+      }
+      .lead-card.realtime {
+        border-color: color-mix(in srgb, var(--brand) 44%, var(--line));
+      }
+      .lead-card.expired {
+        opacity: 0.72;
+      }
+      .lead-card header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .lead-card h3 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+      .lead-card header span {
+        color: var(--brand);
+        font-weight: 950;
+        font-size: 0.82rem;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        font-weight: 950;
+      }
+      .badge.info {
+        background: color-mix(in srgb, var(--brand) 16%, transparent);
+        color: var(--brand);
+      }
+      .badge.success {
+        background: color-mix(in srgb, #22c55e 16%, var(--surface));
+        color: #166534;
+      }
+      .badge.warn {
+        background: color-mix(in srgb, #f59e0b 16%, var(--surface));
+        color: #92400e;
+      }
+      .badge.danger {
+        background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+        color: #991b1b;
+      }
+      .timer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 18px;
+        background: color-mix(in srgb, var(--brand) 10%, transparent);
+        color: var(--brand);
+        font-weight: 950;
+      }
+      .timer-row.danger {
+        background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+        color: #991b1b;
+      }
+      .lead-actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+      .call-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        min-height: 52px;
+        border-radius: 20px;
+        padding: 8px 12px;
+        background: color-mix(in srgb, #22c55e 18%, var(--surface-muted));
+        color: #bbf7d0;
+        font-weight: 950;
+      }
+      .call-action small,
+      .call-action b {
+        display: block;
+      }
+      .call-action small {
+        color: color-mix(in srgb, #bbf7d0 78%, var(--muted));
+        font-size: 0.76rem;
+      }
+      .call-action b {
+        direction: ltr;
+        text-align: right;
+        font-size: 1rem;
+      }
+      .call-icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+        border-radius: 15px;
+        background: color-mix(in srgb, #22c55e 22%, transparent);
+        font-size: 1.1rem;
+      }
+      .call-action.disabled {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .pager button {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 9px 16px;
+        background: var(--surface-muted);
+        color: var(--text);
+        font: inherit;
+        font-weight: 950;
+      }
+      .pager button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .pager span {
+        color: var(--muted);
+        font-weight: 950;
+      }
+      .reservation-list {
+        display: grid;
+        gap: 10px;
+      }
+      .reservation-list article {
+        display: grid;
+        gap: 3px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: color-mix(in srgb, var(--surface-muted) 58%, transparent);
+      }
+      .reservation-list strong {
+        color: var(--text);
+      }
+      .reservation-list span,
+      .reservation-list time {
+        color: var(--muted);
+        font-weight: 900;
+      }
+      .dialog-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      @media (max-width: 980px) {
+        .dashboard-layout {
+          grid-template-columns: 1fr;
+          width: min(100% - 24px, 760px);
+          padding-top: 14px;
+        }
+        .dashboard-sidebar {
+          position: relative;
+          top: 0;
+          min-height: 0;
+        }
+        .consultant-overview {
+          grid-template-columns: 1fr;
+        }
+        .lead-filters {
+          grid-template-columns: 1fr 1fr auto;
+        }
+        .locked-panel {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 760px) {
+        .dashboard-layout.consultant-mode {
+          width: 100%;
+          padding: 0 10px 96px;
+        }
+        .dashboard-layout.consultant-mode .dashboard-sidebar {
+          position: fixed;
+          z-index: 80;
+          inset-inline: 10px;
+          bottom: 10px;
+          top: auto;
+          min-height: 0;
+          padding: 8px;
+          border-radius: 28px;
+          background: var(--surface);
+          box-shadow: 0 8px 22px rgba(93, 64, 32, 0.08);
+          contain: layout paint;
+        }
+        .consultant-mode .dashboard-brand,
+        .consultant-mode .dashboard-user-card,
+        .consultant-mode .logout-btn {
+          display: none;
+        }
+        .consultant-mode .dashboard-nav {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 6px;
+        }
+        .consultant-mode .dashboard-nav button {
+          display: grid;
+          place-items: center;
+          gap: 3px;
+          min-height: 58px;
+          padding: 7px;
+          border-radius: 20px;
+          text-align: center;
+          font-size: 0.72rem;
+        }
+        .consultant-mode .dashboard-nav app-fa-icon {
+          color: var(--brand);
+          font-size: 1.1rem;
+        }
+        .dashboard-content {
+          padding-top: 10px;
+        }
+        .dashboard-hero,
+        .profile-lock-card,
+        .status-card,
+        .lead-panel,
+        .reservation-panel,
+        .consultant-panel {
+          border-radius: 24px;
+          padding: 14px;
+          background: var(--surface);
+          box-shadow: 0 8px 22px rgba(93, 64, 32, 0.06);
+          contain: paint;
+          overflow: hidden;
+        }
+        .status-summary div,
+        .lead-card,
+        .reservation-list article,
+        .form-section {
+          background: var(--surface-muted);
+        }
+        .status-summary,
+        .action-grid,
+        .lead-filters,
+        .lead-actions,
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+        .primary-action,
+        .secondary-action,
+        .call-action {
+          transform: translateZ(0);
+          backface-visibility: hidden;
+        }
+        .panel-heading {
+          display: grid;
+        }
+        .dialog-actions {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 560px) {
+        .form-section {
+          padding: 12px;
+          border-radius: 18px;
+        }
+        .dialog-actions {
+          grid-template-columns: 1fr;
+        }
+      }
+    `,
+  ],
 })
 export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   readonly user = this.auth.user;
-  activeSection: ConsultantDashboardSection = 'overview';
+  activeSection: ConsultantDashboardSection = "overview";
 
   readonly dashboardLinks: ConsultantDashboardLink[] = [
-    { id: 'overview', label: 'نمای کلی', icon: 'dashboard' },
-    { id: 'profile', label: 'پروفایل', icon: 'shield' },
-    { id: 'leads', label: 'لیدها', icon: 'clipboard' },
-    { id: 'reservations', label: 'رزروها', icon: 'calendar' }
+    { id: "overview", label: "نمای کلی", icon: "dashboard" },
+    { id: "profile", label: "پروفایل", icon: "shield" },
+    { id: "leads", label: "لیدها", icon: "clipboard" },
+    { id: "reservations", label: "رزروها", icon: "calendar" },
   ];
 
   readonly displayName = computed(() => {
     const user = this.user();
-    const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim();
-    return name || 'مشاور';
+    const name = [user?.firstName, user?.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    return name || "مشاور";
   });
   readonly roleLabel = computed(() => {
     const user = this.user();
-    return user ? this.auth.roleLabel(user.role, 'fa') : 'مشاور';
+    return user ? this.auth.roleLabel(user.role, "fa") : "مشاور";
   });
 
   profileForm: ConsultantProfileForm = {
-    nationalityCode: '',
-    address: ''
+    nationalityCode: "",
+    address: "",
   };
   profileSaving = false;
   profileId: number | null = null;
@@ -1331,15 +1729,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   selectedReservationLead: ConsultantLead | null = null;
   reservationForm: ReservationForm = {
     reservationDate: null,
-    reservationTime: '',
-    secondaryPhoneNumber: '',
-    description: ''
+    reservationTime: "",
+    secondaryPhoneNumber: "",
+    description: "",
   };
   reservations: ConsultantReservation[] = [];
   dueConfirmations: ConsultantReservation[] = [];
   attendanceSavingId: number | null = null;
   reservationsLoading = false;
-  readonly reservationDatePickerLabel = { fa: 'تاریخ رزرو', en: 'Reservation date' };
+  readonly reservationDatePickerLabel = {
+    fa: "تاریخ رزرو",
+    en: "Reservation date",
+  };
 
   patientProfileDialogOpen = false;
   patientProfileSaving = false;
@@ -1347,8 +1748,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   selectedPatientProfileReservation: ConsultantReservation | null = null;
   patientProfileForm: PatientProfileForm = this.emptyPatientProfileForm();
 
-  feedbackMessage = '';
-  feedbackType: 'success' | 'error' = 'success';
+  feedbackMessage = "";
+  feedbackType: "success" | "error" = "success";
 
   private currentTime = Date.now();
   private timerId: ReturnType<typeof setInterval> | null = null;
@@ -1376,25 +1777,33 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private consultantApi: ConsultantDashboardService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
   ) {}
 
   get visibleDashboardLinks(): ConsultantDashboardLink[] {
     return this.isProfileReady()
-      ? this.dashboardLinks.filter(item => item.id !== 'profile' && item.id !== 'reservations')
-      : this.dashboardLinks.filter(item => item.id !== 'reservations');
+      ? this.dashboardLinks.filter(
+          (item) => item.id !== "profile" && item.id !== "reservations",
+        )
+      : this.dashboardLinks.filter((item) => item.id !== "reservations");
   }
 
-  trackDashboardLink(_: number, item: ConsultantDashboardLink): ConsultantDashboardSection {
+  trackDashboardLink(
+    _: number,
+    item: ConsultantDashboardLink,
+  ): ConsultantDashboardSection {
     return item.id;
   }
 
   ngOnInit(): void {
     this.profileId = this.currentProfileId();
-    this.timerStarts = this.readJson<Record<string, number>>(this.timerStorageKey(), {});
+    this.timerStarts = this.readJson<Record<string, number>>(
+      this.timerStorageKey(),
+      {},
+    );
     this.notifiedLeadIds = new Set([
       ...this.readJson<number[]>(this.notificationStorageKey(), []),
-      ...this.readJson<number[]>(this.assignmentNotificationStorageKey(), [])
+      ...this.readJson<number[]>(this.assignmentNotificationStorageKey(), []),
     ]);
     this.requestNotificationPermission();
 
@@ -1402,7 +1811,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.refreshDashboard();
       this.startTimers();
     } else {
-      this.activeSection = 'profile';
+      this.activeSection = "profile";
     }
   }
 
@@ -1420,7 +1829,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   currentProfileId(): number | null {
     const user = this.user();
-    return this.profileId ?? user?.consultantProfileId ?? user?.profileId ?? null;
+    return (
+      this.profileId ?? user?.consultantProfileId ?? user?.profileId ?? null
+    );
   }
 
   isProfileReady(): boolean {
@@ -1432,17 +1843,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   canGoOnline(): boolean {
     if (!this.isAvailable || this.pendingOfflineCount > 0) return false;
-    return this.dashboardStatusLoaded ? this.canGoOnlineFromStatus || !this.onlineStatusBlockReason : true;
+    return this.dashboardStatusLoaded
+      ? this.canGoOnlineFromStatus || !this.onlineStatusBlockReason
+      : true;
   }
 
   setSection(section: ConsultantDashboardSection): void {
-    if (section === 'reservations') {
-      this.activeSection = 'overview';
+    if (section === "reservations") {
+      this.activeSection = "overview";
       return;
     }
 
-    if (section === 'profile' && this.isProfileReady()) {
-      this.activeSection = 'overview';
+    if (section === "profile" && this.isProfileReady()) {
+      this.activeSection = "overview";
       return;
     }
 
@@ -1452,36 +1865,51 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   submitProfile(): void {
     const validationError = this.validateProfileForm();
     if (validationError) {
-      this.showFeedback(validationError, 'error');
+      this.showFeedback(validationError, "error");
       return;
     }
 
     this.profileSaving = true;
     this.clearFeedback();
 
-    this.consultantApi.completeProfile({
-      profileId: this.currentProfileId() ?? 0,
-      nationalityCode: this.profileForm.nationalityCode.trim(),
-      address: this.profileForm.address.trim(),
-      isCompleteProfile: true
-    }).pipe(finalize(() => {
-      this.profileSaving = false;
-      this.markViewDirty();
-    })).subscribe({
-      next: response => {
-        const profileId = this.resolveProfileId(response.data) ?? this.currentProfileId() ?? 0;
-        if (profileId > 0) {
-          this.profileId = profileId;
-          this.auth.updateConsultantProfile(profileId, true);
-        }
+    this.consultantApi
+      .completeProfile({
+        profileId: this.currentProfileId() ?? 0,
+        nationalityCode: this.profileForm.nationalityCode.trim(),
+        address: this.profileForm.address.trim(),
+        isCompleteProfile: true,
+      })
+      .pipe(
+        finalize(() => {
+          this.profileSaving = false;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          const profileId =
+            this.resolveProfileId(response.data) ??
+            this.currentProfileId() ??
+            0;
+          if (profileId > 0) {
+            this.profileId = profileId;
+            this.auth.updateConsultantProfile(profileId, true);
+          }
 
-        this.showFeedback(response.message || 'پروفایل مشاور کامل شد', 'success');
-        this.activeSection = 'overview';
-        this.refreshDashboard();
-        this.startTimers();
-      },
-      error: error => this.showFeedback(this.errorMessage(error, 'تکمیل پروفایل انجام نشد'), 'error')
-    });
+          this.showFeedback(
+            response.message || "پروفایل مشاور کامل شد",
+            "success",
+          );
+          this.activeSection = "overview";
+          this.refreshDashboard();
+          this.startTimers();
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "تکمیل پروفایل انجام نشد"),
+            "error",
+          ),
+      });
   }
 
   setAvailability(isAvailable: boolean): void {
@@ -1489,28 +1917,45 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId) return;
 
     if (!isAvailable && this.isOnline) {
-      this.showFeedback('برای ثبت عدم حضور، ابتدا وضعیت دریافت لید را آفلاین کنید', 'error');
+      this.showFeedback(
+        "برای ثبت عدم حضور، ابتدا وضعیت دریافت لید را آفلاین کنید",
+        "error",
+      );
       return;
     }
 
     this.availabilitySaving = true;
     this.clearFeedback();
 
-    this.consultantApi.setAvailability({ profileId, isAvailable })
-      .pipe(finalize(() => {
-        this.availabilitySaving = false;
-        this.markViewDirty();
-      }))
+    this.consultantApi
+      .setAvailability({ profileId, isAvailable })
+      .pipe(
+        finalize(() => {
+          this.availabilitySaving = false;
+          this.markViewDirty();
+        }),
+      )
       .subscribe({
-        next: response => {
-          const status = this.applyConsultantStatusFrom(response, response.data);
+        next: (response) => {
+          const status = this.applyConsultantStatusFrom(
+            response,
+            response.data,
+          );
           if (status.isAvailable === null) this.isAvailable = isAvailable;
           if (!isAvailable && status.isOnline === null) this.isOnline = false;
-          this.showFeedback(response.message || (isAvailable ? 'حضور شما ثبت شد' : 'عدم حضور شما ثبت شد'), 'success');
+          this.showFeedback(
+            response.message ||
+              (isAvailable ? "حضور شما ثبت شد" : "عدم حضور شما ثبت شد"),
+            "success",
+          );
           this.requestNotificationPermission();
           this.refreshDashboard();
         },
-        error: error => this.showFeedback(this.errorMessage(error, 'ثبت حضور انجام نشد'), 'error')
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "ثبت حضور انجام نشد"),
+            "error",
+          ),
       });
   }
 
@@ -1519,35 +1964,49 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId) return;
 
     if (isOnline && !this.canGoOnline()) {
-      const message = this.onlineStatusBlockReason
-        || (this.pendingOfflineCount > 0
-          ? 'ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید'
-          : 'ابتدا حضور خود را ثبت کنید');
-      this.showFeedback(message, 'error');
+      const message =
+        this.onlineStatusBlockReason ||
+        (this.pendingOfflineCount > 0
+          ? "ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید"
+          : "ابتدا حضور خود را ثبت کنید");
+      this.showFeedback(message, "error");
       return;
     }
 
     this.onlineSaving = true;
     this.clearFeedback();
 
-    this.consultantApi.setOnlineStatus({ profileId, isOnline, isOffline: !isOnline })
-      .pipe(finalize(() => {
-        this.onlineSaving = false;
-        this.markViewDirty();
-      }))
+    this.consultantApi
+      .setOnlineStatus({ profileId, isOnline, isOffline: !isOnline })
+      .pipe(
+        finalize(() => {
+          this.onlineSaving = false;
+          this.markViewDirty();
+        }),
+      )
       .subscribe({
-        next: response => {
-          const status = this.applyConsultantStatusFrom(response, response.data);
+        next: (response) => {
+          const status = this.applyConsultantStatusFrom(
+            response,
+            response.data,
+          );
           if (status.isOnline === null) this.isOnline = isOnline;
           if (isOnline && status.isAvailable === null) this.isAvailable = true;
-          this.showFeedback(response.message || (isOnline ? 'شما آنلاین شدید' : 'شما آفلاین شدید'), 'success');
+          this.showFeedback(
+            response.message ||
+              (isOnline ? "شما آنلاین شدید" : "شما آفلاین شدید"),
+            "success",
+          );
           this.requestNotificationPermission();
           this.refreshDashboard();
         },
-        error: error => {
-          this.showFeedback(this.errorMessage(error, 'تغییر وضعیت آنلاین انجام نشد'), 'error');
+        error: (error) => {
+          this.showFeedback(
+            this.errorMessage(error, "تغییر وضعیت آنلاین انجام نشد"),
+            "error",
+          );
           this.loadPendingOfflineLeads();
-        }
+        },
       });
   }
 
@@ -1568,7 +2027,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   changeLeadPage(page: number): void {
-    this.leadPageNumber = Math.min(Math.max(1, page), Math.max(1, this.leadTotalPages));
+    this.leadPageNumber = Math.min(
+      Math.max(1, page),
+      Math.max(1, this.leadTotalPages),
+    );
     this.loadLeads();
   }
 
@@ -1595,12 +2057,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportSaving = true;
     this.clearFeedback();
 
-    const rawAttendanceProbability = this.reportForm.attendanceProbabilityPercent;
-    const attendanceProbabilityPercent = rawAttendanceProbability === null || rawAttendanceProbability === undefined || rawAttendanceProbability === ''
-      ? null
-      : Number(rawAttendanceProbability);
-    if (attendanceProbabilityPercent !== null && (!Number.isFinite(attendanceProbabilityPercent) || attendanceProbabilityPercent < 0 || attendanceProbabilityPercent > 100)) {
-      this.showFeedback('درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد', 'error');
+    const rawAttendanceProbability =
+      this.reportForm.attendanceProbabilityPercent;
+    const attendanceProbabilityPercent =
+      rawAttendanceProbability === null ||
+      rawAttendanceProbability === undefined ||
+      rawAttendanceProbability === ""
+        ? null
+        : Number(rawAttendanceProbability);
+    if (
+      attendanceProbabilityPercent !== null &&
+      (!Number.isFinite(attendanceProbabilityPercent) ||
+        attendanceProbabilityPercent < 0 ||
+        attendanceProbabilityPercent > 100)
+    ) {
+      this.showFeedback("درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد", "error");
       this.reportSaving = false;
       return;
     }
@@ -1609,51 +2080,79 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentId,
       consultantProfileId: profileId,
       callResult: Number(this.reportForm.callResult),
-      reportDescription: this.normalizedReportDescription(Number(this.reportForm.callResult)),
+      reportDescription: this.normalizedReportDescription(
+        Number(this.reportForm.callResult),
+      ),
       patientCity: this.reportForm.patientCity.trim(),
       patientRegion: this.reportForm.patientRegion.trim(),
       businessName: this.reportForm.businessName.trim(),
-      ...(attendanceProbabilityPercent === null ? {} : { attendanceProbabilityPercent })
+      ...(attendanceProbabilityPercent === null
+        ? {}
+        : { attendanceProbabilityPercent }),
     };
 
-    this.consultantApi.submitLeadCallReport(payload)
-      .pipe(finalize(() => {
-        this.reportSaving = false;
-        this.markViewDirty();
-      }))
+    this.consultantApi
+      .submitLeadCallReport(payload)
+      .pipe(
+        finalize(() => {
+          this.reportSaving = false;
+          this.markViewDirty();
+        }),
+      )
       .subscribe({
-        next: response => {
-          const wasBlockingOfflineLead = this.leadType(lead) === LEAD_TYPE.OfflineQueue && this.leadState(lead) === LEAD_STATE.Pending;
+        next: (response) => {
+          const wasBlockingOfflineLead =
+            this.leadType(lead) === LEAD_TYPE.OfflineQueue &&
+            this.leadState(lead) === LEAD_STATE.Pending;
           this.reportedLeadIds.add(leadAssignmentId);
-          const status = this.applyConsultantStatusFrom(response, response.data);
-          if (status.isOnline === null && typeof response.data?.isConsultantOnline === 'boolean') {
+          const status = this.applyConsultantStatusFrom(
+            response,
+            response.data,
+          );
+          if (
+            status.isOnline === null &&
+            typeof response.data?.isConsultantOnline === "boolean"
+          ) {
             this.isOnline = response.data.isConsultantOnline;
           }
-          this.markLeadReported(leadAssignmentId, response.data?.leadAssignmentState ?? LEAD_STATE.Contacted);
-          if (wasBlockingOfflineLead) this.updatePendingOfflineCount(Math.max(0, this.pendingOfflineCount - 1));
+          this.markLeadReported(
+            leadAssignmentId,
+            response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
+          );
+          if (wasBlockingOfflineLead)
+            this.updatePendingOfflineCount(
+              Math.max(0, this.pendingOfflineCount - 1),
+            );
           this.closeReportDialog();
-          this.showFeedback(response.message || 'گزارش تماس ثبت شد', 'success');
+          this.showFeedback(response.message || "گزارش تماس ثبت شد", "success");
           this.restoreOnlineAfterRequiredAction();
           this.refreshDashboard();
         },
-        error: error => this.showFeedback(this.errorMessage(error, 'ثبت گزارش تماس انجام نشد'), 'error')
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "ثبت گزارش تماس انجام نشد"),
+            "error",
+          ),
       });
   }
-
 
   private emptyLeadReportForm(): LeadReportForm {
     return {
       callResult: 1,
-      reportDescription: '',
-      patientCity: '',
-      patientRegion: '',
-      businessName: '',
-      attendanceProbabilityPercent: null
+      reportDescription: "",
+      patientCity: "",
+      patientRegion: "",
+      businessName: "",
+      attendanceProbabilityPercent: null,
     };
   }
 
   private normalizedReportDescription(callResult: number): string {
-    return this.reportForm.reportDescription.trim() || CALL_RESULT_DEFAULT_DESCRIPTIONS[callResult] || 'گزارش تماس ثبت شد';
+    return (
+      this.reportForm.reportDescription.trim() ||
+      CALL_RESULT_DEFAULT_DESCRIPTIONS[callResult] ||
+      "گزارش تماس ثبت شد"
+    );
   }
 
   closeReservationDialog(): void {
@@ -1667,57 +2166,91 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   reservationId(reservation: ConsultantReservation): number | null {
-    return this.numberOrNull(reservation.id ?? reservation.Id ?? reservation.reservationId ?? reservation.ReservationId ?? null);
+    return this.numberOrNull(
+      reservation.id ??
+        reservation.Id ??
+        reservation.reservationId ??
+        reservation.ReservationId ??
+        null,
+    );
   }
 
   reservationPatientName(reservation: ConsultantReservation): string {
-    return reservation.patientName || reservation.PatientName || 'بدون نام';
+    return reservation.patientName || reservation.PatientName || "بدون نام";
   }
 
   reservationPatientPhone(reservation: ConsultantReservation): string {
-    return reservation.patientPhoneNumber || reservation.PatientPhoneNumber || '-';
+    return (
+      reservation.patientPhoneNumber || reservation.PatientPhoneNumber || "-"
+    );
   }
 
   reservationDateTime(reservation: ConsultantReservation): string {
-    return reservation.reservationAt || reservation.ReservationAt || '';
+    return reservation.reservationAt || reservation.ReservationAt || "";
   }
 
   reservationPatientCity(reservation: ConsultantReservation): string {
-    return reservation.patientCity || reservation.PatientCity || 'شهر ثبت نشده';
+    return reservation.patientCity || reservation.PatientCity || "شهر ثبت نشده";
   }
 
-  reservationAttendanceProbability(reservation: ConsultantReservation): number | string {
-    return reservation.attendanceProbabilityPercent ?? reservation.AttendanceProbabilityPercent ?? '-';
+  reservationAttendanceProbability(
+    reservation: ConsultantReservation,
+  ): number | string {
+    return (
+      reservation.attendanceProbabilityPercent ??
+      reservation.AttendanceProbabilityPercent ??
+      "-"
+    );
   }
 
   reservationAttendancePrediction(reservation: ConsultantReservation): string {
-    return reservation.attendancePrediction || reservation.AttendancePrediction || 'ثبت نشده';
+    return (
+      reservation.attendancePrediction ||
+      reservation.AttendancePrediction ||
+      "ثبت نشده"
+    );
   }
 
   reservationAttendanceStatusLabel(reservation: ConsultantReservation): string {
-    switch (reservation.attendanceConfirmationStatus ?? reservation.AttendanceConfirmationStatus) {
-      case 1: return 'منتظر تایید مشاور';
-      case 2: return 'مشاور: بیمار آمد';
-      case 3: return 'مشاور: بیمار نیامد';
-      case 4: return 'تایید نهایی منشی';
-      case 5: return 'رد شده توسط منشی';
-      default: return 'نامشخص';
+    switch (
+      reservation.attendanceConfirmationStatus ??
+      reservation.AttendanceConfirmationStatus
+    ) {
+      case 1:
+        return "منتظر تایید مشاور";
+      case 2:
+        return "مشاور: بیمار آمد";
+      case 3:
+        return "مشاور: بیمار نیامد";
+      case 4:
+        return "تایید نهایی منشی";
+      case 5:
+        return "رد شده توسط منشی";
+      default:
+        return "نامشخص";
     }
   }
 
   reservationStatusClass(reservation: ConsultantReservation): string {
-    const status = reservation.attendanceConfirmationStatus ?? reservation.AttendanceConfirmationStatus;
-    if (status === 4) return 'badge success';
-    if (status === 5) return 'badge danger';
-    if (status === 2 || status === 3) return 'badge warn';
-    return 'badge info';
+    const status =
+      reservation.attendanceConfirmationStatus ??
+      reservation.AttendanceConfirmationStatus;
+    if (status === 4) return "badge success";
+    if (status === 5) return "badge danger";
+    if (status === 2 || status === 3) return "badge warn";
+    return "badge info";
   }
 
   realtimeBlockedByOfflineQueue(): boolean {
-    return this.pendingOfflineCount > 0 && this.leadTypeFilter === LEAD_TYPE.RealTime;
+    return (
+      this.pendingOfflineCount > 0 && this.leadTypeFilter === LEAD_TYPE.RealTime
+    );
   }
 
-  confirmAttendance(reservation: ConsultantReservation, patientAttended: boolean): void {
+  confirmAttendance(
+    reservation: ConsultantReservation,
+    patientAttended: boolean,
+  ): void {
     const profileId = this.requireProfileId();
     const reservationId = this.reservationId(reservation);
     if (!profileId || !reservationId) return;
@@ -1726,28 +2259,46 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       reservationId,
       consultantProfileId: profileId,
       patientAttended,
-      note: patientAttended ? 'بیمار در مطب حاضر شد.' : 'بیمار در زمان رزرو حاضر نشد.'
+      note: patientAttended
+        ? "بیمار در مطب حاضر شد."
+        : "بیمار در زمان رزرو حاضر نشد.",
     };
 
     this.attendanceSavingId = reservationId;
-    this.consultantApi.confirmAttendance(payload).pipe(finalize(() => {
-      this.attendanceSavingId = null;
-      this.markViewDirty();
-    })).subscribe({
-      next: response => {
-        this.showFeedback(response.message || 'وضعیت حضور بیمار ثبت شد و منتظر بررسی منشی است', 'success');
-        this.loadDueConfirmations();
-        this.loadLeads();
-      },
-      error: error => this.showFeedback(this.errorMessage(error, 'ثبت تایید حضور انجام نشد'), 'error')
-    });
+    this.consultantApi
+      .confirmAttendance(payload)
+      .pipe(
+        finalize(() => {
+          this.attendanceSavingId = null;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          this.showFeedback(
+            response.message ||
+              "وضعیت حضور بیمار ثبت شد و منتظر بررسی منشی است",
+            "success",
+          );
+          this.loadDueConfirmations();
+          this.loadLeads();
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "ثبت تایید حضور انجام نشد"),
+            "error",
+          ),
+      });
   }
 
   canCompletePatientProfile(reservation: ConsultantReservation): boolean {
-    return (reservation.requiresPatientProfile ?? reservation.RequiresPatientProfile) === true
-      && !(reservation.patientUserId ?? reservation.PatientUserId)
-      && (reservation.isCanceled ?? reservation.IsCanceled) !== true
-      && Boolean(this.reservationId(reservation));
+    return (
+      (reservation.requiresPatientProfile ??
+        reservation.RequiresPatientProfile) === true &&
+      !(reservation.patientUserId ?? reservation.PatientUserId) &&
+      (reservation.isCanceled ?? reservation.IsCanceled) !== true &&
+      Boolean(this.reservationId(reservation))
+    );
   }
 
   openPatientProfileFromReservation(reservation: ConsultantReservation): void {
@@ -1762,8 +2313,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId || !leadAssignmentId) return;
 
     const reservationAt = this.selectedReservationDateTime();
-    if (!reservationAt || !Number.isFinite(reservationAt.getTime()) || reservationAt.getTime() <= Date.now()) {
-      this.showFeedback('زمان رزرو باید در آینده باشد', 'error');
+    if (
+      !reservationAt ||
+      !Number.isFinite(reservationAt.getTime()) ||
+      reservationAt.getTime() <= Date.now()
+    ) {
+      this.showFeedback("زمان رزرو باید در آینده باشد", "error");
       return;
     }
 
@@ -1771,25 +2326,34 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentId,
       consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
-      secondaryPhoneNumber: this.reservationForm.secondaryPhoneNumber.trim() || null,
-      description: this.reservationForm.description.trim() || null
+      secondaryPhoneNumber:
+        this.reservationForm.secondaryPhoneNumber.trim() || null,
+      description: this.reservationForm.description.trim() || null,
     };
 
     this.reservationSaving = true;
     this.clearFeedback();
 
-    this.consultantApi.createReservation(payload)
-      .pipe(finalize(() => {
-        this.reservationSaving = false;
-        this.markViewDirty();
-      }))
+    this.consultantApi
+      .createReservation(payload)
+      .pipe(
+        finalize(() => {
+          this.reservationSaving = false;
+          this.markViewDirty();
+        }),
+      )
       .subscribe({
-        next: response => {
-          const reservation = this.extractReservation(response.data) ?? this.extractReservation(response);
+        next: (response) => {
+          const reservation =
+            this.extractReservation(response.data) ??
+            this.extractReservation(response);
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           const shouldOpenPatientProfile = Boolean(reservation);
-          this.showFeedback(response.message || 'رزرو با موفقیت ثبت شد', 'success');
+          this.showFeedback(
+            response.message || "رزرو با موفقیت ثبت شد",
+            "success",
+          );
           this.loadReservations();
 
           if (shouldOpenPatientProfile && reservation) {
@@ -1798,7 +2362,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.restoreOnlineAfterRequiredAction();
           }
         },
-        error: error => this.showFeedback(this.errorMessage(error, 'ثبت رزرو انجام نشد'), 'error')
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "ثبت رزرو انجام نشد"),
+            "error",
+          ),
       });
   }
 
@@ -1807,7 +2375,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.resetPatientProfileState();
 
     if (wasRequired) {
-      this.showFeedback('برای تکمیل رزرو، تشکیل پرونده بیمار الزامی است', 'error');
+      this.showFeedback(
+        "برای تکمیل رزرو، تشکیل پرونده بیمار الزامی است",
+        "error",
+      );
     }
   }
 
@@ -1815,13 +2386,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const reservation = this.selectedPatientProfileReservation;
     const reservationId = reservation ? this.reservationId(reservation) : null;
     if (!reservation || !reservationId) {
-      this.showFeedback('شناسه رزرو برای تشکیل پرونده یافت نشد', 'error');
+      this.showFeedback("شناسه رزرو برای تشکیل پرونده یافت نشد", "error");
       return;
     }
 
     const validationError = this.validatePatientProfileForm();
     if (validationError) {
-      this.showFeedback(validationError, 'error');
+      this.showFeedback(validationError, "error");
       return;
     }
 
@@ -1830,141 +2401,207 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.patientProfileSaving = true;
     this.clearFeedback();
 
-    this.auth.register(payload)
-      .pipe(finalize(() => {
-        this.patientProfileSaving = false;
-        this.markViewDirty();
-      }))
+    this.auth
+      .register(payload)
+      .pipe(
+        finalize(() => {
+          this.patientProfileSaving = false;
+          this.markViewDirty();
+        }),
+      )
       .subscribe({
-        next: response => {
+        next: (response) => {
           this.resetPatientProfileState();
-          this.showFeedback(response.message || 'ثبت‌نام بیمار و تشکیل پرونده رزرو با موفقیت انجام شد', 'success');
+          this.showFeedback(
+            response.message ||
+              "ثبت‌نام بیمار و تشکیل پرونده رزرو با موفقیت انجام شد",
+            "success",
+          );
           this.restoreOnlineAfterRequiredAction();
           this.loadReservations();
         },
-        error: error => this.showFeedback(this.errorMessage(error, 'تشکیل پرونده بیمار انجام نشد'), 'error')
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "تشکیل پرونده بیمار انجام نشد"),
+            "error",
+          ),
       });
   }
 
   handleCallClick(event: MouseEvent, lead: ConsultantLead): void {
-    if (this.isLeadPhoneDisabled(lead) || this.leadPhone(lead) === '-') {
+    if (this.isLeadPhoneDisabled(lead) || this.leadPhone(lead) === "-") {
       event.preventDefault();
-      this.showFeedback('شماره این لید در حال حاضر فعال نیست', 'error');
+      this.showFeedback("شماره این لید در حال حاضر فعال نیست", "error");
     }
   }
 
   leadId(lead: ConsultantLead): number | null {
-    const value = lead.id ?? lead.Id ?? lead.leadAssignmentId ?? lead.LeadAssignmentId;
+    const value =
+      lead.id ?? lead.Id ?? lead.leadAssignmentId ?? lead.LeadAssignmentId;
     const numeric = this.numberOrNull(value);
     return numeric && numeric > 0 ? numeric : null;
   }
 
   leadName(lead: ConsultantLead): string {
-    return lead.userName
-      || lead.UserName
-      || lead.fullName
-      || lead.FullName
-      || [lead.firstName, lead.lastName].filter(Boolean).join(' ').trim()
-      || [lead.FirstName, lead.LastName].filter(Boolean).join(' ').trim()
-      || lead.user?.userName
-      || lead.user?.UserName
-      || lead.user?.fullName
-      || lead.user?.FullName
-      || lead.user?.name
-      || lead.user?.Name
-      || [lead.user?.firstName, lead.user?.lastName].filter(Boolean).join(' ').trim()
-      || [lead.user?.FirstName, lead.user?.LastName].filter(Boolean).join(' ').trim()
-      || lead.User?.userName
-      || lead.User?.UserName
-      || lead.User?.fullName
-      || lead.User?.FullName
-      || lead.User?.name
-      || lead.User?.Name
-      || [lead.User?.firstName, lead.User?.lastName].filter(Boolean).join(' ').trim()
-      || [lead.User?.FirstName, lead.User?.LastName].filter(Boolean).join(' ').trim()
-      || lead.lead?.fullName
-      || lead.lead?.FullName
-      || lead.lead?.name
-      || lead.lead?.Name
-      || [lead.lead?.firstName, lead.lead?.lastName].filter(Boolean).join(' ').trim()
-      || [lead.lead?.FirstName, lead.lead?.LastName].filter(Boolean).join(' ').trim()
-      || lead.Lead?.fullName
-      || lead.Lead?.FullName
-      || lead.Lead?.name
-      || lead.Lead?.Name
-      || [lead.Lead?.firstName, lead.Lead?.lastName].filter(Boolean).join(' ').trim()
-      || [lead.Lead?.FirstName, lead.Lead?.LastName].filter(Boolean).join(' ').trim()
-      || 'بدون نام';
+    return (
+      lead.userName ||
+      lead.UserName ||
+      lead.fullName ||
+      lead.FullName ||
+      [lead.firstName, lead.lastName].filter(Boolean).join(" ").trim() ||
+      [lead.FirstName, lead.LastName].filter(Boolean).join(" ").trim() ||
+      lead.user?.userName ||
+      lead.user?.UserName ||
+      lead.user?.fullName ||
+      lead.user?.FullName ||
+      lead.user?.name ||
+      lead.user?.Name ||
+      [lead.user?.firstName, lead.user?.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      [lead.user?.FirstName, lead.user?.LastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      lead.User?.userName ||
+      lead.User?.UserName ||
+      lead.User?.fullName ||
+      lead.User?.FullName ||
+      lead.User?.name ||
+      lead.User?.Name ||
+      [lead.User?.firstName, lead.User?.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      [lead.User?.FirstName, lead.User?.LastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      lead.lead?.fullName ||
+      lead.lead?.FullName ||
+      lead.lead?.name ||
+      lead.lead?.Name ||
+      [lead.lead?.firstName, lead.lead?.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      [lead.lead?.FirstName, lead.lead?.LastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      lead.Lead?.fullName ||
+      lead.Lead?.FullName ||
+      lead.Lead?.name ||
+      lead.Lead?.Name ||
+      [lead.Lead?.firstName, lead.Lead?.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      [lead.Lead?.FirstName, lead.Lead?.LastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      "بدون نام"
+    );
   }
 
   leadPhone(lead: ConsultantLead): string {
-    return lead.phoneNumber
-      || lead.PhoneNumber
-      || lead.mobile
-      || lead.Mobile
-      || lead.userPhoneNumber
-      || lead.UserPhoneNumber
-      || lead.leadPhoneNumber
-      || lead.LeadPhoneNumber
-      || lead.user?.phoneNumber
-      || lead.user?.PhoneNumber
-      || lead.user?.mobile
-      || lead.user?.Mobile
-      || lead.User?.phoneNumber
-      || lead.User?.PhoneNumber
-      || lead.User?.mobile
-      || lead.User?.Mobile
-      || lead.lead?.phoneNumber
-      || lead.lead?.PhoneNumber
-      || lead.lead?.mobile
-      || lead.lead?.Mobile
-      || lead.Lead?.phoneNumber
-      || lead.Lead?.PhoneNumber
-      || lead.Lead?.mobile
-      || lead.Lead?.Mobile
-      || '-';
+    return (
+      lead.phoneNumber ||
+      lead.PhoneNumber ||
+      lead.mobile ||
+      lead.Mobile ||
+      lead.userPhoneNumber ||
+      lead.UserPhoneNumber ||
+      lead.leadPhoneNumber ||
+      lead.LeadPhoneNumber ||
+      lead.user?.phoneNumber ||
+      lead.user?.PhoneNumber ||
+      lead.user?.mobile ||
+      lead.user?.Mobile ||
+      lead.User?.phoneNumber ||
+      lead.User?.PhoneNumber ||
+      lead.User?.mobile ||
+      lead.User?.Mobile ||
+      lead.lead?.phoneNumber ||
+      lead.lead?.PhoneNumber ||
+      lead.lead?.mobile ||
+      lead.lead?.Mobile ||
+      lead.Lead?.phoneNumber ||
+      lead.Lead?.PhoneNumber ||
+      lead.Lead?.mobile ||
+      lead.Lead?.Mobile ||
+      "-"
+    );
   }
 
   leadState(lead: ConsultantLead): number | null {
-    return this.numberOrNull(lead.leadAssignmentState ?? lead.LeadAssignmentState ?? lead.state ?? lead.State ?? lead.status ?? lead.Status ?? null);
+    return this.numberOrNull(
+      lead.leadAssignmentState ??
+        lead.LeadAssignmentState ??
+        lead.state ??
+        lead.State ??
+        lead.status ??
+        lead.Status ??
+        null,
+    );
   }
 
   leadType(lead: ConsultantLead): number | null {
-    return this.numberOrNull(lead.leadAssignmentType ?? lead.LeadAssignmentType ?? lead.assignmentType ?? lead.AssignmentType ?? lead.type ?? lead.Type ?? null);
+    return this.numberOrNull(
+      lead.leadAssignmentType ??
+        lead.LeadAssignmentType ??
+        lead.assignmentType ??
+        lead.AssignmentType ??
+        lead.type ??
+        lead.Type ??
+        null,
+    );
   }
 
   stateLabel(value: number | null): string {
     const labels: Record<number, string> = {
-      1: 'جدید',
-      2: 'تخصیص داده شده',
-      3: 'تماس گرفته شده',
-      4: 'در انتظار تعیین تکلیف',
-      5: 'تبدیل شده',
-      6: 'منقضی شده',
-      7: 'رد شده'
+      1: "جدید",
+      2: "تخصیص داده شده",
+      3: "تماس گرفته شده",
+      4: "در انتظار تعیین تکلیف",
+      5: "تبدیل شده",
+      6: "منقضی شده",
+      7: "رد شده",
     };
 
-    return value === null ? 'نامشخص' : labels[value] ?? 'نامشخص';
+    return value === null ? "نامشخص" : (labels[value] ?? "نامشخص");
   }
 
   leadTypeLabel(value: number | null): string {
-    if (value === LEAD_TYPE.OfflineQueue) return 'صف آفلاین';
-    if (value === LEAD_TYPE.RealTime) return 'لحظه‌ای';
-    return 'نامشخص';
+    if (value === LEAD_TYPE.OfflineQueue) return "صف آفلاین";
+    if (value === LEAD_TYPE.RealTime) return "لحظه‌ای";
+    return "نامشخص";
   }
 
   stateBadgeClass(value: number | null): string {
-    if (value === LEAD_STATE.New || value === LEAD_STATE.Assigned) return 'badge info';
-    if (value === LEAD_STATE.Contacted || value === LEAD_STATE.Converted) return 'badge success';
-    if (value === LEAD_STATE.Pending || value === LEAD_STATE.Expired) return 'badge warn';
-    return 'badge danger';
+    if (value === LEAD_STATE.New || value === LEAD_STATE.Assigned)
+      return "badge info";
+    if (value === LEAD_STATE.Contacted || value === LEAD_STATE.Converted)
+      return "badge success";
+    if (value === LEAD_STATE.Pending || value === LEAD_STATE.Expired)
+      return "badge warn";
+    return "badge danger";
   }
 
   isRealtimeTimedLead(lead: ConsultantLead): boolean {
     const leadAssignmentId = this.leadId(lead);
-    if ((leadAssignmentId && this.reportedLeadIds.has(leadAssignmentId)) || Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)) return false;
+    if (
+      (leadAssignmentId && this.reportedLeadIds.has(leadAssignmentId)) ||
+      Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)
+    )
+      return false;
     if (this.leadType(lead) !== LEAD_TYPE.RealTime) return false;
-    return (lead.requiresThreeMinuteCall ?? lead.RequiresThreeMinuteCall ?? true) === true;
+    return (
+      (lead.requiresThreeMinuteCall ?? lead.RequiresThreeMinuteCall ?? true) ===
+      true
+    );
   }
 
   leadRemainingMs(lead: ConsultantLead): number {
@@ -1973,31 +2610,42 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   realtimeCountdown(lead: ConsultantLead): string {
-    if (this.isLeadExpired(lead)) return 'منقضی';
+    if (this.isLeadExpired(lead)) return "منقضی";
     const totalSeconds = Math.ceil(this.leadRemainingMs(lead) / 1000);
-    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    const minutes = Math.floor(totalSeconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = (totalSeconds % 60).toString().padStart(2, "0");
     return `${minutes}:${seconds}`;
   }
 
   isLeadExpired(lead: ConsultantLead): boolean {
-    return this.leadState(lead) === LEAD_STATE.Expired || (this.isRealtimeTimedLead(lead) && this.leadRemainingMs(lead) <= 0);
+    return (
+      this.leadState(lead) === LEAD_STATE.Expired ||
+      (this.isRealtimeTimedLead(lead) && this.leadRemainingMs(lead) <= 0)
+    );
   }
 
   isLeadPhoneDisabled(lead: ConsultantLead): boolean {
-    return this.isLeadExpired(lead) || this.leadPhone(lead) === '-' || this.expiringLeadIds.has(this.leadId(lead) ?? -1);
+    return (
+      this.isLeadExpired(lead) ||
+      this.leadPhone(lead) === "-" ||
+      this.expiringLeadIds.has(this.leadId(lead) ?? -1)
+    );
   }
 
   isReportDisabled(lead: ConsultantLead): boolean {
     const state = this.leadState(lead);
     const leadAssignmentId = this.leadId(lead);
-    return !leadAssignmentId
-      || this.isLeadExpired(lead)
-      || this.reportedLeadIds.has(leadAssignmentId)
-      || Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)
-      || state === LEAD_STATE.Contacted
-      || state === LEAD_STATE.Converted
-      || state === LEAD_STATE.Rejected;
+    return (
+      !leadAssignmentId ||
+      this.isLeadExpired(lead) ||
+      this.reportedLeadIds.has(leadAssignmentId) ||
+      Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted) ||
+      state === LEAD_STATE.Contacted ||
+      state === LEAD_STATE.Converted ||
+      state === LEAD_STATE.Rejected
+    );
   }
 
   isReservationDisabled(lead: ConsultantLead): boolean {
@@ -2016,12 +2664,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   formatDateTime(value: string): string {
     const date = new Date(value);
     if (!Number.isFinite(date.getTime())) return value;
-    return new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    return new Intl.DateTimeFormat("fa-IR", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(date);
   }
 
   logout(): void {
     this.auth.logout();
-    this.router.navigateByUrl('/');
+    this.router.navigateByUrl("/");
   }
 
   private loadDashboardStatus(afterLoad?: () => void): void {
@@ -2029,17 +2680,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId) return;
 
     this.dashboardStatusSubscription?.unsubscribe();
-    this.dashboardStatusSubscription = this.consultantApi.getDashboardStatus(profileId)
+    this.dashboardStatusSubscription = this.consultantApi
+      .getDashboardStatus(profileId)
       .pipe(finalize(() => this.markViewDirty()))
       .subscribe({
-        next: status => {
+        next: (status) => {
           this.applyDashboardStatus(status);
           afterLoad?.();
         },
-        error: error => {
-          this.showFeedback(this.errorMessage(error, 'دریافت وضعیت داشبورد انجام نشد'), 'error');
+        error: (error) => {
+          this.showFeedback(
+            this.errorMessage(error, "دریافت وضعیت داشبورد انجام نشد"),
+            "error",
+          );
           afterLoad?.();
-        }
+        },
       });
   }
 
@@ -2062,24 +2717,29 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const requestId = ++this.pendingOfflineRequestId;
     this.pendingOfflineLoadSubscription?.unsubscribe();
 
-    this.pendingOfflineLoadSubscription = this.consultantApi.getLeads({
-      profileId,
-      leadAssignmentState: LEAD_STATE.Pending,
-      leadAssignmentType: LEAD_TYPE.OfflineQueue,
-      pageNumber: 1,
-      pageSize: 50
-    }).pipe(finalize(() => this.markViewDirty())).subscribe({
-      next: response => {
-        if (requestId !== this.pendingOfflineRequestId) return;
-        this.applyConsultantStatusFrom(response.source, response.raw);
-        this.updatePendingOfflineCount(response.totalCount ?? response.items.length);
-      },
-      error: () => {
-        if (requestId === this.pendingOfflineRequestId) this.updatePendingOfflineCount(0);
-      }
-    });
+    this.pendingOfflineLoadSubscription = this.consultantApi
+      .getLeads({
+        profileId,
+        leadAssignmentState: LEAD_STATE.Pending,
+        leadAssignmentType: LEAD_TYPE.OfflineQueue,
+        pageNumber: 1,
+        pageSize: 50,
+      })
+      .pipe(finalize(() => this.markViewDirty()))
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this.pendingOfflineRequestId) return;
+          this.applyConsultantStatusFrom(response.source, response.raw);
+          this.updatePendingOfflineCount(
+            response.totalCount ?? response.items.length,
+          );
+        },
+        error: () => {
+          if (requestId === this.pendingOfflineRequestId)
+            this.updatePendingOfflineCount(0);
+        },
+      });
   }
-
 
   private loadDueConfirmations(): void {
     const profileId = this.currentProfileId();
@@ -2087,22 +2747,26 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     const requestId = ++this.dueConfirmationRequestId;
     this.dueConfirmationLoadSubscription?.unsubscribe();
-    this.dueConfirmationLoadSubscription = this.consultantApi.getDueConfirmations(profileId)
+    this.dueConfirmationLoadSubscription = this.consultantApi
+      .getDueConfirmations(profileId)
       .pipe(finalize(() => this.markViewDirty()))
       .subscribe({
-        next: items => {
-          if (requestId === this.dueConfirmationRequestId) this.dueConfirmations = items ?? [];
+        next: (items) => {
+          if (requestId === this.dueConfirmationRequestId)
+            this.dueConfirmations = items ?? [];
         },
         error: () => {
-          if (requestId === this.dueConfirmationRequestId) this.dueConfirmations = [];
-        }
+          if (requestId === this.dueConfirmationRequestId)
+            this.dueConfirmations = [];
+        },
       });
   }
 
   private loadLeads(quiet = false): void {
     const profileId = this.currentProfileId();
     if (!profileId) return;
-    if (quiet && this.leadLoadSubscription && !this.leadLoadSubscription.closed) return;
+    if (quiet && this.leadLoadSubscription && !this.leadLoadSubscription.closed)
+      return;
 
     const requestId = ++this.leadRequestId;
     this.leadLoadSubscription?.unsubscribe();
@@ -2113,42 +2777,59 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
     if (!quiet) this.clearFeedback();
 
-    this.leadLoadSubscription = this.consultantApi.getLeads({
-      profileId,
-      leadAssignmentState: this.leadStateFilter,
-      leadAssignmentType: this.leadTypeFilter,
-      pageNumber: this.leadPageNumber,
-      pageSize: this.leadPageSize
-    }).pipe(finalize(() => {
-      if (!quiet && requestId === this.visibleLeadLoadingRequestId) this.leadsLoading = false;
-      this.markViewDirty();
-    })).subscribe({
-      next: response => {
-        if (requestId !== this.leadRequestId) return;
-        this.applyConsultantStatusFrom(response.source, response.raw);
-        this.leads = response.items ?? [];
-        this.leadTotalCount = response.totalCount ?? this.leads.length;
-        this.leadPageSize = response.pageSize || this.leadPageSize;
-        this.leadTotalPages = Math.max(1, response.totalPages || Math.ceil(this.leadTotalCount / this.leadPageSize));
-        const normalizedPageNumber = Math.min(Math.max(1, response.pageNumber || this.leadPageNumber), this.leadTotalPages);
-        if (!quiet && this.leadPageNumber !== normalizedPageNumber) {
-          this.leadPageNumber = normalizedPageNumber;
-          if (!this.leads.length && this.leadTotalCount > 0) {
-            this.loadLeads();
-            return;
+    this.leadLoadSubscription = this.consultantApi
+      .getLeads({
+        profileId,
+        leadAssignmentState: this.leadStateFilter,
+        leadAssignmentType: this.leadTypeFilter,
+        pageNumber: this.leadPageNumber,
+        pageSize: this.leadPageSize,
+      })
+      .pipe(
+        finalize(() => {
+          if (!quiet && requestId === this.visibleLeadLoadingRequestId)
+            this.leadsLoading = false;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this.leadRequestId) return;
+          this.applyConsultantStatusFrom(response.source, response.raw);
+          this.leads = response.items ?? [];
+          this.leadTotalCount = response.totalCount ?? this.leads.length;
+          this.leadPageSize = response.pageSize || this.leadPageSize;
+          this.leadTotalPages = Math.max(
+            1,
+            response.totalPages ||
+              Math.ceil(this.leadTotalCount / this.leadPageSize),
+          );
+          const normalizedPageNumber = Math.min(
+            Math.max(1, response.pageNumber || this.leadPageNumber),
+            this.leadTotalPages,
+          );
+          if (!quiet && this.leadPageNumber !== normalizedPageNumber) {
+            this.leadPageNumber = normalizedPageNumber;
+            if (!this.leads.length && this.leadTotalCount > 0) {
+              this.loadLeads();
+              return;
+            }
+          } else {
+            this.leadPageNumber = normalizedPageNumber;
           }
-        } else {
-          this.leadPageNumber = normalizedPageNumber;
-        }
-        this.hydrateRealtimeTimers();
-        this.notifyNewLeads(this.leads);
-        this.expireDueRealtimeLeads();
-      },
-      error: error => {
-        if (requestId !== this.leadRequestId) return;
-        if (!quiet) this.showFeedback(this.errorMessage(error, 'دریافت لیدها انجام نشد'), 'error');
-      }
-    });
+          this.hydrateRealtimeTimers();
+          this.notifyNewLeads(this.leads);
+          this.expireDueRealtimeLeads();
+        },
+        error: (error) => {
+          if (requestId !== this.leadRequestId) return;
+          if (!quiet)
+            this.showFeedback(
+              this.errorMessage(error, "دریافت لیدها انجام نشد"),
+              "error",
+            );
+        },
+      });
   }
 
   private loadReservations(): void {
@@ -2159,26 +2840,32 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationLoadSubscription?.unsubscribe();
     this.reservationsLoading = true;
 
-    this.reservationLoadSubscription = this.consultantApi.getReservations({
-      consultantProfileId: profileId,
-      from: this.startOfTodayIso(),
-      to: this.endOfTodayIso(),
-      includeCanceled: false,
-      pageNumber: 1,
-      pageSize: 5
-    }).pipe(finalize(() => {
-      if (requestId === this.reservationRequestId) this.reservationsLoading = false;
-      this.markViewDirty();
-    })).subscribe({
-      next: response => {
-        if (requestId !== this.reservationRequestId) return;
-        this.applyConsultantStatusFrom(response.source, response.raw);
-        this.reservations = response.items ?? [];
-      },
-      error: () => {
-        if (requestId === this.reservationRequestId) this.reservations = [];
-      }
-    });
+    this.reservationLoadSubscription = this.consultantApi
+      .getReservations({
+        consultantProfileId: profileId,
+        from: this.startOfTodayIso(),
+        to: this.endOfTodayIso(),
+        includeCanceled: false,
+        pageNumber: 1,
+        pageSize: 5,
+      })
+      .pipe(
+        finalize(() => {
+          if (requestId === this.reservationRequestId)
+            this.reservationsLoading = false;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this.reservationRequestId) return;
+          this.applyConsultantStatusFrom(response.source, response.raw);
+          this.reservations = response.items ?? [];
+        },
+        error: () => {
+          if (requestId === this.reservationRequestId) this.reservations = [];
+        },
+      });
   }
 
   private startOfTodayIso(): string {
@@ -2218,15 +2905,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-
   private hasActiveRealtimeTimers(): boolean {
-    return this.leads.some(lead => this.isRealtimeTimedLead(lead) && !this.isLeadExpired(lead));
+    return this.leads.some(
+      (lead) => this.isRealtimeTimedLead(lead) && !this.isLeadExpired(lead),
+    );
   }
 
   private hydrateRealtimeTimers(): void {
     let changed = false;
 
-    this.leads.forEach(lead => {
+    this.leads.forEach((lead) => {
       if (!this.isRealtimeTimedLead(lead)) return;
       const leadAssignmentId = this.leadId(lead);
       if (!leadAssignmentId) return;
@@ -2245,61 +2933,83 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId) return;
 
     this.leadNotificationLoadSubscription?.unsubscribe();
-    this.leadNotificationLoadSubscription = this.consultantApi.getLeads({
-      profileId,
-      leadAssignmentState: null,
-      leadAssignmentType: null,
-      pageNumber: 1,
-      pageSize: 50
-    }).subscribe({
-      next: response => this.notifyNewLeads(response.items ?? []),
-      error: () => undefined
-    });
+    this.leadNotificationLoadSubscription = this.consultantApi
+      .getLeads({
+        profileId,
+        leadAssignmentState: null,
+        leadAssignmentType: null,
+        pageNumber: 1,
+        pageSize: 50,
+      })
+      .subscribe({
+        next: (response) => this.notifyNewLeads(response.items ?? []),
+        error: () => undefined,
+      });
   }
 
   private notifyNewLeads(leads: ConsultantLead[]): void {
     let changed = false;
 
-    leads.forEach(lead => {
+    leads.forEach((lead) => {
       const leadAssignmentId = this.leadId(lead);
-      if (!leadAssignmentId || this.notifiedLeadIds.has(leadAssignmentId) || this.isLeadExpired(lead)) return;
+      if (
+        !leadAssignmentId ||
+        this.notifiedLeadIds.has(leadAssignmentId) ||
+        this.isLeadExpired(lead)
+      )
+        return;
 
       const state = this.leadState(lead);
-      if (![LEAD_STATE.New, LEAD_STATE.Assigned, LEAD_STATE.Pending].includes(state as 1 | 2 | 4)) return;
+      if (
+        ![LEAD_STATE.New, LEAD_STATE.Assigned, LEAD_STATE.Pending].includes(
+          state as 1 | 2 | 4,
+        )
+      )
+        return;
 
       this.notifiedLeadIds.add(leadAssignmentId);
       changed = true;
       this.showNewLeadNotification(lead);
     });
 
-    if (changed) this.writeJson(this.notificationStorageKey(), [...this.notifiedLeadIds]);
+    if (changed)
+      this.writeJson(this.notificationStorageKey(), [...this.notifiedLeadIds]);
   }
 
   private showNewLeadNotification(lead: ConsultantLead): void {
     const isRealtime = this.leadType(lead) === LEAD_TYPE.RealTime;
-    const title = isRealtime ? 'لید لحظه‌ای جدید' : 'لید جدید برای شما';
-    const timing = isRealtime && this.isRealtimeTimedLead(lead) ? '؛ مهلت تماس ۳ دقیقه است.' : '';
-    this.showLeadNotification(title, `${this.leadName(lead)} - ${this.leadPhone(lead)}${timing}`);
+    const title = isRealtime ? "لید لحظه‌ای جدید" : "لید جدید برای شما";
+    const timing =
+      isRealtime && this.isRealtimeTimedLead(lead)
+        ? "؛ مهلت تماس ۳ دقیقه است."
+        : "";
+    this.showLeadNotification(
+      title,
+      `${this.leadName(lead)} - ${this.leadPhone(lead)}${timing}`,
+    );
   }
 
   private showLeadNotification(title: string, body: string): void {
-    if ('Notification' in window && Notification.permission === 'granted') {
+    if ("Notification" in window && Notification.permission === "granted") {
       new Notification(title, { body });
     } else {
-      this.showFeedback(body, 'success');
+      this.showFeedback(body, "success");
     }
 
-    const navigatorWithVibration = navigator as Navigator & { vibrate?: (pattern: number | number[]) => boolean };
+    const navigatorWithVibration = navigator as Navigator & {
+      vibrate?: (pattern: number | number[]) => boolean;
+    };
     navigatorWithVibration.vibrate?.([200, 100, 200]);
   }
 
   private requestNotificationPermission(): void {
-    if (!('Notification' in window) || Notification.permission !== 'default') return;
+    if (!("Notification" in window) || Notification.permission !== "default")
+      return;
     Notification.requestPermission().catch(() => undefined);
   }
 
   private expireDueRealtimeLeads(): void {
-    this.leads.forEach(lead => {
+    this.leads.forEach((lead) => {
       const leadAssignmentId = this.leadId(lead);
       if (!leadAssignmentId || !this.shouldExpireLead(lead)) return;
       this.expireLead(leadAssignmentId);
@@ -2309,12 +3019,26 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private shouldExpireLead(lead: ConsultantLead): boolean {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId || !this.isRealtimeTimedLead(lead)) return false;
-    if (this.reportedLeadIds.has(leadAssignmentId) || this.expiringLeadIds.has(leadAssignmentId)) return false;
-    if (this.currentTime < (this.expirationRetryAfter.get(leadAssignmentId) ?? 0)) return false;
+    if (
+      this.reportedLeadIds.has(leadAssignmentId) ||
+      this.expiringLeadIds.has(leadAssignmentId)
+    )
+      return false;
+    if (
+      this.currentTime < (this.expirationRetryAfter.get(leadAssignmentId) ?? 0)
+    )
+      return false;
     if (Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)) return false;
 
     const state = this.leadState(lead);
-    if ([LEAD_STATE.Contacted, LEAD_STATE.Converted, LEAD_STATE.Expired, LEAD_STATE.Rejected].includes(state as 3 | 5 | 6 | 7)) {
+    if (
+      [
+        LEAD_STATE.Contacted,
+        LEAD_STATE.Converted,
+        LEAD_STATE.Expired,
+        LEAD_STATE.Rejected,
+      ].includes(state as 3 | 5 | 6 | 7)
+    ) {
       return false;
     }
 
@@ -2327,26 +3051,47 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.expiringLeadIds.add(leadAssignmentId);
 
-    this.consultantApi.expireLeadNoCall({ leadAssignmentId, consultantProfileId: profileId }).pipe(finalize(() => {
-      this.expiringLeadIds.delete(leadAssignmentId);
-      this.markViewDirty();
-    })).subscribe({
-      next: response => {
-        const status = this.applyConsultantStatusFrom(response, response.data);
-        if (status.isOnline === null && typeof response.data?.isConsultantOnline === 'boolean') {
-          this.isOnline = response.data.isConsultantOnline;
-        }
-        this.leads = this.leads.map(lead => this.leadId(lead) === leadAssignmentId ? { ...lead, leadAssignmentState: LEAD_STATE.Expired } : lead);
-        this.showFeedback(response.message || 'لید منقضی شد و امتیاز مشاور کسر شد', 'error');
-        this.loadPendingOfflineLeads();
-        this.loadLeads(true);
-      },
-      error: error => {
-        this.expirationRetryAfter.set(leadAssignmentId, Date.now() + 30000);
-        this.showFeedback(this.errorMessage(error, 'منقضی کردن لید انجام نشد'), 'error');
-        this.loadLeads(true);
-      },
-    });
+    this.consultantApi
+      .expireLeadNoCall({ leadAssignmentId, consultantProfileId: profileId })
+      .pipe(
+        finalize(() => {
+          this.expiringLeadIds.delete(leadAssignmentId);
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          const status = this.applyConsultantStatusFrom(
+            response,
+            response.data,
+          );
+          if (
+            status.isOnline === null &&
+            typeof response.data?.isConsultantOnline === "boolean"
+          ) {
+            this.isOnline = response.data.isConsultantOnline;
+          }
+          this.leads = this.leads.map((lead) =>
+            this.leadId(lead) === leadAssignmentId
+              ? { ...lead, leadAssignmentState: LEAD_STATE.Expired }
+              : lead,
+          );
+          this.showFeedback(
+            response.message || "لید منقضی شد و امتیاز مشاور کسر شد",
+            "error",
+          );
+          this.loadPendingOfflineLeads();
+          this.loadLeads(true);
+        },
+        error: (error) => {
+          this.expirationRetryAfter.set(leadAssignmentId, Date.now() + 30000);
+          this.showFeedback(
+            this.errorMessage(error, "منقضی کردن لید انجام نشد"),
+            "error",
+          );
+          this.loadLeads(true);
+        },
+      });
   }
 
   openReservationDialog(lead: ConsultantLead): void {
@@ -2355,14 +3100,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
-      secondaryPhoneNumber: '',
-      description: 'رزرو اولیه برای لید'
+      secondaryPhoneNumber: "",
+      description: "رزرو اولیه برای لید",
     };
     this.reservationDialogOpen = true;
   }
 
   private openPatientProfileDialog(reservation: ConsultantReservation): void {
-    const names = this.splitReservationPatientName(this.reservationPatientName(reservation));
+    const names = this.splitReservationPatientName(
+      this.reservationPatientName(reservation),
+    );
     const phoneNumber = this.reservationPatientPhone(reservation);
 
     this.selectedPatientProfileReservation = reservation;
@@ -2371,18 +3118,29 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ...this.emptyPatientProfileForm(),
       firstName: names.firstName,
       lastName: names.lastName,
-      phoneNumber: phoneNumber === '-' ? '' : phoneNumber
+      phoneNumber: phoneNumber === "-" ? "" : phoneNumber,
     };
     this.patientProfileDialogOpen = true;
   }
 
-
   private extractReservation(source: unknown): ConsultantReservation | null {
     if (!this.isRecord(source)) return null;
 
-    if (this.reservationId(source as ConsultantReservation)) return source as ConsultantReservation;
+    if (this.reservationId(source as ConsultantReservation))
+      return source as ConsultantReservation;
 
-    for (const key of ['reservation', 'Reservation', 'data', 'Data', 'result', 'Result', 'value', 'Value', 'payload', 'Payload']) {
+    for (const key of [
+      "reservation",
+      "Reservation",
+      "data",
+      "Data",
+      "result",
+      "Result",
+      "value",
+      "Value",
+      "payload",
+      "Payload",
+    ]) {
       const nested = this.readValue(source, key);
       const reservation = this.extractReservation(nested);
       if (reservation) return reservation;
@@ -2400,7 +3158,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private markLeadReported(leadAssignmentId: number, nextState: number): void {
-    this.leads = this.leads.map(lead => {
+    this.leads = this.leads.map((lead) => {
       if (this.leadId(lead) !== leadAssignmentId) return lead;
 
       return {
@@ -2409,7 +3167,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         IsReportSubmitted: true,
         leadAssignmentState: nextState,
         LeadAssignmentState: nextState,
-        state: nextState
+        state: nextState,
       };
     });
   }
@@ -2431,12 +3189,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const time = this.reservationForm.reservationTime;
     if (!date || !time) return null;
 
-    const [hours, minutes] = time.split(':').map(Number);
-    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    const [hours, minutes] = time.split(":").map(Number);
+    if (
+      !Number.isInteger(hours) ||
+      !Number.isInteger(minutes) ||
+      hours < 0 ||
+      hours > 23 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
       return null;
     }
 
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes);
+    return new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      hours,
+      minutes,
+    );
   }
 
   private minimumReservationDateTime(): Date {
@@ -2446,7 +3217,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private toTimeValue(date: Date): string {
-    const pad = (value: number) => String(value).padStart(2, '0');
+    const pad = (value: number) => String(value).padStart(2, "0");
     return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
@@ -2458,7 +3229,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     const leadAssignmentId = this.leadId(lead);
-    const startedAt = leadAssignmentId ? this.timerStarts[String(leadAssignmentId)] ?? Date.now() : Date.now();
+    const startedAt = leadAssignmentId
+      ? (this.timerStarts[String(leadAssignmentId)] ?? Date.now())
+      : Date.now();
     return startedAt + THREE_MINUTES_MS;
   }
 
@@ -2468,51 +3241,73 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.onlineSaving = true;
     this.isOnline = false;
-    this.consultantApi.setOnlineStatus({ profileId, isOnline: false, isOffline: true })
-      .pipe(finalize(() => {
-        this.onlineSaving = false;
-        this.markViewDirty();
-      }))
+    this.consultantApi
+      .setOnlineStatus({ profileId, isOnline: false, isOffline: true })
+      .pipe(
+        finalize(() => {
+          this.onlineSaving = false;
+          this.markViewDirty();
+        }),
+      )
       .subscribe({
-        next: response => {
-          const status = this.applyConsultantStatusFrom(response, response.data);
+        next: (response) => {
+          const status = this.applyConsultantStatusFrom(
+            response,
+            response.data,
+          );
           if (status.isOnline === null) this.isOnline = false;
         },
         error: () => {
           this.isOnline = false;
-        }
+        },
       });
   }
 
   private restoreOnlineAfterRequiredAction(): void {
     const profileId = this.currentProfileId();
-    if (!profileId || this.isOnline || !this.isAvailable || this.pendingOfflineCount > 0) return;
+    if (
+      !profileId ||
+      this.isOnline ||
+      !this.isAvailable ||
+      this.pendingOfflineCount > 0
+    )
+      return;
 
     this.onlineSaving = true;
-    this.consultantApi.setOnlineStatus({ profileId, isOnline: true, isOffline: false })
-      .pipe(finalize(() => {
-        this.onlineSaving = false;
-        this.markViewDirty();
-      }))
+    this.consultantApi
+      .setOnlineStatus({ profileId, isOnline: true, isOffline: false })
+      .pipe(
+        finalize(() => {
+          this.onlineSaving = false;
+          this.markViewDirty();
+        }),
+      )
       .subscribe({
-        next: response => {
-          const status = this.applyConsultantStatusFrom(response, response.data);
+        next: (response) => {
+          const status = this.applyConsultantStatusFrom(
+            response,
+            response.data,
+          );
           if (status.isOnline === null) this.isOnline = true;
           if (status.isAvailable === null) this.isAvailable = true;
           this.refreshDashboard();
         },
-        error: () => this.loadPendingOfflineLeads()
+        error: () => this.loadPendingOfflineLeads(),
       });
   }
 
   private defaultPatientAvatarImageName(): string {
-    return 'default-patient-avatar.png';
+    return "default-patient-avatar.png";
   }
 
   private validateProfileForm(): string | null {
     const code = this.profileForm.nationalityCode.trim();
-    if (!/^\d{10}$/.test(code)) return 'کد ملی باید ۱۰ رقم باشد';
-    if (!this.profileForm.address.trim() || this.profileForm.address.trim().length < 5) return 'آدرس مشاور الزامی است';
+    if (!/^\d{10}$/.test(code)) return "کد ملی باید ۱۰ رقم باشد";
+    if (
+      !this.profileForm.address.trim() ||
+      this.profileForm.address.trim().length < 5
+    )
+      return "آدرس مشاور الزامی است";
     return null;
   }
 
@@ -2521,23 +3316,36 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const lastName = this.patientProfileForm.lastName.trim();
     const phoneNumber = this.patientProfileForm.phoneNumber.trim();
     const expectedPhoneNumberValue = this.selectedPatientProfileReservation
-      ? this.reservationPatientPhone(this.selectedPatientProfileReservation).trim()
+      ? this.reservationPatientPhone(
+          this.selectedPatientProfileReservation,
+        ).trim()
       : phoneNumber;
-    const expectedPhoneNumber = expectedPhoneNumberValue && expectedPhoneNumberValue !== '-' ? expectedPhoneNumberValue : phoneNumber;
-    if (!firstName) return 'نام بیمار الزامی است';
-    if (firstName.length > 100) return 'نام بیمار نباید بیشتر از ۱۰۰ کاراکتر باشد';
-    if (!lastName) return 'نام خانوادگی بیمار الزامی است';
-    if (lastName.length > 100) return 'نام خانوادگی بیمار نباید بیشتر از ۱۰۰ کاراکتر باشد';
-    if (!/^09\d{9}$/.test(phoneNumber)) return 'شماره موبایل بیمار معتبر نیست';
-    if (phoneNumber !== expectedPhoneNumber) return 'شماره موبایل بیمار باید با شماره لید رزرو شده یکسان باشد';
-    if (!this.patientProfileForm.password) return 'رمز عبور بیمار الزامی است';
-    if (this.patientProfileForm.password.length < 6) return 'رمز عبور باید حداقل ۶ کاراکتر باشد';
-    if (this.patientProfileForm.password.length > 100) return 'رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد';
-    if (![1, 2].includes(Number(this.patientProfileForm.gender))) return 'جنسیت بیمار معتبر نیست';
+    const expectedPhoneNumber =
+      expectedPhoneNumberValue && expectedPhoneNumberValue !== "-"
+        ? expectedPhoneNumberValue
+        : phoneNumber;
+    if (!firstName) return "نام بیمار الزامی است";
+    if (firstName.length > 100)
+      return "نام بیمار نباید بیشتر از ۱۰۰ کاراکتر باشد";
+    if (!lastName) return "نام خانوادگی بیمار الزامی است";
+    if (lastName.length > 100)
+      return "نام خانوادگی بیمار نباید بیشتر از ۱۰۰ کاراکتر باشد";
+    if (!/^09\d{9}$/.test(phoneNumber)) return "شماره موبایل بیمار معتبر نیست";
+    if (phoneNumber !== expectedPhoneNumber)
+      return "شماره موبایل بیمار باید با شماره لید رزرو شده یکسان باشد";
+    if (!this.patientProfileForm.password) return "رمز عبور بیمار الزامی است";
+    if (this.patientProfileForm.password.length < 6)
+      return "رمز عبور باید حداقل ۶ کاراکتر باشد";
+    if (this.patientProfileForm.password.length > 100)
+      return "رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد";
+    if (![1, 2].includes(Number(this.patientProfileForm.gender)))
+      return "جنسیت بیمار معتبر نیست";
     return null;
   }
 
-  private buildPatientRegistrationRequest(reservationId: number): RegisterRequest {
+  private buildPatientRegistrationRequest(
+    reservationId: number,
+  ): RegisterRequest {
     return {
       firstName: this.patientProfileForm.firstName.trim(),
       lastName: this.patientProfileForm.lastName.trim(),
@@ -2546,26 +3354,29 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       isCompleteProfile: true,
       avatarImageName: this.defaultPatientAvatarImageName(),
       gender: Number(this.patientProfileForm.gender),
-      roleName: 'Patient',
-      reservationId
+      roleName: "Patient",
+      reservationId,
     };
   }
 
   private emptyPatientProfileForm(): PatientProfileForm {
     return {
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
-      password: '',
-      gender: 1
+      firstName: "",
+      lastName: "",
+      phoneNumber: "",
+      password: "",
+      gender: 1,
     };
   }
 
-  private splitReservationPatientName(value: string | null | undefined): { firstName: string; lastName: string } {
-    const parts = (value ?? '').trim().split(/\s+/).filter(Boolean);
+  private splitReservationPatientName(value: string | null | undefined): {
+    firstName: string;
+    lastName: string;
+  } {
+    const parts = (value ?? "").trim().split(/\s+/).filter(Boolean);
     return {
-      firstName: parts[0] ?? '',
-      lastName: parts.slice(1).join(' ')
+      firstName: parts[0] ?? "",
+      lastName: parts.slice(1).join(" "),
     };
   }
 
@@ -2586,23 +3397,28 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private toDateInputValue(date: Date): string {
-    const pad = (value: number) => String(value).padStart(2, '0');
+    const pad = (value: number) => String(value).padStart(2, "0");
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
 
   private resolveProfileId(data: unknown): number | null {
-    if (typeof data === 'number' && data > 0) return data;
-    if (typeof data === 'string') {
+    if (typeof data === "number" && data > 0) return data;
+    if (typeof data === "string") {
       const numeric = Number(data);
       return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
     }
 
-    if (typeof data !== 'object' || data === null) return null;
+    if (typeof data !== "object" || data === null) return null;
 
     const source = data as Record<string, unknown>;
-    for (const key of ['profileId', 'consultantProfileId', 'id']) {
+    for (const key of ["profileId", "consultantProfileId", "id"]) {
       const value = source[key];
-      const numeric = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+      const numeric =
+        typeof value === "number"
+          ? value
+          : typeof value === "string"
+            ? Number(value)
+            : NaN;
       if (Number.isFinite(numeric) && numeric > 0) return numeric;
     }
 
@@ -2612,7 +3428,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private requireProfileId(): number | null {
     const profileId = this.currentProfileId();
     if (!profileId) {
-      this.showFeedback('شناسه پروفایل مشاور یافت نشد', 'error');
+      this.showFeedback("شناسه پروفایل مشاور یافت نشد", "error");
       return null;
     }
 
@@ -2633,18 +3449,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private userKey(): string {
     const user = this.user();
-    return user?.userId || user?.phoneNumber || 'current';
+    return user?.userId || user?.phoneNumber || "current";
   }
 
   private toDateTimeLocalValue(date: Date): string {
-    const pad = (value: number) => String(value).padStart(2, '0');
+    const pad = (value: number) => String(value).padStart(2, "0");
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
   private readJson<T>(key: string, fallback: T): T {
     try {
       const value = localStorage.getItem(key);
-      return value ? JSON.parse(value) as T : fallback;
+      return value ? (JSON.parse(value) as T) : fallback;
     } catch {
       return fallback;
     }
@@ -2658,10 +3474,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private applyConsultantStatusFrom(...sources: unknown[]): ConsultantStatusUpdate {
-    const update: ConsultantStatusUpdate = { isAvailable: null, isOnline: null };
+  private applyConsultantStatusFrom(
+    ...sources: unknown[]
+  ): ConsultantStatusUpdate {
+    const update: ConsultantStatusUpdate = {
+      isAvailable: null,
+      isOnline: null,
+    };
 
-    sources.forEach(source => this.collectConsultantStatus(source, update, 0));
+    sources.forEach((source) =>
+      this.collectConsultantStatus(source, update, 0),
+    );
 
     if (update.isAvailable !== null) this.isAvailable = update.isAvailable;
     if (update.isOnline !== null) this.isOnline = update.isOnline;
@@ -2669,20 +3492,49 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return update;
   }
 
-  private collectConsultantStatus(source: unknown, update: ConsultantStatusUpdate, depth: number): void {
+  private collectConsultantStatus(
+    source: unknown,
+    update: ConsultantStatusUpdate,
+    depth: number,
+  ): void {
     if (depth > 2 || !this.isRecord(source)) return;
 
-    update.isAvailable ??= this.readBoolean(source, 'isAvailable', 'available', 'consultantIsAvailable');
-    update.isOnline ??= this.readBoolean(source, 'isOnline', 'online', 'consultantIsOnline', 'isConsultantOnline');
+    update.isAvailable ??= this.readBoolean(
+      source,
+      "isAvailable",
+      "available",
+      "consultantIsAvailable",
+    );
+    update.isOnline ??= this.readBoolean(
+      source,
+      "isOnline",
+      "online",
+      "consultantIsOnline",
+      "isConsultantOnline",
+    );
 
     if (update.isOnline === null) {
-      const isOffline = this.readBoolean(source, 'isOffline', 'offline', 'consultantIsOffline');
+      const isOffline = this.readBoolean(
+        source,
+        "isOffline",
+        "offline",
+        "consultantIsOffline",
+      );
       if (isOffline !== null) update.isOnline = !isOffline;
     }
 
-    for (const key of ['data', 'result', 'value', 'payload', 'consultant', 'profile', 'status']) {
+    for (const key of [
+      "data",
+      "result",
+      "value",
+      "payload",
+      "consultant",
+      "profile",
+      "status",
+    ]) {
       const nested = this.readValue(source, key);
-      if (nested && nested !== source) this.collectConsultantStatus(nested, update, depth + 1);
+      if (nested && nested !== source)
+        this.collectConsultantStatus(nested, update, depth + 1);
     }
   }
 
@@ -2691,11 +3543,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     for (const key of keys) {
       const value = this.readValue(source, key);
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') {
+      if (typeof value === "boolean") return value;
+      if (typeof value === "string") {
         const normalized = value.trim().toLowerCase();
-        if (['true', '1', 'yes'].includes(normalized)) return true;
-        if (['false', '0', 'no'].includes(normalized)) return false;
+        if (["true", "1", "yes"].includes(normalized)) return true;
+        if (["false", "0", "no"].includes(normalized)) return false;
       }
     }
 
@@ -2703,8 +3555,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private numberOrNull(value: unknown): number | null {
-    if (value === null || value === undefined || value === '') return null;
-    const numeric = typeof value === 'number' ? value : Number(value);
+    if (value === null || value === undefined || value === "") return null;
+    const numeric = typeof value === "number" ? value : Number(value);
     return Number.isFinite(numeric) ? numeric : null;
   }
 
@@ -2717,7 +3569,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     const entries = Object.entries(source);
     for (const key of keys) {
-      const match = entries.find(([entryKey]) => entryKey.toLowerCase() === key.toLowerCase());
+      const match = entries.find(
+        ([entryKey]) => entryKey.toLowerCase() === key.toLowerCase(),
+      );
       if (match) return match[1];
     }
 
@@ -2725,16 +3579,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
+    return typeof value === "object" && value !== null;
   }
 
-  private showFeedback(message: string, type: 'success' | 'error'): void {
+  private showFeedback(message: string, type: "success" | "error"): void {
     this.feedbackMessage = message;
     this.feedbackType = type;
   }
 
   private clearFeedback(): void {
-    this.feedbackMessage = '';
+    this.feedbackMessage = "";
   }
 
   private markViewDirty(): void {

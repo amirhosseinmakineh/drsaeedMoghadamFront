@@ -1,6 +1,6 @@
-import { CanActivateFn, Router } from '@angular/router';
-import { inject } from '@angular/core';
-import { AuthRole, AuthService } from './auth.service';
+import { CanActivateFn, Router } from "@angular/router";
+import { inject } from "@angular/core";
+import { AuthRole, AuthService } from "./auth.service";
 
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
@@ -8,7 +8,7 @@ export const authGuard: CanActivateFn = () => {
 
   if (auth.isAuthenticated()) return true;
 
-  return router.parseUrl('/');
+  return router.parseUrl("/");
 };
 
 export const roleGuard = (allowedRoles: AuthRole[]): CanActivateFn => {
@@ -17,7 +17,7 @@ export const roleGuard = (allowedRoles: AuthRole[]): CanActivateFn => {
     const router = inject(Router);
     const user = auth.user();
 
-    if (!user) return router.parseUrl('/');
+    if (!user) return router.parseUrl("/");
     if (allowedRoles.includes(user.role)) return true;
 
     return router.parseUrl(auth.dashboardUrl(user));

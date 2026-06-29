@@ -1,4 +1,6 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   animation: none !important;
   backdrop-filter: none !important;
@@ -16,15 +18,15 @@
   --surface-muted: #efe0ca;
   --text: #2b2118;
   --muted: #716351;
-  --line: rgba(129, 98, 62, .18);
+  --line: rgba(129, 98, 62, 0.18);
   --brand: #a8793f;
   --brand-2: #d2ad72;
   --gold: #b88942;
   --danger: #ef4444;
-  --shadow: 0 14px 42px rgba(93, 64, 32, .10);
+  --shadow: 0 14px 42px rgba(93, 64, 32, 0.1);
 }
 
-body[data-theme='light'] {
+body[data-theme="light"] {
   color-scheme: light;
   --bg: #fffaf2;
   --cream: #f4e4cc;
@@ -33,11 +35,11 @@ body[data-theme='light'] {
   --surface-muted: #efe0ca;
   --text: #2b2118;
   --muted: #716351;
-  --line: rgba(129, 98, 62, .18);
+  --line: rgba(129, 98, 62, 0.18);
   --brand: #a8793f;
   --brand-2: #d2ad72;
   --gold: #b88942;
-  --shadow: 0 14px 42px rgba(93, 64, 32, .10);
+  --shadow: 0 14px 42px rgba(93, 64, 32, 0.1);
 }
 
 html {
@@ -51,7 +53,12 @@ body {
   margin: 0;
   min-width: 320px;
   color: var(--text);
-  background: linear-gradient(180deg, var(--bg), var(--surface-soft) 58%, var(--bg));
+  background: linear-gradient(
+    180deg,
+    var(--bg),
+    var(--surface-soft) 58%,
+    var(--bg)
+  );
   font-family: "Vazirmatn", "Inter", "Segoe UI", Tahoma, Arial, sans-serif;
   line-height: 1.8;
   overflow-x: hidden;
@@ -158,14 +165,14 @@ textarea:focus {
 }
 
 .brand b {
-  font-size: .98rem;
+  font-size: 0.98rem;
   font-weight: 950;
   line-height: 1.45;
 }
 
 .brand small {
   color: var(--muted);
-  font-size: .76rem;
+  font-size: 0.76rem;
   line-height: 1.3;
 }
 
@@ -177,7 +184,11 @@ textarea:focus {
   width: 46px;
   height: 46px;
   border-radius: 18px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 16%, var(--surface)), color-mix(in srgb, var(--brand-2) 12%, var(--surface)));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 16%, var(--surface)),
+    color-mix(in srgb, var(--brand-2) 12%, var(--surface))
+  );
   color: var(--brand);
 }
 
@@ -192,7 +203,7 @@ textarea:focus {
   padding: 10px 14px;
   border-radius: 999px;
   color: var(--muted);
-  font-size: .93rem;
+  font-size: 0.93rem;
   font-weight: 900;
 }
 
@@ -242,13 +253,13 @@ textarea:focus {
 .primary-btn.small {
   min-height: 44px;
   padding: 10px 16px;
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 
 .secondary-btn.small {
   min-height: 40px;
   padding: 9px 14px;
-  font-size: .86rem;
+  font-size: 0.86rem;
 }
 
 .header-account {
@@ -288,7 +299,7 @@ textarea:focus {
 .icon-btn:hover,
 .primary-btn:hover,
 .secondary-btn:hover {
-  box-shadow: 0 10px 24px rgba(93, 64, 32, .10);
+  box-shadow: 0 10px 24px rgba(93, 64, 32, 0.1);
 }
 
 main {
@@ -311,7 +322,7 @@ h2,
 h3 {
   color: var(--text);
   line-height: 1.28;
-  letter-spacing: -.018em;
+  letter-spacing: -0.018em;
 }
 
 h1,
@@ -366,7 +377,7 @@ summary {
   border: 1px solid var(--line);
   border-radius: 30px;
   background: var(--surface);
-  box-shadow: 0 18px 54px rgba(91, 64, 38, .08);
+  box-shadow: 0 18px 54px rgba(91, 64, 38, 0.08);
 }
 
 .glass-card,
@@ -402,8 +413,13 @@ summary {
 }
 
 .service-card:hover {
-  border-color: color-mix(in srgb, var(--accent, var(--brand)) 44%, transparent);
-  box-shadow: 0 24px 70px color-mix(in srgb, var(--accent, var(--brand)) 14%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--accent, var(--brand)) 44%,
+    transparent
+  );
+  box-shadow: 0 24px 70px
+    color-mix(in srgb, var(--accent, var(--brand)) 14%, transparent);
 }
 
 .service-card img {
@@ -456,7 +472,7 @@ summary {
 
 .quote-card .stars {
   color: var(--gold);
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
 }
 
 .quote-card b,
@@ -471,7 +487,7 @@ summary {
 
 .site-footer {
   display: grid;
-  grid-template-columns: minmax(260px, .8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
   gap: 20px;
   width: min(1180px, calc(100% - 36px));
   margin: 40px auto 34px;
@@ -589,7 +605,7 @@ summary {
     border: 1px solid var(--line);
     border-radius: 28px;
     background: var(--surface);
-    box-shadow: 0 12px 36px rgba(5, 20, 30, .14);
+    box-shadow: 0 12px 36px rgba(5, 20, 30, 0.14);
   }
 
   .mobile-account-panel {
@@ -654,7 +670,7 @@ summary {
     border-radius: 20px;
     background: transparent;
     color: var(--muted);
-    font-size: .72rem;
+    font-size: 0.72rem;
     font-weight: 900;
   }
 
@@ -665,7 +681,7 @@ summary {
     gap: 8px;
     min-height: 44px;
     color: var(--text);
-    font-size: .82rem;
+    font-size: 0.82rem;
   }
 
   .mobile-bottom-nav app-fa-icon {
@@ -692,7 +708,7 @@ summary {
   .lead-form,
   .care-access-panel,
   .dental-map article {
-    box-shadow: 0 10px 28px rgba(5, 20, 30, .10);
+    box-shadow: 0 10px 28px rgba(5, 20, 30, 0.1);
   }
 
   .page-section {
@@ -708,7 +724,7 @@ summary {
   .brand b {
     max-width: 185px;
     overflow: hidden;
-    font-size: .86rem;
+    font-size: 0.86rem;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
