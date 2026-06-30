@@ -9,7 +9,7 @@ import {
   computed,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Subscription, finalize } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
@@ -21,6 +21,7 @@ import {
   ConfirmAttendanceRequest,
   SubmitLeadCallReportRequest,
 } from "../../core/consultant/consultant-dashboard.service";
+import { PushNotificationService } from "../../core/push/push-notification.service";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
@@ -1704,11 +1705,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private leadNotificationLoadSubscription: Subscription | null = null;
   private dashboardStatusSubscription: Subscription | null = null;
   private destroyed = false;
+  private readonly pushMessageListener = (event: Event): void => {
+    const detail = (event as CustomEvent<{ body?: string }>).detail;
+    if (detail?.body) this.showFeedback(detail.body, "success");
+  };
 
   constructor(
     private auth: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private consultantApi: ConsultantDashboardService,
+    private pushNotifications: PushNotificationService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
   ) {}
@@ -1739,6 +1746,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ...this.readJson<number[]>(this.assignmentNotificationStorageKey(), []),
     ]);
     this.requestNotificationPermission();
+    window.addEventListener("consultant-push-message", this.pushMessageListener);
+    void this.pushNotifications.syncForCurrentProfile(this.profileId);
+    this.applyLeadRouteParams();
 
     if (this.isProfileReady()) {
       this.refreshDashboard();
@@ -1759,6 +1769,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.dueConfirmationLoadSubscription?.unsubscribe();
     this.leadNotificationLoadSubscription?.unsubscribe();
     this.dashboardStatusSubscription?.unsubscribe();
+    window.removeEventListener(
+      "consultant-push-message",
+      this.pushMessageListener,
+    );
   }
 
   currentProfileId(): number | null {
@@ -1828,6 +1842,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (profileId > 0) {
             this.profileId = profileId;
             this.auth.updateConsultantProfile(profileId, true);
+            void this.pushNotifications.syncForCurrentProfile(profileId);
           }
 
           this.showFeedback(
@@ -1958,6 +1973,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   applyLeadFilters(): void {
     this.leadPageNumber = 1;
     this.loadLeads();
+  }
+
+  private applyLeadRouteParams(): void {
+    const params = this.route.snapshot.queryParamMap;
+    if (params.get("section") !== "leads" && !params.get("type")) return;
+
+    this.activeSection = "leads";
+    const type = params.get("type");
+    if (type === "offline") {
+      this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
+    } else if (type === "realtime") {
+      this.leadTypeFilter = LEAD_TYPE.RealTime;
+    }
+    this.leadPageNumber = 1;
   }
 
   changeLeadPage(page: number): void {

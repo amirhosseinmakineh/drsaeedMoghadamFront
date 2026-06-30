@@ -8,6 +8,7 @@ import {
 } from "@angular/router";
 import { AuthDialogComponent } from "./auth/auth-dialog.component";
 import { AuthService, AuthUser } from "./core/auth/auth.service";
+import { PushNotificationService } from "./core/push/push-notification.service";
 import { LanguageCode, NAV_ITEMS, pickText } from "./models/clinic.model";
 import { FaIconComponent } from "./shared/ui/fa-icon/fa-icon.component";
 
@@ -288,6 +289,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     public auth: AuthService,
+    private pushNotifications: PushNotificationService,
   ) {}
 
   get direction(): "rtl" | "ltr" {
@@ -315,6 +317,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
+    this.pushNotifications.resetRegisteredTokenCache();
     this.auth.logout();
     this.mobileAccountOpen.set(false);
     if (this.isDashboardRoute()) {
@@ -324,6 +327,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.applyDocumentState();
+    void this.pushNotifications.syncForCurrentProfile();
     window.addEventListener("open-auth-dialog", this.openAuthFromPage);
   }
 
