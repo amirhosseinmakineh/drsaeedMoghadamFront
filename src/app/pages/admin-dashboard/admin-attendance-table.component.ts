@@ -1,5 +1,7 @@
 import { CommonModule } from "@angular/common";
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   Input,
   OnChanges,
@@ -132,6 +134,7 @@ import {
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminAttendanceTableComponent implements OnChanges, OnInit {
   @Input() consultantProfileId: number | null = null;
@@ -164,7 +167,10 @@ export class AdminAttendanceTableComponent implements OnChanges, OnInit {
     },
   ];
 
-  constructor(private adminApi: AdminDashboardService) {}
+  constructor(
+    private adminApi: AdminDashboardService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     if (!this.hasRequestedLoad) this.load();
@@ -189,18 +195,24 @@ export class AdminAttendanceTableComponent implements OnChanges, OnInit {
       this.items = [];
       this.totalCount = 0;
       this.totalPages = 1;
+      this.loading = false;
+      this.markDirty();
       return;
     }
 
     const requestId = ++this.loadRequestId;
     this.loading = true;
     this.feedback = "";
+    this.markDirty();
 
     this.adminApi
       .getAttendance(this.consultantProfileId, this.pageNumber, this.pageSize)
       .pipe(
         finalize(() => {
-          if (requestId === this.loadRequestId) this.loading = false;
+          if (requestId === this.loadRequestId) {
+            this.loading = false;
+            this.markDirty();
+          }
         }),
       )
       .subscribe({
@@ -212,15 +224,22 @@ export class AdminAttendanceTableComponent implements OnChanges, OnInit {
             1,
             response.totalPages || Math.ceil(this.totalCount / this.pageSize),
           );
+          this.markDirty();
         },
         error: (error) => {
-          if (requestId === this.loadRequestId)
+          if (requestId === this.loadRequestId) {
             this.feedback = this.errorMessage(
               error,
               "دریافت حضور و غیاب انجام نشد",
             );
+            this.markDirty();
+          }
         },
       });
+  }
+
+  private markDirty(): void {
+    this.cdr.markForCheck();
   }
 
   private statusLabel(value: number): string {

@@ -1,5 +1,11 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectorRef, Component, OnInit, computed } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  computed,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { finalize } from "rxjs";
@@ -13,6 +19,7 @@ import {
   UserFilters,
 } from "../../core/admin/admin-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
+import { PushNotificationService } from "../../core/push/push-notification.service";
 import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendance-table.component";
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
@@ -78,9 +85,38 @@ interface ScoreFormModel {
     SecretaryReservationAttendanceReviewsComponent,
     FaIconComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="dashboard-layout" [class.admin-mode]="isAdmin()">
-      <aside class="dashboard-sidebar" [class.mobile-app-nav]="isAdmin()">
+    <section
+      class="dashboard-layout"
+      [class.admin-mode]="isAdmin()"
+      [class.patient-mode]="!isAdmin()"
+    >
+      <header class="dashboard-mobile-header">
+        <div class="mobile-header-info">
+          <span class="mobile-avatar"
+            ><app-fa-icon name="user"></app-fa-icon
+          ></span>
+          <div>
+            <strong>{{ displayName() }}</strong>
+            <small>{{ roleLabel() }}</small>
+          </div>
+        </div>
+        <button
+          class="mobile-logout-btn"
+          type="button"
+          (click)="logout()"
+          aria-label="خروج از حساب کاربری"
+        >
+          <app-fa-icon name="logout"></app-fa-icon>
+          <span>خروج</span>
+        </button>
+      </header>
+
+      <aside
+        class="dashboard-sidebar"
+        [class.mobile-app-nav]="isAdmin()"
+      >
         <a class="dashboard-brand" routerLink="/">
           <span class="brand-mark"
             ><app-fa-icon name="tooth"></app-fa-icon
@@ -735,7 +771,7 @@ interface ScoreFormModel {
       }
       .admin-overview {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 14px;
       }
       .admin-overview button {
@@ -873,6 +909,9 @@ interface ScoreFormModel {
         margin: 0;
         color: var(--muted);
       }
+      .dashboard-mobile-header {
+        display: none;
+      }
       @media (max-width: 980px) {
         .dashboard-layout {
           grid-template-columns: 1fr;
@@ -894,15 +933,77 @@ interface ScoreFormModel {
         }
       }
       @media (max-width: 760px) {
+        .dashboard-mobile-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          position: sticky;
+          top: 0;
+          z-index: 90;
+          margin-bottom: 10px;
+          padding: 10px 12px;
+          border: 1px solid var(--line);
+          border-radius: 22px;
+          background: var(--surface);
+          box-shadow: 0 8px 22px rgba(93, 64, 32, 0.08);
+        }
+        .mobile-header-info {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
+        .mobile-avatar {
+          display: grid;
+          place-items: center;
+          width: 42px;
+          height: 42px;
+          border-radius: 16px;
+          background: color-mix(in srgb, var(--brand) 16%, transparent);
+          color: var(--brand);
+          flex-shrink: 0;
+        }
+        .mobile-header-info strong {
+          display: block;
+          font-size: 0.95rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .mobile-header-info small {
+          display: block;
+          color: var(--muted);
+          font-weight: 900;
+          font-size: 0.78rem;
+        }
+        .mobile-logout-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          flex-shrink: 0;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 8px 12px;
+          background: var(--surface-muted);
+          color: var(--text);
+          font: inherit;
+          font-weight: 950;
+          font-size: 0.82rem;
+        }
         .dashboard-layout.admin-mode {
           width: 100%;
-          padding: 0 10px 96px;
+          padding: 10px 10px calc(108px + env(safe-area-inset-bottom, 0px));
+        }
+        .dashboard-layout.patient-mode {
+          width: 100%;
+          padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px));
         }
         .dashboard-layout.admin-mode .dashboard-sidebar {
           position: fixed;
           z-index: 80;
           inset-inline: 10px;
-          bottom: 10px;
+          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
           top: auto;
           min-height: 0;
           padding: 8px;
@@ -917,18 +1018,25 @@ interface ScoreFormModel {
           display: none;
         }
         .admin-mode .dashboard-nav {
-          grid-template-columns: repeat(5, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 6px;
         }
         .admin-mode .dashboard-nav button {
           display: grid;
           place-items: center;
           gap: 3px;
-          min-height: 58px;
-          padding: 7px;
-          border-radius: 20px;
+          min-height: 54px;
+          padding: 6px 4px;
+          border-radius: 18px;
           text-align: center;
-          font-size: 0.72rem;
+          font-size: 0.68rem;
+          line-height: 1.2;
+        }
+        .admin-mode .dashboard-nav button span {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
         .admin-mode .dashboard-nav app-fa-icon {
           color: var(--brand);
@@ -959,6 +1067,9 @@ interface ScoreFormModel {
         }
         .panel-heading {
           display: grid;
+        }
+        .patient-mode .dashboard-sidebar {
+          display: none;
         }
       }
     `,
@@ -1041,6 +1152,8 @@ export class DashboardComponent implements OnInit {
 
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
+  private usersLoadRequestId = 0;
+  private consultantsLoadRequestId = 0;
 
   readonly userColumns: TableColumn<AdminUser>[] = [
     { key: "firstName", label: "نام کامل", value: (row) => this.fullName(row) },
@@ -1093,6 +1206,7 @@ export class DashboardComponent implements OnInit {
     private auth: AuthService,
     private router: Router,
     private adminApi: AdminDashboardService,
+    private pushNotifications: PushNotificationService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -1117,6 +1231,7 @@ export class DashboardComponent implements OnInit {
 
   setSection(section: DashboardSection): void {
     this.activeSection = section;
+    this.markDirty();
 
     if (section === "users" && !this.users.length) this.loadUsers();
     if (section === "consultants" && !this.consultants.length)
@@ -1124,6 +1239,7 @@ export class DashboardComponent implements OnInit {
   }
 
   logout(): void {
+    this.pushNotifications.resetRegisteredTokenCache();
     this.auth.logout();
     this.router.navigateByUrl("/");
   }
@@ -1139,14 +1255,24 @@ export class DashboardComponent implements OnInit {
   }
 
   loadUsers(): void {
+    const requestId = ++this.usersLoadRequestId;
     this.usersLoading = true;
     this.clearFeedback();
+    this.markDirty();
 
     this.adminApi
       .getUsers(this.userFilters)
-      .pipe(finalize(() => (this.usersLoading = false)))
+      .pipe(
+        finalize(() => {
+          if (requestId === this.usersLoadRequestId) {
+            this.usersLoading = false;
+            this.markDirty();
+          }
+        }),
+      )
       .subscribe({
         next: (response) => {
+          if (requestId !== this.usersLoadRequestId) return;
           this.users = (response.items ?? []).map((user) =>
             this.normalizeUser(user),
           );
@@ -1156,12 +1282,16 @@ export class DashboardComponent implements OnInit {
             response.totalPages ||
               Math.ceil(this.usersTotalCount / this.userFilters.pageSize),
           );
+          this.markDirty();
         },
-        error: (error) =>
+        error: (error) => {
+          if (requestId !== this.usersLoadRequestId) return;
           this.showFeedback(
             this.errorMessage(error, "دریافت کاربران انجام نشد"),
             "error",
-          ),
+          );
+          this.markDirty();
+        },
       });
   }
 
@@ -1174,6 +1304,7 @@ export class DashboardComponent implements OnInit {
     if (event.action === "delete") {
       this.userToDelete = event.row;
       this.deleteDialogOpen = true;
+      this.markDirty();
     }
   }
 
@@ -1182,6 +1313,7 @@ export class DashboardComponent implements OnInit {
     this.userForm = this.emptyUserForm();
     this.selectedUserBirthDate = undefined;
     this.userDialogOpen = true;
+    this.markDirty();
   }
 
   openEditUserDialog(user: AdminUser): void {
@@ -1201,11 +1333,13 @@ export class DashboardComponent implements OnInit {
       roleName: user.roleName || "NormalUser",
     };
     this.userDialogOpen = true;
+    this.markDirty();
   }
 
   closeUserDialog(): void {
     this.userDialogOpen = false;
     this.userSaving = false;
+    this.markDirty();
   }
 
   setUserBirthDate(date: Date): void {
@@ -1228,7 +1362,14 @@ export class DashboardComponent implements OnInit {
         ? this.adminApi.addUser(this.buildUserPayload())
         : this.adminApi.updateUser(this.buildUserPayload());
 
-    request.pipe(finalize(() => (this.userSaving = false))).subscribe({
+    request
+      .pipe(
+        finalize(() => {
+          this.userSaving = false;
+          this.markDirty();
+        }),
+      )
+      .subscribe({
       next: (response) => {
         this.closeUserDialog();
         this.showFeedback(
@@ -1267,6 +1408,7 @@ export class DashboardComponent implements OnInit {
   closeDeleteDialog(): void {
     this.deleteDialogOpen = false;
     this.userToDelete = null;
+    this.markDirty();
   }
 
   applyConsultantFilters(): void {
@@ -1280,19 +1422,24 @@ export class DashboardComponent implements OnInit {
   }
 
   loadConsultants(): void {
+    const requestId = ++this.consultantsLoadRequestId;
     this.consultantsLoading = true;
     this.clearFeedback();
+    this.markDirty();
 
     this.adminApi
       .getConsultants(this.consultantFilters)
       .pipe(
         finalize(() => {
-          this.consultantsLoading = false;
-          this.cdr.markForCheck();
+          if (requestId === this.consultantsLoadRequestId) {
+            this.consultantsLoading = false;
+            this.markDirty();
+          }
         }),
       )
       .subscribe({
         next: (response) => {
+          if (requestId !== this.consultantsLoadRequestId) return;
           this.consultants = (response.items ?? []).map((consultant) =>
             this.normalizeConsultant(consultant),
           );
@@ -1305,14 +1452,15 @@ export class DashboardComponent implements OnInit {
                 this.consultantsTotalCount / this.consultantFilters.pageSize,
               ),
           );
-          this.cdr.markForCheck();
+          this.markDirty();
         },
         error: (error) => {
+          if (requestId !== this.consultantsLoadRequestId) return;
           this.showFeedback(
             this.errorMessage(error, "دریافت مشاوران انجام نشد"),
             "error",
           );
-          this.cdr.markForCheck();
+          this.markDirty();
         },
       });
   }
@@ -1322,18 +1470,21 @@ export class DashboardComponent implements OnInit {
       this.selectedScoreConsultant = event.row;
       this.scoreForm = this.emptyScoreForm();
       this.scoreDialogOpen = true;
+      this.markDirty();
       return;
     }
 
     if (event.action === "attendance") {
       this.selectedAttendanceConsultant = event.row;
       this.selectedLeadsConsultant = null;
+      this.markDirty();
       return;
     }
 
     if (event.action === "leads") {
       this.selectedLeadsConsultant = event.row;
       this.selectedAttendanceConsultant = null;
+      this.markDirty();
     }
   }
 
@@ -1341,6 +1492,7 @@ export class DashboardComponent implements OnInit {
     this.scoreDialogOpen = false;
     this.scoreSaving = false;
     this.selectedScoreConsultant = null;
+    this.markDirty();
   }
 
   syncScoreSign(): void {
@@ -1375,7 +1527,12 @@ export class DashboardComponent implements OnInit {
 
     this.adminApi
       .createScore(payload)
-      .pipe(finalize(() => (this.scoreSaving = false)))
+      .pipe(
+        finalize(() => {
+          this.scoreSaving = false;
+          this.markDirty();
+        }),
+      )
       .subscribe({
         next: (response) => {
           this.closeScoreDialog();
@@ -1571,10 +1728,16 @@ export class DashboardComponent implements OnInit {
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedbackMessage = message;
     this.feedbackType = type;
+    this.markDirty();
   }
 
   private clearFeedback(): void {
     this.feedbackMessage = "";
+    this.markDirty();
+  }
+
+  private markDirty(): void {
+    this.cdr.markForCheck();
   }
 
   private errorMessage(error: unknown, fallback: string): string {

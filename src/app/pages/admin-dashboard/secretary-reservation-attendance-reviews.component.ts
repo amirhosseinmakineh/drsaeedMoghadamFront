@@ -1,5 +1,10 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
 import {
@@ -41,7 +46,10 @@ import { AuthService } from "../../core/auth/auth.service";
       }
 
       @if (loading) {
-        <p class="empty-copy">در حال دریافت موارد بررسی...</p>
+        <div class="loading-state" role="status" aria-live="polite">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <p>در حال دریافت موارد بررسی...</p>
+        </div>
       } @else if (!items.length) {
         <p class="empty-copy">موردی برای بررسی تایید حضور وجود ندارد.</p>
       } @else {
@@ -279,6 +287,33 @@ import { AuthService } from "../../core/auth/auth.service";
         color: var(--muted);
         text-align: center;
       }
+      .loading-state {
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        padding: 32px 16px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+      }
+      .loading-state p {
+        margin: 0;
+        color: var(--muted);
+        font-weight: 900;
+      }
+      .loading-spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid color-mix(in srgb, var(--brand) 24%, transparent);
+        border-top-color: var(--brand);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
       .review-table {
         display: grid;
         gap: 12px;
@@ -355,6 +390,7 @@ import { AuthService } from "../../core/auth/auth.service";
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
   items: SecretaryReservation[] = [];
@@ -367,10 +403,12 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
   savingId: number | null = null;
   feedback = "";
   feedbackType: "success" | "error" = "success";
+  private loadRequestId = 0;
 
   constructor(
     private adminApi: AdminDashboardService,
     private auth: AuthService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -378,20 +416,35 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
   }
 
   load(): void {
+    const requestId = ++this.loadRequestId;
     this.loading = true;
     this.feedback = "";
+    this.markDirty();
     this.adminApi
       .getSecretaryReservations({ pageNumber: 1, pageSize: 50, includeCanceled: false })
-      .pipe(finalize(() => (this.loading = false)))
+      .pipe(
+        finalize(() => {
+          if (requestId === this.loadRequestId) {
+            this.loading = false;
+            this.markDirty();
+          }
+        }),
+      )
       .subscribe({
-        next: (response) => (this.items = response.items ?? []),
-        error: (error) =>
+        next: (response) => {
+          if (requestId !== this.loadRequestId) return;
+          this.items = response.items ?? [];
+          this.markDirty();
+        },
+        error: (error) => {
+          if (requestId !== this.loadRequestId) return;
           this.showFeedback(
             error instanceof Error && error.message
               ? error.message
               : "دریافت صف بررسی انجام نشد",
             "error",
-          ),
+          );
+        },
       });
   }
 
@@ -567,5 +620,10 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedback = message;
     this.feedbackType = type;
+    this.markDirty();
+  }
+
+  private markDirty(): void {
+    this.cdr.markForCheck();
   }
 }
