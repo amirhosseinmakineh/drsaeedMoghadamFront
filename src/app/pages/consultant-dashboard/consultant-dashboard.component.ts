@@ -673,7 +673,10 @@ interface ConsultantDashboardLink {
                 </header>
 
                 @if (reservationsLoading) {
-                  <p class="loading-copy">در حال دریافت رزروها...</p>
+                  <div class="loading-state" role="status" aria-live="polite">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <p class="loading-copy">در حال دریافت رزروها...</p>
+                  </div>
                 } @else if (!reservations.length) {
                   <p class="empty-copy">رزرو فعالی برای نمایش وجود ندارد.</p>
                 } @else {
@@ -1347,6 +1350,33 @@ interface ConsultantDashboardLink {
         color: var(--muted);
         text-align: center;
         font-weight: 900;
+      }
+      .loading-state {
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        padding: 24px 16px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+      }
+      .loading-state .loading-copy {
+        border: 0;
+        padding: 0;
+        background: transparent;
+      }
+      .loading-spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid color-mix(in srgb, var(--brand) 24%, transparent);
+        border-top-color: var(--brand);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
       .lead-list {
         display: grid;
