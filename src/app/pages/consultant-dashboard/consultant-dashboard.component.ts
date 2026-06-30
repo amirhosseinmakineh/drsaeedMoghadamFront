@@ -1971,6 +1971,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   applyLeadFilters(): void {
+    this.applyOfflineLeadReportFilter();
     this.leadPageNumber = 1;
     this.loadLeads();
   }
@@ -1983,10 +1984,23 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const type = params.get("type");
     if (type === "offline") {
       this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
+      this.applyOfflineLeadReportFilter();
     } else if (type === "realtime") {
       this.leadTypeFilter = LEAD_TYPE.RealTime;
     }
     this.leadPageNumber = 1;
+  }
+
+  private applyOfflineLeadReportFilter(): void {
+    if (this.leadTypeFilter === LEAD_TYPE.OfflineQueue) {
+      this.leadStateFilter = LEAD_STATE.Pending;
+    }
+  }
+
+  private effectiveLeadStateFilter(): number | null {
+    return this.leadTypeFilter === LEAD_TYPE.OfflineQueue
+      ? LEAD_STATE.Pending
+      : this.leadStateFilter;
   }
 
   changeLeadPage(page: number): void {
@@ -2799,7 +2813,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.leadLoadSubscription = this.consultantApi
       .getLeads({
         profileId,
-        leadAssignmentState: this.leadStateFilter,
+        leadAssignmentState: this.effectiveLeadStateFilter(),
         leadAssignmentType: this.leadTypeFilter,
         pageNumber: this.leadPageNumber,
         pageSize: this.leadPageSize,
