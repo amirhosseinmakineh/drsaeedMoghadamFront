@@ -38,6 +38,11 @@ export interface OnlineRequest {
   isOffline: boolean;
 }
 
+export interface RegisterPushTokenRequest {
+  profileId: number;
+  deviceToken: string;
+}
+
 export interface ConsultantDashboardStatus {
   profileId: number;
   isAvailable: boolean;
@@ -313,6 +318,20 @@ export class ConsultantDashboardService {
         },
       )
       .pipe(this.ensureCommandSucceeded("تغییر وضعیت آنلاین انجام نشد"));
+  }
+
+  registerPushToken(
+    payload: RegisterPushTokenRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .post<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Consultant/RegisterPushToken`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت توکن نوتیفیکیشن انجام نشد"));
   }
 
   getDashboardStatus(profileId: number): Observable<ConsultantDashboardStatus> {
