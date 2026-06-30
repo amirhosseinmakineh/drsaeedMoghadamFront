@@ -23,7 +23,6 @@ import { PushNotificationService } from "../../core/push/push-notification.servi
 import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendance-table.component";
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
-import { SecretaryReservationAttendanceReviewsComponent } from "../admin-dashboard/secretary-reservation-attendance-reviews.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -38,8 +37,7 @@ type DashboardSection =
   | "users"
   | "consultants"
   | "leads"
-  | "leadReports"
-  | "attendanceReviews";
+  | "leadReports";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -82,7 +80,6 @@ interface ScoreFormModel {
     AdminLeadsTableComponent,
     AdminLeadCallReportsComponent,
     AdminAttendanceTableComponent,
-    SecretaryReservationAttendanceReviewsComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -191,10 +188,6 @@ interface ScoreFormModel {
                   <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                   <strong>گزارش تماس لیدها</strong>
                 </button>
-                <button type="button" (click)="setSection('attendanceReviews')">
-                  <span><app-fa-icon name="calendar"></app-fa-icon></span>
-                  <strong>بررسی تایید حضور</strong>
-                </button>
               </section>
             }
 
@@ -236,6 +229,7 @@ interface ScoreFormModel {
                       <option value="">همه نقش‌ها</option>
                       <option value="Admin">ادمین</option>
                       <option value="Consultant">مشاور</option>
+                      <option value="Secretary">منشی</option>
                       <option value="NormalUser">کاربر عادی</option>
                     </select>
                   </label>
@@ -367,10 +361,6 @@ interface ScoreFormModel {
             @if (activeSection === "leadReports") {
               <app-admin-lead-call-reports></app-admin-lead-call-reports>
             }
-
-            @if (activeSection === "attendanceReviews") {
-              <app-secretary-reservation-attendance-reviews></app-secretary-reservation-attendance-reviews>
-            }
           </section>
         } @else {
           <div class="dashboard-hero">
@@ -463,6 +453,7 @@ interface ScoreFormModel {
               <select [(ngModel)]="userForm.roleName" name="dialogRole">
                 <option value="Admin">ادمین</option>
                 <option value="Consultant">مشاور</option>
+                <option value="Secretary">منشی</option>
                 <option value="NormalUser">کاربر عادی</option>
               </select>
             </label>
@@ -1085,7 +1076,6 @@ export class DashboardComponent implements OnInit {
     { id: "consultants", label: "مشاوران", icon: "doctor" },
     { id: "leads", label: "لیدها", icon: "clipboard" },
     { id: "leadReports", label: "گزارش تماس", icon: "clipboard" },
-    { id: "attendanceReviews", label: "تایید حضور", icon: "calendar" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
@@ -1568,6 +1558,7 @@ export class DashboardComponent implements OnInit {
     const labels: Record<string, string> = {
       Admin: "ادمین",
       Consultant: "مشاور",
+      Secretary: "منشی",
       NormalUser: "کاربر عادی",
     };
 

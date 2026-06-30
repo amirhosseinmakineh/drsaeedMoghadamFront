@@ -3,7 +3,7 @@ import { Injectable, computed, signal } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { environment } from "../../../environments/environment";
 
-export type AuthRole = "admin" | "consultant" | "patient";
+export type AuthRole = "admin" | "consultant" | "secretary" | "patient";
 
 export interface AuthUser {
   firstName: string;
@@ -167,6 +167,7 @@ export class AuthService {
     const labels: Record<AuthRole, { fa: string; en: string }> = {
       admin: { fa: "ادمین", en: "Admin" },
       consultant: { fa: "مشاور", en: "Consultant" },
+      secretary: { fa: "منشی", en: "Secretary" },
       patient: { fa: "بیمار", en: "Patient" },
     };
 
@@ -279,6 +280,7 @@ export class AuthService {
       return "admin";
     if (["consultant", "advisor", "مشاور"].includes(normalized))
       return "consultant";
+    if (["secretary", "منشی"].includes(normalized)) return "secretary";
     return "patient";
   }
 

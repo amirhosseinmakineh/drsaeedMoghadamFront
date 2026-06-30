@@ -8,22 +8,22 @@ import {
 import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
 import {
-  AdminDashboardService,
   CompletePatientProfileRequest,
   SecretaryReservation,
 } from "../../core/admin/admin-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
+import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 
 @Component({
   selector: "app-secretary-reservation-attendance-reviews",
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <section class="admin-panel">
+    <section class="secretary-panel">
       <header class="panel-heading">
         <div>
-          <span>بررسی منشی</span>
-          <h2>داشبورد رزروها و بررسی تایید حضور</h2>
+          <span>صف بررسی</span>
+          <h2>رزروهای در انتظار تایید حضور</h2>
         </div>
         <button
           class="secondary-action compact"
@@ -200,7 +200,7 @@ import { AuthService } from "../../core/auth/auth.service";
   `,
   styles: [
     `
-      .admin-panel {
+      .secretary-panel {
         display: grid;
         gap: 16px;
         padding: 18px;
@@ -226,10 +226,6 @@ import { AuthService } from "../../core/auth/auth.service";
       .panel-heading h2 {
         margin: 0;
         font-size: 1.35rem;
-      }
-      .panel-heading p {
-        margin: 8px 0 0;
-        color: var(--muted);
       }
       .secondary-action,
       .primary-action {
@@ -368,12 +364,6 @@ import { AuthService } from "../../core/auth/auth.service";
       .danger {
         color: #fecaca;
       }
-      label {
-        display: grid;
-        gap: 8px;
-        color: var(--muted);
-        font-weight: 950;
-      }
       .dialog-actions {
         display: flex;
         gap: 10px;
@@ -406,7 +396,7 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
   private loadRequestId = 0;
 
   constructor(
-    private adminApi: AdminDashboardService,
+    private secretaryApi: SecretaryDashboardService,
     private auth: AuthService,
     private cdr: ChangeDetectorRef,
   ) {}
@@ -420,8 +410,8 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
     this.loading = true;
     this.feedback = "";
     this.markDirty();
-    this.adminApi
-      .getSecretaryReservations({ pageNumber: 1, pageSize: 50, includeCanceled: false })
+    this.secretaryApi
+      .getReservations({ pageNumber: 1, pageSize: 50, includeCanceled: false })
       .pipe(
         finalize(() => {
           if (requestId === this.loadRequestId) {
@@ -460,7 +450,7 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
     }
 
     this.savingId = reservationId;
-    this.adminApi
+    this.secretaryApi
       .reviewAttendance({
         reservationId,
         secretaryUserId,
@@ -533,7 +523,7 @@ export class SecretaryReservationAttendanceReviewsComponent implements OnInit {
       notes: this.profileForm.notes.trim() || null,
     };
     this.profileSaving = true;
-    this.adminApi.completePatientProfile(payload).pipe(finalize(() => (this.profileSaving = false))).subscribe({
+    this.secretaryApi.completePatientProfile(payload).pipe(finalize(() => (this.profileSaving = false))).subscribe({
       next: (response) => {
         this.showFeedback(response.message || "پرونده بیمار ثبت شد", "success");
         this.closeProfileDialog();

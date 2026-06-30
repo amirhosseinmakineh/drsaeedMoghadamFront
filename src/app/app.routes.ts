@@ -60,13 +60,18 @@ export const routes: Routes = [
     data: { role: "consultant" },
   },
   {
-    path: "secretary/reservation-attendance-reviews",
-    canActivate: [authGuard, roleGuard(["admin"])],
+    path: "dashboard/secretary",
+    canActivate: [authGuard, roleGuard(["secretary"])],
     loadComponent: () =>
-      import("./pages/admin-dashboard/secretary-reservation-attendance-reviews.component").then(
-        (m) => m.SecretaryReservationAttendanceReviewsComponent,
+      import("./pages/secretary-dashboard/secretary-dashboard.component").then(
+        (m) => m.SecretaryDashboardComponent,
       ),
-    data: { role: "admin" },
+    data: { role: "secretary" },
+  },
+  {
+    path: "secretary/reservation-attendance-reviews",
+    redirectTo: "dashboard/secretary",
+    pathMatch: "full",
   },
   {
     path: "dashboard/patient",

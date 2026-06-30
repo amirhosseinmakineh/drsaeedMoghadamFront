@@ -302,7 +302,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isDashboardRoute(): boolean {
     const url = this.router.url.split("?")[0];
-    return url.startsWith("/dashboard") || url.startsWith("/secretary");
+    return url.startsWith("/dashboard");
   }
 
   displayName(user: AuthUser): string {
