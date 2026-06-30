@@ -1,5 +1,9 @@
 import { CommonModule } from "@angular/common";
-import { Component } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
 import {
@@ -185,6 +189,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminLeadCallReportsComponent {
   fromDate: Date | null = null;
@@ -195,19 +200,25 @@ export class AdminLeadCallReportsComponent {
   readonly fromDatePickerLabel = { fa: "از تاریخ", en: "From date" };
   readonly toDatePickerLabel = { fa: "تا تاریخ", en: "To date" };
 
-  constructor(private adminApi: AdminDashboardService) {}
+  constructor(
+    private adminApi: AdminDashboardService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   setFromDate(date: Date): void {
     this.fromDate = date;
+    this.markDirty();
   }
   setToDate(date: Date): void {
     this.toDate = date;
+    this.markDirty();
   }
 
   resetFilters(): void {
     this.fromDate = null;
     this.toDate = null;
     this.feedback = "";
+    this.markDirty();
   }
 
   validateFilters(): string | null {
@@ -236,9 +247,15 @@ export class AdminLeadCallReportsComponent {
 
     this.downloading = true;
     this.feedback = "";
+    this.markDirty();
     this.adminApi
       .exportLeadCallReports(filters)
-      .pipe(finalize(() => (this.downloading = false)))
+      .pipe(
+        finalize(() => {
+          this.downloading = false;
+          this.markDirty();
+        }),
+      )
       .subscribe({
         next: (blob) => {
           this.saveBlob(blob, this.fileName(filters));
@@ -283,5 +300,10 @@ export class AdminLeadCallReportsComponent {
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedback = message;
     this.feedbackType = type;
+    this.markDirty();
+  }
+
+  private markDirty(): void {
+    this.cdr.markForCheck();
   }
 }

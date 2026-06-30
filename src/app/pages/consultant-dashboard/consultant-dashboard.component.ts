@@ -111,6 +111,27 @@ interface ConsultantDashboardLink {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="dashboard-layout consultant-mode">
+      <header class="dashboard-mobile-header">
+        <div class="mobile-header-info">
+          <span class="mobile-avatar"
+            ><app-fa-icon name="doctor"></app-fa-icon
+          ></span>
+          <div>
+            <strong>{{ displayName() }}</strong>
+            <small>{{ roleLabel() }}</small>
+          </div>
+        </div>
+        <button
+          class="mobile-logout-btn"
+          type="button"
+          (click)="logout()"
+          aria-label="خروج از حساب کاربری"
+        >
+          <app-fa-icon name="logout"></app-fa-icon>
+          <span>خروج</span>
+        </button>
+      </header>
+
       <aside class="dashboard-sidebar mobile-app-nav">
         <a class="dashboard-brand" routerLink="/">
           <span class="brand-mark"
@@ -182,6 +203,12 @@ interface ConsultantDashboardLink {
                 <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                 <strong>لیدهای من</strong>
               </button>
+              @if (isProfileReady()) {
+                <button type="button" (click)="setSection('reservations')">
+                  <span><app-fa-icon name="calendar"></app-fa-icon></span>
+                  <strong>رزروهای من</strong>
+                </button>
+              }
             </section>
 
             @if (!isProfileReady()) {
@@ -518,7 +545,10 @@ interface ConsultantDashboardLink {
                 </form>
 
                 @if (leadsLoading) {
-                  <p class="loading-copy">در حال دریافت لیدها...</p>
+                  <div class="loading-state" role="status" aria-live="polite">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <p class="loading-copy">در حال دریافت لیدها...</p>
+                  </div>
                 } @else if (!leads.length) {
                   <p class="empty-copy">فعلاً لیدی برای نمایش وجود ندارد.</p>
                 } @else {
@@ -643,7 +673,10 @@ interface ConsultantDashboardLink {
                 </header>
 
                 @if (reservationsLoading) {
-                  <p class="loading-copy">در حال دریافت رزروها...</p>
+                  <div class="loading-state" role="status" aria-live="polite">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <p class="loading-copy">در حال دریافت رزروها...</p>
+                  </div>
                 } @else if (!reservations.length) {
                   <p class="empty-copy">رزرو فعالی برای نمایش وجود ندارد.</p>
                 } @else {
@@ -1318,6 +1351,33 @@ interface ConsultantDashboardLink {
         text-align: center;
         font-weight: 900;
       }
+      .loading-state {
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        padding: 24px 16px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+      }
+      .loading-state .loading-copy {
+        border: 0;
+        padding: 0;
+        background: transparent;
+      }
+      .loading-spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid color-mix(in srgb, var(--brand) 24%, transparent);
+        border-top-color: var(--brand);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
       .lead-list {
         display: grid;
         gap: 12px;
@@ -1484,6 +1544,9 @@ interface ConsultantDashboardLink {
         grid-template-columns: 1fr 1fr;
         gap: 10px;
       }
+      .dashboard-mobile-header {
+        display: none;
+      }
       @media (max-width: 980px) {
         .dashboard-layout {
           grid-template-columns: 1fr;
@@ -1506,15 +1569,73 @@ interface ConsultantDashboardLink {
         }
       }
       @media (max-width: 760px) {
+        .dashboard-mobile-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          position: sticky;
+          top: 0;
+          z-index: 90;
+          margin-bottom: 10px;
+          padding: 10px 12px;
+          border: 1px solid var(--line);
+          border-radius: 22px;
+          background: var(--surface);
+          box-shadow: 0 8px 22px rgba(93, 64, 32, 0.08);
+        }
+        .mobile-header-info {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
+        .mobile-avatar {
+          display: grid;
+          place-items: center;
+          width: 42px;
+          height: 42px;
+          border-radius: 16px;
+          background: color-mix(in srgb, var(--brand) 16%, transparent);
+          color: var(--brand);
+          flex-shrink: 0;
+        }
+        .mobile-header-info strong {
+          display: block;
+          font-size: 0.95rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .mobile-header-info small {
+          display: block;
+          color: var(--muted);
+          font-weight: 900;
+          font-size: 0.78rem;
+        }
+        .mobile-logout-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          flex-shrink: 0;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 8px 12px;
+          background: var(--surface-muted);
+          color: var(--text);
+          font: inherit;
+          font-weight: 950;
+          font-size: 0.82rem;
+        }
         .dashboard-layout.consultant-mode {
           width: 100%;
-          padding: 0 10px 96px;
+          padding: 10px 10px calc(108px + env(safe-area-inset-bottom, 0px));
         }
         .dashboard-layout.consultant-mode .dashboard-sidebar {
           position: fixed;
           z-index: 80;
           inset-inline: 10px;
-          bottom: 10px;
+          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
           top: auto;
           min-height: 0;
           padding: 8px;
@@ -1529,18 +1650,25 @@ interface ConsultantDashboardLink {
           display: none;
         }
         .consultant-mode .dashboard-nav {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
           gap: 6px;
         }
         .consultant-mode .dashboard-nav button {
           display: grid;
           place-items: center;
           gap: 3px;
-          min-height: 58px;
-          padding: 7px;
-          border-radius: 20px;
+          min-height: 54px;
+          padding: 6px 4px;
+          border-radius: 18px;
           text-align: center;
-          font-size: 0.72rem;
+          font-size: 0.68rem;
+          line-height: 1.2;
+        }
+        .consultant-mode .dashboard-nav button span {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
         .consultant-mode .dashboard-nav app-fa-icon {
           color: var(--brand);
@@ -1721,11 +1849,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   get visibleDashboardLinks(): ConsultantDashboardLink[] {
-    return this.isProfileReady()
-      ? this.dashboardLinks.filter(
-          (item) => item.id !== "profile" && item.id !== "reservations",
-        )
-      : this.dashboardLinks.filter((item) => item.id !== "reservations");
+    if (!this.isProfileReady()) {
+      return this.dashboardLinks.filter((item) => item.id !== "reservations");
+    }
+
+    return this.dashboardLinks.filter((item) => item.id !== "profile");
   }
 
   trackDashboardLink(
@@ -1797,17 +1925,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   setSection(section: ConsultantDashboardSection): void {
-    if (section === "reservations") {
-      this.activeSection = "overview";
-      return;
-    }
-
     if (section === "profile" && this.isProfileReady()) {
       this.activeSection = "overview";
+      this.markViewDirty();
       return;
     }
 
     this.activeSection = section;
+    this.markViewDirty();
+
+    if (section === "leads" && !this.leads.length && !this.leadsLoading) {
+      this.loadLeads();
+    }
+    if (
+      section === "reservations" &&
+      !this.reservations.length &&
+      !this.reservationsLoading
+    ) {
+      this.loadReservations();
+    }
   }
 
   submitProfile(): void {
@@ -2704,6 +2840,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
+    this.pushNotifications.resetRegisteredTokenCache();
     this.auth.logout();
     this.router.navigateByUrl("/");
   }

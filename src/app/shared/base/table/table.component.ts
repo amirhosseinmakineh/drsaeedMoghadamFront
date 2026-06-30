@@ -1,5 +1,14 @@
 import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { FaIconComponent } from "../../ui/fa-icon/fa-icon.component";
 
@@ -74,7 +83,7 @@ export interface TableActionClick<T = unknown> {
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of visibleRows">
+            <tr *ngFor="let row of visibleRows" [hidden]="loading">
               <td
                 *ngFor="let column of columns"
                 [attr.data-label]="column.label"
@@ -195,6 +204,7 @@ export interface TableActionClick<T = unknown> {
         border: 1px solid var(--line);
         border-radius: 24px;
         background: color-mix(in srgb, var(--surface) 88%, transparent);
+        min-height: 120px;
       }
       table {
         width: 100%;
@@ -292,9 +302,25 @@ export interface TableActionClick<T = unknown> {
       .table-loading {
         position: absolute;
         inset: 0;
+        z-index: 2;
         display: grid;
         place-items: center;
-        background: color-mix(in srgb, var(--surface) 76%, transparent);
+        gap: 10px;
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+      }
+      .table-loading::before {
+        content: "";
+        width: 28px;
+        height: 28px;
+        border: 3px solid color-mix(in srgb, var(--brand) 24%, transparent);
+        border-top-color: var(--brand);
+        border-radius: 50%;
+        animation: table-spin 0.8s linear infinite;
+      }
+      @keyframes table-spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
       .table-pagination {
         display: flex;
@@ -385,8 +411,11 @@ export interface TableActionClick<T = unknown> {
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TableComponent<T extends object = Record<string, unknown>> {
+export class TableComponent<T extends object = Record<string, unknown>>
+  implements OnChanges
+{
   @Input() title = "";
   @Input() subtitle = "";
   @Input() columns: TableColumn<T>[] = [];
@@ -414,6 +443,12 @@ export class TableComponent<T extends object = Record<string, unknown>> {
   @Output() actionClick = new EventEmitter<TableActionClick<T>>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() searchChange = new EventEmitter<string>();
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  ngOnChanges(_: SimpleChanges): void {
+    this.cdr.markForCheck();
+  }
 
   get actionItems(): TableAction<T>[] {
     return [...this.defaultActions, ...this.customActions];
@@ -483,6 +518,7 @@ export class TableComponent<T extends object = Record<string, unknown>> {
     this.searchTerm = value;
     this.currentPage = 1;
     this.searchChange.emit(value);
+    this.cdr.markForCheck();
   }
 
   previousPage(): void {
@@ -509,6 +545,7 @@ export class TableComponent<T extends object = Record<string, unknown>> {
 
     this.currentPage = nextPage;
     this.pageChange.emit(nextPage);
+    this.cdr.markForCheck();
   }
 
   emitAction(action: TableAction<T>, row: T): void {

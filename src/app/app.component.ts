@@ -116,7 +116,7 @@ interface LanguageAwarePage {
         <router-outlet (activate)="onActivate($event)"></router-outlet>
       </main>
 
-      <footer class="site-footer">
+      <footer *ngIf="!isDashboardRoute()" class="site-footer">
         <section class="footer-brand-area">
           <a
             class="brand"
@@ -301,7 +301,8 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   isDashboardRoute(): boolean {
-    return this.router.url.startsWith("/dashboard");
+    const url = this.router.url.split("?")[0];
+    return url.startsWith("/dashboard") || url.startsWith("/secretary");
   }
 
   displayName(user: AuthUser): string {

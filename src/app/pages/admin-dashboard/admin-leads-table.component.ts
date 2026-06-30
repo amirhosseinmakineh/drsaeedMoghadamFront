@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   Input,
@@ -196,6 +197,7 @@ type LeadTableMode = "system" | "consultant";
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminLeadsTableComponent implements OnChanges, OnInit {
   @Input() mode: LeadTableMode = "system";
@@ -284,6 +286,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     const requestId = ++this.loadRequestId;
     this.loading = true;
     this.feedback = "";
+    this.cdr.markForCheck();
 
     const query: LeadFilters = {
       ...this.filters,
