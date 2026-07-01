@@ -401,17 +401,38 @@ export class AdminDashboardService {
       );
   }
 
+  exportUsersReport(): Observable<Blob> {
+    return this.exportCsvReport("users/export");
+  }
+
+  exportLeadsReport(): Observable<Blob> {
+    return this.exportCsvReport("leads/export");
+  }
+
+  exportConsultantsReport(): Observable<Blob> {
+    return this.exportCsvReport("consultants/export");
+  }
+
   exportLeadCallReports(
     filters: LeadCallReportExportFilters,
   ): Observable<Blob> {
-    return this.http.get(
-      `${this.apiBaseUrl}/admin/reports/lead-call-reports/export`,
-      {
-        headers: this.authHeaders(),
-        params: this.toParams(filters),
-        responseType: "blob",
-      },
-    );
+    return this.exportCsvReport("lead-call-reports/export", filters);
+  }
+
+  private exportCsvReport(
+    path: string,
+    params?: object,
+  ): Observable<Blob> {
+    let headers = this.authHeaders();
+    if (headers.has("Authorization")) {
+      headers = headers.set("Accept", "text/csv");
+    }
+
+    return this.http.get(`${this.apiBaseUrl}/admin/reports/${path}`, {
+      headers,
+      ...(params ? { params: this.toParams(params) } : {}),
+      responseType: "blob",
+    });
   }
 
   getConsultantLeads(

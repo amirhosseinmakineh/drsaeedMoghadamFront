@@ -17,6 +17,7 @@ const iconPaths: Record<string, string> = {
   edit: "M4 17.5V21h3.5L18.8 9.7l-3.5-3.5L4 17.5zM17 4.5 19.5 7",
   trash: "M5 7h14m-2 0-.8 13H7.8L7 7m3 0V4h4v3m-2 4v6m-3-6 .4 6m5.6-6-.4 6",
   table: "M4 5h16v14H4V5zm0 5h16M9 5v14",
+  download: "M12 3v12m0 0 4-4m-4 4-4-4M5 21h14",
   users:
     "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm6 10H3c.5-4 2.8-6 6-6s5.5 2 6 6zm2-9a3 3 0 1 0 0-6m4 15c-.3-2.6-1.6-4.3-3.8-5",
   clipboard: "M8 4h8l1 2h2v16H5V6h2l1-2zm1 6h6m-6 4h6m-6 4h4",

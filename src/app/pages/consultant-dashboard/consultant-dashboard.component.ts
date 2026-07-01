@@ -62,6 +62,7 @@ interface LeadReportForm {
   reportDescription: string;
   patientCity: string;
   patientRegion: string;
+  businessName: string;
   attendanceProbabilityPercent: number | null | "";
 }
 
@@ -797,6 +798,15 @@ interface ConsultantDashboardLink {
               />
             </label>
           </div>
+          <label>
+            نام بیزینس / کلینیک
+            <input
+              [(ngModel)]="reportForm.businessName"
+              name="leadReportBusinessName"
+              maxlength="120"
+              placeholder="کلینیک/بیزینس نمونه"
+            />
+          </label>
           <label>
             درصد احتمال حضور
             <input
@@ -2365,6 +2375,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ),
       patientCity: this.reportForm.patientCity.trim(),
       patientRegion: this.reportForm.patientRegion.trim(),
+      ...(this.reportForm.businessName.trim()
+        ? { businessName: this.reportForm.businessName.trim() }
+        : {}),
       ...(attendanceProbabilityPercent === null
         ? {}
         : { attendanceProbabilityPercent }),
@@ -2422,6 +2435,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       reportDescription: "",
       patientCity: "",
       patientRegion: "",
+      businessName: "",
       attendanceProbabilityPercent: null,
     };
   }
@@ -3723,6 +3737,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return "شهر بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
     if (this.reportForm.patientRegion.trim().length > 80)
       return "منطقه بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
+    if (this.reportForm.businessName.trim().length > 120)
+      return "نام بیزینس نباید بیشتر از ۱۲۰ کاراکتر باشد";
 
     const rawAttendanceProbability =
       this.reportForm.attendanceProbabilityPercent;
