@@ -150,6 +150,16 @@ export class AuthService {
     });
   }
 
+  updateSecretaryProfile(isCompleteProfile = true): void {
+    const user = this.currentUser();
+    if (!user) return;
+
+    this.saveSession({
+      ...user,
+      isCompleteProfile,
+    });
+  }
+
   dashboardUrl(user: AuthUser | null = this.currentUser()): string {
     if (!user) return "/";
 
