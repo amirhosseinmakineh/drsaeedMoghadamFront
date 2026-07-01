@@ -1,13 +1,13 @@
 export const environment = {
-  production: true,
+  production: false,
   apiBaseUrl: "https://drsaeedback.drmoghadam.runflare.run/api",
   firebaseVapidKey: "",
-  firebase: {
-    apiKey: "",
-    authDomain: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: "",
+  firebase:   {
+    "apiKey": "",
+    "authDomain": "",
+    "projectId": "",
+    "storageBucket": "",
+    "messagingSenderId": "",
+    "appId": ""
   },
 };

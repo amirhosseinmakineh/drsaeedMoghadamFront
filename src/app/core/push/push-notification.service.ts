@@ -1,8 +1,12 @@
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-import { environment } from "../../../environments/environment";
 import { AuthService } from "../auth/auth.service";
 import { ConsultantDashboardService } from "../consultant/consultant-dashboard.service";
+import {
+  getFirebaseConfig,
+  getFirebaseVapidKey,
+  hasFirebaseClientConfig,
+} from "./firebase-environment";
 
 interface FirebaseAppModule {
   initializeApp: (config: Record<string, unknown>) => unknown;
@@ -28,12 +32,19 @@ interface FirebaseMessagePayload {
   data?: Record<string, string>;
 }
 
+export interface ConsultantPushMessageDetail {
+  title: string;
+  body: string;
+  data?: Record<string, string>;
+}
+
 @Injectable({ providedIn: "root" })
 export class PushNotificationService {
   private messaging: unknown | null = null;
   private messagingModule: FirebaseMessagingModule | null = null;
   private foregroundUnsubscribe: (() => void) | null = null;
   private lastRegisteredKey: string | null = null;
+  private tokenSyncPromise: Promise<void> | null = null;
 
   constructor(
     private consultantApi: ConsultantDashboardService,
@@ -46,6 +57,16 @@ export class PushNotificationService {
   }
 
   async syncForCurrentProfile(profileId?: number | null): Promise<void> {
+    if (this.tokenSyncPromise) return this.tokenSyncPromise;
+
+    this.tokenSyncPromise = this.syncToken(profileId).finally(() => {
+      this.tokenSyncPromise = null;
+    });
+
+    return this.tokenSyncPromise;
+  }
+
+  private async syncToken(profileId?: number | null): Promise<void> {
     const user = this.auth.user();
     const resolvedProfileId =
       profileId ?? user?.consultantProfileId ?? user?.profileId ?? null;
@@ -57,14 +78,22 @@ export class PushNotificationService {
     const registrationKey = `${resolvedProfileId}:${token}`;
     if (this.lastRegisteredKey === registrationKey) return;
 
-    this.consultantApi.registerPushToken({
-      profileId: resolvedProfileId,
-      deviceToken: token,
-    }).subscribe({
-      next: () => {
-        this.lastRegisteredKey = registrationKey;
-      },
-      error: (error) => console.warn("RegisterPushToken failed", error),
+    await new Promise<void>((resolve) => {
+      this.consultantApi
+        .registerPushToken({
+          profileId: resolvedProfileId,
+          deviceToken: token,
+        })
+        .subscribe({
+          next: () => {
+            this.lastRegisteredKey = registrationKey;
+            resolve();
+          },
+          error: (error) => {
+            console.warn("RegisterPushToken failed", error);
+            resolve();
+          },
+        });
     });
   }
 
@@ -74,7 +103,12 @@ export class PushNotificationService {
 
   async getCurrentFirebaseToken(): Promise<string | null> {
     if (!this.canUseNotifications()) return null;
-    if (!this.hasFirebaseConfig()) return null;
+    if (!hasFirebaseClientConfig()) {
+      console.warn(
+        "Firebase push is not configured. Set FIREBASE_* env vars before build.",
+      );
+      return null;
+    }
 
     const permission = await Notification.requestPermission();
     if (permission !== "granted") {
@@ -88,9 +122,12 @@ export class PushNotificationService {
     try {
       const registration = await navigator.serviceWorker.register(
         "/firebase-messaging-sw.js",
+        { scope: "/" },
       );
+      await registration.update().catch(() => undefined);
+
       const token = await messagingModule.getToken(this.messaging, {
-        vapidKey: environment.firebaseVapidKey,
+        vapidKey: getFirebaseVapidKey(),
         serviceWorkerRegistration: registration,
       });
       this.listenForForegroundMessages(messagingModule);
@@ -115,7 +152,9 @@ export class PushNotificationService {
       if (!(await messagingModule.isSupported())) return null;
       const app = appModule.getApps().length
         ? appModule.getApp()
-        : appModule.initializeApp(environment.firebase);
+        : appModule.initializeApp(
+            getFirebaseConfig() as unknown as Record<string, unknown>,
+          );
       this.messaging = messagingModule.getMessaging(app);
       this.messagingModule = messagingModule;
       return messagingModule;
@@ -133,22 +172,49 @@ export class PushNotificationService {
     this.foregroundUnsubscribe = messagingModule.onMessage(
       this.messaging,
       (payload) => {
-        const title = payload.notification?.title || "اعلان جدید";
-        const body = payload.notification?.body || this.bodyForData(payload.data);
+        const title = payload.notification?.title || this.titleForData(payload.data);
+        const body =
+          payload.notification?.body || this.bodyForData(payload.data);
+        const detail: ConsultantPushMessageDetail = {
+          title,
+          body,
+          data: payload.data,
+        };
+
         window.dispatchEvent(
-          new CustomEvent("consultant-push-message", {
-            detail: { title, body, data: payload.data },
-          }),
+          new CustomEvent("consultant-push-message", { detail }),
         );
+
         if (Notification.permission === "granted") {
-          const notification = new Notification(title, { body, data: payload.data });
-          notification.onclick = () => this.handleNotificationData(payload.data);
+          const notification = new Notification(title, {
+            body,
+            data: payload.data,
+            tag: this.notificationTag(payload.data),
+          });
+          notification.onclick = () => {
+            notification.close();
+            this.handleNotificationData(payload.data);
+          };
         }
       },
     );
   }
 
-  private handleNotificationData(data?: Record<string, string>): void {
+  private notificationTag(data?: Record<string, string>): string {
+    if (data?.["type"] === "realtime_lead" && data["leadAssignmentId"]) {
+      return `realtime-lead-${data["leadAssignmentId"]}`;
+    }
+    if (data?.["type"] === "offline_leads") return "offline-leads";
+    return "consultant-notification";
+  }
+
+  private titleForData(data?: Record<string, string>): string {
+    if (data?.["type"] === "offline_leads") return "لیدهای آفلاین";
+    if (data?.["type"] === "realtime_lead") return "لید لحظه‌ای جدید";
+    return "اعلان جدید";
+  }
+
+  handleNotificationData(data?: Record<string, string>): void {
     if (!data) return;
     if (data["type"] === "offline_leads") {
       this.router.navigate(["/dashboard/consultant"], {
@@ -159,7 +225,11 @@ export class PushNotificationService {
 
     if (data["type"] === "realtime_lead") {
       this.router.navigate(["/dashboard/consultant"], {
-        queryParams: { section: "leads", type: "realtime", leadAssignmentId: data["leadAssignmentId"] },
+        queryParams: {
+          section: "leads",
+          type: "realtime",
+          leadAssignmentId: data["leadAssignmentId"] ?? null,
+        },
       });
     }
   }
@@ -169,7 +239,7 @@ export class PushNotificationService {
       return `شما ${data["count"] ?? "چند"} لید آفلاین دارید.`;
     }
     if (data?.["type"] === "realtime_lead") {
-      return "شما یک لید جدید دارید و 3 دقیقه زمان دارید برای تماس.";
+      return "شما یک لید جدید دارید و ۳ دقیقه زمان دارید برای تماس.";
     }
     return "برای مشاهده جزئیات وارد داشبورد شوید.";
   }
@@ -179,16 +249,6 @@ export class PushNotificationService {
       typeof window !== "undefined" &&
       "Notification" in window &&
       "serviceWorker" in navigator
-    );
-  }
-
-  private hasFirebaseConfig(): boolean {
-    return Boolean(
-      environment.firebaseVapidKey?.trim() &&
-        environment.firebase?.apiKey?.trim() &&
-        environment.firebase?.projectId?.trim() &&
-        environment.firebase?.messagingSenderId?.trim() &&
-        environment.firebase?.appId?.trim(),
     );
   }
 }

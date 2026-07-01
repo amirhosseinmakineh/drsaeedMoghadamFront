@@ -9,7 +9,7 @@ import {
   computed,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
 import { Subscription, finalize } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
@@ -293,6 +293,11 @@ interface ConsultantDashboardLink {
                     {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده
                     دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
                   </p>
+                } @else if (isAvailable && !isOnline) {
+                  <p class="queue-warning info">
+                    حضور شما ثبت شده اما برای دریافت لید لحظه‌ای باید «آنلاین»
+                    شوید.
+                  </p>
                 }
               </section>
             }
@@ -412,6 +417,11 @@ interface ConsultantDashboardLink {
                   <p class="queue-warning">
                     {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده
                     دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
+                  </p>
+                } @else if (isAvailable && !isOnline) {
+                  <p class="queue-warning info">
+                    حضور شما ثبت شده اما برای دریافت لید لحظه‌ای باید «آنلاین»
+                    شوید.
                   </p>
                 }
               </section>
@@ -556,8 +566,12 @@ interface ConsultantDashboardLink {
                     @for (lead of leads; track leadId(lead)) {
                       <article
                         class="lead-card"
+                        [attr.id]="'lead-' + leadId(lead)"
                         [class.realtime]="leadType(lead) === 1"
                         [class.expired]="isLeadExpired(lead)"
+                        [class.highlighted]="
+                          highlightedLeadAssignmentId === leadId(lead)
+                        "
                       >
                         <header>
                           <div>
@@ -1329,6 +1343,10 @@ interface ConsultantDashboardLink {
         color: #92400e;
         font-weight: 950;
       }
+      .queue-warning.info {
+        background: color-mix(in srgb, var(--brand) 12%, var(--surface));
+        color: color-mix(in srgb, var(--brand) 72%, #3b2a16);
+      }
       .panel-heading {
         display: flex;
         align-items: flex-start;
@@ -1392,6 +1410,23 @@ interface ConsultantDashboardLink {
       }
       .lead-card.realtime {
         border-color: color-mix(in srgb, var(--brand) 44%, var(--line));
+      }
+      .lead-card.highlighted {
+        border-color: color-mix(in srgb, var(--brand) 70%, var(--line));
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--brand) 24%, transparent);
+        animation: lead-highlight-pulse 1.2s ease-in-out 3;
+      }
+      @keyframes lead-highlight-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 3px
+            color-mix(in srgb, var(--brand) 24%, transparent);
+        }
+        50% {
+          box-shadow: 0 0 0 6px
+            color-mix(in srgb, var(--brand) 36%, transparent);
+        }
       }
       .lead-card.expired {
         opacity: 0.72;
@@ -1777,6 +1812,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadPageSize = 10;
   leadTotalPages = 1;
   leadTotalCount = 0;
+  highlightedLeadAssignmentId: number | null = null;
 
   reportDialogOpen = false;
   reportSaving = false;
@@ -1832,10 +1868,32 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private dueConfirmationLoadSubscription: Subscription | null = null;
   private leadNotificationLoadSubscription: Subscription | null = null;
   private dashboardStatusSubscription: Subscription | null = null;
+  private routeQueryParamsSubscription: Subscription | null = null;
   private destroyed = false;
+  private pollIntervalMs = 30000;
+  private routeParamsInitialized = false;
   private readonly pushMessageListener = (event: Event): void => {
-    const detail = (event as CustomEvent<{ body?: string }>).detail;
-    if (detail?.body) this.showFeedback(detail.body, "success");
+    const detail = (
+      event as CustomEvent<{
+        title?: string;
+        body?: string;
+        data?: Record<string, string>;
+      }>
+    ).detail;
+    if (!detail) return;
+
+    const pushType = detail.data?.["type"];
+    if (pushType === "realtime_lead") {
+      this.handleRealtimeLeadPush(detail);
+      return;
+    }
+
+    if (pushType === "offline_leads") {
+      this.handleOfflineLeadsPush(detail);
+      return;
+    }
+
+    if (detail.body) this.showFeedback(detail.body, "success");
   };
 
   constructor(
@@ -1876,7 +1934,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.requestNotificationPermission();
     window.addEventListener("consultant-push-message", this.pushMessageListener);
     void this.pushNotifications.syncForCurrentProfile(this.profileId);
-    this.applyLeadRouteParams();
+    this.applyLeadRouteParams(this.route.snapshot.queryParamMap);
+    this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
+      (params) => {
+        this.applyLeadRouteParams(params);
+        if (!this.routeParamsInitialized) {
+          this.routeParamsInitialized = true;
+          return;
+        }
+        if (this.isProfileReady() && params.get("section") === "leads") {
+          this.loadLeads();
+        }
+      },
+    );
 
     if (this.isProfileReady()) {
       this.refreshDashboard();
@@ -1897,6 +1967,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.dueConfirmationLoadSubscription?.unsubscribe();
     this.leadNotificationLoadSubscription?.unsubscribe();
     this.dashboardStatusSubscription?.unsubscribe();
+    this.routeQueryParamsSubscription?.unsubscribe();
     window.removeEventListener(
       "consultant-push-message",
       this.pushMessageListener,
@@ -1919,9 +1990,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   canGoOnline(): boolean {
     if (!this.isAvailable || this.pendingOfflineCount > 0) return false;
-    return this.dashboardStatusLoaded
-      ? this.canGoOnlineFromStatus || !this.onlineStatusBlockReason
-      : true;
+    if (!this.dashboardStatusLoaded) return true;
+    if (this.onlineStatusBlockReason) return false;
+    return this.canGoOnlineFromStatus;
   }
 
   setSection(section: ConsultantDashboardSection): void {
@@ -2034,6 +2105,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             "success",
           );
           this.requestNotificationPermission();
+          void this.pushNotifications.syncForCurrentProfile(profileId);
+          this.configurePollTimer();
           this.refreshDashboard();
         },
         error: (error) =>
@@ -2083,6 +2156,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             "success",
           );
           this.requestNotificationPermission();
+          void this.pushNotifications.syncForCurrentProfile(profileId);
+          this.configurePollTimer();
           this.refreshDashboard();
         },
         error: (error) => {
@@ -2112,8 +2187,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.loadLeads();
   }
 
-  private applyLeadRouteParams(): void {
-    const params = this.route.snapshot.queryParamMap;
+  private applyLeadRouteParams(params: ParamMap): void {
     if (params.get("section") !== "leads" && !params.get("type")) return;
 
     this.activeSection = "leads";
@@ -2123,8 +2197,78 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.applyOfflineLeadReportFilter();
     } else if (type === "realtime") {
       this.leadTypeFilter = LEAD_TYPE.RealTime;
+      this.leadStateFilter = null;
     }
+
+    const leadAssignmentId = params.get("leadAssignmentId");
+    if (leadAssignmentId) {
+      const parsedId = Number(leadAssignmentId);
+      if (Number.isFinite(parsedId)) {
+        this.highlightedLeadAssignmentId = parsedId;
+      }
+    }
+
     this.leadPageNumber = 1;
+  }
+
+  private handleRealtimeLeadPush(detail: {
+    title?: string;
+    body?: string;
+    data?: Record<string, string>;
+  }): void {
+    this.activeSection = "leads";
+    this.leadTypeFilter = LEAD_TYPE.RealTime;
+    this.leadStateFilter = null;
+    this.leadPageNumber = 1;
+
+    const leadAssignmentId = detail.data?.["leadAssignmentId"];
+    if (leadAssignmentId) {
+      const parsedId = Number(leadAssignmentId);
+      if (Number.isFinite(parsedId)) {
+        this.highlightedLeadAssignmentId = parsedId;
+      }
+    }
+
+    this.loadLeads();
+    this.loadLeadNotifications();
+    this.configurePollTimer();
+    void this.pushNotifications.syncForCurrentProfile(this.currentProfileId());
+
+    this.showLeadNotification(
+      detail.title || "لید لحظه‌ای جدید",
+      detail.body || "لید جدید دریافت شد؛ مهلت تماس ۳ دقیقه است.",
+    );
+  }
+
+  private handleOfflineLeadsPush(detail: { body?: string }): void {
+    this.activeSection = "leads";
+    this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
+    this.applyOfflineLeadReportFilter();
+    this.leadPageNumber = 1;
+    this.loadLeads();
+    this.loadPendingOfflineLeads();
+    if (detail.body) this.showFeedback(detail.body, "success");
+  }
+
+  private scrollToHighlightedLead(): void {
+    const targetId = this.highlightedLeadAssignmentId;
+    if (!targetId) return;
+
+    const leadExists = this.leads.some((lead) => this.leadId(lead) === targetId);
+    if (!leadExists) return;
+
+    this.markViewDirty();
+    setTimeout(() => {
+      document
+        .getElementById(`lead-${targetId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => {
+        if (this.highlightedLeadAssignmentId === targetId) {
+          this.highlightedLeadAssignmentId = null;
+          this.markViewDirty();
+        }
+      }, 4000);
+    }, 50);
   }
 
   private applyOfflineLeadReportFilter(): void {
@@ -2872,12 +3016,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.profileId = status.profileId || this.profileId;
     this.isAvailable = status.isAvailable;
     this.isOnline = status.isOnline;
+    this.canGoOnlineFromStatus = status.canGoOnline;
     this.updatePendingOfflineCount(status.pendingOfflineLeadCount);
     this.currentScore = status.currentScore;
-    this.canGoOnlineFromStatus = status.canGoOnline;
     this.dashboardStatusLoaded = true;
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.applyConsultantStatusFrom(status.raw);
+    this.configurePollTimer();
   }
 
   private loadPendingOfflineLeads(): void {
@@ -2990,6 +3135,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.hydrateRealtimeTimers();
           this.notifyNewLeads(this.leads);
           this.expireDueRealtimeLeads();
+          this.scrollToHighlightedLead();
         },
         error: (error) => {
           if (requestId !== this.leadRequestId) return;
@@ -3063,16 +3209,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         }, 1000);
       }
 
-      if (!this.pollId) {
-        this.pollId = setInterval(() => {
-          if (!this.isProfileReady() || this.destroyed) return;
-          this.ngZone.run(() => {
-            this.loadLeads(true);
-            this.loadLeadNotifications();
-            this.loadPendingOfflineLeads();
-          });
-        }, 30000);
-      }
+      this.configurePollTimer();
 
       if (!this.autoAbsenceId) {
         this.autoAbsenceId = setInterval(() => {
@@ -3083,6 +3220,30 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     });
 
     this.runDailyAutoAbsenceIfDue();
+  }
+
+  private configurePollTimer(): void {
+    const desiredInterval =
+      this.isOnline && this.isProfileReady() ? 10000 : 30000;
+
+    if (this.pollId && desiredInterval === this.pollIntervalMs) return;
+
+    if (this.pollId) {
+      clearInterval(this.pollId);
+      this.pollId = null;
+    }
+
+    this.pollIntervalMs = desiredInterval;
+    this.ngZone.runOutsideAngular(() => {
+      this.pollId = setInterval(() => {
+        if (!this.isProfileReady() || this.destroyed) return;
+        this.ngZone.run(() => {
+          this.loadLeads(true);
+          this.loadLeadNotifications();
+          this.loadPendingOfflineLeads();
+        });
+      }, this.pollIntervalMs);
+    });
   }
 
   private hasActiveRealtimeTimers(): boolean {
@@ -3117,7 +3278,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .getLeads({
         profileId,
         leadAssignmentState: null,
-        leadAssignmentType: null,
+        leadAssignmentType: this.isOnline ? LEAD_TYPE.RealTime : null,
         pageNumber: 1,
         pageSize: 50,
       })
@@ -3135,9 +3296,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       if (!leadAssignmentId || this.notifiedLeadIds.has(leadAssignmentId))
         return;
 
+      if (
+        this.isOnline &&
+        this.leadType(lead) !== LEAD_TYPE.RealTime &&
+        this.leadType(lead) !== null
+      ) {
+        return;
+      }
+
       this.notifiedLeadIds.add(leadAssignmentId);
       changed = true;
       this.showNewLeadNotification(lead);
+
+      if (this.leadType(lead) === LEAD_TYPE.RealTime) {
+        this.highlightedLeadAssignmentId = leadAssignmentId;
+        if (this.activeSection !== "leads") {
+          this.activeSection = "leads";
+        }
+        this.scrollToHighlightedLead();
+      }
     });
 
     if (changed)
@@ -3410,14 +3587,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private updatePendingOfflineCount(count: number): void {
     this.pendingOfflineCount = Math.max(0, count);
-
-    if (this.pendingOfflineCount === 0) {
-      this.onlineStatusBlockReason = null;
-      this.canGoOnlineFromStatus = this.isAvailable;
-      return;
+    if (this.pendingOfflineCount > 0) {
+      this.canGoOnlineFromStatus = false;
     }
-
-    this.canGoOnlineFromStatus = false;
   }
 
   private selectedReservationDateTime(): Date | null {
@@ -3492,9 +3664,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             response.data,
           );
           if (status.isOnline === null) this.isOnline = false;
+          this.configurePollTimer();
         },
         error: () => {
           this.isOnline = false;
+          this.configurePollTimer();
         },
       });
   }

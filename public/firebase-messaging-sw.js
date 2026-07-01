@@ -1,8 +1,9 @@
 /* global importScripts, firebase, self, clients */
+importScripts("/firebase-config.js");
 importScripts("https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js");
 
-const firebaseConfig = {
+const firebaseConfig = self.__FIREBASE_CONFIG__ || {
   apiKey: "",
   authDomain: "",
   projectId: "",
@@ -33,6 +34,8 @@ if (hasFirebaseConfig && firebase?.messaging) {
       data,
       icon: "/1.png",
       badge: "/1.png",
+      tag: notificationTag(data),
+      renotify: true,
     };
 
     self.registration.showNotification(title, options);
@@ -57,9 +60,17 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
+function notificationTag(data) {
+  if (data.type === "realtime_lead" && data.leadAssignmentId) {
+    return `realtime-lead-${data.leadAssignmentId}`;
+  }
+  if (data.type === "offline_leads") return "offline-leads";
+  return "consultant-notification";
+}
+
 function notificationTitle(data) {
   if (data.type === "offline_leads") return "لیدهای آفلاین";
-  if (data.type === "realtime_lead") return "لید جدید";
+  if (data.type === "realtime_lead") return "لید لحظه‌ای جدید";
   return "اعلان جدید";
 }
 
@@ -68,7 +79,7 @@ function notificationBody(data) {
     return `شما ${data.count || "چند"} لید آفلاین دارید.`;
   }
   if (data.type === "realtime_lead") {
-    return "شما یک لید جدید دارید و 3 دقیقه زمان دارید برای تماس.";
+    return "شما یک لید جدید دارید و ۳ دقیقه زمان دارید برای تماس.";
   }
   return "برای مشاهده جزئیات وارد داشبورد شوید.";
 }

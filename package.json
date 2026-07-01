@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "build": "npm run optimize:images && ng build --configuration production",
+    "build": "npm run optimize:images && node scripts/generate-firebase-config.mjs && ng build --configuration production",
+    "generate:firebase": "node scripts/generate-firebase-config.mjs",
     "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
     "optimize:images": "python3 scripts/optimize-images.py"
