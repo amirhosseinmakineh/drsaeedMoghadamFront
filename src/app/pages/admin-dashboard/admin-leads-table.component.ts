@@ -16,6 +16,10 @@ import {
   LeadFilters,
 } from "../../core/admin/admin-dashboard.service";
 import {
+  downloadBlob,
+  reportFileName,
+} from "../../utils/file-download.util";
+import {
   TableColumn,
   TableComponent,
 } from "../../shared/base/table/table.component";
@@ -44,6 +48,24 @@ type LeadTableMode = "system" | "consultant";
           بروزرسانی
         </button>
       </header>
+
+      @if (mode === "system") {
+        <div class="export-bar">
+          <button
+            class="export-action"
+            type="button"
+            [disabled]="exporting"
+            (click)="exportLeadsReport()"
+          >
+            {{
+              exporting
+                ? "در حال آماده‌سازی..."
+                : "دانلود گزارش اکسل لیدها"
+            }}
+          </button>
+          <p>شامل وضعیت اساین و اطلاعات مشاور</p>
+        </div>
+      }
 
       <form class="filter-grid" (ngSubmit)="applyFilters()">
         <label>
@@ -186,6 +208,35 @@ type LeadTableMode = "system" | "consultant";
         background: color-mix(in srgb, var(--danger) 14%, transparent);
         color: #fecaca;
       }
+      .export-bar {
+        display: grid;
+        gap: 8px;
+      }
+      .export-bar p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 900;
+        line-height: 1.7;
+      }
+      .export-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        min-height: 48px;
+        border: 1px solid color-mix(in srgb, var(--brand) 40%, var(--line));
+        border-radius: 18px;
+        padding: 12px 18px;
+        background: color-mix(in srgb, var(--brand) 12%, var(--surface-muted));
+        color: var(--text);
+        font: inherit;
+        font-weight: 950;
+      }
+      .export-action:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
       @media (max-width: 760px) {
         .admin-panel {
           padding: 14px;
@@ -207,6 +258,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
 
   items: LeadAssignmentItem[] = [];
   loading = false;
+  exporting = false;
   feedback = "";
   totalCount = 0;
   totalPages = 1;
@@ -269,6 +321,31 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   changePage(page: number): void {
     this.filters.pageNumber = page;
     this.load();
+  }
+
+  exportLeadsReport(): void {
+    if (this.exporting || this.mode !== "system") return;
+
+    this.exporting = true;
+    this.feedback = "";
+    this.cdr.markForCheck();
+
+    this.adminApi
+      .exportLeadsReport()
+      .pipe(
+        finalize(() => {
+          this.exporting = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (blob) => downloadBlob(blob, reportFileName("leads-report")),
+        error: () => {
+          this.feedback =
+            "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید.";
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   load(): void {

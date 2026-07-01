@@ -31,6 +31,10 @@ import {
   TableComponent,
 } from "../../shared/base/table/table.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
+import {
+  downloadBlob,
+  reportFileName,
+} from "../../utils/file-download.util";
 
 type DashboardSection =
   | "overview"
@@ -198,6 +202,19 @@ interface ScoreFormModel {
                     <span>کاربران</span>
                     <h2>مدیریت کاربران سیستم</h2>
                   </div>
+                  <button
+                    class="export-action"
+                    type="button"
+                    [disabled]="exportingUsers"
+                    (click)="exportUsersReport()"
+                  >
+                    <app-fa-icon name="download"></app-fa-icon>
+                    <span>{{
+                      exportingUsers
+                        ? "در حال آماده‌سازی..."
+                        : "دانلود گزارش اکسل کاربران"
+                    }}</span>
+                  </button>
                 </header>
 
                 <form
@@ -280,12 +297,32 @@ interface ScoreFormModel {
 
             @if (activeSection === "consultants") {
               <section class="admin-panel">
-                <header class="panel-heading">
+                <header class="panel-heading consultants-heading">
                   <div>
                     <span>مشاوران</span>
                     <h2>مدیریت مشاوران</h2>
                   </div>
                 </header>
+
+                <div class="export-hero">
+                  <button
+                    class="export-action primary-export"
+                    type="button"
+                    title="شامل خلاصه عملکرد و جزئیات تماس هر مشاور با لیدها"
+                    [disabled]="exportingConsultants"
+                    (click)="exportConsultantsReport()"
+                  >
+                    <app-fa-icon name="download"></app-fa-icon>
+                    <span>{{
+                      exportingConsultants
+                        ? "در حال آماده‌سازی..."
+                        : "دانلود گزارش کامل مشاوران"
+                    }}</span>
+                  </button>
+                  <p>
+                    شامل خلاصه عملکرد و جزئیات تماس هر مشاور با لیدها
+                  </p>
+                </div>
 
                 <form class="filter-grid" (ngSubmit)="applyConsultantFilters()">
                   <label
@@ -896,6 +933,47 @@ interface ScoreFormModel {
         opacity: 0.6;
         cursor: not-allowed;
       }
+      .export-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 48px;
+        border: 1px solid color-mix(in srgb, var(--brand) 40%, var(--line));
+        border-radius: 18px;
+        padding: 12px 18px;
+        background: color-mix(in srgb, var(--brand) 12%, var(--surface-muted));
+        color: var(--text);
+        font: inherit;
+        font-weight: 950;
+        white-space: nowrap;
+      }
+      .export-action:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .export-hero {
+        display: grid;
+        gap: 8px;
+        padding: 16px;
+        border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line));
+        border-radius: 22px;
+        background: color-mix(in srgb, var(--brand) 8%, transparent);
+      }
+      .export-hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 900;
+        line-height: 1.7;
+      }
+      .primary-export {
+        width: fit-content;
+        min-height: 54px;
+        border: 0;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        color: #1b1712;
+      }
       .delete-copy {
         margin: 0;
         color: var(--muted);
@@ -1142,6 +1220,8 @@ export class DashboardComponent implements OnInit {
 
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
+  exportingUsers = false;
+  exportingConsultants = false;
   private usersLoadRequestId = 0;
   private consultantsLoadRequestId = 0;
 
@@ -1217,6 +1297,59 @@ export class DashboardComponent implements OnInit {
 
   isAdmin(): boolean {
     return this.user()?.role === "admin";
+  }
+
+  exportUsersReport(): void {
+    if (this.exportingUsers) return;
+
+    this.exportingUsers = true;
+    this.clearFeedback();
+    this.markDirty();
+
+    this.adminApi
+      .exportUsersReport()
+      .pipe(
+        finalize(() => {
+          this.exportingUsers = false;
+          this.markDirty();
+        }),
+      )
+      .subscribe({
+        next: (blob) => {
+          downloadBlob(blob, reportFileName("users-report"));
+          this.showFeedback("گزارش کاربران دانلود شد", "success");
+        },
+        error: () =>
+          this.showFeedback(
+            "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید.",
+            "error",
+          ),
+      });
+  }
+
+  exportConsultantsReport(): void {
+    if (this.exportingConsultants) return;
+
+    this.exportingConsultants = true;
+    this.clearFeedback();
+    this.markDirty();
+
+    this.adminApi
+      .exportConsultantsReport()
+      .pipe(
+        finalize(() => {
+          this.exportingConsultants = false;
+          this.markDirty();
+        }),
+      )
+      .subscribe({
+        next: (blob) => {
+          downloadBlob(blob, reportFileName("consultants-report"));
+          this.showFeedback("گزارش مشاوران دانلود شد", "success");
+        },
+        error: () =>
+          this.showFeedback("خطا در دریافت گزارش مشاوران.", "error"),
+      });
   }
 
   setSection(section: DashboardSection): void {

@@ -11,6 +11,7 @@ import {
   LeadCallReportExportFilters,
 } from "../../core/admin/admin-dashboard.service";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import { downloadBlob } from "../../utils/file-download.util";
 
 @Component({
   selector: "app-admin-lead-call-reports",
@@ -55,7 +56,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
           ></app-base-datepicker>
         </label>
         <button class="primary-filter" type="submit" [disabled]="downloading || validateFilters() !== null">
-          {{ downloading ? "در حال دانلود..." : "دانلود Excel/CSV" }}
+          {{ downloading ? "در حال آماده‌سازی..." : "دانلود گزارش تماس" }}
         </button>
       </form>
 
@@ -234,26 +235,15 @@ export class AdminLeadCallReportsComponent {
       )
       .subscribe({
         next: (blob) => {
-          this.saveBlob(blob, this.fileName(filters));
+          downloadBlob(blob, this.fileName(filters));
           this.showFeedback("فایل گزارش تماس لیدها دانلود شد", "success");
         },
-        error: (error) =>
+        error: () =>
           this.showFeedback(
-            error instanceof Error && error.message
-              ? error.message
-              : "دانلود گزارش انجام نشد",
+            "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید.",
             "error",
           ),
       });
-  }
-
-  private saveBlob(blob: Blob, fileName: string): void {
-    const url = window.URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = fileName;
-    anchor.click();
-    window.URL.revokeObjectURL(url);
   }
 
   private fileName(filters: LeadCallReportExportFilters): string {
