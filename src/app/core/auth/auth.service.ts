@@ -160,10 +160,30 @@ export class AuthService {
     });
   }
 
+  isRoleProfileComplete(user: AuthUser | null = this.currentUser()): boolean {
+    if (!user) return false;
+
+    if (user.role === "consultant") {
+      const profileId = user.consultantProfileId ?? user.profileId;
+      return Boolean(profileId) && user.isCompleteProfile === true;
+    }
+
+    if (user.role === "secretary") {
+      return Boolean(user.userId) && user.isCompleteProfile === true;
+    }
+
+    return true;
+  }
+
   dashboardUrl(user: AuthUser | null = this.currentUser()): string {
     if (!user) return "/";
 
-    return `/dashboard/${user.role}`;
+    const base = `/dashboard/${user.role}`;
+    if (!this.isRoleProfileComplete(user) && user.role === "consultant") {
+      return `${base}?section=profile`;
+    }
+
+    return base;
   }
 
   authToken(): string | null {
@@ -488,6 +508,12 @@ export class AuthService {
 
       const tokenUser = this.userFromToken(session.token, null);
 
+      const isCompleteProfile =
+        session.user.isCompleteProfile === true ||
+        tokenUser.isCompleteProfile === true
+          ? true
+          : (tokenUser.isCompleteProfile ?? session.user.isCompleteProfile);
+
       return {
         ...tokenUser,
         ...session.user,
@@ -495,13 +521,12 @@ export class AuthService {
         lastName: tokenUser.lastName || session.user.lastName,
         phoneNumber: tokenUser.phoneNumber || session.user.phoneNumber,
         userId: tokenUser.userId || session.user.userId,
-        profileId: session.user.profileId ?? tokenUser.profileId,
+        profileId: tokenUser.profileId ?? session.user.profileId,
         consultantProfileId:
-          session.user.consultantProfileId ?? tokenUser.consultantProfileId,
-        isCompleteProfile:
-          session.user.isCompleteProfile ?? tokenUser.isCompleteProfile,
-        roleName: session.user.roleName || tokenUser.roleName,
-        role: session.user.role || tokenUser.role,
+          tokenUser.consultantProfileId ?? session.user.consultantProfileId,
+        isCompleteProfile,
+        roleName: tokenUser.roleName || session.user.roleName,
+        role: tokenUser.role,
         token: session.token,
       };
     } catch {

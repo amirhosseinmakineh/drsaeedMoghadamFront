@@ -488,7 +488,11 @@ interface ScoreFormModel {
             </label>
             <label>
               نقش
-              <select [(ngModel)]="userForm.roleName" name="dialogRole">
+              <select
+                [(ngModel)]="userForm.roleName"
+                name="dialogRole"
+                (ngModelChange)="onUserRoleChange($event)"
+              >
                 <option value="Admin">ادمین</option>
                 <option value="Consultant">مشاور</option>
                 <option value="Secretary">منشی</option>
@@ -1204,6 +1208,7 @@ export class DashboardComponent implements OnInit {
   userDialogOpen = false;
   userDialogMode: UserDialogMode = "add";
   userSaving = false;
+  userFormOriginalRole = "";
   userForm: UserFormModel = this.emptyUserForm();
   selectedUserBirthDate?: Date;
   readonly birthDatePickerLabel = { fa: "تاریخ تولد", en: "Birth date" };
@@ -1436,6 +1441,7 @@ export class DashboardComponent implements OnInit {
   openAddUserDialog(): void {
     this.userDialogMode = "add";
     this.userForm = this.emptyUserForm();
+    this.userFormOriginalRole = "";
     this.selectedUserBirthDate = undefined;
     this.userDialogOpen = true;
     this.markDirty();
@@ -1444,6 +1450,8 @@ export class DashboardComponent implements OnInit {
   openEditUserDialog(user: AdminUser): void {
     this.userDialogMode = "edit";
     this.selectedUserBirthDate = undefined;
+    const roleName = user.roleName || "NormalUser";
+    this.userFormOriginalRole = roleName;
     this.userForm = {
       id: user.id,
       firstName: user.firstName ?? "",
@@ -1455,10 +1463,20 @@ export class DashboardComponent implements OnInit {
       gender: Number(user.gender || 1),
       birthDate: "",
       isActive: Boolean(user.isActive),
-      roleName: user.roleName || "NormalUser",
+      roleName,
     };
     this.userDialogOpen = true;
     this.markDirty();
+  }
+
+  onUserRoleChange(roleName: string): void {
+    if (
+      this.userDialogMode === "edit" &&
+      roleName !== this.userFormOriginalRole &&
+      ["Consultant", "Secretary"].includes(roleName)
+    ) {
+      this.userForm.isCompleteProfile = false;
+    }
   }
 
   closeUserDialog(): void {
@@ -1765,14 +1783,22 @@ export class DashboardComponent implements OnInit {
   }
 
   private buildUserPayload(): SaveUserRequest {
+    const roleName = this.userForm.roleName;
+    const roleChanged =
+      this.userDialogMode === "edit" && roleName !== this.userFormOriginalRole;
+    const requiresProfileCompletion =
+      roleChanged && ["Consultant", "Secretary"].includes(roleName);
+
     const payload: SaveUserRequest = {
       firstName: this.userForm.firstName.trim(),
       lastName: this.userForm.lastName.trim(),
       phoneNumber: this.userForm.phoneNumber.trim(),
-      isCompleteProfile: Boolean(this.userForm.isCompleteProfile),
+      isCompleteProfile: requiresProfileCompletion
+        ? false
+        : Boolean(this.userForm.isCompleteProfile),
       avatarImageName: this.userForm.avatarImageName?.trim() || null,
       gender: Number(this.userForm.gender),
-      roleName: this.userForm.roleName,
+      roleName,
     };
 
     if (this.userDialogMode === "add") {

@@ -685,9 +685,7 @@ export class SecretaryDashboardComponent implements OnInit {
   }
 
   isProfileReady(): boolean {
-    const user = this.user();
-    if (!user?.userId) return false;
-    return user.isCompleteProfile !== false;
+    return this.auth.isRoleProfileComplete(this.user());
   }
 
   setSection(section: SecretaryDashboardSection): void {

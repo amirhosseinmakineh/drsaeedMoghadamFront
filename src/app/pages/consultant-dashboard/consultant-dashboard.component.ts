@@ -205,7 +205,7 @@ interface ConsultantDashboardLink {
             </p>
           }
 
-          @if (activeSection === "overview") {
+          @if (activeSection === "overview" && isProfileReady()) {
             <section class="consultant-overview">
               @if (!isProfileReady()) {
                 <button type="button" (click)="setSection('profile')">
@@ -317,7 +317,7 @@ interface ConsultantDashboardLink {
             }
           }
 
-          @if (activeSection === "profile") {
+          @if (activeSection === "profile" || !isProfileReady()) {
             @if (!isProfileReady()) {
               <section class="profile-lock-card">
                 <span class="lock-icon"
@@ -442,7 +442,7 @@ interface ConsultantDashboardLink {
             }
           }
 
-          @if (activeSection === "leads") {
+          @if (activeSection === "leads" && isProfileReady()) {
             @if (!isProfileReady()) {
               <section class="consultant-panel locked-panel">
                 <span class="lock-icon"
@@ -673,7 +673,7 @@ interface ConsultantDashboardLink {
             }
           }
 
-          @if (activeSection === "reservations") {
+          @if (activeSection === "reservations" && isProfileReady()) {
             @if (!isProfileReady()) {
               <section class="consultant-panel locked-panel">
                 <span class="lock-icon"
@@ -1974,7 +1974,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   get visibleDashboardLinks(): ConsultantDashboardLink[] {
     if (!this.isProfileReady()) {
-      return this.dashboardLinks.filter((item) => item.id !== "reservations");
+      return [];
     }
 
     return this.dashboardLinks.filter((item) => item.id !== "profile");
@@ -2049,10 +2049,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isProfileReady(): boolean {
-    const user = this.user();
-    const profileId = this.currentProfileId();
-    if (!profileId) return false;
-    return user?.isCompleteProfile !== false;
+    return this.auth.isRoleProfileComplete(this.user());
   }
 
   canGoOnline(): boolean {
@@ -2065,6 +2062,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   setSection(section: ConsultantDashboardSection): void {
     if (section === "profile" && this.isProfileReady()) {
       this.activeSection = "overview";
+      this.markViewDirty();
+      return;
+    }
+
+    if (
+      (section === "overview" ||
+        section === "leads" ||
+        section === "reservations") &&
+      !this.isProfileReady()
+    ) {
+      this.activeSection = "profile";
       this.markViewDirty();
       return;
     }
@@ -2127,11 +2135,27 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.refreshDashboard();
           this.startTimers();
         },
-        error: (error) =>
+        error: (error) => {
+          const message = this.errorMessage(error, "");
+          if (this.isAlreadyCompleteProfileError(message)) {
+            const profileId = this.currentProfileId();
+            if (profileId) {
+              this.profileId = profileId;
+              this.auth.updateConsultantProfile(profileId, true);
+              void this.pushNotifications.syncForCurrentProfile(profileId);
+              this.showFeedback("پروفایل مشاور قبلاً تکمیل شده است", "success");
+              this.activeSection = "overview";
+              this.refreshDashboard();
+              this.startTimers();
+              return;
+            }
+          }
+
           this.showFeedback(
             this.errorMessage(error, "تکمیل پروفایل انجام نشد"),
             "error",
-          ),
+          );
+        },
       });
   }
 
@@ -2370,7 +2394,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private applyLeadRouteParams(params: ParamMap): void {
+    if (params.get("section") === "profile" && !this.isProfileReady()) {
+      this.activeSection = "profile";
+      return;
+    }
+
     if (params.get("section") !== "leads" && !params.get("type")) return;
+    if (!this.isProfileReady()) return;
 
     this.activeSection = "leads";
     const type = params.get("type");
@@ -4424,6 +4454,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private markViewDirty(): void {
     if (this.destroyed) return;
     this.cdr.markForCheck();
+  }
+
+  private isAlreadyCompleteProfileError(message: string): boolean {
+    const normalized = message.trim().toLowerCase();
+    if (!normalized) return false;
+
+    const markers = [
+      "already",
+      "complete",
+      "completed",
+      "تکمیل شده",
+      "قبلا",
+      "قبلاً",
+      "از قبل",
+      "پروفایل کامل",
+      "کامل است",
+    ];
+
+    return markers.some((marker) => normalized.includes(marker));
   }
 
   private errorMessage(error: unknown, fallback: string): string {
