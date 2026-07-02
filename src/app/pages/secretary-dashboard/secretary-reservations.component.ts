@@ -5,17 +5,29 @@ import {
   Component,
   Input,
   OnChanges,
+  OnDestroy,
   OnInit,
   SimpleChanges,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { finalize } from "rxjs";
+import { Subscription, finalize, forkJoin, map } from "rxjs";
+import { AuthService } from "../../core/auth/auth.service";
+import {
+  AttendanceConfirmationStatus,
+  attendanceScoreLabel,
+  attendanceStatusPresentation,
+  canSecretaryReviewAttendance,
+  consultantAttendanceClaimLabel,
+  readAttendanceStatus,
+} from "../../core/reservation/reservation-attendance";
 import {
   CompletePatientProfileRequest,
   SecretaryReservation,
+  SecretaryDashboardService,
 } from "../../core/secretary/secretary-dashboard.service";
-import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
+
+export type SecretaryReservationTab = "queue" | "all" | "completed";
 
 @Component({
   selector: "app-secretary-reservations",
@@ -27,7 +39,7 @@ import { ToastService } from "../../core/toast/toast.service";
       <header class="panel-heading">
         <div>
           <span>رزروها</span>
-          <h2>لیست رزروهای کلینیک</h2>
+          <h2>مدیریت رزرو و بررسی حضور</h2>
         </div>
         <button
           class="secondary-action compact"
@@ -39,32 +51,74 @@ import { ToastService } from "../../core/toast/toast.service";
         </button>
       </header>
 
-      <div class="filters">
-        <label>
-          وضعیت تایید حضور
-          <select
-            [(ngModel)]="statusFilter"
-            name="secretaryReservationStatus"
-            (ngModelChange)="load()"
+      <nav class="tab-nav" aria-label="تب‌های رزرو منشی">
+        <button
+          type="button"
+          [class.active]="activeTab === 'queue'"
+          (click)="setTab('queue')"
+        >
+          صف بررسی
+        </button>
+        <button
+          type="button"
+          [class.active]="activeTab === 'all'"
+          (click)="setTab('all')"
+        >
+          همه
+        </button>
+        <button
+          type="button"
+          [class.active]="activeTab === 'completed'"
+          (click)="setTab('completed')"
+        >
+          انجام‌شده
+        </button>
+      </nav>
+
+      @if (activeTab === "all") {
+        <div class="filters">
+          <label>
+            جستجو
+            <input
+              [(ngModel)]="searchText"
+              name="secretaryReservationSearch"
+              placeholder="نام، موبایل یا مشاور"
+              (keyup.enter)="applySearch()"
+            />
+          </label>
+          <label>
+            وضعیت
+            <select
+              [(ngModel)]="statusFilter"
+              name="secretaryReservationStatus"
+              (ngModelChange)="load()"
+            >
+              <option [ngValue]="null">همه</option>
+              <option [ngValue]="1">منتظر اعلام مشاور</option>
+              <option [ngValue]="2">مشاور: بیمار آمده</option>
+              <option [ngValue]="3">مشاور: بیمار نیامده</option>
+              <option [ngValue]="4">تایید نهایی منشی</option>
+              <option [ngValue]="5">رد نهایی منشی</option>
+            </select>
+          </label>
+          <button
+            class="secondary-action compact"
+            type="button"
+            (click)="applySearch()"
           >
-            <option [ngValue]="null">همه</option>
-            <option [ngValue]="1">منتظر اعلام مشاور</option>
-            <option [ngValue]="2">مشاور: بیمار آمده</option>
-            <option [ngValue]="3">مشاور: بیمار نیامده</option>
-            <option [ngValue]="4">تایید نهایی منشی</option>
-            <option [ngValue]="5">رد نهایی منشی</option>
-          </select>
-        </label>
-        <label class="checkbox-field">
-          <input
-            type="checkbox"
-            [(ngModel)]="includeCanceled"
-            name="secretaryIncludeCanceled"
-            (ngModelChange)="load()"
-          />
-          نمایش لغوشده‌ها
-        </label>
-      </div>
+            اعمال فیلتر
+          </button>
+          <label class="checkbox-field">
+            <input
+              type="checkbox"
+              [(ngModel)]="includeCanceled"
+              name="secretaryIncludeCanceled"
+              (ngModelChange)="load()"
+            />
+            نمایش لغوشده‌ها
+          </label>
+        </div>
+      }
 
       @if (feedback) {
         <p
@@ -82,55 +136,45 @@ import { ToastService } from "../../core/toast/toast.service";
           <p>در حال دریافت رزروها...</p>
         </div>
       } @else if (!items.length) {
-        <p class="empty-copy">رزروی برای نمایش وجود ندارد.</p>
+        <p class="empty-copy">{{ emptyCopy() }}</p>
       } @else {
         <div class="reservation-table">
           @for (item of items; track reservationId(item)) {
             <article>
               <header>
                 <div>
-                  <strong>{{
-                    value(item.patientName, item.PatientName, "بیمار بدون نام")
-                  }}</strong>
+                  <strong>{{ patientName(item) }}</strong>
                   <small
-                    >{{
-                      value(
-                        item.patientPhoneNumber,
-                        item.PatientPhoneNumber,
-                        "-"
-                      )
-                    }}
-                    -
-                    {{
-                      value(item.patientCity, item.PatientCity, "شهر ثبت نشده")
-                    }}</small
+                    >{{ patientPhone(item) }} - {{ patientCity(item) }}</small
                   >
                 </div>
-                <b [class]="statusBadge(status(item))">{{
-                  statusLabel(status(item))
-                }}</b>
+                <b [class]="statusBadge(item)">{{ statusLabel(item) }}</b>
               </header>
               <dl>
                 <div>
                   <dt>مشاور</dt>
-                  <dd>
-                    {{
-                      value(item.consultantFullName, item.ConsultantFullName, "-")
-                    }}
-                  </dd>
+                  <dd>{{ consultantName(item) }}</dd>
                 </div>
                 <div>
                   <dt>زمان رزرو</dt>
-                  <dd>
-                    {{
-                      formatDate(value(item.reservationAt, item.ReservationAt, ""))
-                    }}
-                  </dd>
+                  <dd>{{ formatDate(reservationAt(item)) }}</dd>
                 </div>
                 <div>
                   <dt>احتمال حضور</dt>
                   <dd>{{ probability(item) }}٪</dd>
                 </div>
+                @if (activeTab !== "all") {
+                  <div>
+                    <dt>اظهار مشاور</dt>
+                    <dd>{{ consultantClaim(item) }}</dd>
+                  </div>
+                }
+                @if (activeTab === "completed") {
+                  <div>
+                    <dt>امتیاز</dt>
+                    <dd [class]="scoreClass(item)">{{ scoreText(item) }}</dd>
+                  </div>
+                }
                 <div>
                   <dt>پرونده بیمار</dt>
                   <dd>
@@ -142,8 +186,20 @@ import { ToastService } from "../../core/toast/toast.service";
                   </dd>
                 </div>
               </dl>
-              @if (requiresPatientProfile(item)) {
-                <div class="dialog-actions">
+
+              @if (canReview(item)) {
+                <label>
+                  یادداشت منشی
+                  <textarea
+                    [(ngModel)]="notes[reservationId(item) || 0]"
+                    [name]="'secretaryNote' + reservationId(item)"
+                    rows="2"
+                  ></textarea>
+                </label>
+              }
+
+              <div class="dialog-actions">
+                @if (requiresPatientProfile(item)) {
                   <button
                     class="secondary-action compact"
                     type="button"
@@ -151,8 +207,26 @@ import { ToastService } from "../../core/toast/toast.service";
                   >
                     تکمیل پرونده
                   </button>
-                </div>
-              }
+                }
+                @if (canReview(item)) {
+                  <button
+                    class="primary-action compact"
+                    type="button"
+                    [disabled]="savingId === reservationId(item)"
+                    (click)="review(item, true)"
+                  >
+                    تایید ادعای مشاور (+۱۰)
+                  </button>
+                  <button
+                    class="secondary-action compact danger"
+                    type="button"
+                    [disabled]="savingId === reservationId(item)"
+                    (click)="review(item, false)"
+                  >
+                    رد ادعای مشاور (-۱۰)
+                  </button>
+                }
+              </div>
             </article>
           }
         </div>
@@ -281,9 +355,7 @@ import { ToastService } from "../../core/toast/toast.service";
               type="submit"
               [disabled]="profileSaving"
             >
-              {{
-                profileSaving ? "در حال ثبت..." : "ثبت پرونده"
-              }}
+              {{ profileSaving ? "در حال ثبت..." : "ثبت پرونده" }}
             </button>
           </div>
         </form>
@@ -319,9 +391,30 @@ import { ToastService } from "../../core/toast/toast.service";
         margin: 0;
         font-size: 1.35rem;
       }
+      .tab-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tab-nav button {
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 14px;
+        background: var(--surface-muted);
+        color: var(--text);
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+      }
+      .tab-nav button.active {
+        border-color: color-mix(in srgb, var(--brand) 40%, var(--line));
+        background: color-mix(in srgb, var(--brand) 16%, transparent);
+        color: var(--brand);
+      }
       .filters {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto;
         gap: 12px;
         align-items: end;
       }
@@ -542,38 +635,75 @@ import { ToastService } from "../../core/toast/toast.service";
     `,
   ],
 })
-export class SecretaryReservationsComponent implements OnInit, OnChanges {
+export class SecretaryReservationsComponent
+  implements OnInit, OnChanges, OnDestroy
+{
   @Input() profileReady = false;
+  @Input() initialTab: SecretaryReservationTab = "queue";
 
+  activeTab: SecretaryReservationTab = "queue";
   items: SecretaryReservation[] = [];
+  notes: Record<number, string> = {};
   profileDialogOpen = false;
   profileSaving = false;
   selectedProfileReservation: SecretaryReservation | null = null;
   profileForm = this.emptyProfileForm();
   loading = false;
+  savingId: number | null = null;
   feedback = "";
   feedbackType: "success" | "error" = "success";
   statusFilter: number | null = null;
+  searchText = "";
   includeCanceled = false;
   pageNumber = 1;
   pageSize = 20;
   totalPages = 1;
+
   private loadRequestId = 0;
+  private pollId: ReturnType<typeof setInterval> | null = null;
+  private loadSubscription: Subscription | null = null;
 
   constructor(
     private secretaryApi: SecretaryDashboardService,
+    private auth: AuthService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    if (this.profileReady) this.load();
+    this.activeTab = this.initialTab;
+    if (this.profileReady) {
+      this.load();
+      this.startPolling();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes["initialTab"]?.currentValue) {
+      this.activeTab = changes["initialTab"].currentValue;
+    }
     if (changes["profileReady"]?.currentValue === true) {
       this.load();
+      this.startPolling();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
+    this.loadSubscription?.unsubscribe();
+  }
+
+  setTab(tab: SecretaryReservationTab): void {
+    if (this.activeTab === tab) return;
+    this.activeTab = tab;
+    this.pageNumber = 1;
+    this.load();
+    this.startPolling();
+  }
+
+  applySearch(): void {
+    this.pageNumber = 1;
+    this.load();
   }
 
   load(): void {
@@ -583,12 +713,93 @@ export class SecretaryReservationsComponent implements OnInit, OnChanges {
     this.loading = true;
     this.feedback = "";
     this.markDirty();
-    this.secretaryApi
+    this.loadSubscription?.unsubscribe();
+
+    if (this.activeTab === "queue") {
+      this.loadSubscription = this.secretaryApi
+        .getAttendanceReviews(this.pageNumber, this.pageSize)
+        .pipe(
+          finalize(() => {
+            if (requestId === this.loadRequestId) {
+              this.loading = false;
+              this.markDirty();
+            }
+          }),
+        )
+        .subscribe({
+          next: (response) => {
+            if (requestId !== this.loadRequestId) return;
+            this.items = response.items ?? [];
+            this.pageNumber = response.pageNumber;
+            this.totalPages = response.totalPages;
+            this.markDirty();
+          },
+          error: (error) => this.handleLoadError(requestId, error),
+        });
+      return;
+    }
+
+    if (this.activeTab === "completed") {
+      this.loadSubscription = forkJoin({
+        approved: this.secretaryApi.getReservations({
+          attendanceConfirmationStatus:
+            AttendanceConfirmationStatus.SecretaryApproved,
+          includeCanceled: false,
+          pageNumber: this.pageNumber,
+          pageSize: this.pageSize,
+        }),
+        rejected: this.secretaryApi.getReservations({
+          attendanceConfirmationStatus:
+            AttendanceConfirmationStatus.SecretaryRejected,
+          includeCanceled: false,
+          pageNumber: this.pageNumber,
+          pageSize: this.pageSize,
+        }),
+      })
+        .pipe(
+          map(({ approved, rejected }) => {
+            const merged = [...(approved.items ?? []), ...(rejected.items ?? [])]
+              .sort(
+                (left, right) =>
+                  new Date(this.reservationAt(right)).getTime() -
+                  new Date(this.reservationAt(left)).getTime(),
+              );
+            const totalCount =
+              (approved.totalCount ?? 0) + (rejected.totalCount ?? 0);
+            const totalPages = Math.max(
+              approved.totalPages ?? 1,
+              rejected.totalPages ?? 1,
+              Math.ceil(totalCount / this.pageSize),
+            );
+            return { items: merged, pageNumber: this.pageNumber, totalPages };
+          }),
+          finalize(() => {
+            if (requestId === this.loadRequestId) {
+              this.loading = false;
+              this.markDirty();
+            }
+          }),
+        )
+        .subscribe({
+          next: (response) => {
+            if (requestId !== this.loadRequestId) return;
+            this.items = response.items;
+            this.pageNumber = response.pageNumber;
+            this.totalPages = response.totalPages;
+            this.markDirty();
+          },
+          error: (error) => this.handleLoadError(requestId, error),
+        });
+      return;
+    }
+
+    this.loadSubscription = this.secretaryApi
       .getReservations({
         pageNumber: this.pageNumber,
         pageSize: this.pageSize,
         includeCanceled: this.includeCanceled,
         attendanceConfirmationStatus: this.statusFilter,
+        searchText: this.searchText.trim() || undefined,
       })
       .pipe(
         finalize(() => {
@@ -606,15 +817,48 @@ export class SecretaryReservationsComponent implements OnInit, OnChanges {
           this.totalPages = response.totalPages;
           this.markDirty();
         },
-        error: (error) => {
-          if (requestId !== this.loadRequestId) return;
+        error: (error) => this.handleLoadError(requestId, error),
+      });
+  }
+
+  review(item: SecretaryReservation, approved: boolean): void {
+    const reservationId = this.reservationId(item);
+    const secretaryUserId = this.auth.user()?.userId;
+    if (!reservationId || !secretaryUserId) {
+      this.showFeedback(
+        "شناسه رزرو یا شناسه کاربر منشی در دسترس نیست",
+        "error",
+      );
+      return;
+    }
+
+    this.savingId = reservationId;
+    this.secretaryApi
+      .reviewAttendance({
+        reservationId,
+        secretaryUserId,
+        approved,
+        note: (this.notes[reservationId] || "").trim() || null,
+      })
+      .pipe(finalize(() => (this.savingId = null)))
+      .subscribe({
+        next: (response) => {
+          this.showFeedback(
+            response.message ||
+              (approved
+                ? "ادعای مشاور تایید شد (+۱۰ امتیاز)"
+                : "ادعای مشاور رد شد (-۱۰ امتیاز)"),
+            "success",
+          );
+          this.load();
+        },
+        error: (error) =>
           this.showFeedback(
             error instanceof Error && error.message
               ? error.message
-              : "دریافت رزروها انجام نشد",
+              : "ثبت بررسی انجام نشد",
             "error",
-          );
-        },
+          ),
       });
   }
 
@@ -624,24 +868,41 @@ export class SecretaryReservationsComponent implements OnInit, OnChanges {
     this.load();
   }
 
+  emptyCopy(): string {
+    if (this.activeTab === "queue") {
+      return "موردی در صف بررسی تایید حضور وجود ندارد.";
+    }
+    if (this.activeTab === "completed") {
+      return "رزروی با بررسی نهایی منشی یافت نشد.";
+    }
+    return "رزروی برای نمایش وجود ندارد.";
+  }
+
+  canReview(item: SecretaryReservation): boolean {
+    if (this.activeTab !== "queue") return false;
+    return canSecretaryReviewAttendance(
+      readAttendanceStatus(
+        item,
+        "attendanceConfirmationStatus",
+        "AttendanceConfirmationStatus",
+      ),
+      (item.isWaitingForSecretaryReview ?? item.IsWaitingForSecretaryReview) ===
+        true,
+    );
+  }
+
   requiresPatientProfile(item: SecretaryReservation): boolean {
     return (item.requiresPatientProfile ?? item.RequiresPatientProfile) === true;
   }
 
   openProfileDialog(item: SecretaryReservation): void {
-    const [firstName, ...rest] = this.value(item.patientName, item.PatientName, "")
-      .split(" ")
-      .filter(Boolean);
+    const [firstName, ...rest] = this.patientName(item).split(" ").filter(Boolean);
     this.selectedProfileReservation = item;
     this.profileForm = {
       ...this.emptyProfileForm(),
       firstName: firstName || "",
       lastName: rest.join(" "),
-      phoneNumber: this.value(
-        item.patientPhoneNumber,
-        item.PatientPhoneNumber,
-        "",
-      ),
+      phoneNumber: this.patientPhone(item),
     };
     this.profileDialogOpen = true;
   }
@@ -723,11 +984,26 @@ export class SecretaryReservationsComponent implements OnInit, OnChanges {
     return Number.isFinite(numeric) ? numeric : null;
   }
 
-  status(item: SecretaryReservation): number | null {
-    const numeric = Number(
-      item.attendanceConfirmationStatus ?? item.AttendanceConfirmationStatus,
+  patientName(item: SecretaryReservation): string {
+    return item.patientName?.trim() || item.PatientName?.trim() || "بیمار بدون نام";
+  }
+
+  patientPhone(item: SecretaryReservation): string {
+    return item.patientPhoneNumber?.trim() || item.PatientPhoneNumber?.trim() || "-";
+  }
+
+  patientCity(item: SecretaryReservation): string {
+    return item.patientCity?.trim() || item.PatientCity?.trim() || "شهر ثبت نشده";
+  }
+
+  consultantName(item: SecretaryReservation): string {
+    return (
+      item.consultantFullName?.trim() || item.ConsultantFullName?.trim() || "-"
     );
-    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  reservationAt(item: SecretaryReservation): string {
+    return item.reservationAt || item.ReservationAt || "";
   }
 
   probability(item: SecretaryReservation): number | string {
@@ -738,30 +1014,51 @@ export class SecretaryReservationsComponent implements OnInit, OnChanges {
     );
   }
 
-  statusLabel(value: number | null): string {
-    if (value === 1) return "منتظر اعلام مشاور";
-    if (value === 2) return "مشاور: بیمار آمده";
-    if (value === 3) return "مشاور: بیمار نیامده";
-    if (value === 4) return "تایید نهایی منشی";
-    if (value === 5) return "رد نهایی منشی";
-    return "نامشخص";
-  }
-
-  statusBadge(value: number | null): string {
-    if (value === 1) return "muted";
-    if (value === 2) return "success";
-    if (value === 3) return "warn";
-    if (value === 4) return "success";
-    if (value === 5) return "danger";
-    return "muted";
-  }
-
-  value(...values: Array<string | null | undefined>): string {
-    return (
-      values
-        .find((value) => typeof value === "string" && value.trim())
-        ?.trim() || "-"
+  consultantClaim(item: SecretaryReservation): string {
+    return consultantAttendanceClaimLabel(
+      item.consultantSaysPatientAttended ?? item.ConsultantSaysPatientAttended,
     );
+  }
+
+  statusLabel(item: SecretaryReservation): string {
+    return attendanceStatusPresentation(
+      readAttendanceStatus(
+        item,
+        "attendanceConfirmationStatus",
+        "AttendanceConfirmationStatus",
+      ),
+    ).label;
+  }
+
+  statusBadge(item: SecretaryReservation): string {
+    return attendanceStatusPresentation(
+      readAttendanceStatus(
+        item,
+        "attendanceConfirmationStatus",
+        "AttendanceConfirmationStatus",
+      ),
+    ).badgeClass;
+  }
+
+  scoreText(item: SecretaryReservation): string {
+    const applied =
+      item.isAttendanceScoreApplied ?? item.IsAttendanceScoreApplied;
+    const value = item.attendanceScoreValue ?? item.AttendanceScoreValue;
+    if (applied && value !== null && value !== undefined) {
+      return value > 0 ? `+${value}` : `${value}`;
+    }
+
+    return attendanceScoreLabel(
+      item.secretaryApprovedConsultantConfirmation ??
+        item.SecretaryApprovedConsultantConfirmation,
+    );
+  }
+
+  scoreClass(item: SecretaryReservation): string {
+    const text = this.scoreText(item);
+    if (text.startsWith("+")) return "success";
+    if (text.startsWith("-")) return "danger";
+    return "muted";
   }
 
   formatDate(value: string): string {
@@ -773,6 +1070,33 @@ export class SecretaryReservationsComponent implements OnInit, OnChanges {
           timeStyle: "short",
         }).format(date)
       : value;
+  }
+
+  private handleLoadError(requestId: number, error: unknown): void {
+    if (requestId !== this.loadRequestId) return;
+    this.items = [];
+    this.showFeedback(
+      error instanceof Error && error.message
+        ? error.message
+        : "دریافت رزروها انجام نشد",
+      "error",
+    );
+  }
+
+  private startPolling(): void {
+    this.stopPolling();
+    const intervalMs = this.activeTab === "queue" ? 15000 : 30000;
+    this.pollId = setInterval(() => {
+      if (!this.profileReady || this.loading || this.savingId) return;
+      this.load();
+    }, intervalMs);
+  }
+
+  private stopPolling(): void {
+    if (this.pollId) {
+      clearInterval(this.pollId);
+      this.pollId = null;
+    }
   }
 
   private emptyProfileForm() {

@@ -26,6 +26,7 @@ import { ToastService } from "../../core/toast/toast.service";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
+import { ConsultantReservationsPanelComponent } from "./consultant-reservations-panel.component";
 
 const LEAD_STATE = {
   New: 1,
@@ -73,6 +74,9 @@ interface ReservationForm {
   reservationTime: string;
   secondaryPhoneNumber: string;
   description: string;
+  patientCity: string;
+  attendanceProbabilityPercent: number;
+  attendancePrediction: string;
 }
 
 interface PatientProfileForm {
@@ -110,6 +114,7 @@ interface ConsultantDashboardLink {
     BaseDialogComponent,
     BaseDatepickerComponent,
     FaIconComponent,
+    ConsultantReservationsPanelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -691,69 +696,12 @@ interface ConsultantDashboardLink {
                 </button>
               </section>
             } @else {
-              <section class="reservation-panel">
-                <header class="panel-heading">
-                  <div>
-                    <span>رزروها</span>
-                    <h2>رزروهای آینده مشاور</h2>
-                  </div>
-                </header>
-
-                @if (reservationsLoading) {
-                  <div class="loading-state" role="status" aria-live="polite">
-                    <span class="loading-spinner" aria-hidden="true"></span>
-                    <p class="loading-copy">در حال دریافت رزروها...</p>
-                  </div>
-                } @else if (!reservations.length) {
-                  <p class="empty-copy">رزرو فعالی برای نمایش وجود ندارد.</p>
-                } @else {
-                  <div class="reservation-list">
-                    @for (
-                      reservation of reservations;
-                      track reservationId(reservation)
-                    ) {
-                      <article>
-                        <strong>{{
-                          reservationPatientName(reservation)
-                        }}</strong>
-                        <span
-                          >{{ reservationPatientPhone(reservation) }} -
-                          {{ reservationPatientCity(reservation) }}</span
-                        >
-                        <time>{{
-                          formatDateTime(reservationDateTime(reservation))
-                        }}</time>
-                        <small
-                          >احتمال حضور:
-                          {{
-                            reservationAttendanceProbability(reservation)
-                          }}٪</small
-                        >
-                        <small
-                          >پیش‌بینی حضور:
-                          {{
-                            reservationAttendancePrediction(reservation)
-                          }}</small
-                        >
-                        <b [class]="reservationStatusClass(reservation)">{{
-                          reservationAttendanceStatusLabel(reservation)
-                        }}</b>
-                        @if (canCompletePatientProfile(reservation)) {
-                          <button
-                            class="secondary-action compact"
-                            type="button"
-                            (click)="
-                              openPatientProfileFromReservation(reservation)
-                            "
-                          >
-                            تکمیل پرونده
-                          </button>
-                        }
-                      </article>
-                    }
-                  </div>
-                }
-              </section>
+              <app-consultant-reservations-panel
+                [profileId]="currentProfileId() ?? 0"
+                [profileReady]="isProfileReady()"
+                (completeProfile)="openPatientProfileFromReservation($event)"
+                (pendingCountChange)="syncDueConfirmationsCount($event)"
+              ></app-consultant-reservations-panel>
             }
           }
         </section>
@@ -1889,6 +1837,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     reservationTime: "",
     secondaryPhoneNumber: "",
     description: "",
+    patientCity: "",
+    attendanceProbabilityPercent: 80,
+    attendancePrediction: "",
   };
   reservations: ConsultantReservation[] = [];
   dueConfirmations: ConsultantReservation[] = [];
@@ -2686,6 +2637,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  private defaultAttendancePrediction(): string {
+    return (
+      this.reportForm.reportDescription.trim() ||
+      "بیمار گفت در تاریخ و ساعت رزرو شده در مطب حاضر می‌شود."
+    );
+  }
+
+  private normalizedAttendanceProbability(
+    value: number | null | "" | undefined,
+  ): number | null {
+    if (value === null || value === undefined || value === "") return null;
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
   closeReservationDialog(): void {
     this.reservationDialogOpen = false;
     this.reservationSaving = false;
@@ -2777,6 +2743,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return (
       this.pendingOfflineCount > 0 && this.leadTypeFilter === LEAD_TYPE.RealTime
     );
+  }
+
+  syncDueConfirmationsCount(count: number): void {
+    if (count !== this.dueConfirmations.length) {
+      this.loadDueConfirmations();
+    }
   }
 
   confirmAttendance(
@@ -2873,6 +2845,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentId,
       consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
+      patientCity: this.reservationForm.patientCity.trim(),
+      attendanceProbabilityPercent:
+        this.reservationForm.attendanceProbabilityPercent,
+      attendancePrediction: this.reservationForm.attendancePrediction.trim(),
       secondaryPhoneNumber:
         this.reservationForm.secondaryPhoneNumber.trim() || null,
       description: this.reservationForm.description.trim() || null,
@@ -3541,6 +3517,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.loadLeads(true);
           this.loadLeadNotifications();
           this.loadPendingOfflineLeads();
+          this.loadDueConfirmations();
         });
       }, this.pollIntervalMs);
     });
@@ -3825,6 +3802,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       reservationTime: this.toTimeValue(minimumReservationAt),
       secondaryPhoneNumber: reservationSecondaryPhone,
       description: "",
+      patientCity: this.reportForm.patientCity.trim(),
+      attendanceProbabilityPercent:
+        this.normalizedAttendanceProbability(
+          this.reportForm.attendanceProbabilityPercent,
+        ) ?? 80,
+      attendancePrediction: this.defaultAttendancePrediction(),
     };
     this.reservationDialogOpen = true;
   }
@@ -4126,6 +4109,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       reservationAt.getTime() <= Date.now()
     )
       return "زمان رزرو باید در آینده باشد";
+
+    if (!this.reservationForm.patientCity.trim())
+      return "شهر بیمار برای رزرو الزامی است";
+    if (!this.reservationForm.attendancePrediction.trim())
+      return "پیش‌بینی حضور برای رزرو الزامی است";
+    if (
+      !Number.isFinite(this.reservationForm.attendanceProbabilityPercent) ||
+      this.reservationForm.attendanceProbabilityPercent < 0 ||
+      this.reservationForm.attendanceProbabilityPercent > 100
+    )
+      return "درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد";
 
     const secondaryPhone = this.reservationForm.secondaryPhoneNumber.trim();
     if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone))
