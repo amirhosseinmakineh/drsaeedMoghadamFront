@@ -149,12 +149,12 @@ import { ToastService } from "../../core/toast/toast.service";
         font-weight: 900;
       }
       .feedback.error {
-        background: color-mix(in srgb, var(--danger) 14%, transparent);
-        color: #fecaca;
+        background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+        color: #991b1b;
       }
       .feedback.success {
-        background: color-mix(in srgb, var(--success) 14%, transparent);
-        color: #bbf7d0;
+        background: color-mix(in srgb, var(--success) 14%, var(--surface));
+        color: #166534;
       }
       @media (max-width: 760px) {
         .report-panel {
@@ -240,9 +240,11 @@ export class AdminLeadCallReportsComponent {
           downloadBlob(blob, this.fileName(filters));
           this.showFeedback("فایل گزارش تماس لیدها دانلود شد", "success");
         },
-        error: () =>
+        error: (error) =>
           this.showFeedback(
-            "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید.",
+            error instanceof Error && error.message
+              ? error.message
+              : "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید.",
             "error",
           ),
       });

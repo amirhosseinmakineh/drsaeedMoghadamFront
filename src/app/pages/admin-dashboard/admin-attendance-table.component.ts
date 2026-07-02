@@ -123,8 +123,8 @@ import {
         font-weight: 900;
       }
       .feedback.error {
-        background: color-mix(in srgb, var(--danger) 14%, transparent);
-        color: #fecaca;
+        background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+        color: #991b1b;
       }
       @media (max-width: 760px) {
         .admin-panel {

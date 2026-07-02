@@ -1,8 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { Observable, catchError, forkJoin, map, throwError } from "rxjs";
+import { Observable, catchError, forkJoin, from, map, switchMap, throwError } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
+import { ensureCsvBlob } from "../../utils/file-download.util";
 
 export interface ApiCommandResponse<T = unknown> {
   isSuccess: boolean;
@@ -502,11 +503,20 @@ export class AdminDashboardService {
       headers = headers.set("Accept", "text/csv");
     }
 
-    return this.http.get(`${this.apiBaseUrl}/admin/reports/${path}`, {
-      headers,
-      ...(params ? { params: this.toParams(params) } : {}),
-      responseType: "blob",
-    });
+    return this.http
+      .get(`${this.apiBaseUrl}/admin/reports/${path}`, {
+        headers,
+        ...(params ? { params: this.toParams(params) } : {}),
+        responseType: "blob",
+      })
+      .pipe(
+        switchMap((blob) => from(ensureCsvBlob(blob))),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت گزارش انجام نشد"),
+          ),
+        ),
+      );
   }
 
   getConsultantLeads(

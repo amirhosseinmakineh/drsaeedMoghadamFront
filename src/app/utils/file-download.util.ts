@@ -7,6 +7,39 @@ export function downloadBlob(blob: Blob, filename: string): void {
   window.URL.revokeObjectURL(url);
 }
 
+export function ensureCsvBlob(
+  blob: Blob,
+  fallback = "خطا در دریافت گزارش",
+): Promise<Blob> {
+  if (blob.size === 0) {
+    return Promise.reject(new Error("فایل گزارش خالی است"));
+  }
+
+  return blob
+    .slice(0, Math.min(blob.size, 512))
+    .text()
+    .then((head) => {
+      const trimmed = head.trimStart();
+      if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+        return blob;
+      }
+
+      try {
+        const parsed = JSON.parse(trimmed) as {
+          message?: string;
+          title?: string;
+          error?: string;
+        };
+        throw new Error(
+          parsed.message || parsed.title || parsed.error || fallback,
+        );
+      } catch (error) {
+        if (error instanceof Error) throw error;
+        throw new Error(fallback);
+      }
+    });
+}
+
 export function extractFilename(
   contentDisposition: string | null,
   fallback: string,
