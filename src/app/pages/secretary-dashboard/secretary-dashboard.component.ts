@@ -12,6 +12,8 @@ import { finalize } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import { ToastService } from "../../core/toast/toast.service";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
+import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
@@ -167,6 +169,7 @@ interface SecretaryDashboardLink {
                     کد ملی
                     <input
                       [(ngModel)]="profileForm.nationalityCode"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="secretaryNationalityCode"
                       inputmode="numeric"
                       maxlength="10"
@@ -177,6 +180,7 @@ interface SecretaryDashboardLink {
                     آدرس
                     <textarea
                       [(ngModel)]="profileForm.address"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="secretaryAddress"
                       rows="4"
                       placeholder="آدرس کامل محل سکونت"
@@ -659,6 +663,9 @@ export class SecretaryDashboardComponent implements OnInit {
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
 
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
+  private readonly markDirty: () => void;
+
   constructor(
     private auth: AuthService,
     private router: Router,
@@ -666,7 +673,9 @@ export class SecretaryDashboardComponent implements OnInit {
     private pushNotifications: PushNotificationService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.markDirty = createCoalescedMarkForCheck(this.cdr, () => false);
+  }
 
   get visibleDashboardLinks(): SecretaryDashboardLink[] {
     if (!this.isProfileReady()) {
@@ -795,9 +804,5 @@ export class SecretaryDashboardComponent implements OnInit {
   private clearFeedback(): void {
     this.feedbackMessage = "";
     this.markDirty();
-  }
-
-  private markDirty(): void {
-    this.cdr.markForCheck();
   }
 }

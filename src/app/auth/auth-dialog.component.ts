@@ -12,6 +12,7 @@ import {
 } from "../models/clinic.model";
 import { BaseDialogComponent } from "../shared/base/base-dialog/base-dialog.component";
 import { FaIconComponent } from "../shared/ui/fa-icon/fa-icon.component";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../shared/forms/ng-model-options";
 
 @Component({
   selector: "app-auth-dialog",
@@ -62,6 +63,7 @@ import { FaIconComponent } from "../shared/ui/fa-icon/fa-icon.component";
               {{ copy.firstName[language] }}
               <input
                 [(ngModel)]="form.firstName"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="authFirstName"
                 autocomplete="given-name"
                 maxlength="100"
@@ -71,6 +73,7 @@ import { FaIconComponent } from "../shared/ui/fa-icon/fa-icon.component";
               {{ copy.lastName[language] }}
               <input
                 [(ngModel)]="form.lastName"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="authLastName"
                 autocomplete="family-name"
                 maxlength="100"
@@ -83,6 +86,7 @@ import { FaIconComponent } from "../shared/ui/fa-icon/fa-icon.component";
           {{ copy.phone[language] }}
           <input
             [(ngModel)]="form.phone"
+            [ngModelOptions]="ngModelBlurOptions"
             name="authPhone"
             inputmode="tel"
             autocomplete="tel"
@@ -94,6 +98,7 @@ import { FaIconComponent } from "../shared/ui/fa-icon/fa-icon.component";
           {{ copy.password[language] }}
           <input
             [(ngModel)]="form.password"
+            [ngModelOptions]="ngModelBlurOptions"
             name="authPassword"
             type="password"
             minlength="8"
@@ -108,7 +113,11 @@ import { FaIconComponent } from "../shared/ui/fa-icon/fa-icon.component";
           <div class="two-col">
             <label>
               {{ copy.gender[language] }}
-              <select [(ngModel)]="form.gender" name="authGender">
+              <select
+                [(ngModel)]="form.gender"
+                [ngModelOptions]="ngModelBlurOptions"
+                name="authGender"
+              >
                 <option [ngValue]="1">{{ copy.male[language] }}</option>
                 <option [ngValue]="2">{{ copy.female[language] }}</option>
               </select>
@@ -244,6 +253,7 @@ export class AuthDialogComponent {
   @Output() closed = new EventEmitter<void>();
 
   mode = signal<AuthDialogMode>("login");
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   loading = signal(false);
   feedback = signal<{ type: "success" | "error"; message: string } | null>(
     null,

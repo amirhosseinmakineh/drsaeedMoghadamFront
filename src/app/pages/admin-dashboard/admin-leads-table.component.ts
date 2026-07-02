@@ -23,6 +23,7 @@ import {
   TableColumn,
   TableComponent,
 } from "../../shared/base/table/table.component";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 
 type LeadTableMode = "system" | "consultant";
 
@@ -72,6 +73,7 @@ type LeadTableMode = "system" | "consultant";
           وضعیت لید
           <select
             [(ngModel)]="filters.leadAssignmentState"
+            [ngModelOptions]="ngModelBlurOptions"
             name="leadAssignmentState"
           >
             <option [ngValue]="null">همه وضعیت‌ها</option>
@@ -88,6 +90,7 @@ type LeadTableMode = "system" | "consultant";
           نوع تخصیص
           <select
             [(ngModel)]="filters.leadAssignmentType"
+            [ngModelOptions]="ngModelBlurOptions"
             name="leadAssignmentType"
           >
             <option [ngValue]="null">همه نوع‌ها</option>
@@ -269,6 +272,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   };
   private hasRequestedLoad = false;
   private loadRequestId = 0;
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
 
   readonly columns: TableColumn<LeadAssignmentItem>[] = [
     { key: "id", label: "شناسه", value: (row) => this.leadId(row) ?? "-" },

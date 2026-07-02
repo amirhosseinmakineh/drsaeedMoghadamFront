@@ -1,5 +1,7 @@
 import { NgFor, NgIf } from "@angular/common";
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -19,6 +21,7 @@ import {
   selector: "app-base-datepicker",
   standalone: true,
   imports: [NgFor, NgIf],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section
       class="base-datepicker"
@@ -236,6 +239,12 @@ export class BaseDatepickerComponent implements OnChanges {
   @Output() dateChange = new EventEmitter<Date>();
 
   private activeMonthAnchor = new Date();
+  private cachedDays: DatePickerDay[] = [];
+  private daysCacheKey = "";
+
+  constructor(private cdr: ChangeDetectorRef) {
+    this.rebuildDaysCache();
+  }
 
   get labelText(): string {
     return pickText(this.label, this.language);
@@ -285,56 +294,21 @@ export class BaseDatepickerComponent implements OnChanges {
   }
 
   get days(): DatePickerDay[] {
-    const minDate = this.minSelectableDate;
-    const maxDate = this.maxDate ? this.startOfDay(this.maxDate) : null;
-    const currentMonth = this.calendarParts(this.activeMonthAnchor);
-    const gridStart = this.addDays(
-      this.monthStart,
-      -this.weekOffset(this.monthStart),
-    );
-
-    return Array.from({ length: 42 }, (_, index) => {
-      const date = this.addDays(gridStart, index);
-      const parts = this.calendarParts(date);
-      const outsideMonth =
-        parts.year !== currentMonth.year || parts.month !== currentMonth.month;
-
-      return {
-        label: new Intl.DateTimeFormat(this.locale, { day: "numeric" }).format(
-          date,
-        ),
-        weekday: new Intl.DateTimeFormat(this.locale, {
-          weekday: "short",
-        }).format(date),
-        iso: this.toIsoDate(date),
-        disabled:
-          outsideMonth ||
-          this.startOfDay(date).getTime() < minDate.getTime() ||
-          (maxDate !== null &&
-            this.startOfDay(date).getTime() > maxDate.getTime()),
-        outsideMonth,
-        ariaLabel: new Intl.DateTimeFormat(this.locale, {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }).format(date),
-      };
-    });
+    return this.cachedDays;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["selectedDate"] && this.selectedDate) {
       this.activeMonthAnchor = this.selectedDate;
-      return;
-    }
-
-    if (
+    } else if (
       (changes["maxDate"] || changes["minDate"]) &&
       this.activeMonthAnchorOutsideSelectableRange()
     ) {
       this.activeMonthAnchor = this.maxDate ?? this.minSelectableDate;
     }
+
+    this.rebuildDaysCache();
+    this.cdr.markForCheck();
   }
 
   moveMonth(direction: number): void {
@@ -343,6 +317,8 @@ export class BaseDatepickerComponent implements OnChanges {
 
     const base = this.monthStart;
     this.activeMonthAnchor = this.addDays(base, direction > 0 ? 32 : -2);
+    this.rebuildDaysCache();
+    this.cdr.markForCheck();
   }
 
   select(value: DatePickerDay | string): void {
@@ -353,6 +329,62 @@ export class BaseDatepickerComponent implements OnChanges {
     const selected = this.fromIsoDate(isoValue);
     this.selectedDate = selected;
     this.dateChange.emit(selected);
+    this.rebuildDaysCache();
+    this.cdr.markForCheck();
+  }
+
+  private rebuildDaysCache(): void {
+    const cacheKey = [
+      this.language,
+      this.activeMonthAnchor.getTime(),
+      this.minDate?.getTime() ?? "none",
+      this.maxDate?.getTime() ?? "none",
+      this.allowToday,
+      this.selectedDate?.getTime() ?? "none",
+    ].join("|");
+
+    if (cacheKey === this.daysCacheKey) return;
+
+    this.daysCacheKey = cacheKey;
+    const minDate = this.minSelectableDate;
+    const maxDate = this.maxDate ? this.startOfDay(this.maxDate) : null;
+    const currentMonth = this.calendarParts(this.activeMonthAnchor);
+    const gridStart = this.addDays(
+      this.monthStart,
+      -this.weekOffset(this.monthStart),
+    );
+    const dayFormatter = new Intl.DateTimeFormat(this.locale, {
+      day: "numeric",
+    });
+    const weekdayFormatter = new Intl.DateTimeFormat(this.locale, {
+      weekday: "short",
+    });
+    const ariaFormatter = new Intl.DateTimeFormat(this.locale, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    this.cachedDays = Array.from({ length: 42 }, (_, index) => {
+      const date = this.addDays(gridStart, index);
+      const parts = this.calendarParts(date);
+      const outsideMonth =
+        parts.year !== currentMonth.year || parts.month !== currentMonth.month;
+
+      return {
+        label: dayFormatter.format(date),
+        weekday: weekdayFormatter.format(date),
+        iso: this.toIsoDate(date),
+        disabled:
+          outsideMonth ||
+          this.startOfDay(date).getTime() < minDate.getTime() ||
+          (maxDate !== null &&
+            this.startOfDay(date).getTime() > maxDate.getTime()),
+        outsideMonth,
+        ariaLabel: ariaFormatter.format(date),
+      };
+    });
   }
 
   private get monthStart(): Date {

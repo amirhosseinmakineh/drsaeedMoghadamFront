@@ -519,6 +519,7 @@
       {{ language() === "fa" ? "نام و نام خانوادگی" : "Full name" }}
       <input
         [(ngModel)]="lead.fullName"
+        [ngModelOptions]="ngModelBlurOptions"
         name="leadFullName"
         required
         autocomplete="name"
@@ -528,6 +529,7 @@
       {{ language() === "fa" ? "شماره تماس" : "Phone number" }}
       <input
         [(ngModel)]="lead.phone"
+        [ngModelOptions]="ngModelBlurOptions"
         name="leadPhone"
         required
         inputmode="tel"
@@ -536,7 +538,11 @@
     </label>
     <label>
       {{ language() === "fa" ? "درمان مورد نظر" : "Service of interest" }}
-      <select [(ngModel)]="lead.serviceId" name="leadService">
+      <select
+        [(ngModel)]="lead.serviceId"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="leadService"
+      >
         <option *ngFor="let service of services" [value]="service.id">
           {{ pickText(service.title, language()) }}
         </option>
@@ -546,6 +552,7 @@
       {{ language() === "fa" ? "توضیح کوتاه" : "Short note" }}
       <textarea
         [(ngModel)]="lead.message"
+        [ngModelOptions]="ngModelBlurOptions"
         name="leadMessage"
         rows="4"
       ></textarea>
