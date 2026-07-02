@@ -22,6 +22,7 @@ import {
   SubmitLeadCallReportRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
+import { ToastService } from "../../core/toast/toast.service";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
@@ -64,6 +65,7 @@ interface LeadReportForm {
   patientRegion: string;
   businessName: string;
   attendanceProbabilityPercent: number | null | "";
+  secondaryPhoneNumber: string;
 }
 
 interface ReservationForm {
@@ -335,7 +337,7 @@ interface ConsultantDashboardLink {
                   <button
                     class="primary-action full"
                     type="submit"
-                    [disabled]="profileSaving || validateProfileForm() !== null"
+                    [disabled]="profileSaving"
                   >
                     {{
                       profileSaving
@@ -530,7 +532,6 @@ interface ConsultantDashboardLink {
                     >
                       <option [ngValue]="null">همه</option>
                       <option [ngValue]="1">جدید</option>
-                      <option [ngValue]="3">تماس گرفته شده</option>
                       <option [ngValue]="4">در انتظار تعیین تکلیف</option>
                       <option [ngValue]="7">رد شده</option>
                     </select>
@@ -817,6 +818,16 @@ interface ConsultantDashboardLink {
               max="100"
             />
           </label>
+          <label>
+            شماره تماس دوم بیمار
+            <input
+              [(ngModel)]="reportForm.secondaryPhoneNumber"
+              name="leadReportSecondaryPhoneNumber"
+              inputmode="tel"
+              maxlength="11"
+              placeholder="09120000000"
+            />
+          </label>
           <div class="dialog-actions">
             <button
               class="secondary-action"
@@ -828,7 +839,7 @@ interface ConsultantDashboardLink {
             <button
               class="primary-action"
               type="submit"
-              [disabled]="reportSaving || validateLeadReportForm() !== null"
+              [disabled]="reportSaving"
             >
               {{ reportSaving ? "در حال ثبت..." : "ثبت گزارش" }}
             </button>
@@ -897,9 +908,7 @@ interface ConsultantDashboardLink {
             <button
               class="primary-action"
               type="submit"
-              [disabled]="
-                reservationSaving || validateReservationForm() !== null
-              "
+              [disabled]="reservationSaving"
             >
               {{ reservationSaving ? "در حال ثبت..." : "ثبت رزرو" }}
             </button>
@@ -991,9 +1000,7 @@ interface ConsultantDashboardLink {
             <button
               class="primary-action"
               type="submit"
-              [disabled]="
-                patientProfileSaving || validatePatientProfileForm() !== null
-              "
+              [disabled]="patientProfileSaving"
             >
               {{ patientProfileSaving ? "در حال ثبت..." : "ثبت پرونده" }}
             </button>
@@ -1020,7 +1027,7 @@ interface ConsultantDashboardLink {
       .reservation-panel,
       .consultant-panel {
         border: 1px solid var(--line);
-        background: color-mix(in srgb, var(--surface) 86%, transparent);
+        background: var(--surface);
         box-shadow: var(--shadow);
       }
       .dashboard-sidebar {
@@ -1386,7 +1393,7 @@ interface ConsultantDashboardLink {
         padding: 24px 16px;
         border: 1px solid var(--line);
         border-radius: 22px;
-        background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+        background: var(--surface-soft);
       }
       .loading-state .loading-copy {
         border: 0;
@@ -1510,8 +1517,8 @@ interface ConsultantDashboardLink {
         min-height: 52px;
         border-radius: 20px;
         padding: 8px 12px;
-        background: color-mix(in srgb, #22c55e 18%, var(--surface-muted));
-        color: #bbf7d0;
+        background: color-mix(in srgb, #16a34a 14%, var(--surface));
+        color: #14532d;
         font-weight: 950;
       }
       .call-action small,
@@ -1519,7 +1526,7 @@ interface ConsultantDashboardLink {
         display: block;
       }
       .call-action small {
-        color: color-mix(in srgb, #bbf7d0 78%, var(--muted));
+        color: var(--muted);
         font-size: 0.76rem;
       }
       .call-action b {
@@ -1574,7 +1581,7 @@ interface ConsultantDashboardLink {
         padding: 12px;
         border: 1px solid var(--line);
         border-radius: 20px;
-        background: color-mix(in srgb, var(--surface-muted) 58%, transparent);
+        background: var(--surface-soft);
       }
       .reservation-list strong {
         color: var(--text);
@@ -1912,6 +1919,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private consultantApi: ConsultantDashboardService,
     private pushNotifications: PushNotificationService,
+    private toast: ToastService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
   ) {}
@@ -2192,7 +2200,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   applyLeadFilters(): void {
-    this.applyOfflineLeadReportFilter();
     this.leadPageNumber = 1;
     this.loadLeads();
   }
@@ -2204,7 +2211,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const type = params.get("type");
     if (type === "offline") {
       this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
-      this.applyOfflineLeadReportFilter();
     } else if (type === "realtime") {
       this.leadTypeFilter = LEAD_TYPE.RealTime;
       this.leadStateFilter = null;
@@ -2253,7 +2259,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private handleOfflineLeadsPush(detail: { body?: string }): void {
     this.activeSection = "leads";
     this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
-    this.applyOfflineLeadReportFilter();
     this.leadPageNumber = 1;
     this.loadLeads();
     this.loadPendingOfflineLeads();
@@ -2281,16 +2286,42 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }, 50);
   }
 
-  private applyOfflineLeadReportFilter(): void {
-    if (this.leadTypeFilter === LEAD_TYPE.OfflineQueue) {
-      this.leadStateFilter = LEAD_STATE.Pending;
-    }
+  private effectiveLeadStateFilter(): number | null {
+    return this.leadStateFilter;
   }
 
-  private effectiveLeadStateFilter(): number | null {
-    return this.leadTypeFilter === LEAD_TYPE.OfflineQueue
-      ? LEAD_STATE.Pending
-      : this.leadStateFilter;
+  private reservationSecondaryPhoneForLead(
+    leadAssignmentId: number,
+  ): string {
+    const reservation = this.reservationForLead(leadAssignmentId);
+    if (!reservation) return "";
+
+    return (
+      reservation.secondaryPhoneNumber?.trim() ||
+      reservation.SecondaryPhoneNumber?.trim() ||
+      ""
+    );
+  }
+
+  private reservationForLead(
+    leadAssignmentId: number,
+  ): ConsultantReservation | null {
+    return (
+      this.reservations.find((reservation) => {
+        const id = this.numberOrNull(
+          reservation.leadAssignmentId ?? reservation.LeadAssignmentId ?? null,
+        );
+        return id === leadAssignmentId;
+      }) ?? null
+    );
+  }
+
+  private shouldOpenReservationAfterReport(
+    callResult: number,
+    responseData?: { shouldOpenReservationPage?: boolean | null },
+  ): boolean {
+    if (responseData?.shouldOpenReservationPage === true) return true;
+    return callResult === 1 || callResult === 2;
   }
 
   changeLeadPage(page: number): void {
@@ -2308,7 +2339,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportingLeadIds.add(leadAssignmentId);
     this.forceOfflineForReport();
     this.selectedLead = lead;
-    this.reportForm = this.emptyLeadReportForm();
+    this.reportForm = this.emptyLeadReportForm(leadAssignmentId);
     this.reportDialogOpen = true;
   }
 
@@ -2366,6 +2397,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const secondaryPhone = this.reportForm.secondaryPhoneNumber.trim();
+    if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone)) {
+      this.showFeedback("شماره تماس دوم بیمار معتبر نیست", "error");
+      this.reportSaving = false;
+      return;
+    }
+
     const payload: SubmitLeadCallReportRequest = {
       leadAssignmentId,
       consultantProfileId: profileId,
@@ -2381,6 +2419,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ...(attendanceProbabilityPercent === null
         ? {}
         : { attendanceProbabilityPercent }),
+      ...(secondaryPhone ? { secondaryPhoneNumber: secondaryPhone } : {}),
     };
 
     this.consultantApi
@@ -2396,6 +2435,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const wasBlockingOfflineLead =
             this.leadType(lead) === LEAD_TYPE.OfflineQueue &&
             this.leadState(lead) === LEAD_STATE.Pending;
+          const callResult = Number(this.reportForm.callResult);
+          const shouldOpenReservation = this.shouldOpenReservationAfterReport(
+            callResult,
+            response.data,
+          );
+          const reportSecondaryPhone =
+            this.reportForm.secondaryPhoneNumber.trim();
           this.reportedLeadIds.add(leadAssignmentId);
           this.reportingLeadIds.delete(leadAssignmentId);
           const status = this.applyConsultantStatusFrom(
@@ -2410,7 +2456,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
           this.markLeadReported(
             leadAssignmentId,
-            response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
+            response.data?.leadAssignmentState ?? LEAD_STATE.Pending,
           );
           if (wasBlockingOfflineLead)
             this.updatePendingOfflineCount(
@@ -2418,7 +2464,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             );
           this.closeReportDialog({ releaseReportLock: false });
           this.showFeedback(response.message || "گزارش تماس ثبت شد", "success");
-          this.restoreOnlineAfterRequiredAction();
+
+          if (shouldOpenReservation) {
+            this.openReservationDialog(lead, reportSecondaryPhone);
+          } else {
+            this.restoreOnlineAfterRequiredAction();
+          }
           this.refreshDashboard();
         },
         error: (error) =>
@@ -2429,7 +2480,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private emptyLeadReportForm(): LeadReportForm {
+  private emptyLeadReportForm(leadAssignmentId?: number): LeadReportForm {
     return {
       callResult: 1,
       reportDescription: "",
@@ -2437,6 +2488,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       patientRegion: "",
       businessName: "",
       attendanceProbabilityPercent: null,
+      secondaryPhoneNumber: leadAssignmentId
+        ? this.reservationSecondaryPhoneForLead(leadAssignmentId)
+        : "",
     };
   }
 
@@ -2609,7 +2663,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.requireProfileId();
     const lead = this.selectedReservationLead;
     const leadAssignmentId = lead ? this.leadId(lead) : null;
-    if (!profileId || !leadAssignmentId) return;
+    if (!profileId) {
+      this.showFeedback("شناسه پروفایل مشاور یافت نشد", "error");
+      return;
+    }
+    if (!leadAssignmentId) {
+      this.showFeedback("لید انتخاب‌شده برای رزرو یافت نشد", "error");
+      return;
+    }
 
     const validationError = this.validateReservationForm();
     if (validationError) {
@@ -2618,7 +2679,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     const reservationAt = this.selectedReservationDateTime();
-    if (!reservationAt) return;
+    if (!reservationAt) {
+      this.showFeedback("تاریخ و ساعت رزرو معتبر نیست", "error");
+      return;
+    }
 
     const payload: CreateReservationRequest = {
       leadAssignmentId,
@@ -2862,7 +2926,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const labels: Record<number, string> = {
       1: "جدید",
       2: "تخصیص داده شده",
-      3: "تماس گرفته شده",
       4: "در انتظار تعیین تکلیف",
       5: "تبدیل شده",
       6: "منقضی شده",
@@ -2895,8 +2958,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   stateBadgeClass(value: number | null): string {
     if (value === LEAD_STATE.New || value === LEAD_STATE.Assigned)
       return "badge info";
-    if (value === LEAD_STATE.Contacted || value === LEAD_STATE.Converted)
-      return "badge success";
+    if (value === LEAD_STATE.Converted) return "badge success";
     if (value === LEAD_STATE.Pending || value === LEAD_STATE.Expired)
       return "badge warn";
     return "badge danger";
@@ -2958,7 +3020,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.reportingLeadIds.has(leadAssignmentId) ||
       this.reportedLeadIds.has(leadAssignmentId) ||
       Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted) ||
-      state === LEAD_STATE.Contacted ||
       state === LEAD_STATE.Converted ||
       state === LEAD_STATE.Rejected
     );
@@ -3521,13 +3582,22 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  openReservationDialog(lead: ConsultantLead): void {
+  openReservationDialog(
+    lead: ConsultantLead,
+    secondaryPhoneNumber = "",
+  ): void {
+    const leadAssignmentId = this.leadId(lead);
     const minimumReservationAt = this.minimumReservationDateTime();
+    const reservationSecondaryPhone =
+      secondaryPhoneNumber.trim() ||
+      (leadAssignmentId
+        ? this.reservationSecondaryPhoneForLead(leadAssignmentId)
+        : "");
     this.selectedReservationLead = lead;
     this.reservationForm = {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
-      secondaryPhoneNumber: "",
+      secondaryPhoneNumber: reservationSecondaryPhone,
       description: "رزرو اولیه برای لید",
     };
     this.reservationDialogOpen = true;
@@ -3729,6 +3799,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (![1, 2, 3, 4, 5, 6].includes(callResult))
       return "نتیجه تماس معتبر نیست";
 
+    if (!this.reportForm.patientCity.trim())
+      return "شهر بیمار الزامی است";
+    if (!this.reportForm.patientRegion.trim())
+      return "منطقه بیمار الزامی است";
+
     const description = this.reportForm.reportDescription.trim();
     if (description.length > 1000)
       return "توضیحات گزارش نباید بیشتر از ۱۰۰۰ کاراکتر باشد";
@@ -3739,6 +3814,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return "منطقه بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
     if (this.reportForm.businessName.trim().length > 120)
       return "نام بیزینس نباید بیشتر از ۱۲۰ کاراکتر باشد";
+
+    const secondaryPhone = this.reportForm.secondaryPhoneNumber.trim();
+    if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone))
+      return "شماره تماس دوم بیمار معتبر نیست";
 
     const rawAttendanceProbability =
       this.reportForm.attendanceProbabilityPercent;
@@ -4066,6 +4145,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedbackMessage = message;
     this.feedbackType = type;
+    if (type === "success") {
+      this.toast.success(message);
+    } else {
+      this.toast.error(message);
+    }
+    this.markViewDirty();
   }
 
   private clearFeedback(): void {

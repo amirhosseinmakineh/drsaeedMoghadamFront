@@ -16,6 +16,7 @@ import {
 } from "../../core/secretary/secretary-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
+import { ToastService } from "../../core/toast/toast.service";
 
 @Component({
   selector: "app-secretary-reservation-attendance-reviews",
@@ -195,7 +196,7 @@ import { SecretaryDashboardService } from "../../core/secretary/secretary-dashbo
             <label>توضیحات<textarea [(ngModel)]="profileForm.notes" name="secProfileNotes" rows="2"></textarea></label>
             <div class="dialog-actions">
               <button class="secondary-action" type="button" (click)="closeProfileDialog()">انصراف</button>
-              <button class="primary-action" type="submit" [disabled]="profileSaving || validateProfileForm() !== null">{{ profileSaving ? "در حال ثبت..." : "ثبت پرونده" }}</button>
+              <button class="primary-action" type="submit" [disabled]="profileSaving">{{ profileSaving ? "در حال ثبت..." : "ثبت پرونده" }}</button>
             </div>
           </form>
         </div>
@@ -209,7 +210,7 @@ import { SecretaryDashboardService } from "../../core/secretary/secretary-dashbo
         padding: 18px;
         border: 1px solid var(--line);
         border-radius: 30px;
-        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        background: var(--surface);
         box-shadow: var(--shadow);
       }
       .panel-heading {
@@ -329,7 +330,7 @@ import { SecretaryDashboardService } from "../../core/secretary/secretary-dashbo
         padding: 14px;
         border: 1px solid var(--line);
         border-radius: 24px;
-        background: color-mix(in srgb, var(--surface-muted) 58%, transparent);
+        background: var(--surface-soft);
       }
       .review-table header {
         display: flex;
@@ -405,6 +406,7 @@ export class SecretaryReservationAttendanceReviewsComponent
   constructor(
     private secretaryApi: SecretaryDashboardService,
     private auth: AuthService,
+    private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -625,6 +627,11 @@ export class SecretaryReservationAttendanceReviewsComponent
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedback = message;
     this.feedbackType = type;
+    if (type === "success") {
+      this.toast.success(message);
+      return;
+    }
+    this.toast.error(message);
     this.markDirty();
   }
 

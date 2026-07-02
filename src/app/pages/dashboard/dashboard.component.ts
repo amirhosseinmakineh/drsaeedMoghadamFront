@@ -20,6 +20,7 @@ import {
 } from "../../core/admin/admin-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
+import { ToastService } from "../../core/toast/toast.service";
 import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendance-table.component";
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
@@ -529,7 +530,7 @@ interface ScoreFormModel {
             >
               انصراف
             </button>
-            <button class="solid-action" type="submit" [disabled]="userSaving || validateUserForm() !== null">
+            <button class="solid-action" type="submit" [disabled]="userSaving">
               {{ userSaving ? "در حال ذخیره..." : "ذخیره" }}
             </button>
           </div>
@@ -588,7 +589,7 @@ interface ScoreFormModel {
             >
               انصراف
             </button>
-            <button class="solid-action" type="submit" [disabled]="scoreSaving || validateScoreForm() !== null">
+            <button class="solid-action" type="submit" [disabled]="scoreSaving">
               {{ scoreSaving ? "در حال ثبت..." : "ثبت امتیاز" }}
             </button>
           </div>
@@ -630,7 +631,7 @@ interface ScoreFormModel {
       .dashboard-content article,
       .dashboard-hero {
         border: 1px solid var(--line);
-        background: color-mix(in srgb, var(--surface) 86%, transparent);
+        background: var(--surface);
         box-shadow: var(--shadow);
       }
       .dashboard-sidebar {
@@ -809,7 +810,7 @@ interface ScoreFormModel {
         border: 1px solid var(--line);
         border-radius: 30px;
         padding: 22px;
-        background: color-mix(in srgb, var(--surface) 86%, transparent);
+        background: var(--surface);
         color: var(--text);
         box-shadow: 0 18px 54px rgba(0, 0, 0, 0.18);
       }
@@ -1277,6 +1278,7 @@ export class DashboardComponent implements OnInit {
     private router: Router,
     private adminApi: AdminDashboardService,
     private pushNotifications: PushNotificationService,
+    private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -1852,6 +1854,11 @@ export class DashboardComponent implements OnInit {
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedbackMessage = message;
     this.feedbackType = type;
+    if (type === "success") {
+      this.toast.success(message);
+    } else {
+      this.toast.error(message);
+    }
     this.markDirty();
   }
 

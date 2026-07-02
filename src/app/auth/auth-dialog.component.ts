@@ -3,6 +3,7 @@ import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { finalize } from "rxjs";
 import { AuthService, RegisterRequest } from "../core/auth/auth.service";
+import { ToastService } from "../core/toast/toast.service";
 import {
   AuthDialogMode,
   AuthDialogModel,
@@ -115,7 +116,7 @@ import { FaIconComponent } from "../shared/ui/fa-icon/fa-icon.component";
           </div>
         }
 
-        <button class="primary full" type="submit" [disabled]="loading() || validate() !== null">
+        <button class="primary full" type="submit" [disabled]="loading()">
           <app-fa-icon name="user"></app-fa-icon>
           {{
             loading()
@@ -282,6 +283,7 @@ export class AuthDialogComponent {
   constructor(
     private auth: AuthService,
     private router: Router,
+    private toast: ToastService,
   ) {}
 
   switchMode(mode: AuthDialogMode): void {
@@ -295,6 +297,7 @@ export class AuthDialogComponent {
     const validationError = this.validate();
     if (validationError) {
       this.feedback.set({ type: "error", message: validationError });
+      this.toast.error(validationError);
       return;
     }
 

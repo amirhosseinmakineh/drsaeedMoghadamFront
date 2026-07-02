@@ -11,6 +11,7 @@ import { Router, RouterLink } from "@angular/router";
 import { finalize } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
+import { ToastService } from "../../core/toast/toast.service";
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationAttendanceReviewsComponent } from "./secretary-reservation-attendance-reviews.component";
@@ -186,7 +187,7 @@ interface SecretaryDashboardLink {
                   <button
                     class="primary-action full"
                     type="submit"
-                    [disabled]="profileSaving || validateProfileForm() !== null"
+                    [disabled]="profileSaving"
                   >
                     {{
                       profileSaving
@@ -280,7 +281,7 @@ interface SecretaryDashboardLink {
       .status-card,
       .locked-panel {
         border: 1px solid var(--line);
-        background: color-mix(in srgb, var(--surface) 86%, transparent);
+        background: var(--surface);
         box-shadow: var(--shadow);
       }
       .dashboard-sidebar {
@@ -663,6 +664,7 @@ export class SecretaryDashboardComponent implements OnInit {
     private router: Router,
     private secretaryApi: SecretaryDashboardService,
     private pushNotifications: PushNotificationService,
+    private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -784,6 +786,11 @@ export class SecretaryDashboardComponent implements OnInit {
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedbackMessage = message;
     this.feedbackType = type;
+    if (type === "success") {
+      this.toast.success(message);
+      return;
+    }
+    this.toast.error(message);
     this.markDirty();
   }
 

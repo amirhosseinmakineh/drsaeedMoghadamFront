@@ -67,7 +67,7 @@ import {
         padding: 18px;
         border: 1px solid var(--line);
         border-radius: 30px;
-        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        background: var(--surface);
         box-shadow: var(--shadow);
       }
       .panel-heading {

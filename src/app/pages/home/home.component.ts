@@ -18,6 +18,7 @@ import {
 } from "../../models/clinic.model";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
+import { ToastService } from "../../core/toast/toast.service";
 
 @Component({
   selector: "app-home",
@@ -61,6 +62,7 @@ export class HomeComponent {
   constructor(
     private title: Title,
     private meta: Meta,
+    private toast: ToastService,
   ) {
     this.updateSeo();
   }
@@ -133,6 +135,11 @@ export class HomeComponent {
   private showLeadFeedback(message: string, type: "success" | "error"): void {
     this.leadFeedback.set(message);
     this.leadFeedbackType.set(type);
+    if (type === "success") {
+      this.toast.success(message);
+      return;
+    }
+    this.toast.error(message);
   }
 
   private updateSeo(): void {

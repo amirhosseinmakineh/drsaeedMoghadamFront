@@ -118,6 +118,7 @@ export interface SubmitLeadCallReportRequest {
   patientRegion: string;
   businessName?: string;
   attendanceProbabilityPercent?: number;
+  secondaryPhoneNumber?: string | null;
 }
 
 export interface LeadCallReportResponse {
@@ -128,6 +129,7 @@ export interface LeadCallReportResponse {
   leadAssignmentState: number;
   callResult: number;
   isConsultantOnline: boolean;
+  shouldOpenReservationPage?: boolean;
 }
 
 export interface ExpireLeadNoCallRequest {
@@ -178,6 +180,8 @@ export interface ConsultantReservation {
   PatientName?: string;
   patientPhoneNumber?: string;
   PatientPhoneNumber?: string;
+  secondaryPhoneNumber?: string | null;
+  SecondaryPhoneNumber?: string | null;
   patientCity?: string | null;
   PatientCity?: string | null;
   attendanceProbabilityPercent?: number | null;
