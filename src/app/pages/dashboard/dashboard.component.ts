@@ -1591,6 +1591,15 @@ export class DashboardComponent implements OnInit {
   }
 
   handleConsultantAction(event: TableActionClick<Consultant>): void {
+    const profileId = event.row.profileId ?? event.row.ProfileId ?? 0;
+    if (!profileId) {
+      this.showFeedback(
+        "پروفایل مشاور هنوز ایجاد نشده است. ابتدا مشاور باید وارد داشبورد شود و پروفایل خود را تکمیل کند.",
+        "error",
+      );
+      return;
+    }
+
     if (event.action === "score") {
       this.selectedScoreConsultant = event.row;
       this.scoreForm = this.emptyScoreForm();
