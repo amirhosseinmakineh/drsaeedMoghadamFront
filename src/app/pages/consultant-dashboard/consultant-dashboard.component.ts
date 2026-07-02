@@ -46,7 +46,7 @@ const THREE_MINUTES_MS = 3 * 60 * 1000;
 
 const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
   1: "تماس برقرار شد",
-  2: "تبدیل/موفق شد",
+  2: "تبدیل به بیمار",
   3: "رد شد",
   4: "پاسخ نداد",
   5: "شماره اشتباه بود",
@@ -189,6 +189,7 @@ interface ConsultantDashboardLink {
               class="feedback"
               [class.error]="feedbackType === 'error'"
               [class.success]="feedbackType === 'success'"
+              [class.info]="feedbackType === 'info'"
             >
               {{ feedbackMessage }}
             </p>
@@ -293,8 +294,8 @@ interface ConsultantDashboardLink {
 
                 @if (pendingOfflineCount > 0) {
                   <p class="queue-warning">
-                    {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده
-                    دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
+                    {{ pendingOfflineCount }} لید در صف آفلاین منتظر ثبت گزارش
+                    است. تا زمان تعیین تکلیف آن‌ها امکان آنلاین شدن وجود ندارد.
                   </p>
                 } @else if (isAvailable && !isOnline) {
                   <p class="queue-warning info">
@@ -418,8 +419,8 @@ interface ConsultantDashboardLink {
 
                 @if (pendingOfflineCount > 0) {
                   <p class="queue-warning">
-                    {{ pendingOfflineCount }} لید صف آفلاین تعیین‌تکلیف‌نشده
-                    دارید؛ تا ثبت گزارش آن‌ها امکان آنلاین شدن ندارید.
+                    {{ pendingOfflineCount }} لید در صف آفلاین منتظر ثبت گزارش
+                    است. تا زمان تعیین تکلیف آن‌ها امکان آنلاین شدن وجود ندارد.
                   </p>
                 } @else if (isAvailable && !isOnline) {
                   <p class="queue-warning info">
@@ -763,7 +764,7 @@ interface ConsultantDashboardLink {
             نتیجه تماس
             <select [(ngModel)]="reportForm.callResult" name="leadCallResult">
               <option [ngValue]="1">تماس برقرار شد</option>
-              <option [ngValue]="2">تبدیل/موفق شد</option>
+              <option [ngValue]="2">تبدیل به بیمار</option>
               <option [ngValue]="3">رد شد</option>
               <option [ngValue]="4">پاسخ نداد</option>
               <option [ngValue]="5">شماره اشتباه بود</option>
@@ -800,12 +801,12 @@ interface ConsultantDashboardLink {
             </label>
           </div>
           <label>
-            نام بیزینس / کلینیک
+            نام مطب یا کلینیک
             <input
               [(ngModel)]="reportForm.businessName"
               name="leadReportBusinessName"
               maxlength="120"
-              placeholder="کلینیک/بیزینس نمونه"
+              placeholder="نام مطب یا کلینیک بیمار"
             />
           </label>
           <label>
@@ -1162,6 +1163,10 @@ interface ConsultantDashboardLink {
       .feedback.error {
         background: color-mix(in srgb, var(--danger) 12%, var(--surface));
         color: #991b1b;
+      }
+      .feedback.info {
+        background: color-mix(in srgb, var(--brand) 12%, var(--surface));
+        color: var(--text);
       }
       .consultant-overview {
         display: grid;
@@ -1861,7 +1866,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   patientProfileForm: PatientProfileForm = this.emptyPatientProfileForm();
 
   feedbackMessage = "";
-  feedbackType: "success" | "error" = "success";
+  feedbackType: "success" | "error" | "info" = "success";
 
   private currentTime = Date.now();
   private timerId: ReturnType<typeof setInterval> | null = null;
@@ -2008,7 +2013,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   canGoOnline(): boolean {
     if (!this.isAvailable || this.pendingOfflineCount > 0) return false;
-    if (!this.dashboardStatusLoaded) return true;
+    if (!this.dashboardStatusLoaded) return false;
     if (this.onlineStatusBlockReason) return false;
     return this.canGoOnlineFromStatus;
   }
@@ -2143,7 +2148,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       const message =
         this.onlineStatusBlockReason ||
         (this.pendingOfflineCount > 0
-          ? "ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید"
+          ? "تا زمان تعیین تکلیف لیدهای صف آفلاین، امکان آنلاین شدن وجود ندارد."
           : "ابتدا حضور خود را ثبت کنید");
       this.showFeedback(message, "error");
       return;
@@ -2196,6 +2201,89 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.loadLeads();
       this.loadLeadNotifications();
       this.loadReservations();
+    });
+  }
+
+  private refreshDashboardAfterReport(afterLoad?: () => void): void {
+    if (!this.isProfileReady()) {
+      afterLoad?.();
+      return;
+    }
+
+    this.loadDashboardStatus(() => {
+      const profileId = this.currentProfileId();
+      if (!profileId) {
+        afterLoad?.();
+        return;
+      }
+
+      let leadsLoaded = false;
+      let pendingLoaded = false;
+      const maybeFinish = () => {
+        if (!leadsLoaded || !pendingLoaded) return;
+        afterLoad?.();
+      };
+
+      const pendingRequestId = ++this.pendingOfflineRequestId;
+      this.pendingOfflineLoadSubscription?.unsubscribe();
+      this.pendingOfflineLoadSubscription = this.consultantApi
+        .getLeads({
+          profileId,
+          leadAssignmentState: LEAD_STATE.Pending,
+          leadAssignmentType: LEAD_TYPE.OfflineQueue,
+          pageNumber: 1,
+          pageSize: 50,
+        })
+        .pipe(finalize(() => this.markViewDirty()))
+        .subscribe({
+          next: (response) => {
+            if (pendingRequestId !== this.pendingOfflineRequestId) return;
+            this.applyConsultantStatusFrom(response.source, response.raw);
+            this.updatePendingOfflineCount(
+              response.totalCount ?? response.items.length,
+            );
+            pendingLoaded = true;
+            maybeFinish();
+          },
+          error: () => {
+            if (pendingRequestId !== this.pendingOfflineRequestId) return;
+            this.updatePendingOfflineCount(0);
+            pendingLoaded = true;
+            maybeFinish();
+          },
+        });
+
+      const requestId = ++this.leadRequestId;
+      this.consultantApi
+        .getLeads({
+          profileId,
+          leadAssignmentState: this.effectiveLeadStateFilter(),
+          leadAssignmentType: this.leadTypeFilter,
+          pageNumber: this.leadPageNumber,
+          pageSize: this.leadPageSize,
+        })
+        .pipe(finalize(() => this.markViewDirty()))
+        .subscribe({
+          next: (response) => {
+            if (requestId !== this.leadRequestId) return;
+            this.applyConsultantStatusFrom(response.source, response.raw);
+            this.leads = response.items ?? [];
+            this.syncReportedLeadIdsFromLeads(this.leads);
+            this.leadTotalCount = response.totalCount ?? this.leads.length;
+            this.leadTotalPages = Math.max(
+              1,
+              response.totalPages ||
+                Math.ceil(this.leadTotalCount / this.leadPageSize),
+            );
+            this.hydrateRealtimeTimers();
+            leadsLoaded = true;
+            maybeFinish();
+          },
+          error: () => {
+            leadsLoaded = true;
+            maybeFinish();
+          },
+        });
     });
   }
 
@@ -2316,14 +2404,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  private shouldOpenReservationAfterReport(
-    callResult: number,
-    responseData?: { shouldOpenReservationPage?: boolean | null },
-  ): boolean {
-    if (responseData?.shouldOpenReservationPage === true) return true;
-    return callResult === 1 || callResult === 2;
-  }
-
   changeLeadPage(page: number): void {
     this.leadPageNumber = Math.min(
       Math.max(1, page),
@@ -2341,6 +2421,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.selectedLead = lead;
     this.reportForm = this.emptyLeadReportForm(leadAssignmentId);
     this.reportDialogOpen = true;
+    this.markViewDirty();
   }
 
   closeReportDialog(options: { releaseReportLock?: boolean } = {}): void {
@@ -2435,13 +2516,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const wasBlockingOfflineLead =
             this.leadType(lead) === LEAD_TYPE.OfflineQueue &&
             this.leadState(lead) === LEAD_STATE.Pending;
-          const callResult = Number(this.reportForm.callResult);
-          const shouldOpenReservation = this.shouldOpenReservationAfterReport(
-            callResult,
-            response.data,
-          );
-          const reportSecondaryPhone =
-            this.reportForm.secondaryPhoneNumber.trim();
           this.reportedLeadIds.add(leadAssignmentId);
           this.reportingLeadIds.delete(leadAssignmentId);
           const status = this.applyConsultantStatusFrom(
@@ -2456,21 +2530,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
           this.markLeadReported(
             leadAssignmentId,
-            response.data?.leadAssignmentState ?? LEAD_STATE.Pending,
+            response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
+            response.data?.isReportSubmitted ?? true,
           );
           if (wasBlockingOfflineLead)
             this.updatePendingOfflineCount(
               Math.max(0, this.pendingOfflineCount - 1),
             );
           this.closeReportDialog({ releaseReportLock: false });
-          this.showFeedback(response.message || "گزارش تماس ثبت شد", "success");
-
-          if (shouldOpenReservation) {
-            this.openReservationDialog(lead, reportSecondaryPhone);
-          } else {
-            this.restoreOnlineAfterRequiredAction();
-          }
-          this.refreshDashboard();
+          this.showFeedback(response.message || "گزارش تماس با موفقیت ثبت شد", "success");
+          this.markViewDirty();
+          this.refreshDashboardAfterReport(() => {
+            this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
+          });
         },
         error: (error) =>
           this.showFeedback(
@@ -2506,6 +2578,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationDialogOpen = false;
     this.reservationSaving = false;
     this.selectedReservationLead = null;
+    this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
   }
 
   setReservationDate(date: Date): void {
@@ -2564,11 +2637,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       reservation.AttendanceConfirmationStatus
     ) {
       case 1:
-        return "منتظر تایید مشاور";
+        return "منتظر اعلام مشاور";
       case 2:
-        return "مشاور: بیمار آمد";
+        return "مشاور: بیمار آمده";
       case 3:
-        return "مشاور: بیمار نیامد";
+        return "مشاور: بیمار نیامده";
       case 4:
         return "تایید نهایی منشی";
       case 5:
@@ -2711,7 +2784,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.extractReservation(response);
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
-          const shouldOpenPatientProfile = Boolean(reservation);
+          const shouldOpenPatientProfile =
+            Boolean(reservation) &&
+            (reservation?.requiresPatientProfile ??
+              reservation?.RequiresPatientProfile) === true;
           this.showFeedback(
             response.message || "رزرو با موفقیت ثبت شد",
             "success",
@@ -2721,7 +2797,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (shouldOpenPatientProfile && reservation) {
             this.openPatientProfileDialog(reservation);
           } else {
-            this.restoreOnlineAfterRequiredAction();
+            this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
           }
         },
         error: (error) =>
@@ -2779,7 +2855,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               "ثبت‌نام بیمار و تشکیل پرونده رزرو با موفقیت انجام شد",
             "success",
           );
-          this.restoreOnlineAfterRequiredAction();
+          this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
           this.loadReservations();
         },
         error: (error) =>
@@ -2926,6 +3002,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const labels: Record<number, string> = {
       1: "جدید",
       2: "تخصیص داده شده",
+      3: "تماس برقرار شد",
       4: "در انتظار تعیین تکلیف",
       5: "تبدیل شده",
       6: "منقضی شده",
@@ -2967,10 +3044,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   isRealtimeTimedLead(lead: ConsultantLead): boolean {
     const leadAssignmentId = this.leadId(lead);
     if (
-      (leadAssignmentId &&
-        (this.reportedLeadIds.has(leadAssignmentId) ||
-          this.reportingLeadIds.has(leadAssignmentId))) ||
-      Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)
+      (leadAssignmentId && this.reportingLeadIds.has(leadAssignmentId)) ||
+      this.isLeadReportSubmitted(lead)
     )
       return false;
     if (this.leadType(lead) !== LEAD_TYPE.RealTime) return false;
@@ -3018,8 +3093,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       !leadAssignmentId ||
       this.isLeadExpired(lead) ||
       this.reportingLeadIds.has(leadAssignmentId) ||
-      this.reportedLeadIds.has(leadAssignmentId) ||
-      Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted) ||
+      this.isLeadReportSubmitted(lead) ||
       state === LEAD_STATE.Converted ||
       state === LEAD_STATE.Rejected
     );
@@ -3029,8 +3103,46 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return (
       !this.leadId(lead) ||
       this.isLeadInReportProgress(lead) ||
-      this.isLeadExpired(lead)
+      this.isLeadExpired(lead) ||
+      !this.isLeadReportSubmitted(lead) ||
+      !this.isLeadEligibleForReservation(lead)
     );
+  }
+
+  private isLeadEligibleForReservation(lead: ConsultantLead): boolean {
+    const state = this.leadState(lead);
+    return (
+      state === LEAD_STATE.Contacted || state === LEAD_STATE.Converted
+    );
+  }
+
+  isLeadReportSubmitted(lead: ConsultantLead): boolean {
+    const leadAssignmentId = this.leadId(lead);
+    if (leadAssignmentId && this.reportedLeadIds.has(leadAssignmentId)) {
+      return true;
+    }
+    return this.leadHasSubmittedReportFromBackend(lead);
+  }
+
+  private leadHasSubmittedReportFromBackend(lead: ConsultantLead): boolean {
+    if (Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)) return true;
+
+    const state = this.leadState(lead);
+    return (
+      state === LEAD_STATE.Contacted ||
+      state === LEAD_STATE.Converted ||
+      state === LEAD_STATE.Rejected
+    );
+  }
+
+  private syncReportedLeadIdsFromLeads(leads: ConsultantLead[]): void {
+    leads.forEach((lead) => {
+      const leadAssignmentId = this.leadId(lead);
+      if (!leadAssignmentId || !this.leadHasSubmittedReportFromBackend(lead)) {
+        return;
+      }
+      this.reportedLeadIds.add(leadAssignmentId);
+    });
   }
 
   isLeadInReportProgress(lead: ConsultantLead): boolean {
@@ -3187,6 +3299,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (requestId !== this.leadRequestId) return;
           this.applyConsultantStatusFrom(response.source, response.raw);
           this.leads = response.items ?? [];
+          this.syncReportedLeadIdsFromLeads(this.leads);
           this.leadTotalCount = response.totalCount ?? this.leads.length;
           this.leadPageSize = response.pageSize || this.leadPageSize;
           this.leadTotalPages = Math.max(
@@ -3507,16 +3620,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId || !this.isRealtimeTimedLead(lead)) return false;
     if (
-      this.reportedLeadIds.has(leadAssignmentId) ||
       this.reportingLeadIds.has(leadAssignmentId) ||
       this.expiringLeadIds.has(leadAssignmentId)
     )
       return false;
+    if (this.isLeadReportSubmitted(lead)) return false;
     if (
       this.currentTime < (this.expirationRetryAfter.get(leadAssignmentId) ?? 0)
     )
       return false;
-    if (Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)) return false;
 
     const state = this.leadState(lead);
     if (
@@ -3598,7 +3710,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
       secondaryPhoneNumber: reservationSecondaryPhone,
-      description: "رزرو اولیه برای لید",
+      description: "",
     };
     this.reservationDialogOpen = true;
   }
@@ -3654,14 +3766,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.patientProfileForm = this.emptyPatientProfileForm();
   }
 
-  private markLeadReported(leadAssignmentId: number, nextState: number): void {
+  private markLeadReported(
+    leadAssignmentId: number,
+    nextState: number,
+    isReportSubmitted = true,
+  ): void {
     this.leads = this.leads.map((lead) => {
       if (this.leadId(lead) !== leadAssignmentId) return lead;
 
       return {
         ...lead,
-        isReportSubmitted: true,
-        IsReportSubmitted: true,
+        isReportSubmitted,
+        IsReportSubmitted: isReportSubmitted,
         leadAssignmentState: nextState,
         LeadAssignmentState: nextState,
         state: nextState,
@@ -3757,15 +3873,38 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private restoreOnlineAfterRequiredAction(): void {
+  private restoreOnlineAfterRequiredAction(
+    options: { notifyWhenBlocked?: boolean } = {},
+  ): void {
     const profileId = this.currentProfileId();
-    if (
-      !profileId ||
-      this.isOnline ||
-      !this.isAvailable ||
-      this.pendingOfflineCount > 0
-    )
+    if (!profileId || this.isOnline || !this.isAvailable) return;
+
+    if (this.pendingOfflineCount > 0) {
+      if (options.notifyWhenBlocked) {
+        this.showFeedback(
+          "تا زمان تعیین تکلیف لیدهای صف آفلاین، امکان آنلاین شدن وجود ندارد.",
+          "info",
+        );
+      }
       return;
+    }
+
+    if (this.onlineStatusBlockReason) {
+      if (options.notifyWhenBlocked) {
+        this.showFeedback(this.onlineStatusBlockReason, "info");
+      }
+      return;
+    }
+
+    if (this.dashboardStatusLoaded && !this.canGoOnlineFromStatus) {
+      if (options.notifyWhenBlocked) {
+        this.showFeedback(
+          "در حال حاضر امکان آنلاین شدن وجود ندارد. لطفاً چند لحظه بعد دوباره تلاش کنید.",
+          "info",
+        );
+      }
+      return;
+    }
 
     this.onlineSaving = true;
     this.consultantApi
@@ -3786,7 +3925,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (status.isAvailable === null) this.isAvailable = true;
           this.refreshDashboard();
         },
-        error: () => this.loadPendingOfflineLeads(),
+        error: () => {
+          this.loadPendingOfflineLeads();
+          if (options.notifyWhenBlocked) {
+            this.showFeedback(
+              "تا زمان تعیین تکلیف لیدهای صف آفلاین، امکان آنلاین شدن وجود ندارد.",
+              "info",
+            );
+          }
+        },
       });
   }
 
@@ -3813,7 +3960,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.reportForm.patientRegion.trim().length > 80)
       return "منطقه بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
     if (this.reportForm.businessName.trim().length > 120)
-      return "نام بیزینس نباید بیشتر از ۱۲۰ کاراکتر باشد";
+      return "نام مطب یا کلینیک نباید بیشتر از ۱۲۰ کاراکتر باشد";
 
     const secondaryPhone = this.reportForm.secondaryPhoneNumber.trim();
     if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone))
@@ -4142,13 +4289,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return typeof value === "object" && value !== null;
   }
 
-  private showFeedback(message: string, type: "success" | "error"): void {
+  private showFeedback(
+    message: string,
+    type: "success" | "error" | "info",
+  ): void {
     this.feedbackMessage = message;
     this.feedbackType = type;
     if (type === "success") {
       this.toast.success(message);
-    } else {
+    } else if (type === "error") {
       this.toast.error(message);
+    } else {
+      this.toast.info(message);
     }
     this.markViewDirty();
   }
