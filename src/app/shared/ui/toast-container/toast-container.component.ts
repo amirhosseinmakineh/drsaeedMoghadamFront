@@ -6,6 +6,8 @@ import {
   ToastService,
 } from "../../../core/toast/toast.service";
 
+const TOAST_AUTO_DISMISS_MS = 2800;
+
 @Component({
   selector: "app-toast-container",
   standalone: true,
@@ -13,15 +15,23 @@ import {
   template: `
     <div class="toast-stack" aria-live="polite" aria-atomic="false">
       @for (toast of toasts; track toast.id) {
-        <p
+        <div
           class="toast"
           [class.success]="toast.type === 'success'"
           [class.error]="toast.type === 'error'"
           [class.info]="toast.type === 'info'"
           role="status"
         >
-          {{ toast.message }}
-        </p>
+          <p class="toast-message">{{ toast.message }}</p>
+          <button
+            class="toast-dismiss"
+            type="button"
+            aria-label="بستن اعلان"
+            (click)="dismiss(toast.id)"
+          >
+            ×
+          </button>
+        </div>
       }
     </div>
   `,
@@ -39,8 +49,11 @@ import {
         pointer-events: none;
       }
       .toast {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
         margin: 0;
-        padding: 12px 16px;
+        padding: 12px 12px 12px 16px;
         border-radius: 16px;
         border: 1px solid var(--line);
         background: var(--surface);
@@ -48,7 +61,29 @@ import {
         box-shadow: var(--shadow);
         font-weight: 900;
         line-height: 1.6;
+        pointer-events: auto;
+      }
+      .toast-message {
+        flex: 1;
+        margin: 0;
         text-align: center;
+      }
+      .toast-dismiss {
+        flex: 0 0 auto;
+        width: 28px;
+        height: 28px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--text) 8%, transparent);
+        color: inherit;
+        font-size: 1.25rem;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .toast-dismiss:hover {
+        background: color-mix(in srgb, var(--text) 14%, transparent);
       }
       .toast.success {
         border-color: color-mix(in srgb, #16a34a 40%, var(--line));
@@ -78,7 +113,10 @@ export class ToastContainerComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscription = this.toastService.messages$.subscribe((toast) => {
       this.toasts = [...this.toasts, toast];
-      const timer = setTimeout(() => this.dismiss(toast.id), 4200);
+      const timer = setTimeout(
+        () => this.dismiss(toast.id),
+        TOAST_AUTO_DISMISS_MS,
+      );
       this.timers.set(toast.id, timer);
     });
   }
@@ -89,7 +127,7 @@ export class ToastContainerComponent implements OnInit, OnDestroy {
     this.timers.clear();
   }
 
-  private dismiss(id: number): void {
+  dismiss(id: number): void {
     this.toasts = this.toasts.filter((toast) => toast.id !== id);
     const timer = this.timers.get(id);
     if (timer) {
