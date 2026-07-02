@@ -11,6 +11,7 @@ import { AuthService, AuthUser } from "./core/auth/auth.service";
 import { PushNotificationService } from "./core/push/push-notification.service";
 import { LanguageCode, NAV_ITEMS, pickText } from "./models/clinic.model";
 import { FaIconComponent } from "./shared/ui/fa-icon/fa-icon.component";
+import { ToastContainerComponent } from "./shared/ui/toast-container/toast-container.component";
 
 interface LanguageAwarePage {
   setLanguage?: (language: LanguageCode) => void;
@@ -27,8 +28,10 @@ interface LanguageAwarePage {
     RouterOutlet,
     AuthDialogComponent,
     FaIconComponent,
+    ToastContainerComponent,
   ],
   template: `
+    <app-toast-container></app-toast-container>
     <div class="app-shell light" [attr.dir]="direction">
       <header *ngIf="!isDashboardRoute()" class="site-header">
         <a

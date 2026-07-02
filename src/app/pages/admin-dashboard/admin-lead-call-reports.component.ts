@@ -12,6 +12,7 @@ import {
 } from "../../core/admin/admin-dashboard.service";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { downloadBlob } from "../../utils/file-download.util";
+import { ToastService } from "../../core/toast/toast.service";
 
 @Component({
   selector: "app-admin-lead-call-reports",
@@ -27,7 +28,7 @@ import { downloadBlob } from "../../utils/file-download.util";
         <button
           class="secondary-action compact"
           type="button"
-          [disabled]="downloading || validateFilters() !== null"
+          [disabled]="downloading"
           (click)="resetFilters()"
         >
           پاک‌سازی
@@ -55,7 +56,7 @@ import { downloadBlob } from "../../utils/file-download.util";
             (dateChange)="setToDate($event)"
           ></app-base-datepicker>
         </label>
-        <button class="primary-filter" type="submit" [disabled]="downloading || validateFilters() !== null">
+        <button class="primary-filter" type="submit" [disabled]="downloading">
           {{ downloading ? "در حال آماده‌سازی..." : "دانلود گزارش تماس" }}
         </button>
       </form>
@@ -79,7 +80,7 @@ import { downloadBlob } from "../../utils/file-download.util";
         padding: 18px;
         border: 1px solid var(--line);
         border-radius: 30px;
-        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        background: var(--surface);
         box-shadow: var(--shadow);
       }
       .panel-heading {
@@ -179,6 +180,7 @@ export class AdminLeadCallReportsComponent {
 
   constructor(
     private adminApi: AdminDashboardService,
+    private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -266,6 +268,11 @@ export class AdminLeadCallReportsComponent {
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedback = message;
     this.feedbackType = type;
+    if (type === "success") {
+      this.toast.success(message);
+    } else {
+      this.toast.error(message);
+    }
     this.markDirty();
   }
 

@@ -10,6 +10,7 @@ import {
 } from "../../models/clinic.model";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
+import { ToastService } from "../../core/toast/toast.service";
 
 @Component({
   selector: "app-contact",
@@ -117,7 +118,7 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
             rows="4"
           ></textarea>
         </label>
-        <button class="primary-btn" type="submit" [disabled]="validateContactForm() !== null">
+        <button class="primary-btn" type="submit">
           <app-fa-icon name="phone"></app-fa-icon
           >{{
             language() === "fa" ? "ثبت درخواست تماس" : "Submit call request"
@@ -279,6 +280,7 @@ export class ContactComponent {
   constructor(
     private title: Title,
     private meta: Meta,
+    private toast: ToastService,
   ) {
     this.updateSeo();
   }
@@ -326,6 +328,11 @@ export class ContactComponent {
   private showFeedback(message: string, type: "success" | "error"): void {
     this.feedback.set(message);
     this.feedbackType.set(type);
+    if (type === "success") {
+      this.toast.success(message);
+      return;
+    }
+    this.toast.error(message);
   }
 
   openAuth(): void {
