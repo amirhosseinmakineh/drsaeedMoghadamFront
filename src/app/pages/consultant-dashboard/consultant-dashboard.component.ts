@@ -190,8 +190,18 @@ interface ConsultantDashboardLink {
               [class.error]="feedbackType === 'error'"
               [class.success]="feedbackType === 'success'"
               [class.info]="feedbackType === 'info'"
+              role="status"
             >
-              {{ feedbackMessage }}
+              <span class="feedback-text">{{ feedbackMessage }}</span>
+              <button
+                class="feedback-dismiss"
+                type="button"
+                aria-label="بستن پیام"
+                title="بستن"
+                (click)="clearFeedback()"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
             </p>
           }
 
@@ -1151,10 +1161,40 @@ interface ConsultantDashboardLink {
         margin: 0;
       }
       .feedback {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
         margin: 0;
         padding: 12px 14px;
         border-radius: 20px;
         font-weight: 950;
+      }
+      .feedback-text {
+        flex: 1;
+        line-height: 1.6;
+      }
+      .feedback-dismiss {
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        margin: 0;
+        padding: 0;
+        border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--surface) 72%, transparent);
+        color: inherit;
+        font-size: 1.25rem;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .feedback-dismiss span {
+        display: block;
+        margin-top: -2px;
+      }
+      .feedback-dismiss:hover {
+        background: color-mix(in srgb, var(--text) 10%, var(--surface));
       }
       .feedback.success {
         background: color-mix(in srgb, #22c55e 16%, var(--surface));
@@ -1877,6 +1917,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private readonly reportedLeadIds = new Set<number>();
   private readonly reportingLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
+  private feedbackAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private suppressLeadCardActionsUntil = 0;
+  private leadStatusRefreshRequestId = 0;
   private timerStarts: Record<string, number> = {};
   private notifiedLeadIds = new Set<number>();
   private leadRequestId = 0;
@@ -1981,6 +2024,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    if (this.feedbackAutoDismissTimer) clearTimeout(this.feedbackAutoDismissTimer);
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
     if (this.autoAbsenceId) clearInterval(this.autoAbsenceId);
@@ -2204,7 +2248,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private refreshDashboardAfterReport(afterLoad?: () => void): void {
+  private refreshDashboardAfterReport(
+    leadAssignmentId: number,
+    afterLoad?: () => void,
+  ): void {
     if (!this.isProfileReady()) {
       afterLoad?.();
       return;
@@ -2219,10 +2266,40 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
       let leadsLoaded = false;
       let pendingLoaded = false;
+      let leadStatusLoaded = false;
       const maybeFinish = () => {
-        if (!leadsLoaded || !pendingLoaded) return;
+        if (!leadsLoaded || !pendingLoaded || !leadStatusLoaded) return;
         afterLoad?.();
       };
+
+      const leadStatusRequestId = ++this.leadStatusRefreshRequestId;
+      this.consultantApi
+        .getLeads({
+          profileId,
+          pageNumber: 1,
+          pageSize: 100,
+        })
+        .pipe(finalize(() => this.markViewDirty()))
+        .subscribe({
+          next: (response) => {
+            if (leadStatusRequestId !== this.leadStatusRefreshRequestId) return;
+            this.applyConsultantStatusFrom(response.source, response.raw);
+            const updatedLead = (response.items ?? []).find(
+              (item) => this.leadId(item) === leadAssignmentId,
+            );
+            if (updatedLead) {
+              this.mergeLeadFromBackend(updatedLead);
+            }
+            this.syncReportedLeadIdsFromLeads(this.leads);
+            leadStatusLoaded = true;
+            maybeFinish();
+          },
+          error: () => {
+            if (leadStatusRequestId !== this.leadStatusRefreshRequestId) return;
+            leadStatusLoaded = true;
+            maybeFinish();
+          },
+        });
 
       const pendingRequestId = ++this.pendingOfflineRequestId;
       this.pendingOfflineLoadSubscription?.unsubscribe();
@@ -2537,10 +2614,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.updatePendingOfflineCount(
               Math.max(0, this.pendingOfflineCount - 1),
             );
-          this.closeReportDialog({ releaseReportLock: false });
+          this.reservationDialogOpen = false;
+          this.selectedReservationLead = null;
+          this.suppressLeadCardActionsUntil = Date.now() + 600;
+          setTimeout(() => {
+            this.closeReportDialog({ releaseReportLock: false });
+          }, 0);
           this.showFeedback(response.message || "گزارش تماس با موفقیت ثبت شد", "success");
           this.markViewDirty();
-          this.refreshDashboardAfterReport(() => {
+          this.refreshDashboardAfterReport(leadAssignmentId, () => {
             this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
           });
         },
@@ -3698,6 +3780,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     lead: ConsultantLead,
     secondaryPhoneNumber = "",
   ): void {
+    if (Date.now() < this.suppressLeadCardActionsUntil) return;
+
     const leadAssignmentId = this.leadId(lead);
     const minimumReservationAt = this.minimumReservationDateTime();
     const reservationSecondaryPhone =
@@ -3783,6 +3867,22 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         state: nextState,
       };
     });
+  }
+
+  private mergeLeadFromBackend(updatedLead: ConsultantLead): void {
+    const leadAssignmentId = this.leadId(updatedLead);
+    if (!leadAssignmentId) return;
+
+    const index = this.leads.findIndex(
+      (lead) => this.leadId(lead) === leadAssignmentId,
+    );
+    if (index === -1) return;
+
+    this.leads = [
+      ...this.leads.slice(0, index),
+      { ...this.leads[index], ...updatedLead },
+      ...this.leads.slice(index + 1),
+    ];
   }
 
   private updatePendingOfflineCount(count: number): void {
@@ -4295,6 +4395,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   ): void {
     this.feedbackMessage = message;
     this.feedbackType = type;
+    if (this.feedbackAutoDismissTimer) {
+      clearTimeout(this.feedbackAutoDismissTimer);
+      this.feedbackAutoDismissTimer = null;
+    }
+    this.feedbackAutoDismissTimer = setTimeout(() => {
+      this.feedbackAutoDismissTimer = null;
+      this.clearFeedback();
+    }, 3500);
     if (type === "success") {
       this.toast.success(message);
     } else if (type === "error") {
@@ -4305,7 +4413,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.markViewDirty();
   }
 
-  private clearFeedback(): void {
+  clearFeedback(): void {
+    if (this.feedbackAutoDismissTimer) {
+      clearTimeout(this.feedbackAutoDismissTimer);
+      this.feedbackAutoDismissTimer = null;
+    }
     this.feedbackMessage = "";
   }
 
