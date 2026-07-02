@@ -11,6 +11,7 @@ import {
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ToastService } from "../../core/toast/toast.service";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 
 @Component({
   selector: "app-contact",
@@ -82,6 +83,7 @@ import { ToastService } from "../../core/toast/toast.service";
           {{ language() === "fa" ? "نام و نام خانوادگی" : "Full name" }}
           <input
             [(ngModel)]="form.fullName"
+            [ngModelOptions]="ngModelBlurOptions"
             name="contactFullName"
             required
             autocomplete="name"
@@ -91,6 +93,7 @@ import { ToastService } from "../../core/toast/toast.service";
           {{ language() === "fa" ? "شماره موبایل" : "Mobile number" }}
           <input
             [(ngModel)]="form.phone"
+            [ngModelOptions]="ngModelBlurOptions"
             name="contactPhone"
             required
             inputmode="tel"
@@ -99,7 +102,11 @@ import { ToastService } from "../../core/toast/toast.service";
         </label>
         <label>
           {{ language() === "fa" ? "درمان مورد نظر" : "Service of interest" }}
-          <select [(ngModel)]="form.serviceId" name="contactService">
+          <select
+            [(ngModel)]="form.serviceId"
+            [ngModelOptions]="ngModelBlurOptions"
+            name="contactService"
+          >
             <option *ngFor="let service of services" [value]="service.id">
               {{ pickText(service.title, language()) }}
             </option>
@@ -114,6 +121,7 @@ import { ToastService } from "../../core/toast/toast.service";
           {{ language() === "fa" ? "پیام کوتاه" : "Short message" }}
           <textarea
             [(ngModel)]="form.message"
+            [ngModelOptions]="ngModelBlurOptions"
             name="contactMessage"
             rows="4"
           ></textarea>
@@ -250,6 +258,7 @@ export class ContactComponent {
     message: "",
   };
   protected readonly pickText = pickText;
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   infoItems = [
     {
       icon: "phone",

@@ -36,6 +36,8 @@ import {
   downloadBlob,
   reportFileName,
 } from "../../utils/file-download.util";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
+import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 
 type DashboardSection =
   | "overview"
@@ -223,28 +225,34 @@ interface ScoreFormModel {
                   (ngSubmit)="applyUserFilters()"
                 >
                   <label
-                    >نام<input
+                    >نام                    <input
                       [(ngModel)]="userFilters.firstName"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="userFirstName"
                       placeholder="جستجوی نام"
                   /></label>
                   <label
-                    >نام خانوادگی<input
+                    >نام خانوادگی                    <input
                       [(ngModel)]="userFilters.lastName"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="userLastName"
                       placeholder="جستجوی نام خانوادگی"
                   /></label>
                   <label
                     >موبایل<input
                       [(ngModel)]="userFilters.phoneNumber"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="userPhone"
                       inputmode="tel"
                       placeholder="09123456789"
                   /></label>
                   <label>
                     نقش
-                    <select [(ngModel)]="userFilters.roleName" name="userRole">
-                      <option value="">همه نقش‌ها</option>
+                    <select
+                      [(ngModel)]="userFilters.roleName"
+                      [ngModelOptions]="ngModelBlurOptions"
+                      name="userRole"
+                    >
                       <option value="Admin">ادمین</option>
                       <option value="Consultant">مشاور</option>
                       <option value="Secretary">منشی</option>
@@ -253,8 +261,11 @@ interface ScoreFormModel {
                   </label>
                   <label>
                     جنسیت
-                    <select [(ngModel)]="userFilters.gender" name="userGender">
-                      <option [ngValue]="null">همه</option>
+                    <select
+                      [(ngModel)]="userFilters.gender"
+                      [ngModelOptions]="ngModelBlurOptions"
+                      name="userGender"
+                    >
                       <option [ngValue]="1">مرد</option>
                       <option [ngValue]="2">زن</option>
                     </select>
@@ -263,6 +274,7 @@ interface ScoreFormModel {
                     وضعیت
                     <select
                       [(ngModel)]="userFilters.isActive"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="userActive"
                     >
                       <option [ngValue]="null">همه</option>
@@ -329,18 +341,21 @@ interface ScoreFormModel {
                   <label
                     >نام<input
                       [(ngModel)]="consultantFilters.firstName"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="consultantFirstName"
                       placeholder="جستجوی نام"
                   /></label>
                   <label
                     >نام خانوادگی<input
                       [(ngModel)]="consultantFilters.lastName"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="consultantLastName"
                       placeholder="جستجوی نام خانوادگی"
                   /></label>
                   <label
                     >موبایل<input
                       [(ngModel)]="consultantFilters.phoneNumber"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="consultantPhone"
                       inputmode="tel"
                       placeholder="شماره دقیق"
@@ -439,12 +454,14 @@ interface ScoreFormModel {
             <label
               >نام<input
                 [(ngModel)]="userForm.firstName"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="dialogFirstName"
                 maxlength="100"
             /></label>
             <label
               >نام خانوادگی<input
                 [(ngModel)]="userForm.lastName"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="dialogLastName"
                 maxlength="100"
             /></label>
@@ -452,6 +469,7 @@ interface ScoreFormModel {
           <label
             >شماره موبایل<input
               [(ngModel)]="userForm.phoneNumber"
+              [ngModelOptions]="ngModelBlurOptions"
               name="dialogPhone"
               inputmode="tel"
               placeholder="09123456789"
@@ -461,6 +479,7 @@ interface ScoreFormModel {
               <label
                 >رمز عبور<input
                   [(ngModel)]="userForm.passwordHash"
+                  [ngModelOptions]="ngModelBlurOptions"
                   name="dialogPassword"
                   type="password"
                   minlength="6"
@@ -481,7 +500,11 @@ interface ScoreFormModel {
           <div class="two-col">
             <label>
               جنسیت
-              <select [(ngModel)]="userForm.gender" name="dialogGender">
+              <select
+                [(ngModel)]="userForm.gender"
+                [ngModelOptions]="ngModelBlurOptions"
+                name="dialogGender"
+              >
                 <option [ngValue]="1">مرد</option>
                 <option [ngValue]="2">زن</option>
               </select>
@@ -503,6 +526,7 @@ interface ScoreFormModel {
           <label
             >نام فایل آواتار<input
               [(ngModel)]="userForm.avatarImageName"
+              [ngModelOptions]="ngModelBlurOptions"
               name="dialogAvatar"
               placeholder="اختیاری"
           /></label>
@@ -567,12 +591,14 @@ interface ScoreFormModel {
             <label
               >مقدار امتیاز<input
                 [(ngModel)]="scoreForm.scoreValue"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="scoreValue"
                 type="number"
             /></label>
             <label
               >شناسه لید مرتبط<input
                 [(ngModel)]="scoreForm.leadAssignmentId"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="scoreLeadId"
                 type="number"
                 placeholder="اختیاری"
@@ -581,6 +607,7 @@ interface ScoreFormModel {
           <label
             >توضیح<textarea
               [(ngModel)]="scoreForm.description"
+              [ngModelOptions]="ngModelBlurOptions"
               name="scoreDescription"
               rows="3"
             ></textarea>
@@ -1278,6 +1305,9 @@ export class DashboardComponent implements OnInit {
     { action: "leads", label: "لیدها", icon: "clipboard" },
   ];
 
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
+  private readonly markDirty: () => void;
+
   constructor(
     private auth: AuthService,
     private router: Router,
@@ -1285,7 +1315,9 @@ export class DashboardComponent implements OnInit {
     private pushNotifications: PushNotificationService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.markDirty = createCoalescedMarkForCheck(this.cdr, () => false);
+  }
 
   ngOnInit(): void {
     if (this.isAdmin()) {
@@ -1900,10 +1932,6 @@ export class DashboardComponent implements OnInit {
   private clearFeedback(): void {
     this.feedbackMessage = "";
     this.markDirty();
-  }
-
-  private markDirty(): void {
-    this.cdr.markForCheck();
   }
 
   private errorMessage(error: unknown, fallback: string): string {

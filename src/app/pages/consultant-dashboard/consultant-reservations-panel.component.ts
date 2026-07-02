@@ -26,6 +26,8 @@ import {
   readAttendanceStatus,
 } from "../../core/reservation/reservation-attendance";
 import { ToastService } from "../../core/toast/toast.service";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
+import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 
 export type ConsultantReservationTab = "pending" | "all" | "completed";
 
@@ -141,6 +143,7 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
                   یادداشت (اختیاری)
                   <textarea
                     [(ngModel)]="notes[reservationId(reservation) || 0]"
+                    [ngModelOptions]="ngModelBlurOptions"
                     [name]="'note' + reservationId(reservation)"
                     rows="2"
                   ></textarea>
@@ -466,12 +469,17 @@ export class ConsultantReservationsPanelComponent
   private loadRequestId = 0;
   private pollId: ReturnType<typeof setInterval> | null = null;
   private loadSubscription: Subscription | null = null;
+  private destroyed = false;
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
+  private readonly markDirty: () => void;
 
   constructor(
     private consultantApi: ConsultantDashboardService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.markDirty = createCoalescedMarkForCheck(this.cdr, () => this.destroyed);
+  }
 
   ngOnInit(): void {
     if (this.profileReady) {
@@ -491,6 +499,7 @@ export class ConsultantReservationsPanelComponent
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.stopPolling();
     this.loadSubscription?.unsubscribe();
   }
@@ -780,11 +789,7 @@ export class ConsultantReservationsPanelComponent
     this.feedback = message;
     this.feedbackType = type;
     if (type === "success") this.toast.success(message);
-    else this.toast.error(message);
+    else     this.toast.error(message);
     this.markDirty();
-  }
-
-  private markDirty(): void {
-    this.cdr.markForCheck();
   }
 }

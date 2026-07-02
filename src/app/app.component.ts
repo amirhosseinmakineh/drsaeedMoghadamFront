@@ -1,11 +1,7 @@
 import { NgFor, NgIf } from "@angular/common";
-import { Component, OnDestroy, OnInit, signal } from "@angular/core";
-import {
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from "@angular/router";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, signal } from "@angular/core";
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
+import { filter, Subscription } from "rxjs";
 import { AuthDialogComponent } from "./auth/auth-dialog.component";
 import { AuthService, AuthUser } from "./core/auth/auth.service";
 import { PushNotificationService } from "./core/push/push-notification.service";
@@ -20,6 +16,7 @@ interface LanguageAwarePage {
 @Component({
   selector: "app-root",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     NgFor,
     NgIf,
@@ -288,11 +285,13 @@ export class AppComponent implements OnInit, OnDestroy {
   protected readonly pickText = pickText;
 
   private readonly openAuthFromPage = (): void => this.authOpen.set(true);
+  private routerSubscription: Subscription | null = null;
 
   constructor(
     private router: Router,
     public auth: AuthService,
     private pushNotifications: PushNotificationService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   get direction(): "rtl" | "ltr" {
@@ -333,10 +332,14 @@ export class AppComponent implements OnInit, OnDestroy {
     this.applyDocumentState();
     void this.pushNotifications.syncForCurrentProfile();
     window.addEventListener("open-auth-dialog", this.openAuthFromPage);
+    this.routerSubscription = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => this.cdr.markForCheck());
   }
 
   ngOnDestroy(): void {
     window.removeEventListener("open-auth-dialog", this.openAuthFromPage);
+    this.routerSubscription?.unsubscribe();
   }
 
   onActivate(component: object): void {

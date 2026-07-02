@@ -444,9 +444,20 @@ export class TableComponent<T extends object = Record<string, unknown>>
   @Output() pageChange = new EventEmitter<number>();
   @Output() searchChange = new EventEmitter<string>();
 
+  private appliedSearchTerm = "";
+  private searchDebounceId: ReturnType<typeof setTimeout> | null = null;
+
   constructor(private cdr: ChangeDetectorRef) {}
 
-  ngOnChanges(_: SimpleChanges): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes["searchTerm"] && !changes["searchTerm"].firstChange) {
+      this.appliedSearchTerm = this.searchTerm;
+    }
+
+    if (changes["searchTerm"]?.firstChange) {
+      this.appliedSearchTerm = this.searchTerm;
+    }
+
     this.cdr.markForCheck();
   }
 
@@ -481,7 +492,7 @@ export class TableComponent<T extends object = Record<string, unknown>>
   get filteredData(): T[] {
     if (this.serverSide) return this.data;
 
-    const term = this.searchTerm.trim().toLowerCase();
+    const term = this.appliedSearchTerm.trim().toLowerCase();
 
     if (!term) {
       return this.data;
@@ -516,9 +527,18 @@ export class TableComponent<T extends object = Record<string, unknown>>
 
   onSearchChange(value: string): void {
     this.searchTerm = value;
-    this.currentPage = 1;
-    this.searchChange.emit(value);
-    this.cdr.markForCheck();
+
+    if (this.searchDebounceId) {
+      clearTimeout(this.searchDebounceId);
+    }
+
+    this.searchDebounceId = setTimeout(() => {
+      this.searchDebounceId = null;
+      this.appliedSearchTerm = value;
+      this.currentPage = 1;
+      this.searchChange.emit(value);
+      this.cdr.markForCheck();
+    }, 300);
   }
 
   previousPage(): void {

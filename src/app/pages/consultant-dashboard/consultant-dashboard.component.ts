@@ -27,6 +27,8 @@ import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.c
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ConsultantReservationsPanelComponent } from "./consultant-reservations-panel.component";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
+import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 
 const LEAD_STATE = {
   New: 1,
@@ -335,6 +337,7 @@ interface ConsultantDashboardLink {
                     کد ملی
                     <input
                       [(ngModel)]="profileForm.nationalityCode"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="nationalityCode"
                       inputmode="numeric"
                       maxlength="10"
@@ -345,6 +348,7 @@ interface ConsultantDashboardLink {
                     آدرس
                     <textarea
                       [(ngModel)]="profileForm.address"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="consultantAddress"
                       rows="4"
                       placeholder="آدرس کامل محل سکونت"
@@ -544,6 +548,7 @@ interface ConsultantDashboardLink {
                     وضعیت
                     <select
                       [(ngModel)]="leadStateFilter"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="consultantLeadState"
                     >
                       <option [ngValue]="null">همه</option>
@@ -556,6 +561,7 @@ interface ConsultantDashboardLink {
                     نوع
                     <select
                       [(ngModel)]="leadTypeFilter"
+                      [ngModelOptions]="ngModelBlurOptions"
                       name="consultantLeadType"
                     >
                       <option [ngValue]="null">همه</option>
@@ -720,8 +726,11 @@ interface ConsultantDashboardLink {
         <form class="dialog-form" (ngSubmit)="submitLeadReport()">
           <label>
             نتیجه تماس
-            <select [(ngModel)]="reportForm.callResult" name="leadCallResult">
-              <option [ngValue]="1">تماس برقرار شد</option>
+            <select
+              [(ngModel)]="reportForm.callResult"
+              [ngModelOptions]="ngModelBlurOptions"
+              name="leadCallResult"
+            >
               <option [ngValue]="2">تبدیل به بیمار</option>
               <option [ngValue]="3">رد شد</option>
               <option [ngValue]="4">پاسخ نداد</option>
@@ -743,6 +752,7 @@ interface ConsultantDashboardLink {
               شهر بیمار
               <input
                 [(ngModel)]="reportForm.patientCity"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="leadReportPatientCity"
                 maxlength="80"
                 placeholder="تهران"
@@ -752,6 +762,7 @@ interface ConsultantDashboardLink {
               منطقه بیمار
               <input
                 [(ngModel)]="reportForm.patientRegion"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="leadReportPatientRegion"
                 maxlength="80"
                 placeholder="سعادت‌آباد"
@@ -762,6 +773,7 @@ interface ConsultantDashboardLink {
             نام مطب یا کلینیک
             <input
               [(ngModel)]="reportForm.businessName"
+              [ngModelOptions]="ngModelBlurOptions"
               name="leadReportBusinessName"
               maxlength="120"
               placeholder="نام مطب یا کلینیک بیمار"
@@ -771,6 +783,7 @@ interface ConsultantDashboardLink {
             درصد احتمال حضور
             <input
               [(ngModel)]="reportForm.attendanceProbabilityPercent"
+              [ngModelOptions]="ngModelBlurOptions"
               name="leadReportAttendanceProbability"
               type="number"
               min="0"
@@ -781,6 +794,7 @@ interface ConsultantDashboardLink {
             شماره تماس دوم بیمار
             <input
               [(ngModel)]="reportForm.secondaryPhoneNumber"
+              [ngModelOptions]="ngModelBlurOptions"
               name="leadReportSecondaryPhoneNumber"
               inputmode="tel"
               maxlength="11"
@@ -832,6 +846,7 @@ interface ConsultantDashboardLink {
             ساعت رزرو
             <input
               [(ngModel)]="reservationForm.reservationTime"
+              [ngModelOptions]="ngModelBlurOptions"
               name="reservationTime"
               type="time"
             />
@@ -841,6 +856,7 @@ interface ConsultantDashboardLink {
             شماره تماس دوم بیمار
             <input
               [(ngModel)]="reservationForm.secondaryPhoneNumber"
+              [ngModelOptions]="ngModelBlurOptions"
               name="reservationSecondaryPhoneNumber"
               inputmode="tel"
               maxlength="20"
@@ -852,6 +868,7 @@ interface ConsultantDashboardLink {
             توضیحات
             <textarea
               [(ngModel)]="reservationForm.description"
+              [ngModelOptions]="ngModelBlurOptions"
               name="reservationDescription"
               rows="3"
             ></textarea>
@@ -894,6 +911,7 @@ interface ConsultantDashboardLink {
                 نام
                 <input
                   [(ngModel)]="patientProfileForm.firstName"
+                  [ngModelOptions]="ngModelBlurOptions"
                   name="patientFirstName"
                   autocomplete="given-name"
                   maxlength="100"
@@ -903,6 +921,7 @@ interface ConsultantDashboardLink {
                 نام خانوادگی
                 <input
                   [(ngModel)]="patientProfileForm.lastName"
+                  [ngModelOptions]="ngModelBlurOptions"
                   name="patientLastName"
                   autocomplete="family-name"
                   maxlength="100"
@@ -915,6 +934,7 @@ interface ConsultantDashboardLink {
                 شماره موبایل
                 <input
                   [(ngModel)]="patientProfileForm.phoneNumber"
+                  [ngModelOptions]="ngModelBlurOptions"
                   name="patientPhoneNumber"
                   inputmode="tel"
                   autocomplete="tel"
@@ -925,6 +945,7 @@ interface ConsultantDashboardLink {
                 رمز عبور
                 <input
                   [(ngModel)]="patientProfileForm.password"
+                  [ngModelOptions]="ngModelBlurOptions"
                   name="patientPassword"
                   type="password"
                   autocomplete="new-password"
@@ -938,6 +959,7 @@ interface ConsultantDashboardLink {
               جنسیت
               <select
                 [(ngModel)]="patientProfileForm.gender"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="patientGender"
               >
                 <option [ngValue]="1">مرد</option>
@@ -1888,6 +1910,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private destroyed = false;
   private pollIntervalMs = 30000;
   private routeParamsInitialized = false;
+  private readonly markViewDirty: () => void;
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly pushMessageListener = (event: Event): void => {
     const detail = (
       event as CustomEvent<{
@@ -1921,7 +1945,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-  ) {}
+  ) {
+    this.markViewDirty = createCoalescedMarkForCheck(this.cdr, () => this.destroyed);
+  }
 
   get visibleDashboardLinks(): ConsultantDashboardLink[] {
     if (!this.isProfileReady()) {
@@ -4443,11 +4469,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.feedbackAutoDismissTimer = null;
     }
     this.feedbackMessage = "";
-  }
-
-  private markViewDirty(): void {
-    if (this.destroyed) return;
-    this.cdr.markForCheck();
   }
 
   private isAlreadyCompleteProfileError(message: string): boolean {

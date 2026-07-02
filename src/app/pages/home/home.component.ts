@@ -19,6 +19,7 @@ import {
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ToastService } from "../../core/toast/toast.service";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 
 @Component({
   selector: "app-home",
@@ -58,6 +59,7 @@ export class HomeComponent {
   };
 
   protected readonly pickText = pickText;
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
 
   constructor(
     private title: Title,

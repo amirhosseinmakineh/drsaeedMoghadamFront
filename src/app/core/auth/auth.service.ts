@@ -498,6 +498,18 @@ export class AuthService {
     );
   }
 
+  private hasJwtRoleClaim(token: string): boolean {
+    const claims = this.decodeJwtPayload(token);
+    return Boolean(
+      this.claimValue(claims, [
+        "role",
+        "Role",
+        "roles",
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+      ]),
+    );
+  }
+
   private readSession(): AuthUser | null {
     try {
       const rawSession = localStorage.getItem(this.sessionStorageKey);
@@ -526,7 +538,9 @@ export class AuthService {
           tokenUser.consultantProfileId ?? session.user.consultantProfileId,
         isCompleteProfile,
         roleName: tokenUser.roleName || session.user.roleName,
-        role: tokenUser.role,
+        role: this.hasJwtRoleClaim(session.token)
+          ? tokenUser.role
+          : (session.user.role ?? tokenUser.role),
         token: session.token,
       };
     } catch {

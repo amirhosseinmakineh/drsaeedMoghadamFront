@@ -26,6 +26,8 @@ import {
   SecretaryDashboardService,
 } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
+import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
+import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 
 export type SecretaryReservationTab = "queue" | "all" | "completed";
 
@@ -81,6 +83,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
             جستجو
             <input
               [(ngModel)]="searchText"
+              [ngModelOptions]="ngModelBlurOptions"
               name="secretaryReservationSearch"
               placeholder="نام، موبایل یا مشاور"
               (keyup.enter)="applySearch()"
@@ -192,6 +195,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
                   یادداشت منشی
                   <textarea
                     [(ngModel)]="notes[reservationId(item) || 0]"
+                    [ngModelOptions]="ngModelBlurOptions"
                     [name]="'secretaryNote' + reservationId(item)"
                     rows="2"
                   ></textarea>
@@ -267,12 +271,14 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
             <label
               >نام<input
                 [(ngModel)]="profileForm.firstName"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="resPatientFirstName"
                 maxlength="100"
             /></label>
             <label
               >نام خانوادگی<input
                 [(ngModel)]="profileForm.lastName"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="resPatientLastName"
                 maxlength="100"
             /></label>
@@ -287,6 +293,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
             <label
               >رمز عبور<input
                 [(ngModel)]="profileForm.passwordHash"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="resPatientPassword"
                 type="password"
                 minlength="6"
@@ -296,6 +303,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
             <label
               >کد ملی<input
                 [(ngModel)]="profileForm.nationalCode"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="resPatientNationalCode"
                 maxlength="10"
                 inputmode="numeric"
@@ -303,6 +311,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
             <label
               >تاریخ تولد<input
                 [(ngModel)]="profileForm.birthDate"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="resPatientBirthDate"
                 type="date"
             /></label>
@@ -310,6 +319,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
           <label
             >آدرس<textarea
               [(ngModel)]="profileForm.address"
+              [ngModelOptions]="ngModelBlurOptions"
               name="resPatientAddress"
               rows="3"
             ></textarea>
@@ -318,6 +328,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
             <label
               >جنسیت<select
                 [(ngModel)]="profileForm.gender"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="resPatientGender"
                 ><option [ngValue]="1">مرد</option
                 ><option [ngValue]="2">زن</option></select
@@ -326,6 +337,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
             <label
               >شماره اضطراری<input
                 [(ngModel)]="profileForm.emergencyPhoneNumber"
+                [ngModelOptions]="ngModelBlurOptions"
                 name="resEmergencyPhone"
                 inputmode="tel"
             /></label>
@@ -333,11 +345,13 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
           <label
             >بیمه<input
               [(ngModel)]="profileForm.insuranceName"
+              [ngModelOptions]="ngModelBlurOptions"
               name="resInsurance"
           /></label>
           <label
             >توضیحات<textarea
               [(ngModel)]="profileForm.notes"
+              [ngModelOptions]="ngModelBlurOptions"
               name="resProfileNotes"
               rows="2"
             ></textarea>
@@ -662,13 +676,18 @@ export class SecretaryReservationsComponent
   private loadRequestId = 0;
   private pollId: ReturnType<typeof setInterval> | null = null;
   private loadSubscription: Subscription | null = null;
+  private destroyed = false;
+  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
+  private readonly markDirty: () => void;
 
   constructor(
     private secretaryApi: SecretaryDashboardService,
     private auth: AuthService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.markDirty = createCoalescedMarkForCheck(this.cdr, () => this.destroyed);
+  }
 
   ngOnInit(): void {
     this.activeTab = this.initialTab;
@@ -689,6 +708,7 @@ export class SecretaryReservationsComponent
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.stopPolling();
     this.loadSubscription?.unsubscribe();
   }
@@ -1125,9 +1145,5 @@ export class SecretaryReservationsComponent
     }
     this.toast.error(message);
     this.markDirty();
-  }
-
-  private markDirty(): void {
-    this.cdr.markForCheck();
   }
 }
