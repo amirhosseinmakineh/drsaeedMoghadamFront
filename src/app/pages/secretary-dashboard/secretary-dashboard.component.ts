@@ -688,6 +688,12 @@ export class SecretaryDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const user = this.user();
+    if (user?.role === "consultant") {
+      void this.router.navigateByUrl(this.auth.dashboardUrl(user));
+      return;
+    }
+
     if (!this.isProfileReady()) {
       this.activeSection = "profile";
     }
@@ -755,13 +761,28 @@ export class SecretaryDashboardComponent implements OnInit {
           );
           this.activeSection = "overview";
         },
-        error: (error) =>
-          this.showFeedback(
+        error: (error) => {
+          const message =
             error instanceof Error && error.message
               ? error.message
-              : "تکمیل پروفایل انجام نشد",
-            "error",
-          ),
+              : "تکمیل پروفایل انجام نشد";
+
+          if (
+            message.includes("نقش شما") ||
+            message.includes("404") ||
+            message.includes("Not Found")
+          ) {
+            this.auth.logout();
+            this.toast.show(
+              "نقش شما تغییر کرده است. لطفاً دوباره وارد شوید",
+              "info",
+            );
+            void this.router.navigateByUrl("/");
+            return;
+          }
+
+          this.showFeedback(message, "error");
+        },
       });
   }
 

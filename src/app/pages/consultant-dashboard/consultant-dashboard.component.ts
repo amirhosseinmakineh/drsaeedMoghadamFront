@@ -2083,6 +2083,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.consultantApi
       .completeProfile({
         profileId: this.currentProfileId() ?? 0,
+        userId: this.user()?.userId,
         nationalityCode: this.profileForm.nationalityCode.trim(),
         address: this.profileForm.address.trim(),
         isCompleteProfile: true,
@@ -2127,6 +2128,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               this.startTimers();
               return;
             }
+          }
+
+          if (message.includes("نقش شما")) {
+            this.auth.logout();
+            this.toast.show(
+              "نقش شما تغییر کرده است. لطفاً دوباره وارد شوید",
+              "info",
+            );
+            void this.router.navigateByUrl("/");
+            return;
           }
 
           this.showFeedback(

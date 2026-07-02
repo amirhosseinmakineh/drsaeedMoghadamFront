@@ -179,7 +179,10 @@ export class AuthService {
     if (!user) return "/";
 
     const base = `/dashboard/${user.role}`;
-    if (!this.isRoleProfileComplete(user) && user.role === "consultant") {
+    if (
+      !this.isRoleProfileComplete(user) &&
+      (user.role === "consultant" || user.role === "secretary")
+    ) {
       return `${base}?section=profile`;
     }
 
@@ -521,10 +524,7 @@ export class AuthService {
       const tokenUser = this.userFromToken(session.token, null);
 
       const isCompleteProfile =
-        session.user.isCompleteProfile === true ||
-        tokenUser.isCompleteProfile === true
-          ? true
-          : (tokenUser.isCompleteProfile ?? session.user.isCompleteProfile);
+        tokenUser.isCompleteProfile ?? session.user.isCompleteProfile;
 
       return {
         ...tokenUser,
