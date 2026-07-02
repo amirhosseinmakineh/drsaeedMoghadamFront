@@ -311,9 +311,7 @@ export class AuthDialogComponent {
           next: (user) => {
             this.resetForm();
             this.closed.emit();
-            if (user.role === "consultant") {
-              this.router.navigateByUrl(this.auth.dashboardUrl(user));
-            }
+            this.router.navigateByUrl(this.auth.dashboardUrl(user));
           },
           error: (error) =>
             this.feedback.set({

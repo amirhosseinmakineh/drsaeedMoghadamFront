@@ -3,12 +3,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  OnDestroy,
   OnInit,
   computed,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
-import { finalize } from "rxjs";
+import { Router, RouterLink, ActivatedRoute } from "@angular/router";
+import { finalize, Subscription } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import { ToastService } from "../../core/toast/toast.service";
@@ -626,7 +627,7 @@ interface SecretaryDashboardLink {
     `,
   ],
 })
-export class SecretaryDashboardComponent implements OnInit {
+export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   readonly user = this.auth.user;
   activeSection: SecretaryDashboardSection = "overview";
 
@@ -658,10 +659,12 @@ export class SecretaryDashboardComponent implements OnInit {
   profileSaving = false;
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
+  private routeQueryParamsSubscription?: Subscription;
 
   constructor(
     private auth: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private secretaryApi: SecretaryDashboardService,
     private pushNotifications: PushNotificationService,
     private toast: ToastService,
@@ -679,9 +682,35 @@ export class SecretaryDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.applyRouteSection(this.route.snapshot.queryParamMap);
+    this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
+      (params) => this.applyRouteSection(params),
+    );
+
     if (!this.isProfileReady()) {
       this.activeSection = "profile";
     }
+  }
+
+  ngOnDestroy(): void {
+    this.routeQueryParamsSubscription?.unsubscribe();
+  }
+
+  private applyRouteSection(
+    params: { get: (key: string) => string | null },
+  ): void {
+    const section = params.get("section");
+    if (!section) return;
+
+    const allowed: SecretaryDashboardSection[] = [
+      "overview",
+      "profile",
+      "reservations",
+      "reviews",
+    ];
+    if (!allowed.includes(section as SecretaryDashboardSection)) return;
+
+    this.setSection(section as SecretaryDashboardSection);
   }
 
   isProfileReady(): boolean {

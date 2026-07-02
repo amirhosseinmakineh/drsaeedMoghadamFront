@@ -500,8 +500,8 @@ export class AuthService {
           session.user.consultantProfileId ?? tokenUser.consultantProfileId,
         isCompleteProfile:
           session.user.isCompleteProfile ?? tokenUser.isCompleteProfile,
-        roleName: session.user.roleName || tokenUser.roleName,
-        role: session.user.role || tokenUser.role,
+        roleName: tokenUser.roleName || session.user.roleName,
+        role: tokenUser.role || session.user.role,
         token: session.token,
       };
     } catch {

@@ -23,3 +23,13 @@ export const roleGuard = (allowedRoles: AuthRole[]): CanActivateFn => {
     return router.parseUrl(auth.dashboardUrl(user));
   };
 };
+
+export const dashboardRedirectGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const user = auth.user();
+
+  if (!user) return router.parseUrl("/");
+
+  return router.parseUrl(auth.dashboardUrl(user));
+};
