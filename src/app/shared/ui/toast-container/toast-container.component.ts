@@ -6,7 +6,7 @@ import {
   ToastService,
 } from "../../../core/toast/toast.service";
 
-const TOAST_AUTO_DISMISS_MS = 2800;
+const TOAST_AUTO_DISMISS_MS = 2000;
 
 @Component({
   selector: "app-toast-container",
@@ -27,9 +27,10 @@ const TOAST_AUTO_DISMISS_MS = 2800;
             class="toast-dismiss"
             type="button"
             aria-label="بستن اعلان"
+            title="بستن"
             (click)="dismiss(toast.id)"
           >
-            ×
+            <span aria-hidden="true">×</span>
           </button>
         </div>
       }
@@ -70,20 +71,26 @@ const TOAST_AUTO_DISMISS_MS = 2800;
       }
       .toast-dismiss {
         flex: 0 0 auto;
-        width: 28px;
-        height: 28px;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
         margin: 0;
         padding: 0;
-        border: 0;
+        border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
         border-radius: 999px;
-        background: color-mix(in srgb, var(--text) 8%, transparent);
+        background: color-mix(in srgb, var(--surface) 72%, transparent);
         color: inherit;
-        font-size: 1.25rem;
+        font-size: 1.35rem;
         line-height: 1;
         cursor: pointer;
       }
+      .toast-dismiss span {
+        display: block;
+        margin-top: -2px;
+      }
       .toast-dismiss:hover {
-        background: color-mix(in srgb, var(--text) 14%, transparent);
+        background: color-mix(in srgb, var(--text) 12%, var(--surface));
       }
       .toast.success {
         border-color: color-mix(in srgb, #16a34a 40%, var(--line));
