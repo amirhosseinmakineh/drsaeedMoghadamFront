@@ -14,7 +14,6 @@ import { PushNotificationService } from "../../core/push/push-notification.servi
 import { ToastService } from "../../core/toast/toast.service";
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
-import { SecretaryReservationAttendanceReviewsComponent } from "./secretary-reservation-attendance-reviews.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
 
 interface SecretaryProfileForm {
@@ -42,7 +41,6 @@ interface SecretaryDashboardLink {
     FormsModule,
     RouterLink,
     FaIconComponent,
-    SecretaryReservationAttendanceReviewsComponent,
     SecretaryReservationsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -233,6 +231,7 @@ interface SecretaryDashboardLink {
             } @else {
               <app-secretary-reservations
                 [profileReady]="isProfileReady()"
+                initialTab="all"
               ></app-secretary-reservations>
             }
           }
@@ -256,9 +255,10 @@ interface SecretaryDashboardLink {
                 </button>
               </section>
             } @else {
-              <app-secretary-reservation-attendance-reviews
+              <app-secretary-reservations
                 [profileReady]="isProfileReady()"
-              ></app-secretary-reservation-attendance-reviews>
+                initialTab="queue"
+              ></app-secretary-reservations>
             }
           }
         </section>

@@ -64,8 +64,15 @@ Request body کامل:
 ## 2. دریافت رزروهای مشاور
 
 ```http
-GET /api/Reservation/GetConsultantReservations?consultantProfileId=43&from=2026-06-27T00:00:00.000Z&to=2026-06-27T23:59:59.999Z&includeCanceled=false&pageNumber=1&pageSize=5
+GET /api/Reservation/GetConsultantReservations?consultantProfileId=43&from=2026-06-27T00:00:00.000Z&to=2026-06-27T23:59:59.999Z&includeCanceled=false&onlySecretaryReviewed=false&pageNumber=1&pageSize=5
 ```
+
+Queryهای اضافی:
+
+| پارامتر | نوع | توضیح |
+| --- | --- | --- |
+| `onlySecretaryReviewed` | `boolean` | فقط رزروهایی که منشی بررسی کرده (تب انجام‌شده) |
+| `from` / `to` | `DateTime` | بازه تاریخ (اختیاری) |
 
 Response نمونه:
 
@@ -162,3 +169,18 @@ POST /api/Reservation/CompletePatientProfile
 | `3` | `ConsultantConfirmedAbsent` | مشاور گفته بیمار نیامده است |
 | `4` | `SecretaryApproved` | منشی ادعای مشاور را تایید کرده |
 | `5` | `SecretaryRejected` | منشی ادعای مشاور را رد کرده |
+
+## 8. دریافت رزروهای منشی
+
+```http
+GET /api/Reservation/SecretaryReservations?onlyWaitingForSecretaryReview=true&onlyDue=true&searchText=علی&attendanceConfirmationStatus=4&includeCanceled=false&pageNumber=1&pageSize=20
+```
+
+| پارامتر | نوع | توضیح |
+| --- | --- | --- |
+| `onlyWaitingForSecretaryReview` | `boolean` | صف بررسی ادعای مشاور |
+| `onlyDue` | `boolean` | فقط موارد موعددار/سررسید شده |
+| `searchText` | `string` | جستجو در نام بیمار، موبایل یا مشاور |
+| `attendanceConfirmationStatus` | `number` | فیلتر وضعیت (۴ یا ۵ برای انجام‌شده) |
+| `consultantProfileId` | `number` | فیلتر مشاور (اختیاری) |
+| `from` / `to` | `DateTime` | بازه تاریخ (اختیاری) |

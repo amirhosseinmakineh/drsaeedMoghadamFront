@@ -68,6 +68,8 @@
 
 ## تشکیل پرونده بیمار برای رزرو
 
+مستند کامل فلو رزرو و تایید حضور: [frontend-reservation-attendance-workflow-fa.md](./frontend-reservation-attendance-workflow-fa.md)
+
 `POST /api/Reservation/CompletePatientProfile`
 
 ### Request

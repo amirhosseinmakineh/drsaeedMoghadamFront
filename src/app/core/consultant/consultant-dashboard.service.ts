@@ -150,8 +150,11 @@ export interface CreateReservationRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
   reservationAt: string;
-  secondaryPhoneNumber: string | null;
-  description: string | null;
+  patientCity: string;
+  attendanceProbabilityPercent: number;
+  attendancePrediction: string;
+  secondaryPhoneNumber?: string | null;
+  description?: string | null;
 }
 
 export interface ConfirmAttendanceRequest {
@@ -254,6 +257,7 @@ export interface ReservationFilters {
   from?: string;
   to?: string;
   includeCanceled?: boolean;
+  onlySecretaryReviewed?: boolean;
   pageNumber: number;
   pageSize: number;
 }

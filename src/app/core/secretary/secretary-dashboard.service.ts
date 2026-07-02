@@ -86,8 +86,10 @@ export interface SecretaryReservationFilters {
   consultantProfileId?: number | null;
   from?: string;
   to?: string;
+  searchText?: string;
   attendanceConfirmationStatus?: number | null;
   onlyWaitingForSecretaryReview?: boolean;
+  onlyDue?: boolean;
   includeCanceled?: boolean;
   pageNumber: number;
   pageSize: number;
@@ -179,6 +181,7 @@ export class SecretaryDashboardService {
   ): Observable<PaginatedResponse<SecretaryReservation>> {
     return this.getReservations({
       onlyWaitingForSecretaryReview: true,
+      onlyDue: true,
       includeCanceled: false,
       pageNumber,
       pageSize,
