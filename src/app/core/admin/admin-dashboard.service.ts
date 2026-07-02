@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { Observable, catchError, map, throwError } from "rxjs";
+import { Observable, catchError, forkJoin, map, throwError } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
 
@@ -39,6 +39,10 @@ export interface AdminUser {
   Gender?: number;
   avatarImageName?: string | null;
   AvatarImageName?: string | null;
+  profileId?: number;
+  ProfileId?: number;
+  consultantProfileId?: number;
+  ConsultantProfileId?: number;
 }
 
 export interface SaveUserRequest {
@@ -361,16 +365,84 @@ export class AdminDashboardService {
   getConsultants(
     filters: ConsultantFilters,
   ): Observable<PaginatedResponse<Consultant>> {
+    const userFilters: UserFilters = {
+      firstName: filters.firstName,
+      lastName: filters.lastName,
+      phoneNumber: filters.phoneNumber,
+      roleName: "Consultant",
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+    };
+
+    return forkJoin({
+      users: this.getUsers(userFilters),
+      profiles: this.fetchConsultantProfiles(),
+    }).pipe(
+      map(({ users, profiles }) => ({
+        items: this.mergeConsultantsFromUsers(users.items, profiles.items),
+        totalCount: users.totalCount,
+        pageNumber: users.pageNumber,
+        pageSize: users.pageSize,
+        totalPages: users.totalPages,
+        raw: { users: users.raw, profiles: profiles.raw },
+        source: users.source,
+      })),
+    );
+  }
+
+  private fetchConsultantProfiles(): Observable<PaginatedResponse<Consultant>> {
     return this.http
       .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
         headers: this.authHeaders(),
-        params: this.toParams(filters),
+        params: this.toParams({ pageNumber: 1, pageSize: 500 }),
       })
       .pipe(
         map((response) =>
-          this.normalizePaginatedResponse<Consultant>(response, filters),
+          this.normalizePaginatedResponse<Consultant>(response, {
+            pageNumber: 1,
+            pageSize: 500,
+          }),
         ),
       );
+  }
+
+  private mergeConsultantsFromUsers(
+    users: AdminUser[],
+    profiles: Consultant[],
+  ): Consultant[] {
+    const profileByUserId = new Map<string, Consultant>();
+    const profileByPhone = new Map<string, Consultant>();
+
+    profiles.forEach((profile) => {
+      const userId = profile.id || profile.Id || "";
+      const phone = profile.phoneNumber || profile.PhoneNumber || "";
+      if (userId) profileByUserId.set(userId, profile);
+      if (phone) profileByPhone.set(phone, profile);
+    });
+
+    return users.map((user) => {
+      const userId = user.id || user.Id || "";
+      const phone = user.phoneNumber || user.PhoneNumber || "";
+      const profile = profileByUserId.get(userId) ?? profileByPhone.get(phone);
+
+      return {
+        id: userId,
+        firstName: user.firstName || user.FirstName || "",
+        lastName: user.lastName || user.LastName || "",
+        phoneNumber: phone,
+        profileId:
+          profile?.profileId ??
+          profile?.ProfileId ??
+          user.consultantProfileId ??
+          user.ConsultantProfileId ??
+          user.profileId ??
+          user.ProfileId ??
+          0,
+        attendanceResponse: profile?.attendanceResponse,
+        scoreLogResponse: profile?.scoreLogResponse,
+        leadsAssignmentItemsResponse: profile?.leadsAssignmentItemsResponse,
+      };
+    });
   }
 
   createScore(payload: ScoreRequest): Observable<ApiCommandResponse> {
@@ -587,14 +659,65 @@ export class AdminDashboardService {
       this.readNumber(response, "totalPages", "pages", "pageCount") ??
       Math.ceil(totalCount / Math.max(1, pageSize));
 
+    return this.finalizePaginatedResponse(
+      {
+        items,
+        totalCount,
+        pageNumber,
+        pageSize,
+        totalPages,
+        raw: response,
+        source,
+      },
+      filters,
+    );
+  }
+
+  private finalizePaginatedResponse<T>(
+    payload: {
+      items: T[];
+      totalCount: number;
+      pageNumber: number | null;
+      pageSize: number | null;
+      totalPages: number | null;
+      raw?: unknown;
+      source?: unknown;
+    },
+    filters: { pageNumber: number; pageSize: number },
+  ): PaginatedResponse<T> {
+    const totalCount = Math.max(0, payload.totalCount);
+    const pageSize =
+      payload.pageSize && payload.pageSize > 0
+        ? payload.pageSize
+        : filters.pageSize;
+    const pageNumber =
+      payload.pageNumber && payload.pageNumber > 0
+        ? payload.pageNumber
+        : filters.pageNumber;
+    const maxReasonablePages = Math.max(
+      1,
+      Math.ceil(totalCount / Math.max(1, pageSize)),
+    );
+    let totalPages =
+      payload.totalPages ?? maxReasonablePages;
+
+    if (
+      !Number.isFinite(totalPages) ||
+      totalPages >= 2_147_483_647 ||
+      totalPages <= 0 ||
+      totalPages > maxReasonablePages
+    ) {
+      totalPages = maxReasonablePages;
+    }
+
     return {
-      items,
+      items: payload.items,
       totalCount,
       pageNumber,
       pageSize,
       totalPages: Math.max(1, totalPages),
-      raw: response,
-      source,
+      raw: payload.raw,
+      source: payload.source,
     };
   }
 
