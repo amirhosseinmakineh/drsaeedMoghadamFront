@@ -259,7 +259,7 @@ export interface TableActionClick<T = unknown> {
       }
       .table-action.danger {
         background: color-mix(in srgb, var(--danger) 18%, var(--surface-muted));
-        color: #fecaca;
+        color: #991b1b;
       }
       .table-action:disabled {
         cursor: not-allowed;
@@ -277,16 +277,16 @@ export interface TableActionClick<T = unknown> {
         font-size: 0.82rem;
       }
       .cell-badge.success {
-        background: color-mix(in srgb, #22c55e 16%, transparent);
-        color: #bbf7d0;
+        background: color-mix(in srgb, #22c55e 16%, var(--surface));
+        color: #166534;
       }
       .cell-badge.warn {
-        background: color-mix(in srgb, #f59e0b 16%, transparent);
-        color: #fde68a;
+        background: color-mix(in srgb, #f59e0b 16%, var(--surface));
+        color: #92400e;
       }
       .cell-badge.danger {
-        background: color-mix(in srgb, var(--danger) 16%, transparent);
-        color: #fecaca;
+        background: color-mix(in srgb, var(--danger) 16%, var(--surface));
+        color: #991b1b;
       }
       .cell-badge.info {
         background: color-mix(in srgb, var(--brand) 16%, transparent);

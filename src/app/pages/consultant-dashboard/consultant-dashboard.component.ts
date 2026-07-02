@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { Subscription, finalize } from "rxjs";
+import { Subscription, finalize, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
   ConsultantDashboardService,
@@ -283,7 +283,7 @@ interface ConsultantDashboardLink {
                   <button
                     class="secondary-action danger"
                     type="button"
-                    [disabled]="availabilitySaving || !isAvailable || isOnline"
+                    [disabled]="availabilitySaving || !isAvailable"
                     (click)="setAvailability(false)"
                   >
                     <app-fa-icon name="moon"></app-fa-icon>
@@ -292,7 +292,7 @@ interface ConsultantDashboardLink {
                   <button
                     class="primary-action"
                     type="button"
-                    [disabled]="onlineSaving || !canGoOnline()"
+                    [disabled]="onlineSaving || isOnline || !canGoOnline()"
                     (click)="setOnlineStatus(true)"
                   >
                     <app-fa-icon name="mobile"></app-fa-icon>
@@ -410,7 +410,7 @@ interface ConsultantDashboardLink {
                   <button
                     class="secondary-action danger"
                     type="button"
-                    [disabled]="availabilitySaving || !isAvailable || isOnline"
+                    [disabled]="availabilitySaving || !isAvailable"
                     (click)="setAvailability(false)"
                   >
                     <app-fa-icon name="moon"></app-fa-icon>
@@ -419,7 +419,7 @@ interface ConsultantDashboardLink {
                   <button
                     class="primary-action"
                     type="button"
-                    [disabled]="onlineSaving || !canGoOnline()"
+                    [disabled]="onlineSaving || isOnline || !canGoOnline()"
                     (click)="setOnlineStatus(true)"
                   >
                     <app-fa-icon name="mobile"></app-fa-icon>
@@ -1888,6 +1888,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private autoAbsenceRunning = false;
   private readonly expiringLeadIds = new Set<number>();
   private readonly reportedLeadIds = new Set<number>();
+  private readonly reservedLeadIds = new Set<number>();
   private readonly reportingLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
   private feedbackAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
@@ -2141,10 +2142,51 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!profileId) return;
 
     if (!isAvailable && this.isOnline) {
-      this.showFeedback(
-        "برای ثبت عدم حضور، ابتدا وضعیت دریافت لید را آفلاین کنید",
-        "error",
-      );
+      this.availabilitySaving = true;
+      this.clearFeedback();
+
+      this.consultantApi
+        .setOnlineStatus({ profileId, isOnline: false, isOffline: true })
+        .pipe(
+          switchMap((response) => {
+            const status = this.applyConsultantStatusFrom(
+              response,
+              response.data,
+            );
+            if (status.isOnline === null) this.isOnline = false;
+            return this.consultantApi.setAvailability({
+              profileId,
+              isAvailable: false,
+            });
+          }),
+          finalize(() => {
+            this.availabilitySaving = false;
+            this.markViewDirty();
+          }),
+        )
+        .subscribe({
+          next: (response) => {
+            const status = this.applyConsultantStatusFrom(
+              response,
+              response.data,
+            );
+            if (status.isAvailable === null) this.isAvailable = false;
+            if (status.isOnline === null) this.isOnline = false;
+            this.showFeedback(
+              response.message || "عدم حضور شما ثبت شد",
+              "success",
+            );
+            this.requestNotificationPermission();
+            void this.pushNotifications.syncForCurrentProfile(profileId);
+            this.configurePollTimer();
+            this.refreshDashboard();
+          },
+          error: (error) =>
+            this.showFeedback(
+              this.errorMessage(error, "ثبت عدم حضور انجام نشد"),
+              "error",
+            ),
+        });
       return;
     }
 
@@ -2292,6 +2334,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               this.mergeLeadFromBackend(updatedLead);
             }
             this.syncReportedLeadIdsFromLeads(this.leads);
+            this.syncReservedLeadIdsFromLeads(this.leads);
             leadStatusLoaded = true;
             maybeFinish();
           },
@@ -2325,7 +2368,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           },
           error: () => {
             if (pendingRequestId !== this.pendingOfflineRequestId) return;
-            this.updatePendingOfflineCount(0);
             pendingLoaded = true;
             maybeFinish();
           },
@@ -2347,6 +2389,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.applyConsultantStatusFrom(response.source, response.raw);
             this.leads = response.items ?? [];
             this.syncReportedLeadIdsFromLeads(this.leads);
+            this.syncReservedLeadIdsFromLeads(this.leads);
             this.leadTotalCount = response.totalCount ?? this.leads.length;
             this.leadTotalPages = Math.max(
               1,
@@ -2627,10 +2670,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           setTimeout(() => {
             this.closeReportDialog({ releaseReportLock: false });
           }, 0);
-          this.showFeedback(response.message || "گزارش تماس با موفقیت ثبت شد", "success");
+          this.showFeedback("گزارش ثبت شد", "success");
           this.markViewDirty();
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
-            this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
+            this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: false });
           });
         },
         error: (error) =>
@@ -2896,6 +2939,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const reservation =
             this.extractReservation(response.data) ??
             this.extractReservation(response);
+          if (leadAssignmentId) this.reservedLeadIds.add(leadAssignmentId);
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           const shouldOpenPatientProfile =
@@ -3219,7 +3263,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.isLeadInReportProgress(lead) ||
       this.isLeadExpired(lead) ||
       !this.isLeadReportSubmitted(lead) ||
-      !this.isLeadEligibleForReservation(lead)
+      !this.isLeadEligibleForReservation(lead) ||
+      this.leadHasActiveReservation(lead)
+    );
+  }
+
+  leadHasActiveReservation(lead: ConsultantLead): boolean {
+    const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId) return false;
+    if (this.reservedLeadIds.has(leadAssignmentId)) return true;
+
+    return Boolean(
+      lead.hasActiveReservation ?? lead.HasActiveReservation ?? false,
     );
   }
 
@@ -3256,6 +3311,30 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         return;
       }
       this.reportedLeadIds.add(leadAssignmentId);
+    });
+  }
+
+  private syncReservedLeadIdsFromLeads(leads: ConsultantLead[]): void {
+    leads.forEach((lead) => {
+      const leadAssignmentId = this.leadId(lead);
+      if (!leadAssignmentId || !this.leadHasActiveReservation(lead)) return;
+      this.reservedLeadIds.add(leadAssignmentId);
+    });
+  }
+
+  private syncReservedLeadIdsFromReservations(
+    reservations: ConsultantReservation[],
+  ): void {
+    reservations.forEach((reservation) => {
+      const leadAssignmentId =
+        reservation.leadAssignmentId ?? reservation.LeadAssignmentId ?? null;
+      const numeric = Number(leadAssignmentId);
+      if (
+        Number.isFinite(numeric) &&
+        (reservation.isCanceled ?? reservation.IsCanceled) !== true
+      ) {
+        this.reservedLeadIds.add(numeric);
+      }
     });
   }
 
@@ -3351,8 +3430,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           );
         },
         error: () => {
-          if (requestId === this.pendingOfflineRequestId)
-            this.updatePendingOfflineCount(0);
+          if (requestId === this.pendingOfflineRequestId) return;
         },
       });
   }
@@ -3414,6 +3492,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.applyConsultantStatusFrom(response.source, response.raw);
           this.leads = response.items ?? [];
           this.syncReportedLeadIdsFromLeads(this.leads);
+          this.syncReservedLeadIdsFromLeads(this.leads);
           this.leadTotalCount = response.totalCount ?? this.leads.length;
           this.leadPageSize = response.pageSize || this.leadPageSize;
           this.leadTotalPages = Math.max(
@@ -3477,8 +3556,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (requestId !== this.reservationRequestId) return;
-          this.applyConsultantStatusFrom(response.source, response.raw);
           this.reservations = response.items ?? [];
+          this.syncReservedLeadIdsFromReservations(this.reservations);
         },
         error: () => {
           if (requestId === this.reservationRequestId) this.reservations = [];

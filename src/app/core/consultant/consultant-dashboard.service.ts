@@ -95,6 +95,8 @@ export interface ConsultantLead {
   CallDeadlineAt?: string | null;
   isReportSubmitted?: boolean | null;
   IsReportSubmitted?: boolean | null;
+  hasActiveReservation?: boolean | null;
+  HasActiveReservation?: boolean | null;
   user?: LeadPerson | null;
   User?: LeadPerson | null;
   lead?: LeadPerson | null;
@@ -369,6 +371,11 @@ export class ConsultantDashboardService {
       .pipe(
         map((response) =>
           this.normalizePaginatedResponse<ConsultantLead>(response, filters),
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت لیدها انجام نشد"),
+          ),
         ),
       );
   }

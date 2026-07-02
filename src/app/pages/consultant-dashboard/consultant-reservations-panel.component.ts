@@ -109,7 +109,7 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
                     {{ patientCity(reservation) }}</small
                   >
                 </div>
-                <b [class]="badgeClass(reservation)">{{
+                <b class="status-badge" [class]="badgeClass(reservation)">{{
                   statusLabel(reservation)
                 }}</b>
               </header>
@@ -297,7 +297,7 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
         font-size: 0.86rem;
       }
       .danger {
-        color: #fecaca;
+        color: #991b1b;
       }
       .secondary-action:disabled,
       .primary-action:disabled {
@@ -312,12 +312,12 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
         font-weight: 950;
       }
       .feedback.success {
-        background: color-mix(in srgb, #22c55e 16%, transparent);
-        color: #bbf7d0;
+        background: color-mix(in srgb, #22c55e 16%, var(--surface));
+        color: #166534;
       }
       .feedback.error {
-        background: color-mix(in srgb, var(--danger) 15%, transparent);
-        color: #fecaca;
+        background: color-mix(in srgb, var(--danger) 15%, var(--surface));
+        color: #991b1b;
       }
       .empty-copy {
         border: 1px dashed var(--line);
@@ -390,20 +390,35 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
       dd {
         font-weight: 950;
       }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        font-weight: 950;
+      }
       .muted {
+        background: var(--surface-muted);
         color: var(--muted);
       }
       .info {
-        color: #93c5fd;
+        background: color-mix(in srgb, var(--brand) 16%, var(--surface));
+        color: var(--brand);
       }
       .success {
-        color: #bbf7d0;
+        background: color-mix(in srgb, #22c55e 16%, var(--surface));
+        color: #166534;
       }
       .warn {
-        color: #fde68a;
+        background: color-mix(in srgb, #f59e0b 16%, var(--surface));
+        color: #92400e;
       }
       .danger {
-        color: #fecaca;
+        background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+        color: #991b1b;
       }
       .dialog-actions {
         display: flex;

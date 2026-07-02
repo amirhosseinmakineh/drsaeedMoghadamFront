@@ -486,11 +486,11 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
       }
       .feedback.success {
         background: color-mix(in srgb, #22c55e 16%, transparent);
-        color: #bbf7d0;
+        color: #166534;
       }
       .feedback.error {
         background: color-mix(in srgb, var(--danger) 15%, transparent);
-        color: #fecaca;
+        color: #991b1b;
       }
       .empty-copy {
         border: 1px dashed var(--line);
@@ -564,16 +564,16 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
         font-weight: 950;
       }
       .success {
-        color: #bbf7d0;
+        color: #166534;
       }
       .warn {
-        color: #fde68a;
+        color: #92400e;
       }
       .muted {
         color: var(--muted);
       }
       .danger {
-        color: #fecaca;
+        color: #991b1b;
       }
       .dialog-actions {
         display: flex;

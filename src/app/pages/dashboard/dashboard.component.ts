@@ -822,12 +822,12 @@ interface ScoreFormModel {
         font-weight: 950;
       }
       .feedback.success {
-        background: color-mix(in srgb, #22c55e 16%, transparent);
-        color: #bbf7d0;
+        background: color-mix(in srgb, #22c55e 16%, var(--surface));
+        color: #166534;
       }
       .feedback.error {
-        background: color-mix(in srgb, var(--danger) 15%, transparent);
-        color: #fecaca;
+        background: color-mix(in srgb, var(--danger) 15%, var(--surface));
+        color: #991b1b;
       }
       .admin-overview {
         display: grid;
@@ -1358,9 +1358,9 @@ export class DashboardComponent implements OnInit {
           downloadBlob(blob, reportFileName("users-report"));
           this.showFeedback("گزارش کاربران دانلود شد", "success");
         },
-        error: () =>
+        error: (error) =>
           this.showFeedback(
-            "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید.",
+            this.errorMessage(error, "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید."),
             "error",
           ),
       });
@@ -1386,8 +1386,11 @@ export class DashboardComponent implements OnInit {
           downloadBlob(blob, reportFileName("consultants-report"));
           this.showFeedback("گزارش مشاوران دانلود شد", "success");
         },
-        error: () =>
-          this.showFeedback("خطا در دریافت گزارش مشاوران.", "error"),
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "خطا در دریافت گزارش مشاوران."),
+            "error",
+          ),
       });
   }
 

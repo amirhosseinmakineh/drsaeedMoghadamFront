@@ -207,8 +207,8 @@ type LeadTableMode = "system" | "consultant";
         font-weight: 900;
       }
       .feedback.error {
-        background: color-mix(in srgb, var(--danger) 14%, transparent);
-        color: #fecaca;
+        background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+        color: #991b1b;
       }
       .export-bar {
         display: grid;
@@ -343,9 +343,11 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       )
       .subscribe({
         next: (blob) => downloadBlob(blob, reportFileName("leads-report")),
-        error: () => {
+        error: (error) => {
           this.feedback =
-            "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید.";
+            error instanceof Error && error.message
+              ? error.message
+              : "خطا در دریافت گزارش. لطفاً دوباره تلاش کنید.";
           this.cdr.markForCheck();
         },
       });

@@ -507,12 +507,12 @@ interface SecretaryDashboardLink {
         font-weight: 950;
       }
       .feedback.success {
-        background: color-mix(in srgb, #22c55e 16%, transparent);
-        color: #bbf7d0;
+        background: color-mix(in srgb, #22c55e 16%, var(--surface));
+        color: #166534;
       }
       .feedback.error {
-        background: color-mix(in srgb, var(--danger) 15%, transparent);
-        color: #fecaca;
+        background: color-mix(in srgb, var(--danger) 15%, var(--surface));
+        color: #991b1b;
       }
       .empty-copy {
         border: 1px dashed var(--line);
