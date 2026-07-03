@@ -4,8 +4,8 @@ import { firstValueFrom } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import { ConsultantDashboardService } from "../consultant/consultant-dashboard.service";
 import {
-  FirebaseMessagePayload,
   NotificationService,
+  WebPushMessagePayload,
 } from "./notification.service";
 
 export interface ConsultantPushMessageDetail {
@@ -48,16 +48,16 @@ export class PushNotificationService {
     const user = this.auth.user();
     if (!user || !this.auth.authToken()) return;
 
-    const token = await this.getCurrentFirebaseToken();
-    if (!token) return;
+    const subscriptionJson = await this.getCurrentPushSubscription();
+    if (!subscriptionJson) return;
 
     const resolvedProfileId =
       profileId ?? user.consultantProfileId ?? user.profileId ?? null;
-    const registrationKey = `${user.userId ?? resolvedProfileId ?? user.phoneNumber ?? "user"}:${token}`;
+    const registrationKey = `${user.userId ?? resolvedProfileId ?? user.phoneNumber ?? "user"}:${subscriptionJson}`;
     if (this.lastRegisteredKey === registrationKey) return;
 
-    const registered = await this.registerTokenWithBackend(
-      token,
+    const registered = await this.registerSubscriptionWithBackend(
+      subscriptionJson,
       resolvedProfileId,
     );
     if (registered) {
@@ -65,13 +65,13 @@ export class PushNotificationService {
     }
   }
 
-  private async registerTokenWithBackend(
-    token: string,
+  private async registerSubscriptionWithBackend(
+    subscriptionJson: string,
     profileId: number | null,
   ): Promise<boolean> {
     if (this.auth.user()?.userId) {
       try {
-        await firstValueFrom(this.auth.registerPushToken(token));
+        await firstValueFrom(this.auth.registerPushToken(subscriptionJson));
         return true;
       } catch (error) {
         console.warn("Auth RegisterPushToken failed", error);
@@ -84,7 +84,7 @@ export class PushNotificationService {
       await firstValueFrom(
         this.consultantApi.registerPushToken({
           profileId,
-          deviceToken: token,
+          deviceToken: subscriptionJson,
         }),
       );
       return true;
@@ -98,8 +98,8 @@ export class PushNotificationService {
     this.lastRegisteredKey = null;
   }
 
-  async getCurrentFirebaseToken(): Promise<string | null> {
-    return this.notifications.getToken();
+  async getCurrentPushSubscription(): Promise<string | null> {
+    return this.notifications.getSubscriptionJson();
   }
 
   handleNotificationData(data?: Record<string, string>): void {
@@ -124,13 +124,17 @@ export class PushNotificationService {
 
     if (data["type"] === "password_changed") {
       this.router.navigate(["/"]);
+      return;
+    }
+
+    if (data["type"] === "test_push") {
+      this.router.navigate(["/dashboard/consultant"]);
     }
   }
 
-  private handleForegroundMessage(payload: FirebaseMessagePayload): void {
-    const title = payload.notification?.title || this.titleForData(payload.data);
-    const body =
-      payload.notification?.body || this.bodyForData(payload.data);
+  private handleForegroundMessage(payload: WebPushMessagePayload): void {
+    const title = payload.title || this.titleForData(payload.data);
+    const body = payload.body || this.bodyForData(payload.data);
     const detail: ConsultantPushMessageDetail = {
       title,
       body,
@@ -160,6 +164,7 @@ export class PushNotificationService {
     }
     if (data?.["type"] === "offline_leads") return "offline-leads";
     if (data?.["type"] === "password_changed") return "password-changed";
+    if (data?.["type"] === "test_push") return "test-push";
     return "consultant-notification";
   }
 
@@ -167,6 +172,7 @@ export class PushNotificationService {
     if (data?.["type"] === "offline_leads") return "لیدهای آفلاین";
     if (data?.["type"] === "realtime_lead") return "لید لحظه‌ای جدید";
     if (data?.["type"] === "password_changed") return "تغییر رمز عبور";
+    if (data?.["type"] === "test_push") return "تست نوتیفیکیشن";
     return "اعلان جدید";
   }
 
@@ -179,6 +185,9 @@ export class PushNotificationService {
     }
     if (data?.["type"] === "password_changed") {
       return "کلمه عبور شما با موفقیت تغییر کرد.";
+    }
+    if (data?.["type"] === "test_push") {
+      return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";
     }
     return "برای مشاهده جزئیات وارد داشبورد شوید.";
   }

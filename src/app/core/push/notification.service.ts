@@ -1,60 +1,55 @@
 import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { firstValueFrom } from "rxjs";
+import { environment } from "../../../environments/environment";
 import {
-  getFirebaseConfig,
-  getFirebaseVapidKey,
-  hasFirebaseClientConfig,
-} from "./firebase-environment";
+  getWebPushVapidPublicKey,
+  hasWebPushClientConfig,
+} from "./web-push-environment";
 
-export const FCM_SERVICE_WORKER_URL =
-  "/firebase-cloud-messaging-push-scope/firebase-messaging-sw.js";
+export const WEB_PUSH_SERVICE_WORKER_URL =
+  "/web-push-scope/web-push-sw.js";
 
-interface FirebaseAppModule {
-  initializeApp: (config: Record<string, unknown>) => unknown;
-  getApps: () => unknown[];
-  getApp: () => unknown;
-}
-
-interface FirebaseMessagingModule {
-  getMessaging: (app?: unknown) => unknown;
-  getToken: (
-    messaging: unknown,
-    options: { vapidKey: string; serviceWorkerRegistration?: ServiceWorkerRegistration },
-  ) => Promise<string>;
-  onMessage: (
-    messaging: unknown,
-    nextOrObserver: (payload: FirebaseMessagePayload) => void,
-  ) => () => void;
-  isSupported: () => Promise<boolean>;
-}
-
-export interface FirebaseMessagePayload {
-  notification?: { title?: string; body?: string };
+export interface WebPushMessagePayload {
+  title: string;
+  body: string;
   data?: Record<string, string>;
 }
 
 @Injectable({ providedIn: "root" })
 export class NotificationService {
-  private messaging: unknown | null = null;
-  private messagingModule: FirebaseMessagingModule | null = null;
   private swRegistration: ServiceWorkerRegistration | null = null;
-  private foregroundUnsubscribe: (() => void) | null = null;
-  private tokenRefreshUnsubscribe: (() => void) | null = null;
-  private lastKnownToken: string | null = null;
+  private lastKnownSubscription: string | null = null;
+  private resolvedVapidPublicKey: string | null = null;
   private readonly tokenRefreshListeners = new Set<(token: string) => void>();
   private readonly foregroundListeners = new Set<
-    (payload: FirebaseMessagePayload) => void
+    (payload: WebPushMessagePayload) => void
   >();
+
+  constructor(private http: HttpClient) {
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data?.type !== "web-push-message") return;
+        const payload = this.normalizePayload(event.data.payload);
+        for (const listener of this.foregroundListeners) {
+          listener(payload);
+        }
+      });
+    }
+  }
 
   async requestPermission(): Promise<NotificationPermission> {
     if (!this.canUseNotifications()) return "denied";
     return Notification.requestPermission();
   }
 
-  async getToken(): Promise<string | null> {
+  async getSubscriptionJson(): Promise<string | null> {
     if (!this.canUseNotifications()) return null;
-    if (!hasFirebaseClientConfig()) {
+
+    const vapidPublicKey = await this.resolveVapidPublicKey();
+    if (!vapidPublicKey) {
       console.warn(
-        "Firebase push is not configured. Set FIREBASE_* env vars before build.",
+        "Web Push is not configured. Set WEBPUSH_VAPID_PUBLIC_KEY before build or configure backend.",
       );
       return null;
     }
@@ -65,26 +60,30 @@ export class NotificationService {
       return null;
     }
 
-    const messagingModule = await this.loadMessaging();
-    if (!messagingModule) return null;
-
     try {
       const registration = await this.ensureServiceWorkerRegistration();
-      const token = await messagingModule.getToken(this.messaging, {
-        vapidKey: getFirebaseVapidKey(),
-        serviceWorkerRegistration: registration,
-      });
-      const normalized = token?.trim() || null;
-      if (normalized && normalized !== this.lastKnownToken) {
-        this.lastKnownToken = normalized;
-        console.log("[NotificationService] FCM token generated");
-        this.notifyTokenRefresh(normalized);
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
+        });
       }
-      this.ensureForegroundListener(messagingModule);
-      this.ensureTokenRefreshListener(messagingModule);
-      return normalized;
+
+      const subscriptionJson = JSON.stringify(subscription.toJSON());
+      if (
+        subscriptionJson &&
+        subscriptionJson !== this.lastKnownSubscription
+      ) {
+        this.lastKnownSubscription = subscriptionJson;
+        console.log("[NotificationService] Web Push subscription created");
+        this.notifyTokenRefresh(subscriptionJson);
+      }
+
+      return subscriptionJson;
     } catch (error) {
-      console.warn("FCM token could not be resolved", error);
+      console.warn("Web Push subscription could not be created", error);
       return null;
     }
   }
@@ -95,14 +94,42 @@ export class NotificationService {
   }
 
   onForegroundMessage(
-    listener: (payload: FirebaseMessagePayload) => void,
+    listener: (payload: WebPushMessagePayload) => void,
   ): () => void {
     this.foregroundListeners.add(listener);
     return () => this.foregroundListeners.delete(listener);
   }
 
-  getLastKnownToken(): string | null {
-    return this.lastKnownToken;
+  getLastKnownSubscription(): string | null {
+    return this.lastKnownSubscription;
+  }
+
+  private async resolveVapidPublicKey(): Promise<string | null> {
+    if (this.resolvedVapidPublicKey) return this.resolvedVapidPublicKey;
+
+    const fromRuntime = getWebPushVapidPublicKey();
+    if (fromRuntime) {
+      this.resolvedVapidPublicKey = fromRuntime;
+      return fromRuntime;
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.http.get<{
+          isSuccess: boolean;
+          data?: string;
+        }>(`${environment.apiBaseUrl}/Consultant/WebPushPublicKey`),
+      );
+      const publicKey = response.data?.trim();
+      if (response.isSuccess && publicKey) {
+        this.resolvedVapidPublicKey = publicKey;
+        return publicKey;
+      }
+    } catch (error) {
+      console.warn("WebPush public key could not be loaded from backend", error);
+    }
+
+    return null;
   }
 
   private notifyTokenRefresh(token: string): void {
@@ -118,102 +145,54 @@ export class NotificationService {
     }
 
     const registration = await navigator.serviceWorker.register(
-      FCM_SERVICE_WORKER_URL,
-      { scope: "/firebase-cloud-messaging-push-scope/" },
+      WEB_PUSH_SERVICE_WORKER_URL,
+      { scope: "/web-push-scope/" },
     );
     await navigator.serviceWorker.ready;
     this.swRegistration = registration;
     return registration;
   }
 
-  private async loadMessaging(): Promise<FirebaseMessagingModule | null> {
-    if (this.messagingModule && this.messaging) return this.messagingModule;
-
-    try {
-      const [appModule, messagingModule] = await Promise.all([
-        // @ts-expect-error Firebase's browser ESM CDN is loaded at runtime.
-        import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js") as Promise<FirebaseAppModule>,
-        // @ts-expect-error Firebase's browser ESM CDN is loaded at runtime.
-        import("https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging.js") as Promise<FirebaseMessagingModule>,
-      ]);
-
-      if (!(await messagingModule.isSupported())) return null;
-      const app = appModule.getApps().length
-        ? appModule.getApp()
-        : appModule.initializeApp(
-            getFirebaseConfig() as unknown as Record<string, unknown>,
-          );
-      this.messaging = messagingModule.getMessaging(app);
-      this.messagingModule = messagingModule;
-      return messagingModule;
-    } catch (error) {
-      console.warn("Firebase Messaging is unavailable", error);
-      return null;
+  private normalizePayload(payload: unknown): WebPushMessagePayload {
+    if (typeof payload !== "object" || payload === null) {
+      return { title: "اعلان جدید", body: "" };
     }
+
+    const record = payload as Record<string, unknown>;
+    const data =
+      typeof record["data"] === "object" && record["data"] !== null
+        ? (record["data"] as Record<string, string>)
+        : undefined;
+
+    return {
+      title:
+        typeof record["title"] === "string" ? record["title"] : "اعلان جدید",
+      body: typeof record["body"] === "string" ? record["body"] : "",
+      data,
+    };
   }
 
-  private ensureForegroundListener(
-    messagingModule: FirebaseMessagingModule,
-  ): void {
-    if (this.foregroundUnsubscribe || !this.messaging) return;
-
-    this.foregroundUnsubscribe = messagingModule.onMessage(
-      this.messaging,
-      (payload) => {
-        for (const listener of this.foregroundListeners) {
-          listener(payload);
-        }
-      },
-    );
-  }
-
-  private ensureTokenRefreshListener(
-    messagingModule: FirebaseMessagingModule,
-  ): void {
-    if (this.tokenRefreshUnsubscribe || !this.messaging) return;
-
-    const refreshToken = async (): Promise<void> => {
-      if (!this.swRegistration || !this.messaging) return;
-      try {
-        const token = await messagingModule.getToken(this.messaging, {
-          vapidKey: getFirebaseVapidKey(),
-          serviceWorkerRegistration: this.swRegistration,
-        });
-        const normalized = token?.trim() || null;
-        if (normalized && normalized !== this.lastKnownToken) {
-          this.lastKnownToken = normalized;
-          console.log("[NotificationService] FCM token refreshed");
-          this.notifyTokenRefresh(normalized);
-        }
-      } catch (error) {
-        console.warn("FCM token refresh failed", error);
-      }
-    };
-
-    const onVisibilityChange = (): void => {
-      if (document.visibilityState === "visible") {
-        void refreshToken();
-      }
-    };
-
-    const onFocus = (): void => {
-      void refreshToken();
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("focus", onFocus);
-
-    this.tokenRefreshUnsubscribe = () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("focus", onFocus);
-    };
+  private urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length) as Uint8Array<ArrayBuffer>;
+    for (let index = 0; index < rawData.length; index += 1) {
+      outputArray[index] = rawData.charCodeAt(index);
+    }
+    return outputArray;
   }
 
   private canUseNotifications(): boolean {
     return (
       typeof window !== "undefined" &&
       "Notification" in window &&
-      "serviceWorker" in navigator
+      "serviceWorker" in navigator &&
+      "PushManager" in window
     );
   }
+}
+
+export function hasWebPushSupport(): boolean {
+  return hasWebPushClientConfig();
 }

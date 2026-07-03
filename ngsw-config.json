@@ -11,7 +11,7 @@
           "/index.csr.html",
           "/index.html",
           "/manifest.webmanifest",
-          "/firebase-config.js",
+          "/web-push-config.js",
           "/*.css",
           "/*.js"
         ]
@@ -30,8 +30,8 @@
   ],
   "dataGroups": [
     {
-      "name": "firebase-runtime-config",
-      "urls": ["/firebase-config.js"],
+      "name": "webpush-runtime-config",
+      "urls": ["/web-push-config.js"],
       "cacheConfig": {
         "strategy": "freshness",
         "maxSize": 1,
