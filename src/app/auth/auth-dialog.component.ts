@@ -23,28 +23,30 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../shared/forms/ng-model-options";
       [open]="open"
       [language]="language"
       [showFooter]="false"
-      [title]="copy.title[language]"
-      [subtitle]="copy.subtitle[language]"
+      [title]="dialogTitle()[language]"
+      [subtitle]="dialogSubtitle()[language]"
       (closed)="closed.emit()"
     >
-      <div class="tabs">
-        <button
-          type="button"
-          [class.active]="mode() === 'login'"
-          [disabled]="loading()"
-          (click)="switchMode('login')"
-        >
-          {{ copy.login[language] }}
-        </button>
-        <button
-          type="button"
-          [class.active]="mode() === 'register'"
-          [disabled]="loading()"
-          (click)="switchMode('register')"
-        >
-          {{ copy.register[language] }}
-        </button>
-      </div>
+      @if (mode() !== "forgot") {
+        <div class="tabs">
+          <button
+            type="button"
+            [class.active]="mode() === 'login'"
+            [disabled]="loading()"
+            (click)="switchMode('login')"
+          >
+            {{ copy.login[language] }}
+          </button>
+          <button
+            type="button"
+            [class.active]="mode() === 'register'"
+            [disabled]="loading()"
+            (click)="switchMode('register')"
+          >
+            {{ copy.register[language] }}
+          </button>
+        </div>
+      }
 
       @if (feedback(); as currentFeedback) {
         <p
@@ -95,7 +97,11 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../shared/forms/ng-model-options";
         </label>
 
         <label>
-          {{ copy.password[language] }}
+          {{
+            mode() === "forgot"
+              ? copy.newPassword[language]
+              : copy.password[language]
+          }}
           <input
             [(ngModel)]="form.password"
             [ngModelOptions]="ngModelBlurOptions"
@@ -104,10 +110,27 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../shared/forms/ng-model-options";
             minlength="8"
             maxlength="100"
             [autocomplete]="
-              mode() === 'login' ? 'current-password' : 'new-password'
+              mode() === 'login'
+                ? 'current-password'
+                : 'new-password'
             "
           />
         </label>
+
+        @if (mode() === "forgot") {
+          <label>
+            {{ copy.confirmPassword[language] }}
+            <input
+              [(ngModel)]="form.confirmPassword"
+              [ngModelOptions]="ngModelBlurOptions"
+              name="authConfirmPassword"
+              type="password"
+              minlength="8"
+              maxlength="100"
+              autocomplete="new-password"
+            />
+          </label>
+        }
 
         @if (mode() === "register") {
           <div class="two-col">
@@ -125,16 +148,36 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../shared/forms/ng-model-options";
           </div>
         }
 
+        @if (mode() === "login") {
+          <button
+            class="link-button"
+            type="button"
+            [disabled]="loading()"
+            (click)="switchMode('forgot')"
+          >
+            {{ copy.forgotPassword[language] }}
+          </button>
+        }
+
         <button class="primary full" type="submit" [disabled]="loading()">
           <app-fa-icon name="user"></app-fa-icon>
           {{
             loading()
               ? copy.loading[language]
-              : mode() === "login"
-                ? copy.loginAction[language]
-                : copy.registerAction[language]
+              : submitLabel()[language]
           }}
         </button>
+
+        @if (mode() === "forgot") {
+          <button
+            class="link-button centered"
+            type="button"
+            [disabled]="loading()"
+            (click)="switchMode('login')"
+          >
+            {{ copy.backToLogin[language] }}
+          </button>
+        }
       </form>
     </app-base-dialog>
   `,
@@ -220,6 +263,23 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../shared/forms/ng-model-options";
       .full {
         width: 100%;
       }
+      .link-button {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font: inherit;
+        font-weight: 900;
+        color: var(--brand, #a8793f);
+        cursor: pointer;
+        text-align: start;
+      }
+      .link-button.centered {
+        text-align: center;
+      }
+      .link-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
       .feedback {
         margin: 0;
         padding: 10px 12px;
@@ -263,14 +323,20 @@ export class AuthDialogComponent {
     lastName: "",
     phone: "",
     password: "",
+    confirmPassword: "",
     gender: 1,
   };
 
   copy = {
     title: text("ورود و عضویت", "Sign in and membership"),
+    forgotTitle: text("فراموشی رمز عبور", "Forgot password"),
     subtitle: text(
       "برای پیگیری درخواست تماس، ذخیره خدمات مورد علاقه و دریافت راهنمای درمان وارد شوید.",
       "Sign in to follow consultant calls, save favorite services and receive care guidance.",
+    ),
+    forgotSubtitle: text(
+      "شماره موبایلی که با آن وارد می‌شوید را وارد کنید و رمز عبور جدید تعیین کنید.",
+      "Enter the mobile number you use to sign in and set a new password.",
     ),
     login: text("ورود", "Sign in"),
     register: text("عضویت", "Join"),
@@ -278,12 +344,21 @@ export class AuthDialogComponent {
     lastName: text("نام خانوادگی", "Last name"),
     phone: text("شماره موبایل", "Mobile number"),
     password: text("رمز عبور", "Password"),
+    newPassword: text("رمز عبور جدید", "New password"),
+    confirmPassword: text("تکرار رمز عبور جدید", "Confirm new password"),
     gender: text("جنسیت", "Gender"),
     male: text("مرد", "Male"),
     female: text("زن", "Female"),
     loginAction: text("ورود به حساب", "Sign in"),
     registerAction: text("ساخت حساب", "Create account"),
+    forgotAction: text("تغییر رمز عبور", "Change password"),
+    forgotPassword: text("رمز عبور را فراموش کرده‌اید؟", "Forgot your password?"),
+    backToLogin: text("بازگشت به ورود", "Back to sign in"),
     loading: text("در حال ارسال...", "Sending..."),
+    forgotSuccess: text(
+      "رمز عبور با موفقیت تغییر کرد. اکنون می‌توانید وارد شوید.",
+      "Password changed successfully. You can now sign in.",
+    ),
     registerSuccess: text(
       "ثبت نام با موفقیت انجام شد. برای دریافت توکن وارد حساب شوید.",
       "Registration succeeded. Please sign in to receive your token.",
@@ -296,9 +371,25 @@ export class AuthDialogComponent {
     private toast: ToastService,
   ) {}
 
+  dialogTitle = () =>
+    this.mode() === "forgot" ? this.copy.forgotTitle : this.copy.title;
+
+  dialogSubtitle = () =>
+    this.mode() === "forgot" ? this.copy.forgotSubtitle : this.copy.subtitle;
+
+  submitLabel = () => {
+    if (this.mode() === "login") return this.copy.loginAction;
+    if (this.mode() === "forgot") return this.copy.forgotAction;
+    return this.copy.registerAction;
+  };
+
   switchMode(mode: AuthDialogMode): void {
     this.mode.set(mode);
     this.feedback.set(null);
+    if (mode === "login" || mode === "forgot") {
+      this.form.password = "";
+      this.form.confirmPassword = "";
+    }
   }
 
   submit(): void {
@@ -312,6 +403,32 @@ export class AuthDialogComponent {
     }
 
     this.loading.set(true);
+
+    if (this.mode() === "forgot") {
+      this.auth
+        .forgotPassword(this.form.phone.trim(), this.form.password)
+        .pipe(finalize(() => this.loading.set(false)))
+        .subscribe({
+          next: (response) => {
+            this.mode.set("login");
+            this.form.password = "";
+            this.form.confirmPassword = "";
+            this.feedback.set({
+              type: "success",
+              message: response.message || this.copy.forgotSuccess[this.language],
+            });
+            this.toast.success(
+              response.message || this.copy.forgotSuccess[this.language],
+            );
+          },
+          error: (error) =>
+            this.feedback.set({
+              type: "error",
+              message: this.errorMessage(error, "تغییر رمز عبور انجام نشد"),
+            }),
+        });
+      return;
+    }
 
     if (this.mode() === "login") {
       this.auth
@@ -341,6 +458,7 @@ export class AuthDialogComponent {
         next: (response) => {
           this.mode.set("login");
           this.form.password = "";
+          this.form.confirmPassword = "";
           this.feedback.set({
             type: "success",
             message:
@@ -377,6 +495,18 @@ export class AuthDialogComponent {
       return this.language === "fa"
         ? "رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد"
         : "Password must be at most 100 characters";
+
+    if (this.mode() === "forgot") {
+      if (!this.form.confirmPassword)
+        return this.language === "fa"
+          ? "تکرار رمز عبور الزامی است"
+          : "Password confirmation is required";
+      if (this.form.password !== this.form.confirmPassword)
+        return this.language === "fa"
+          ? "رمز عبور و تکرار آن یکسان نیستند"
+          : "Passwords do not match";
+      return null;
+    }
 
     if (this.mode() === "login") return null;
 
@@ -421,6 +551,7 @@ export class AuthDialogComponent {
       lastName: "",
       phone: "",
       password: "",
+      confirmPassword: "",
       gender: 1,
     };
     this.feedback.set(null);

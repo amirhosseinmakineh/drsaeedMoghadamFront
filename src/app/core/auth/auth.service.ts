@@ -100,6 +100,32 @@ export class AuthService {
       );
   }
 
+  forgotPassword(
+    phoneNumber: string,
+    newPassword: string,
+  ): Observable<ApiResponse<{ userId: string } | null>> {
+    const payload = { phoneNumber, newPasswordHash: newPassword };
+
+    return this.http
+      .post<
+        ApiResponse<{ userId: string } | null>
+      >(`${this.apiBaseUrl}/Auth/ForgotPassword`, payload)
+      .pipe(
+        map((response) => {
+          if (!response.isSuccess) {
+            throw new Error(response.message || "تغییر رمز عبور انجام نشد");
+          }
+
+          return response;
+        }),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "خطا در تغییر رمز عبور"),
+          ),
+        ),
+      );
+  }
+
   login(phoneNumber: string, password: string): Observable<AuthUser> {
     const payload: LoginPayload = { phoneNumber, passwordHash: password };
 
