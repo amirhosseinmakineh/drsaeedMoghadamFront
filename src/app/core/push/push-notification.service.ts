@@ -102,6 +102,34 @@ export class PushNotificationService {
     return this.notifications.getSubscriptionJson();
   }
 
+  async enablePushForCurrentProfile(
+    profileId?: number | null,
+  ): Promise<{ ok: boolean; message: string }> {
+    const result = await this.notifications.enablePushNotifications();
+    if (!result.ok) {
+      return { ok: false, message: result.message };
+    }
+
+    const resolvedProfileId =
+      profileId ??
+      this.auth.user()?.consultantProfileId ??
+      this.auth.user()?.profileId ??
+      null;
+
+    if (result.subscriptionJson) {
+      const registered = await this.registerSubscriptionWithBackend(
+        result.subscriptionJson,
+        resolvedProfileId,
+      );
+      if (registered) {
+        const user = this.auth.user();
+        this.lastRegisteredKey = `${user?.userId ?? resolvedProfileId ?? "user"}:${result.subscriptionJson}`;
+      }
+    }
+
+    return { ok: true, message: result.message };
+  }
+
   handleNotificationData(data?: Record<string, string>): void {
     if (!data) return;
     if (data["type"] === "offline_leads") {
