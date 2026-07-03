@@ -32,8 +32,8 @@ if (hasFirebaseConfig && firebase?.messaging) {
     const options = {
       body: payload.notification?.body || notificationBody(data),
       data,
-      icon: "/1.png",
-      badge: "/1.png",
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-96x96.png",
       tag: notificationTag(data),
       renotify: true,
     };
@@ -41,6 +41,11 @@ if (hasFirebaseConfig && firebase?.messaging) {
     self.registration.showNotification(title, options);
   });
 }
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  console.log("[firebase-messaging-sw] push event received", event.data.text());
+});
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
