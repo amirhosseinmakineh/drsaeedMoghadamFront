@@ -5,7 +5,7 @@ import { finalize } from "rxjs";
 import { AuthService, RegisterRequest } from "../core/auth/auth.service";
 import { ToastService } from "../core/toast/toast.service";
 import {
-  AuthDialogMode,
+  AuthDialogMode ,
   AuthDialogModel,
   LanguageCode,
   text,
