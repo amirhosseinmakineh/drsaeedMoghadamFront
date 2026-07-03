@@ -1,5 +1,5 @@
 export type LanguageCode = "fa" | "en";
-export type AuthDialogMode = "login" | "register";
+export type AuthDialogMode = "login" | "register" | "forgot";
 
 export interface LocalizedText {
   fa: string;
@@ -115,6 +115,7 @@ export interface AuthDialogModel {
   lastName: string;
   phone: string;
   password: string;
+  confirmPassword: string;
   gender: number;
 }
 

@@ -77,6 +77,7 @@ interface ReservationForm {
   secondaryPhoneNumber: string;
   description: string;
   patientCity: string;
+  patientRegion: string;
   attendanceProbabilityPercent: number;
   attendancePrediction: string;
 }
@@ -731,6 +732,7 @@ interface ConsultantDashboardLink {
               [ngModelOptions]="ngModelBlurOptions"
               name="leadCallResult"
             >
+              <option [ngValue]="1">تماس برقرار شد</option>
               <option [ngValue]="2">تبدیل به بیمار</option>
               <option [ngValue]="3">رد شد</option>
               <option [ngValue]="4">پاسخ نداد</option>
@@ -849,6 +851,41 @@ interface ConsultantDashboardLink {
               [ngModelOptions]="ngModelBlurOptions"
               name="reservationTime"
               type="time"
+            />
+          </label>
+
+          <div class="two-col">
+            <label>
+              شهر بیمار
+              <input
+                [(ngModel)]="reservationForm.patientCity"
+                [ngModelOptions]="ngModelBlurOptions"
+                name="reservationPatientCity"
+                maxlength="80"
+                placeholder="تهران"
+              />
+            </label>
+            <label>
+              منطقه بیمار
+              <input
+                [(ngModel)]="reservationForm.patientRegion"
+                [ngModelOptions]="ngModelBlurOptions"
+                name="reservationPatientRegion"
+                maxlength="80"
+                placeholder="سعادت‌آباد"
+              />
+            </label>
+          </div>
+
+          <label>
+            درصد احتمال حضور
+            <input
+              [(ngModel)]="reservationForm.attendanceProbabilityPercent"
+              [ngModelOptions]="ngModelBlurOptions"
+              name="reservationAttendanceProbability"
+              type="number"
+              min="0"
+              max="100"
             />
           </label>
 
@@ -1860,6 +1897,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     secondaryPhoneNumber: "",
     description: "",
     patientCity: "",
+    patientRegion: "",
     attendanceProbabilityPercent: 80,
     attendancePrediction: "",
   };
@@ -2923,6 +2961,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
       patientCity: this.reservationForm.patientCity.trim(),
+      patientRegion: this.reservationForm.patientRegion.trim(),
       attendanceProbabilityPercent:
         this.reservationForm.attendanceProbabilityPercent,
       attendancePrediction: this.reservationForm.attendancePrediction.trim(),
@@ -3916,6 +3955,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       secondaryPhoneNumber: reservationSecondaryPhone,
       description: "",
       patientCity: this.reportForm.patientCity.trim(),
+      patientRegion: this.reportForm.patientRegion.trim(),
       attendanceProbabilityPercent:
         this.normalizedAttendanceProbability(
           this.reportForm.attendanceProbabilityPercent,
@@ -4172,14 +4212,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (![1, 2, 3, 4, 5, 6].includes(callResult))
       return "نتیجه تماس معتبر نیست";
 
+    const description = this.reportForm.reportDescription.trim();
+    if (description.length > 1000)
+      return "توضیحات گزارش نباید بیشتر از ۱۰۰۰ کاراکتر باشد";
+
+    if (!this.isSuccessfulCallResult(callResult)) {
+      if (!description) return "توضیحات گزارش الزامی است";
+      return null;
+    }
+
     if (!this.reportForm.patientCity.trim())
       return "شهر بیمار الزامی است";
     if (!this.reportForm.patientRegion.trim())
       return "منطقه بیمار الزامی است";
-
-    const description = this.reportForm.reportDescription.trim();
-    if (description.length > 1000)
-      return "توضیحات گزارش نباید بیشتر از ۱۰۰۰ کاراکتر باشد";
 
     if (this.reportForm.patientCity.trim().length > 80)
       return "شهر بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
@@ -4225,6 +4270,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     if (!this.reservationForm.patientCity.trim())
       return "شهر بیمار برای رزرو الزامی است";
+    if (!this.reservationForm.patientRegion.trim())
+      return "منطقه بیمار برای رزرو الزامی است";
     if (!this.reservationForm.attendancePrediction.trim())
       return "پیش‌بینی حضور برای رزرو الزامی است";
     if (
@@ -4238,10 +4285,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone))
       return "شماره تماس دوم بیمار معتبر نیست";
 
+    if (this.reservationForm.patientCity.trim().length > 80)
+      return "شهر بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
+    if (this.reservationForm.patientRegion.trim().length > 80)
+      return "منطقه بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
+
     if (this.reservationForm.description.trim().length > 1000)
       return "توضیحات رزرو نباید بیشتر از ۱۰۰۰ کاراکتر باشد";
 
     return null;
+  }
+
+  private isSuccessfulCallResult(callResult: number): boolean {
+    return callResult === 1 || callResult === 2;
   }
 
   validateProfileForm(): string | null {

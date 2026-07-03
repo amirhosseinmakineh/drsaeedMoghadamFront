@@ -154,6 +154,7 @@ export interface CreateReservationRequest {
   consultantProfileId: number;
   reservationAt: string;
   patientCity: string;
+  patientRegion: string;
   attendanceProbabilityPercent: number;
   attendancePrediction: string;
   secondaryPhoneNumber?: string | null;
