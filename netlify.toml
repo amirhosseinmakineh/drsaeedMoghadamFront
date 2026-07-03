@@ -2,23 +2,18 @@
 command = "npm run build"
 publish = "dist/demo/browser"
 
-# Firebase push notifications require these environment variables in
-# Netlify → Site configuration → Environment variables (all scopes: Build):
-#   FIREBASE_API_KEY
-#   FIREBASE_AUTH_DOMAIN
-#   FIREBASE_PROJECT_ID
-#   FIREBASE_STORAGE_BUCKET
-#   FIREBASE_MESSAGING_SENDER_ID
-#   FIREBASE_APP_ID
-#   FIREBASE_VAPID_KEY
+# Web Push (VAPID) requires these environment variables in
+# Netlify → Site configuration → Environment variables (Build scope):
+#   WEBPUSH_VAPID_PUBLIC_KEY
 # Optional override:
 #   API_BASE_URL (defaults to production backend)
 #
-# See docs/pwa-push-netlify-setup-fa.md for setup steps.
+# Backend must also have WEBPUSH_VAPID_PUBLIC_KEY, WEBPUSH_VAPID_PRIVATE_KEY,
+# and WEBPUSH_VAPID_SUBJECT configured at runtime.
 
 [build.environment]
 NODE_VERSION = "20"
-REQUIRE_FIREBASE_CONFIG = "true"
+REQUIRE_WEBPUSH_CONFIG = "true"
 
 [[redirects]]
   from = "/*"

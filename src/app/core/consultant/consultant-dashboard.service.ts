@@ -346,6 +346,20 @@ export class ConsultantDashboardService {
       .pipe(this.ensureCommandSucceeded("ثبت توکن نوتیفیکیشن انجام نشد"));
   }
 
+  sendTestPushNotification(
+    payload: RegisterPushTokenRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .post<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Consultant/SendTestPushNotification`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("ارسال نوتیفیکیشن تست انجام نشد"));
+  }
+
   getDashboardStatus(profileId: number): Observable<ConsultantDashboardStatus> {
     return this.http
       .get<unknown>(`${this.apiBaseUrl}/Consultant/GetDashboardStatus`, {

@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { Subscription, finalize, switchMap } from "rxjs";
+import { Subscription, finalize, firstValueFrom, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
   ConsultantDashboardService,
@@ -308,7 +308,22 @@ interface ConsultantDashboardLink {
                     <app-fa-icon name="close"></app-fa-icon>
                     آفلاین
                   </button>
+                  <button
+                    class="secondary-action"
+                    type="button"
+                    [disabled]="testPushSaving || !currentProfileId()"
+                    (click)="sendTestPushNotification()"
+                  >
+                    <app-fa-icon name="phone"></app-fa-icon>
+                    {{
+                      testPushSaving ? "در حال ارسال..." : "تست نوتیفیکیشن"
+                    }}
+                  </button>
                 </div>
+
+                <p class="queue-warning info">
+                  برای تست PWA، اپ را ببندید و بعد روی «تست نوتیفیکیشن» بزنید.
+                </p>
 
                 @if (pendingOfflineCount > 0) {
                   <p class="queue-warning">
@@ -435,7 +450,22 @@ interface ConsultantDashboardLink {
                     <app-fa-icon name="close"></app-fa-icon>
                     آفلاین
                   </button>
+                  <button
+                    class="secondary-action"
+                    type="button"
+                    [disabled]="testPushSaving || !currentProfileId()"
+                    (click)="sendTestPushNotification()"
+                  >
+                    <app-fa-icon name="phone"></app-fa-icon>
+                    {{
+                      testPushSaving ? "در حال ارسال..." : "تست نوتیفیکیشن"
+                    }}
+                  </button>
                 </div>
+
+                <p class="queue-warning info">
+                  برای تست PWA، اپ را ببندید و بعد روی «تست نوتیفیکیشن» بزنید.
+                </p>
 
                 @if (pendingOfflineCount > 0) {
                   <p class="queue-warning">
@@ -1867,6 +1897,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   isOnline = false;
   availabilitySaving = false;
   onlineSaving = false;
+  testPushSaving = false;
   pendingOfflineCount = 0;
   currentScore = 0;
   canGoOnlineFromStatus = false;
@@ -2323,6 +2354,42 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           );
           this.loadPendingOfflineLeads();
         },
+      });
+  }
+
+  sendTestPushNotification(): void {
+    const profileId = this.requireProfileId();
+    if (!profileId) return;
+
+    this.testPushSaving = true;
+    this.clearFeedback();
+
+    void this.pushNotifications
+      .syncForCurrentProfile(profileId)
+      .then(() =>
+        firstValueFrom(
+          this.consultantApi.sendTestPushNotification({
+            profileId,
+            deviceToken: "",
+          }),
+        ),
+      )
+      .then((response) => {
+        this.showFeedback(
+          response.message ||
+            "نوتیفیکیشن تست ارسال شد. برای دیدن روی گوشی، PWA را ببندید.",
+          "success",
+        );
+      })
+      .catch((error) => {
+        this.showFeedback(
+          this.errorMessage(error, "ارسال نوتیفیکیشن تست انجام نشد"),
+          "error",
+        );
+      })
+      .finally(() => {
+        this.testPushSaving = false;
+        this.markViewDirty();
       });
   }
 
