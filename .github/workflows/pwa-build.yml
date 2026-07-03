@@ -10,13 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-      FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-      FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-      FIREBASE_VAPID_KEY: ${{ secrets.FIREBASE_VAPID_KEY }}
+      WEBPUSH_VAPID_PUBLIC_KEY: ${{ secrets.WEBPUSH_VAPID_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,11 +24,11 @@ jobs:
 
       - name: Build production PWA
         run: |
-          if [ -n "$FIREBASE_API_KEY" ]; then
-            export REQUIRE_FIREBASE_CONFIG=true
+          if [ -n "$WEBPUSH_VAPID_PUBLIC_KEY" ]; then
+            export REQUIRE_WEBPUSH_CONFIG=true
             npm run build
           else
-            echo "Firebase secrets not configured in GitHub — running smoke build"
+            echo "Web Push secrets not configured in GitHub — running smoke build"
             npm run build:local
           fi
 

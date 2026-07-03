@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validates PWA + push notification build artifacts and service worker reachability.
+ * Validates PWA + Web Push build artifacts and service worker reachability.
  */
 import { readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -18,8 +18,8 @@ const requiredFiles = [
   "manifest.webmanifest",
   "ngsw-worker.js",
   "ngsw.json",
-  "firebase-config.js",
-  "firebase-cloud-messaging-push-scope/firebase-messaging-sw.js",
+  "web-push-config.js",
+  "web-push-scope/web-push-sw.js",
   "icons/icon-192x192.png",
 ];
 
@@ -53,21 +53,17 @@ if (!indexHtml.includes('rel="manifest"')) {
   console.log("OK: index.html links manifest");
 }
 
-const fcmSw = readFileSync(
-  join(dist, "firebase-cloud-messaging-push-scope/firebase-messaging-sw.js"),
+const webPushSw = readFileSync(
+  join(dist, "web-push-scope/web-push-sw.js"),
   "utf8",
 );
-for (const needle of [
-  "onBackgroundMessage",
-  "notificationclick",
-  "importScripts",
-]) {
-  if (!fcmSw.includes(needle)) {
-    console.error(`FAIL: FCM SW missing ${needle}`);
+for (const needle of ["push", "notificationclick", "showNotification"]) {
+  if (!webPushSw.includes(needle)) {
+    console.error(`FAIL: Web Push SW missing ${needle}`);
     failures++;
   }
 }
-console.log("OK: FCM service worker contains required handlers");
+console.log("OK: Web Push service worker contains required handlers");
 
 function fetchPath(path) {
   return new Promise((resolve, reject) => {
@@ -99,8 +95,8 @@ try {
   for (const path of [
     "/manifest.webmanifest",
     "/ngsw-worker.js",
-    "/firebase-cloud-messaging-push-scope/firebase-messaging-sw.js",
-    "/firebase-config.js",
+    "/web-push-scope/web-push-sw.js",
+    "/web-push-config.js",
   ]) {
     const { status, body } = await fetchPath(path);
     if (status !== 200 || body.length === 0) {
@@ -119,4 +115,4 @@ if (failures > 0) {
   process.exit(1);
 }
 
-console.log("\nAll PWA + push artifact checks passed.");
+console.log("\nAll PWA + Web Push artifact checks passed.");
