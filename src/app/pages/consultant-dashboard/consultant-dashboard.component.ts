@@ -2077,12 +2077,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const userId = this.user()?.userId;
+    const profileId = this.currentProfileId() ?? 0;
+    if (!profileId && !userId) {
+      this.showFeedback("شناسه کاربری یافت نشد. لطفاً دوباره وارد شوید", "error");
+      return;
+    }
+
     this.profileSaving = true;
     this.clearFeedback();
 
     this.consultantApi
       .completeProfile({
-        profileId: this.currentProfileId() ?? 0,
+        profileId,
+        userId,
         nationalityCode: this.profileForm.nationalityCode.trim(),
         address: this.profileForm.address.trim(),
         isCompleteProfile: true,

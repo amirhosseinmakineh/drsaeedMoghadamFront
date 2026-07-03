@@ -276,21 +276,35 @@ export class AuthService {
           "sub",
           "nameid",
           "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
-        ]) ?? data.userId,
+        ]) ?? this.dataString(data, "userId", "UserId"),
       profileId:
         this.claimNumber(claims, [
           "profileId",
           "ProfileId",
           "consultantProfileId",
           "ConsultantProfileId",
-        ]) ?? this.dataNumber(data, "profileId", "consultantProfileId"),
+        ]) ??
+        this.dataNumber(
+          data,
+          "profileId",
+          "ProfileId",
+          "consultantProfileId",
+          "ConsultantProfileId",
+        ),
       consultantProfileId:
         this.claimNumber(claims, [
           "consultantProfileId",
           "ConsultantProfileId",
           "profileId",
           "ProfileId",
-        ]) ?? this.dataNumber(data, "consultantProfileId", "profileId"),
+        ]) ??
+        this.dataNumber(
+          data,
+          "consultantProfileId",
+          "ConsultantProfileId",
+          "profileId",
+          "ProfileId",
+        ),
       isCompleteProfile:
         this.claimBoolean(claims, [
           "isCompleteProfile",
@@ -401,6 +415,18 @@ export class AuthService {
             ? Number(value)
             : NaN;
       if (Number.isFinite(numeric) && numeric > 0) return numeric;
+    }
+
+    return undefined;
+  }
+
+  private dataString(
+    data: Record<string, unknown>,
+    ...keys: string[]
+  ): string | undefined {
+    for (const key of keys) {
+      const value = data[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
     }
 
     return undefined;
