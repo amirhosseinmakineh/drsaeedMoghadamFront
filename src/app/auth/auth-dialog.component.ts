@@ -3,6 +3,7 @@ import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { finalize } from "rxjs";
 import { AuthService, RegisterRequest } from "../core/auth/auth.service";
+import { PushNotificationService } from "../core/push/push-notification.service";
 import { ToastService } from "../core/toast/toast.service";
 import {
   AuthDialogMode ,
@@ -369,6 +370,7 @@ export class AuthDialogComponent {
     private auth: AuthService,
     private router: Router,
     private toast: ToastService,
+    private pushNotifications: PushNotificationService,
   ) {}
 
   dialogTitle = () =>
@@ -438,6 +440,7 @@ export class AuthDialogComponent {
           next: (user) => {
             this.resetForm();
             this.closed.emit();
+            void this.pushNotifications.syncForCurrentProfile();
             if (user.role === "consultant" || user.role === "secretary") {
               this.router.navigateByUrl(this.auth.dashboardUrl(user));
             }

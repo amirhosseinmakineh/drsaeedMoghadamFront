@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Injectable, computed, signal } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { environment } from "../../../environments/environment";
@@ -96,6 +96,31 @@ export class AuthService {
         }),
         catchError((error) =>
           throwError(() => this.toUserFacingError(error, "خطا در ثبت نام")),
+        ),
+      );
+  }
+
+  registerPushToken(
+    deviceToken: string,
+  ): Observable<ApiResponse<null>> {
+    return this.http
+      .post<ApiResponse<null>>(
+        `${this.apiBaseUrl}/Auth/RegisterPushToken`,
+        { deviceToken },
+        { headers: this.authHeaders() },
+      )
+      .pipe(
+        map((response) => {
+          if (!response.isSuccess) {
+            throw new Error(response.message || "ثبت توکن نوتیفیکیشن انجام نشد");
+          }
+
+          return response;
+        }),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "ثبت توکن نوتیفیکیشن انجام نشد"),
+          ),
         ),
       );
   }
@@ -598,6 +623,13 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  private authHeaders(): HttpHeaders {
+    const token = this.authToken();
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return new HttpHeaders(headers);
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {

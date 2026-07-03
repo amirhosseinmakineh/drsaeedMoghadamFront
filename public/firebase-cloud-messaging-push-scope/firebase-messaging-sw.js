@@ -70,12 +70,14 @@ function notificationTag(data) {
     return `realtime-lead-${data.leadAssignmentId}`;
   }
   if (data.type === "offline_leads") return "offline-leads";
+  if (data.type === "password_changed") return "password-changed";
   return "consultant-notification";
 }
 
 function notificationTitle(data) {
   if (data.type === "offline_leads") return "لیدهای آفلاین";
   if (data.type === "realtime_lead") return "لید لحظه‌ای جدید";
+  if (data.type === "password_changed") return "تغییر رمز عبور";
   return "اعلان جدید";
 }
 
@@ -85,6 +87,9 @@ function notificationBody(data) {
   }
   if (data.type === "realtime_lead") {
     return "شما یک لید جدید دارید و ۳ دقیقه زمان دارید برای تماس.";
+  }
+  if (data.type === "password_changed") {
+    return "کلمه عبور شما با موفقیت تغییر کرد.";
   }
   return "برای مشاهده جزئیات وارد داشبورد شوید.";
 }
@@ -99,5 +104,6 @@ function notificationUrl(data) {
       : "";
     return `/dashboard/consultant?section=leads&type=realtime${leadAssignmentId}`;
   }
+  if (data.type === "password_changed") return "/";
   return "/dashboard/consultant";
 }
