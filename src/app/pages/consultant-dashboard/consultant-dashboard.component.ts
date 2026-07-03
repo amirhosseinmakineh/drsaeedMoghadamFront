@@ -311,6 +311,21 @@ interface ConsultantDashboardLink {
                   <button
                     class="secondary-action"
                     type="button"
+                    [disabled]="enablePushSaving || notificationPermission === 'granted'"
+                    (click)="enablePushNotifications()"
+                  >
+                    <app-fa-icon name="phone"></app-fa-icon>
+                    {{
+                      enablePushSaving
+                        ? "در حال فعال‌سازی..."
+                        : notificationPermission === "granted"
+                          ? "نوتیفیکیشن فعال است"
+                          : "فعال‌سازی نوتیفیکیشن"
+                    }}
+                  </button>
+                  <button
+                    class="secondary-action"
+                    type="button"
                     [disabled]="testPushSaving || !currentProfileId()"
                     (click)="sendTestPushNotification()"
                   >
@@ -322,7 +337,12 @@ interface ConsultantDashboardLink {
                 </div>
 
                 <p class="queue-warning info">
-                  برای تست PWA، اپ را ببندید و بعد روی «تست نوتیفیکیشن» بزنید.
+                  @if (notificationPermission === "granted") {
+                    برای تست واقعی PWA، اپ را ببندید و «تست نوتیفیکیشن» بزنید.
+                  } @else {
+                    ابتدا «فعال‌سازی نوتیفیکیشن» را بزنید تا اجازه از مرورگر
+                    پرسیده شود.
+                  }
                 </p>
 
                 @if (pendingOfflineCount > 0) {
@@ -453,6 +473,21 @@ interface ConsultantDashboardLink {
                   <button
                     class="secondary-action"
                     type="button"
+                    [disabled]="enablePushSaving || notificationPermission === 'granted'"
+                    (click)="enablePushNotifications()"
+                  >
+                    <app-fa-icon name="phone"></app-fa-icon>
+                    {{
+                      enablePushSaving
+                        ? "در حال فعال‌سازی..."
+                        : notificationPermission === "granted"
+                          ? "نوتیفیکیشن فعال است"
+                          : "فعال‌سازی نوتیفیکیشن"
+                    }}
+                  </button>
+                  <button
+                    class="secondary-action"
+                    type="button"
                     [disabled]="testPushSaving || !currentProfileId()"
                     (click)="sendTestPushNotification()"
                   >
@@ -464,7 +499,12 @@ interface ConsultantDashboardLink {
                 </div>
 
                 <p class="queue-warning info">
-                  برای تست PWA، اپ را ببندید و بعد روی «تست نوتیفیکیشن» بزنید.
+                  @if (notificationPermission === "granted") {
+                    برای تست واقعی PWA، اپ را ببندید و «تست نوتیفیکیشن» بزنید.
+                  } @else {
+                    ابتدا «فعال‌سازی نوتیفیکیشن» را بزنید تا اجازه از مرورگر
+                    پرسیده شود.
+                  }
                 </p>
 
                 @if (pendingOfflineCount > 0) {
@@ -1898,6 +1938,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   availabilitySaving = false;
   onlineSaving = false;
   testPushSaving = false;
+  enablePushSaving = false;
+  notificationPermission: NotificationPermission | "unsupported" = "default";
   pendingOfflineCount = 0;
   currentScore = 0;
   canGoOnlineFromStatus = false;
@@ -2044,7 +2086,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ...this.readJson<number[]>(this.notificationStorageKey(), []),
       ...this.readJson<number[]>(this.assignmentNotificationStorageKey(), []),
     ]);
-    this.requestNotificationPermission();
+    this.refreshNotificationPermissionState();
     window.addEventListener("consultant-push-message", this.pushMessageListener);
     void this.pushNotifications.syncForCurrentProfile(this.profileId);
     this.applyLeadRouteParams(this.route.snapshot.queryParamMap);
@@ -2253,7 +2295,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               response.message || "عدم حضور شما ثبت شد",
               "success",
             );
-            this.requestNotificationPermission();
             void this.pushNotifications.syncForCurrentProfile(profileId);
             this.configurePollTimer();
             this.refreshDashboard();
@@ -2291,7 +2332,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               (isAvailable ? "حضور شما ثبت شد" : "عدم حضور شما ثبت شد"),
             "success",
           );
-          this.requestNotificationPermission();
           void this.pushNotifications.syncForCurrentProfile(profileId);
           this.configurePollTimer();
           this.refreshDashboard();
@@ -2342,7 +2382,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               (isOnline ? "شما آنلاین شدید" : "شما آفلاین شدید"),
             "success",
           );
-          this.requestNotificationPermission();
           void this.pushNotifications.syncForCurrentProfile(profileId);
           this.configurePollTimer();
           this.refreshDashboard();
@@ -2364,23 +2403,33 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.testPushSaving = true;
     this.clearFeedback();
 
-    void this.pushNotifications
-      .syncForCurrentProfile(profileId)
-      .then(() =>
-        firstValueFrom(
-          this.consultantApi.sendTestPushNotification({
-            profileId,
-            deviceToken: "",
-          }),
-        ),
-      )
-      .then((response) => {
-        this.showFeedback(
-          response.message ||
-            "نوتیفیکیشن تست ارسال شد. برای دیدن روی گوشی، PWA را ببندید.",
-          "success",
+    const runTest = async (): Promise<void> => {
+      if (this.notificationPermission !== "granted") {
+        const enabled = await this.pushNotifications.enablePushForCurrentProfile(
+          profileId,
         );
-      })
+        this.refreshNotificationPermissionState();
+        if (!enabled.ok) {
+          throw new Error(enabled.message);
+        }
+      } else {
+        await this.pushNotifications.syncForCurrentProfile(profileId);
+      }
+
+      const response = await firstValueFrom(
+        this.consultantApi.sendTestPushNotification({
+          profileId,
+          deviceToken: "",
+        }),
+      );
+      this.showFeedback(
+        response.message ||
+          "نوتیفیکیشن تست ارسال شد. برای دیدن روی گوشی، PWA را ببندید.",
+        "success",
+      );
+    };
+
+    void runTest()
       .catch((error) => {
         this.showFeedback(
           this.errorMessage(error, "ارسال نوتیفیکیشن تست انجام نشد"),
@@ -2389,6 +2438,31 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       })
       .finally(() => {
         this.testPushSaving = false;
+        this.markViewDirty();
+      });
+  }
+
+  enablePushNotifications(): void {
+    const profileId = this.requireProfileId();
+    if (!profileId) return;
+
+    this.enablePushSaving = true;
+    this.clearFeedback();
+
+    void this.pushNotifications
+      .enablePushForCurrentProfile(profileId)
+      .then((result) => {
+        this.refreshNotificationPermissionState();
+        this.showFeedback(result.message, result.ok ? "success" : "error");
+      })
+      .catch((error) => {
+        this.showFeedback(
+          this.errorMessage(error, "فعال‌سازی نوتیفیکیشن انجام نشد"),
+          "error",
+        );
+      })
+      .finally(() => {
+        this.enablePushSaving = false;
         this.markViewDirty();
       });
   }
@@ -3843,10 +3917,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     navigatorWithVibration.vibrate?.([200, 100, 200]);
   }
 
-  private requestNotificationPermission(): void {
-    if (!("Notification" in window) || Notification.permission !== "default")
+  private refreshNotificationPermissionState(): void {
+    if (!("Notification" in window)) {
+      this.notificationPermission = "unsupported";
       return;
-    Notification.requestPermission().catch(() => undefined);
+    }
+    this.notificationPermission = Notification.permission;
   }
 
   private runDailyAutoAbsenceIfDue(): void {

@@ -2,10 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { firstValueFrom } from "rxjs";
 import { environment } from "../../../environments/environment";
-import {
-  getWebPushVapidPublicKey,
-  hasWebPushClientConfig,
-} from "./web-push-environment";
+import { getWebPushVapidPublicKey } from "./web-push-environment";
 
 export const WEB_PUSH_SERVICE_WORKER_URL =
   "/web-push-scope/web-push-sw.js";
@@ -14,6 +11,13 @@ export interface WebPushMessagePayload {
   title: string;
   body: string;
   data?: Record<string, string>;
+}
+
+export interface EnablePushResult {
+  ok: boolean;
+  permission: NotificationPermission | "unsupported";
+  message: string;
+  subscriptionJson?: string;
 }
 
 @Injectable({ providedIn: "root" })
@@ -38,13 +42,76 @@ export class NotificationService {
     }
   }
 
-  async requestPermission(): Promise<NotificationPermission> {
-    if (!this.canUseNotifications()) return "denied";
-    return Notification.requestPermission();
+  getPermissionStatus(): NotificationPermission | "unsupported" {
+    if (!this.canUseNotifications()) return "unsupported";
+    return Notification.permission;
+  }
+
+  isSupported(): boolean {
+    return this.canUseNotifications();
+  }
+
+  async enablePushNotifications(): Promise<EnablePushResult> {
+    if (!this.canUseNotifications()) {
+      return {
+        ok: false,
+        permission: "unsupported",
+        message:
+          "مرورگر یا حالت فعلی از نوتیفیکیشن PWA پشتیبانی نمی‌کند. روی اندروید PWA را نصب کنید؛ روی iOS حتماً Add to Home Screen بزنید.",
+      };
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      return {
+        ok: false,
+        permission,
+        message:
+          permission === "denied"
+            ? "اجازه نوتیفیکیشن رد شده است. از تنظیمات مرورگر یا PWA دوباره فعال کنید."
+            : "اجازه نوتیفیکیشن داده نشد.",
+      };
+    }
+
+    const vapidPublicKey = await this.resolveVapidPublicKey();
+    if (!vapidPublicKey) {
+      return {
+        ok: false,
+        permission,
+        message:
+          "کلید Web Push پیکربندی نشده است. WEBPUSH_VAPID_PUBLIC_KEY را در Netlify و بک‌اند ست کنید.",
+      };
+    }
+
+    try {
+      const subscriptionJson = await this.subscribeWithVapidKey(vapidPublicKey);
+      if (!subscriptionJson) {
+        return {
+          ok: false,
+          permission,
+          message: "ثبت subscription انجام نشد.",
+        };
+      }
+
+      return {
+        ok: true,
+        permission,
+        message: "نوتیفیکیشن فعال شد.",
+        subscriptionJson,
+      };
+    } catch (error) {
+      console.warn("Web Push subscription could not be created", error);
+      return {
+        ok: false,
+        permission,
+        message: "خطا در فعال‌سازی Web Push. PWA را یک‌بار ببندید و دوباره امتحان کنید.",
+      };
+    }
   }
 
   async getSubscriptionJson(): Promise<string | null> {
     if (!this.canUseNotifications()) return null;
+    if (Notification.permission !== "granted") return null;
 
     const vapidPublicKey = await this.resolveVapidPublicKey();
     if (!vapidPublicKey) {
@@ -54,36 +121,10 @@ export class NotificationService {
       return null;
     }
 
-    const permission = await this.requestPermission();
-    if (permission !== "granted") {
-      console.warn("Notification permission denied");
-      return null;
-    }
-
     try {
-      const registration = await this.ensureServiceWorkerRegistration();
-      let subscription = await registration.pushManager.getSubscription();
-
-      if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
-        });
-      }
-
-      const subscriptionJson = JSON.stringify(subscription.toJSON());
-      if (
-        subscriptionJson &&
-        subscriptionJson !== this.lastKnownSubscription
-      ) {
-        this.lastKnownSubscription = subscriptionJson;
-        console.log("[NotificationService] Web Push subscription created");
-        this.notifyTokenRefresh(subscriptionJson);
-      }
-
-      return subscriptionJson;
+      return await this.subscribeWithVapidKey(vapidPublicKey);
     } catch (error) {
-      console.warn("Web Push subscription could not be created", error);
+      console.warn("Web Push subscription could not be refreshed", error);
       return null;
     }
   }
@@ -104,6 +145,29 @@ export class NotificationService {
     return this.lastKnownSubscription;
   }
 
+  private async subscribeWithVapidKey(
+    vapidPublicKey: string,
+  ): Promise<string | null> {
+    const registration = await this.ensureServiceWorkerRegistration();
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
+      });
+    }
+
+    const subscriptionJson = JSON.stringify(subscription.toJSON());
+    if (subscriptionJson && subscriptionJson !== this.lastKnownSubscription) {
+      this.lastKnownSubscription = subscriptionJson;
+      console.log("[NotificationService] Web Push subscription ready");
+      this.notifyTokenRefresh(subscriptionJson);
+    }
+
+    return subscriptionJson;
+  }
+
   private async resolveVapidPublicKey(): Promise<string | null> {
     if (this.resolvedVapidPublicKey) return this.resolvedVapidPublicKey;
 
@@ -118,6 +182,7 @@ export class NotificationService {
         this.http.get<{
           isSuccess: boolean;
           data?: string;
+          message?: string;
         }>(`${environment.apiBaseUrl}/Consultant/WebPushPublicKey`),
       );
       const publicKey = response.data?.trim();
@@ -191,8 +256,4 @@ export class NotificationService {
       "PushManager" in window
     );
   }
-}
-
-export function hasWebPushSupport(): boolean {
-  return hasWebPushClientConfig();
 }
