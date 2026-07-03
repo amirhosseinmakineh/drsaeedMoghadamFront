@@ -27,5 +27,17 @@
         ]
       }
     }
+  ],
+  "dataGroups": [
+    {
+      "name": "firebase-runtime-config",
+      "urls": ["/firebase-config.js"],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 1,
+        "maxAge": "0u",
+        "timeout": "5s"
+      }
+    }
   ]
 }

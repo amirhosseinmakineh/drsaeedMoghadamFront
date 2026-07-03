@@ -4,8 +4,11 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "build": "npm run optimize:images && node scripts/generate-firebase-config.mjs && ng build --configuration production",
+    "build": "npm run optimize:images && node scripts/generate-firebase-config.mjs && ng build --configuration production && node scripts/validate-firebase-config.mjs",
+    "build:local": "SKIP_FIREBASE_CONFIG_CHECK=1 npm run build",
     "generate:firebase": "node scripts/generate-firebase-config.mjs",
+    "validate:firebase": "node scripts/validate-firebase-config.mjs",
+    "validate:pwa": "node scripts/validate-pwa-push.mjs",
     "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
     "optimize:images": "python3 scripts/optimize-images.py"
