@@ -43,6 +43,7 @@ const LEAD_STATE = {
 const LEAD_TYPE = {
   RealTime: 1,
   OfflineQueue: 2,
+  ConsultantOwned: 3,
 } as const;
 
 const THREE_MINUTES_MS = 3 * 60 * 1000;
@@ -68,6 +69,14 @@ interface LeadReportForm {
   patientRegion: string;
   businessName: string;
   attendanceProbabilityPercent: number | null | "";
+  secondaryPhoneNumber: string;
+}
+
+interface AddPatientForm {
+  userName: string;
+  phoneNumber: string;
+  patientCity: string;
+  patientRegion: string;
   secondaryPhoneNumber: string;
 }
 
@@ -534,14 +543,24 @@ interface ConsultantDashboardLink {
                     <span>لیدهای من</span>
                     <h2>تماس، گزارش و رزرو لیدها</h2>
                   </div>
-                  <button
-                    class="secondary-action compact"
-                    type="button"
-                    [disabled]="leadsLoading"
-                    (click)="refreshDashboard()"
-                  >
-                    بروزرسانی
-                  </button>
+                  <div class="panel-heading-actions">
+                    <button
+                      class="primary-action compact"
+                      type="button"
+                      [disabled]="!isProfileReady()"
+                      (click)="openAddPatientDialog()"
+                    >
+                      افزودن مریض
+                    </button>
+                    <button
+                      class="secondary-action compact"
+                      type="button"
+                      [disabled]="leadsLoading"
+                      (click)="refreshDashboard()"
+                    >
+                      بروزرسانی
+                    </button>
+                  </div>
                 </header>
 
                 <form class="lead-filters" (ngSubmit)="applyLeadFilters()">
@@ -568,6 +587,7 @@ interface ConsultantDashboardLink {
                       <option [ngValue]="null">همه</option>
                       <option [ngValue]="1">لحظه‌ای</option>
                       <option [ngValue]="2">صف آفلاین</option>
+                      <option [ngValue]="3">مریض شخصی</option>
                     </select>
                   </label>
                   <button
@@ -817,6 +837,88 @@ interface ConsultantDashboardLink {
               [disabled]="reportSaving"
             >
               {{ reportSaving ? "در حال ثبت..." : "ثبت گزارش" }}
+            </button>
+          </div>
+        </form>
+      </app-base-dialog>
+
+      <app-base-dialog
+        [open]="addPatientDialogOpen"
+        [showFooter]="false"
+        title="افزودن مریض"
+        [closable]="!addPatientSaving"
+        (closed)="closeAddPatientDialog()"
+      >
+        <form class="dialog-form" (ngSubmit)="submitAddPatient()">
+          <label>
+            نام بیمار
+            <input
+              [(ngModel)]="addPatientForm.userName"
+              [ngModelOptions]="ngModelBlurOptions"
+              name="consultantPatientName"
+              required
+              maxlength="200"
+              placeholder="نام و نام خانوادگی"
+            />
+          </label>
+          <label>
+            شماره موبایل
+            <input
+              [(ngModel)]="addPatientForm.phoneNumber"
+              [ngModelOptions]="ngModelBlurOptions"
+              name="consultantPatientPhone"
+              inputmode="tel"
+              maxlength="11"
+              required
+              placeholder="09120000000"
+            />
+          </label>
+          <label>
+            شهر بیمار
+            <input
+              [(ngModel)]="addPatientForm.patientCity"
+              [ngModelOptions]="ngModelBlurOptions"
+              name="consultantPatientCity"
+              maxlength="100"
+              placeholder="اختیاری"
+            />
+          </label>
+          <label>
+            منطقه بیمار
+            <input
+              [(ngModel)]="addPatientForm.patientRegion"
+              [ngModelOptions]="ngModelBlurOptions"
+              name="consultantPatientRegion"
+              maxlength="100"
+              placeholder="اختیاری"
+            />
+          </label>
+          <label>
+            شماره تماس دوم
+            <input
+              [(ngModel)]="addPatientForm.secondaryPhoneNumber"
+              [ngModelOptions]="ngModelBlurOptions"
+              name="consultantPatientSecondaryPhone"
+              inputmode="tel"
+              maxlength="11"
+              placeholder="09120000000"
+            />
+          </label>
+          <div class="dialog-actions">
+            <button
+              class="secondary-action"
+              type="button"
+              [disabled]="addPatientSaving"
+              (click)="closeAddPatientDialog()"
+            >
+              انصراف
+            </button>
+            <button
+              class="primary-action"
+              type="submit"
+              [disabled]="addPatientSaving"
+            >
+              {{ addPatientSaving ? "در حال ثبت..." : "ثبت مریض" }}
             </button>
           </div>
         </form>
@@ -1422,6 +1524,12 @@ interface ConsultantDashboardLink {
         justify-content: space-between;
         gap: 12px;
       }
+      .panel-heading-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
       .lead-filters {
         display: grid;
         grid-template-columns: 1fr 1fr auto;
@@ -1887,6 +1995,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reportSaving = false;
   selectedLead: ConsultantLead | null = null;
   reportForm: LeadReportForm = this.emptyLeadReportForm();
+
+  addPatientDialogOpen = false;
+  addPatientSaving = false;
+  addPatientForm: AddPatientForm = this.emptyAddPatientForm();
 
   reservationDialogOpen = false;
   reservationSaving = false;
@@ -2590,7 +2702,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!leadAssignmentId || this.isReportDisabled(lead)) return;
 
     this.reportingLeadIds.add(leadAssignmentId);
-    this.forceOfflineForReport();
+    if (this.leadType(lead) !== LEAD_TYPE.ConsultantOwned) {
+      this.forceOfflineForReport();
+    }
     this.selectedLead = lead;
     this.reportForm = this.emptyLeadReportForm(leadAssignmentId);
     this.reportDialogOpen = true;
@@ -2599,9 +2713,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   closeReportDialog(options: { releaseReportLock?: boolean } = {}): void {
     const releaseReportLock = options.releaseReportLock ?? true;
-    const leadAssignmentId = this.selectedLead
-      ? this.leadId(this.selectedLead)
-      : null;
+    const selectedLead = this.selectedLead;
+    const leadAssignmentId = selectedLead ? this.leadId(selectedLead) : null;
+    const isConsultantOwnedLead =
+      selectedLead !== null &&
+      this.leadType(selectedLead) === LEAD_TYPE.ConsultantOwned;
 
     this.reportDialogOpen = false;
     this.reportSaving = false;
@@ -2613,8 +2729,89 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       !this.reportedLeadIds.has(leadAssignmentId)
     ) {
       this.reportingLeadIds.delete(leadAssignmentId);
-      this.restoreOnlineAfterRequiredAction();
+      if (!isConsultantOwnedLead) {
+        this.restoreOnlineAfterRequiredAction();
+      }
     }
+  }
+
+  openAddPatientDialog(): void {
+    if (!this.isProfileReady()) return;
+    this.addPatientForm = this.emptyAddPatientForm();
+    this.addPatientDialogOpen = true;
+    this.markViewDirty();
+  }
+
+  closeAddPatientDialog(): void {
+    this.addPatientDialogOpen = false;
+    this.addPatientSaving = false;
+    this.addPatientForm = this.emptyAddPatientForm();
+    this.markViewDirty();
+  }
+
+  submitAddPatient(): void {
+    const profileId = this.requireProfileId();
+    if (!profileId) return;
+
+    const userName = this.addPatientForm.userName.trim();
+    const phoneNumber = this.addPatientForm.phoneNumber.trim();
+    const secondaryPhone = this.addPatientForm.secondaryPhoneNumber.trim();
+
+    if (!userName) {
+      this.showFeedback("نام بیمار الزامی است", "error");
+      return;
+    }
+
+    if (!/^09\d{9}$/.test(phoneNumber)) {
+      this.showFeedback("شماره موبایل معتبر نیست", "error");
+      return;
+    }
+
+    if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone)) {
+      this.showFeedback("شماره تماس دوم معتبر نیست", "error");
+      return;
+    }
+
+    this.addPatientSaving = true;
+    this.clearFeedback();
+
+    this.consultantApi
+      .createConsultantPatientLead({
+        consultantProfileId: profileId,
+        userName,
+        phoneNumber,
+        ...(this.addPatientForm.patientCity.trim()
+          ? { patientCity: this.addPatientForm.patientCity.trim() }
+          : {}),
+        ...(this.addPatientForm.patientRegion.trim()
+          ? { patientRegion: this.addPatientForm.patientRegion.trim() }
+          : {}),
+        ...(secondaryPhone ? { secondaryPhoneNumber: secondaryPhone } : {}),
+      })
+      .pipe(
+        finalize(() => {
+          this.addPatientSaving = false;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          this.closeAddPatientDialog();
+          this.leadTypeFilter = LEAD_TYPE.ConsultantOwned;
+          this.leadStateFilter = null;
+          this.leadPageNumber = 1;
+          this.loadLeads();
+          this.showFeedback(
+            response.message || "مریض با موفقیت ثبت شد",
+            "success",
+          );
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "ثبت مریض انجام نشد"),
+            "error",
+          ),
+      });
   }
 
   submitLeadReport(): void {
@@ -2719,7 +2916,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.showFeedback("گزارش ثبت شد", "success");
           this.markViewDirty();
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
-            this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: false });
+            if (this.leadType(lead) !== LEAD_TYPE.ConsultantOwned) {
+              this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: false });
+            }
           });
         },
         error: (error) =>
@@ -2741,6 +2940,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       secondaryPhoneNumber: leadAssignmentId
         ? this.reservationSecondaryPhoneForLead(leadAssignmentId)
         : "",
+    };
+  }
+
+  private emptyAddPatientForm(): AddPatientForm {
+    return {
+      userName: "",
+      phoneNumber: "",
+      patientCity: "",
+      patientRegion: "",
+      secondaryPhoneNumber: "",
     };
   }
 
@@ -3220,6 +3429,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadTypeLabel(value: number | null): string {
     if (value === LEAD_TYPE.OfflineQueue) return "صف آفلاین";
     if (value === LEAD_TYPE.RealTime) return "لحظه‌ای";
+    if (value === LEAD_TYPE.ConsultantOwned) return "مریض شخصی";
     return "نامشخص";
   }
 

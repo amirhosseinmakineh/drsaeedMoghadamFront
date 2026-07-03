@@ -149,6 +149,25 @@ export interface ExpireLeadNoCallResponse {
   isConsultantOnline: boolean;
 }
 
+export interface CreateConsultantPatientLeadRequest {
+  consultantProfileId: number;
+  userName: string;
+  phoneNumber: string;
+  patientCity?: string;
+  patientRegion?: string;
+  secondaryPhoneNumber?: string;
+}
+
+export interface CreateConsultantPatientLeadResponse {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  userName: string;
+  phoneNumber: string;
+  leadAssignmentState: number;
+  leadAssignmentType: number;
+  assignedAt: string;
+}
+
 export interface CreateReservationRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
@@ -408,6 +427,20 @@ export class ConsultantDashboardService {
         },
       )
       .pipe(this.ensureCommandSucceeded("منقضی کردن لید انجام نشد"));
+  }
+
+  createConsultantPatientLead(
+    payload: CreateConsultantPatientLeadRequest,
+  ): Observable<ApiCommandResponse<CreateConsultantPatientLeadResponse>> {
+    return this.http
+      .post<ApiCommandResponse<CreateConsultantPatientLeadResponse>>(
+        `${this.apiBaseUrl}/Consultant/CreateConsultantPatientLead`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت مریض انجام نشد"));
   }
 
   createReservation(

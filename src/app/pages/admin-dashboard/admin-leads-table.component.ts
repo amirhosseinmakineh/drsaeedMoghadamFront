@@ -96,6 +96,7 @@ type LeadTableMode = "system" | "consultant";
             <option [ngValue]="null">همه نوع‌ها</option>
             <option [ngValue]="1">هم‌زمان</option>
             <option [ngValue]="2">صف آفلاین</option>
+            <option [ngValue]="3">مریض مشاور</option>
           </select>
         </label>
 
@@ -563,7 +564,9 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
 
   private typeLabel(value: number | null): string {
     if (value === null) return "نامشخص";
-    return value === 2 ? "صف آفلاین" : "هم‌زمان";
+    if (value === 2) return "صف آفلاین";
+    if (value === 3) return "مریض مشاور";
+    return "هم‌زمان";
   }
 
   private errorMessage(error: unknown, fallback: string): string {
