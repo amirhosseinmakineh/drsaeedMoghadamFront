@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
+import { firstValueFrom } from "rxjs";
 import { AuthService } from "../auth/auth.service";
-import { ConsultantDashboardService } from "../consultant/consultant-dashboard.service";
 import {
   FirebaseMessagePayload,
   NotificationService,
@@ -19,7 +19,6 @@ export class PushNotificationService {
   private tokenSyncPromise: Promise<void> | null = null;
 
   constructor(
-    private consultantApi: ConsultantDashboardService,
     private auth: AuthService,
     private router: Router,
     private notifications: NotificationService,
@@ -43,35 +42,22 @@ export class PushNotificationService {
     return this.tokenSyncPromise;
   }
 
-  private async syncToken(profileId?: number | null): Promise<void> {
+  private async syncToken(_profileId?: number | null): Promise<void> {
     const user = this.auth.user();
-    const resolvedProfileId =
-      profileId ?? user?.consultantProfileId ?? user?.profileId ?? null;
-    if (!resolvedProfileId) return;
+    if (!user?.token) return;
 
     const token = await this.getCurrentFirebaseToken();
     if (!token) return;
 
-    const registrationKey = `${resolvedProfileId}:${token}`;
+    const registrationKey = `${user.userId ?? user.phoneNumber ?? "user"}:${token}`;
     if (this.lastRegisteredKey === registrationKey) return;
 
-    await new Promise<void>((resolve) => {
-      this.consultantApi
-        .registerPushToken({
-          profileId: resolvedProfileId,
-          deviceToken: token,
-        })
-        .subscribe({
-          next: () => {
-            this.lastRegisteredKey = registrationKey;
-            resolve();
-          },
-          error: (error) => {
-            console.warn("RegisterPushToken failed", error);
-            resolve();
-          },
-        });
-    });
+    try {
+      await firstValueFrom(this.auth.registerPushToken(token));
+      this.lastRegisteredKey = registrationKey;
+    } catch (error) {
+      console.warn("RegisterPushToken failed", error);
+    }
   }
 
   resetRegisteredTokenCache(): void {
@@ -84,6 +70,7 @@ export class PushNotificationService {
 
   handleNotificationData(data?: Record<string, string>): void {
     if (!data) return;
+    if (data["type"] === "password_changed") return;
     if (data["type"] === "offline_leads") {
       this.router.navigate(["/dashboard/consultant"], {
         queryParams: { section: "leads", type: "offline" },
@@ -130,6 +117,7 @@ export class PushNotificationService {
   }
 
   private notificationTag(data?: Record<string, string>): string {
+    if (data?.["type"] === "password_changed") return "password-changed";
     if (data?.["type"] === "realtime_lead" && data["leadAssignmentId"]) {
       return `realtime-lead-${data["leadAssignmentId"]}`;
     }
@@ -138,12 +126,16 @@ export class PushNotificationService {
   }
 
   private titleForData(data?: Record<string, string>): string {
+    if (data?.["type"] === "password_changed") return "تغییر رمز عبور";
     if (data?.["type"] === "offline_leads") return "لیدهای آفلاین";
     if (data?.["type"] === "realtime_lead") return "لید لحظه‌ای جدید";
     return "اعلان جدید";
   }
 
   private bodyForData(data?: Record<string, string>): string {
+    if (data?.["type"] === "password_changed") {
+      return "کلمه عبور شما با موفقیت تغییر کرد";
+    }
     if (data?.["type"] === "offline_leads") {
       return `شما ${data["count"] ?? "چند"} لید آفلاین دارید.`;
     }

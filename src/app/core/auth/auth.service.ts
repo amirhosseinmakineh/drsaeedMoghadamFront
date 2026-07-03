@@ -126,6 +126,31 @@ export class AuthService {
       );
   }
 
+  registerPushToken(deviceToken: string): Observable<ApiResponse<unknown>> {
+    return this.http
+      .post<ApiResponse<unknown>>(
+        `${this.apiBaseUrl}/Auth/RegisterPushToken`,
+        { deviceToken },
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(
+        map((response) => {
+          if (!response.isSuccess) {
+            throw new Error(response.message || "ثبت توکن نوتیفیکیشن انجام نشد");
+          }
+
+          return response;
+        }),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "خطا در ثبت توکن نوتیفیکیشن"),
+          ),
+        ),
+      );
+  }
+
   login(phoneNumber: string, password: string): Observable<AuthUser> {
     const payload: LoginPayload = { phoneNumber, passwordHash: password };
 
@@ -217,6 +242,11 @@ export class AuthService {
     if (currentToken?.trim()) return currentToken;
 
     return this.readStoredToken();
+  }
+
+  private authHeaders(): Record<string, string> {
+    const token = this.authToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   roleLabel(role: AuthRole, language: "fa" | "en"): string {
