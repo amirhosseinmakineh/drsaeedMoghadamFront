@@ -64,11 +64,11 @@ if (!hasNgsw) {
 }
 console.log("OK: Angular service worker registered");
 
-const fcmRegistrationResult = await page.evaluate(async () => {
+const webPushRegistrationResult = await page.evaluate(async () => {
   try {
     const registration = await navigator.serviceWorker.register(
-      "/firebase-cloud-messaging-push-scope/firebase-messaging-sw.js",
-      { scope: "/firebase-cloud-messaging-push-scope/" },
+      "/web-push-scope/web-push-sw.js",
+      { scope: "/web-push-scope/" },
     );
     await registration.update().catch(() => undefined);
     return { ok: true };
@@ -80,7 +80,7 @@ const fcmRegistrationResult = await page.evaluate(async () => {
   }
 });
 
-const registrationsAfterFcm = await page.evaluate(async () => {
+const registrationsAfterWebPush = await page.evaluate(async () => {
   const regs = await navigator.serviceWorker.getRegistrations();
   return regs.map((reg) => ({
     scope: reg.scope,
@@ -88,20 +88,18 @@ const registrationsAfterFcm = await page.evaluate(async () => {
   }));
 });
 
-const fcmRegistered = registrationsAfterFcm.some((reg) =>
-  reg.scriptURL.includes(
-    "firebase-cloud-messaging-push-scope/firebase-messaging-sw.js",
-  ),
+const webPushRegistered = registrationsAfterWebPush.some((reg) =>
+  reg.scriptURL.includes("web-push-scope/web-push-sw.js"),
 );
-if (!fcmRegistered) {
-  if (fcmRegistrationResult.ok) {
-    throw new Error("FCM service worker was not registered");
+if (!webPushRegistered) {
+  if (webPushRegistrationResult.ok) {
+    throw new Error("Web Push service worker was not registered");
   }
   console.log(
-    `WARN: FCM SW registration unavailable in this environment (${fcmRegistrationResult.message})`,
+    `WARN: Web Push SW registration unavailable in this environment (${webPushRegistrationResult.message})`,
   );
 } else {
-  console.log("OK: FCM service worker registered at isolated scope");
+  console.log("OK: Web Push service worker registered at isolated scope");
 }
 
 const permission = await page.evaluate(async () => {
@@ -110,17 +108,17 @@ const permission = await page.evaluate(async () => {
 });
 console.log(`OK: Notification API available, permission=${permission}`);
 
-const firebaseConfigPresent = await page.evaluate(
-  () => typeof window.__FIREBASE_CONFIG__ === "object",
+const webPushConfigPresent = await page.evaluate(
+  () => typeof self.__WEB_PUSH_VAPID_PUBLIC_KEY__ === "string",
 );
 console.log(
-  firebaseConfigPresent
-    ? "OK: firebase-config.js loaded on page"
-    : "WARN: firebase-config.js missing (expected without FIREBASE_* env)",
+  webPushConfigPresent
+    ? "OK: web-push-config.js loaded on page"
+    : "WARN: web-push-config.js missing (expected without WEBPUSH_* env)",
 );
 
 const relevantLogs = consoleLogs.filter((line) =>
-  /NotificationService|Firebase|FCM|permission/i.test(line),
+  /NotificationService|Web Push|permission/i.test(line),
 );
 if (relevantLogs.length) {
   console.log("Browser console (notifications):");
@@ -128,4 +126,4 @@ if (relevantLogs.length) {
 }
 
 await browser.close();
-console.log("\nBrowser PWA + notification smoke test passed.");
+console.log("\nBrowser PWA + Web Push smoke test passed.");
