@@ -22,6 +22,7 @@ export interface PaginatedResponse<T> {
 
 export interface CompleteConsultantProfileRequest {
   profileId: number;
+  userId?: string;
   nationalityCode: string;
   address: string;
   isCompleteProfile: boolean;
