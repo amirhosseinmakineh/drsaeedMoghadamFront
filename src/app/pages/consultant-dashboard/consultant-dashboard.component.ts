@@ -311,16 +311,18 @@ interface ConsultantDashboardLink {
                   <button
                     class="secondary-action"
                     type="button"
-                    [disabled]="enablePushSaving || notificationPermission === 'granted'"
+                    [disabled]="enablePushSaving || pushRegistrationReady"
                     (click)="enablePushNotifications()"
                   >
                     <app-fa-icon name="phone"></app-fa-icon>
                     {{
                       enablePushSaving
                         ? "در حال فعال‌سازی..."
-                        : notificationPermission === "granted"
+                        : pushRegistrationReady
                           ? "نوتیفیکیشن فعال است"
-                          : "فعال‌سازی نوتیفیکیشن"
+                          : browserNotificationPermission === "granted"
+                            ? "تکمیل اتصال نوتیفیکیشن"
+                            : "فعال‌سازی نوتیفیکیشن"
                     }}
                   </button>
                   <button
@@ -337,8 +339,11 @@ interface ConsultantDashboardLink {
                 </div>
 
                 <p class="queue-warning info">
-                  @if (notificationPermission === "granted") {
+                  @if (pushRegistrationReady) {
                     برای تست واقعی PWA، اپ را ببندید و «تست نوتیفیکیشن» بزنید.
+                  } @else if (browserNotificationPermission === "granted") {
+                    اجازه داده شده. «فعال‌سازی نوتیفیکیشن» را بزنید تا اتصال push
+                    کامل شود.
                   } @else {
                     ابتدا «فعال‌سازی نوتیفیکیشن» را بزنید تا اجازه از مرورگر
                     پرسیده شود.
@@ -473,16 +478,18 @@ interface ConsultantDashboardLink {
                   <button
                     class="secondary-action"
                     type="button"
-                    [disabled]="enablePushSaving || notificationPermission === 'granted'"
+                    [disabled]="enablePushSaving || pushRegistrationReady"
                     (click)="enablePushNotifications()"
                   >
                     <app-fa-icon name="phone"></app-fa-icon>
                     {{
                       enablePushSaving
                         ? "در حال فعال‌سازی..."
-                        : notificationPermission === "granted"
+                        : pushRegistrationReady
                           ? "نوتیفیکیشن فعال است"
-                          : "فعال‌سازی نوتیفیکیشن"
+                          : browserNotificationPermission === "granted"
+                            ? "تکمیل اتصال نوتیفیکیشن"
+                            : "فعال‌سازی نوتیفیکیشن"
                     }}
                   </button>
                   <button
@@ -499,8 +506,11 @@ interface ConsultantDashboardLink {
                 </div>
 
                 <p class="queue-warning info">
-                  @if (notificationPermission === "granted") {
+                  @if (pushRegistrationReady) {
                     برای تست واقعی PWA، اپ را ببندید و «تست نوتیفیکیشن» بزنید.
+                  } @else if (browserNotificationPermission === "granted") {
+                    اجازه داده شده. «فعال‌سازی نوتیفیکیشن» را بزنید تا اتصال push
+                    کامل شود.
                   } @else {
                     ابتدا «فعال‌سازی نوتیفیکیشن» را بزنید تا اجازه از مرورگر
                     پرسیده شود.
@@ -1939,7 +1949,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   onlineSaving = false;
   testPushSaving = false;
   enablePushSaving = false;
-  notificationPermission: NotificationPermission | "unsupported" = "default";
+  pushRegistrationReady = false;
   pendingOfflineCount = 0;
   currentScore = 0;
   canGoOnlineFromStatus = false;
@@ -2024,6 +2034,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private routeParamsInitialized = false;
   private readonly markViewDirty: () => void;
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
+  private readonly onPushStateSync = (): void => {
+    void this.syncPushRegistrationState();
+  };
+
+  get browserNotificationPermission(): NotificationPermission | "unsupported" {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      return "unsupported";
+    }
+    return Notification.permission;
+  }
+
   private readonly pushMessageListener = (event: Event): void => {
     const detail = (
       event as CustomEvent<{
@@ -2086,8 +2107,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ...this.readJson<number[]>(this.notificationStorageKey(), []),
       ...this.readJson<number[]>(this.assignmentNotificationStorageKey(), []),
     ]);
-    this.refreshNotificationPermissionState();
+    void this.syncPushRegistrationState();
     window.addEventListener("consultant-push-message", this.pushMessageListener);
+    window.addEventListener("focus", this.onPushStateSync);
+    document.addEventListener("visibilitychange", this.onPushStateSync);
     void this.pushNotifications.syncForCurrentProfile(this.profileId);
     this.applyLeadRouteParams(this.route.snapshot.queryParamMap);
     this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
@@ -2128,6 +2151,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       "consultant-push-message",
       this.pushMessageListener,
     );
+    window.removeEventListener("focus", this.onPushStateSync);
+    document.removeEventListener("visibilitychange", this.onPushStateSync);
   }
 
   currentProfileId(): number | null {
@@ -2404,11 +2429,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.clearFeedback();
 
     const runTest = async (): Promise<void> => {
-      if (this.notificationPermission !== "granted") {
+      if (!this.pushRegistrationReady) {
         const enabled = await this.pushNotifications.enablePushForCurrentProfile(
           profileId,
         );
-        this.refreshNotificationPermissionState();
+        await this.syncPushRegistrationState();
         if (!enabled.ok) {
           throw new Error(enabled.message);
         }
@@ -2451,8 +2476,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     void this.pushNotifications
       .enablePushForCurrentProfile(profileId)
-      .then((result) => {
-        this.refreshNotificationPermissionState();
+      .then(async (result) => {
+        await this.syncPushRegistrationState();
         this.showFeedback(result.message, result.ok ? "success" : "error");
       })
       .catch((error) => {
@@ -3917,12 +3942,27 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     navigatorWithVibration.vibrate?.([200, 100, 200]);
   }
 
-  private refreshNotificationPermissionState(): void {
-    if (!("Notification" in window)) {
-      this.notificationPermission = "unsupported";
+  private async syncPushRegistrationState(): Promise<void> {
+    if (this.browserNotificationPermission !== "granted") {
+      this.pushRegistrationReady = false;
+      this.markViewDirty();
       return;
     }
-    this.notificationPermission = Notification.permission;
+
+    try {
+      const subscription =
+        await this.pushNotifications.getCurrentPushSubscription();
+      this.pushRegistrationReady = Boolean(subscription);
+      if (subscription) {
+        void this.pushNotifications.syncForCurrentProfile(
+          this.currentProfileId(),
+        );
+      }
+    } catch {
+      this.pushRegistrationReady = false;
+    }
+
+    this.markViewDirty();
   }
 
   private runDailyAutoAbsenceIfDue(): void {

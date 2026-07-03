@@ -179,14 +179,14 @@ export class NotificationService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<{
-          isSuccess: boolean;
-          data?: string;
-          message?: string;
-        }>(`${environment.apiBaseUrl}/Consultant/WebPushPublicKey`),
+        this.http.get<Record<string, unknown>>(
+          `${environment.apiBaseUrl}/Consultant/WebPushPublicKey`,
+        ),
       );
-      const publicKey = response.data?.trim();
-      if (response.isSuccess && publicKey) {
+      const isSuccess = Boolean(response["isSuccess"] ?? response["IsSuccess"]);
+      const data = response["data"] ?? response["Data"];
+      const publicKey = typeof data === "string" ? data.trim() : "";
+      if (isSuccess && publicKey) {
         this.resolvedVapidPublicKey = publicKey;
         return publicKey;
       }
