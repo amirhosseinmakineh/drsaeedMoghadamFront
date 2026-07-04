@@ -303,6 +303,35 @@ interface LeadPerson {
   Mobile?: string | null;
 }
 
+export interface BroadcastingLead {
+  leadAssignmentId: number;
+  firstName?: string | null;
+  lastName?: string | null;
+  createdAt: string;
+  broadcastStartedAt?: string | null;
+  leadAssignmentType?: number | null;
+}
+
+export interface AcceptLeadRequest {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+}
+
+export interface AcceptLeadResponse {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  leadAssignmentState: number;
+  phoneNumber: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+}
+
+export interface RejectBroadcastRequest {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+}
+
 @Injectable({ providedIn: "root" })
 export class ConsultantDashboardService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
@@ -414,6 +443,53 @@ export class ConsultantDashboardService {
           ),
         ),
       );
+  }
+
+  getBroadcastingLeads(
+    profileId: number,
+  ): Observable<PaginatedResponse<BroadcastingLead>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetBroadcastingLeads`, {
+        headers: this.authHeaders(),
+        params: this.toParams({ profileId }),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<BroadcastingLead>(response, {
+            pageNumber: 1,
+            pageSize: 20,
+          }),
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت لیدهای در حال پخش انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  acceptLead(
+    payload: AcceptLeadRequest,
+  ): Observable<ApiCommandResponse<AcceptLeadResponse>> {
+    return this.http
+      .post<ApiCommandResponse<AcceptLeadResponse>>(
+        `${this.apiBaseUrl}/Consultant/AcceptLead`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("پذیرش لید انجام نشد"));
+  }
+
+  rejectBroadcast(
+    payload: RejectBroadcastRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .post<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Consultant/RejectBroadcast`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("رد لید انجام نشد"));
   }
 
   createConsultantPatientLead(

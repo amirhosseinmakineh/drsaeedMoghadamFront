@@ -234,7 +234,7 @@ export class PushNotificationService {
       return;
     }
 
-    if (data["type"] === "realtime_lead") {
+    if (data["type"] === "lead_broadcast" || data["type"] === "realtime_lead") {
       this.router.navigate(["/dashboard/consultant"], {
         queryParams: {
           section: "leads",
@@ -289,7 +289,8 @@ export class PushNotificationService {
 
   private titleForData(data?: Record<string, string>): string {
     if (data?.["type"] === "offline_leads") return "لیدهای آفلاین";
-    if (data?.["type"] === "realtime_lead") return "لید لحظه‌ای جدید";
+    if (data?.["type"] === "lead_broadcast" || data?.["type"] === "realtime_lead")
+      return "لید جدید!";
     if (data?.["type"] === "password_changed") return "تغییر رمز عبور";
     if (data?.["type"] === "test_push") return "تست نوتیفیکیشن";
     return "اعلان جدید";
@@ -299,8 +300,8 @@ export class PushNotificationService {
     if (data?.["type"] === "offline_leads") {
       return `شما ${data["count"] ?? "چند"} لید آفلاین دارید.`;
     }
-    if (data?.["type"] === "realtime_lead") {
-      return "لید جدید داری — ۳ دقیقه وقت داری برای تماس.";
+    if (data?.["type"] === "lead_broadcast" || data?.["type"] === "realtime_lead") {
+      return "یک لید جدید منتظر پذیرش است — سریع بردارید.";
     }
     if (data?.["type"] === "password_changed") {
       return "کلمه عبور شما با موفقیت تغییر کرد.";
