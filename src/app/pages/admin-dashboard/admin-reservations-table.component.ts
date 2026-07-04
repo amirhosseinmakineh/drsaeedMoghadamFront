@@ -281,12 +281,15 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
       label: "وضعیت",
       value: (row) => attendanceStatusPresentation(readAttendanceStatus(row)).label,
       badge: (row) =>
-        attendanceStatusPresentation(readAttendanceStatus(row)).tone,
+        attendanceStatusPresentation(readAttendanceStatus(row)).badgeClass,
     },
     {
       key: "consultantClaim",
       label: "اعلام مشاور",
-      value: (row) => consultantAttendanceClaimLabel(row),
+      value: (row) =>
+        consultantAttendanceClaimLabel(
+          row.consultantSaysPatientAttended ?? row.ConsultantSaysPatientAttended,
+        ),
     },
     {
       key: "city",
