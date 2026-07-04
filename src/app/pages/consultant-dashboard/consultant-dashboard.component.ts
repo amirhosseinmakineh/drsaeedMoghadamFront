@@ -18,7 +18,6 @@ import {
   ConsultantLead,
   ConsultantReservation,
   CreateReservationRequest,
-  ConfirmAttendanceRequest,
   SubmitLeadCallReportRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
@@ -517,53 +516,6 @@ interface ConsultantDashboardLink {
               </section>
             } @else {
               <section class="lead-panel">
-                @if (dueConfirmations.length) {
-                  <div class="attendance-lock">
-                    <div class="reservation-list">
-                      @for (
-                        reservation of dueConfirmations;
-                        track reservationId(reservation)
-                      ) {
-                        <article>
-                          <strong>{{
-                            reservationPatientName(reservation)
-                          }}</strong>
-                          <span
-                            >{{ reservationPatientPhone(reservation) }} -
-                            {{ reservationPatientCity(reservation) }}</span
-                          >
-                          <time>{{
-                            formatDateTime(reservationDateTime(reservation))
-                          }}</time>
-                          <div class="dialog-actions">
-                            <button
-                              class="primary-action compact"
-                              type="button"
-                              [disabled]="
-                                attendanceSavingId ===
-                                reservationId(reservation)
-                              "
-                              (click)="confirmAttendance(reservation, true)"
-                            >
-                              بیمار آمد
-                            </button>
-                            <button
-                              class="secondary-action compact danger"
-                              type="button"
-                              [disabled]="
-                                attendanceSavingId ===
-                                reservationId(reservation)
-                              "
-                              (click)="confirmAttendance(reservation, false)"
-                            >
-                              بیمار نیامد
-                            </button>
-                          </div>
-                        </article>
-                      }
-                    </div>
-                  </div>
-                }
                 <header class="panel-heading">
                   <div>
                     <span>لیدهای من</span>
@@ -888,7 +840,6 @@ interface ConsultantDashboardLink {
                 [profileId]="currentProfileId() ?? 0"
                 [profileReady]="isProfileReady()"
                 (completeProfile)="openPatientProfileFromReservation($event)"
-                (pendingCountChange)="syncDueConfirmationsCount($event)"
               ></app-consultant-reservations-panel>
             }
           }
@@ -1672,15 +1623,6 @@ interface ConsultantDashboardLink {
         backface-visibility: hidden;
         -webkit-font-smoothing: antialiased;
       }
-      .attendance-lock {
-        display: grid;
-        gap: 12px;
-        margin-bottom: 14px;
-        padding: 14px;
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        background: var(--surface);
-      }
       .panel-heading {
         display: flex;
         align-items: flex-start;
@@ -2189,8 +2131,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     attendancePrediction: "",
   };
   reservations: ConsultantReservation[] = [];
-  dueConfirmations: ConsultantReservation[] = [];
-  attendanceSavingId: number | null = null;
   reservationsLoading = false;
   readonly reservationDatePickerLabel = {
     fa: "تاریخ رزرو",
@@ -2228,12 +2168,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private leadRequestId = 0;
   private pendingOfflineRequestId = 0;
   private reservationRequestId = 0;
-  private dueConfirmationRequestId = 0;
   private visibleLeadLoadingRequestId = 0;
   private pendingOfflineLoadSubscription: Subscription | null = null;
   private leadLoadSubscription: Subscription | null = null;
   private reservationLoadSubscription: Subscription | null = null;
-  private dueConfirmationLoadSubscription: Subscription | null = null;
   private leadNotificationLoadSubscription: Subscription | null = null;
   private dashboardStatusSubscription: Subscription | null = null;
   private routeQueryParamsSubscription: Subscription | null = null;
@@ -2351,7 +2289,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.pendingOfflineLoadSubscription?.unsubscribe();
     this.leadLoadSubscription?.unsubscribe();
     this.reservationLoadSubscription?.unsubscribe();
-    this.dueConfirmationLoadSubscription?.unsubscribe();
     this.leadNotificationLoadSubscription?.unsubscribe();
     this.dashboardStatusSubscription?.unsubscribe();
     this.routeQueryParamsSubscription?.unsubscribe();
@@ -2698,7 +2635,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   refreshDashboard(): void {
     if (!this.isProfileReady()) return;
     this.loadDashboardStatus(() => {
-      this.loadDueConfirmations();
       this.loadPendingOfflineLeads();
       this.loadLeads();
       this.loadLeadNotifications();
@@ -3405,62 +3341,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  syncDueConfirmationsCount(count: number): void {
-    if (count !== this.dueConfirmations.length) {
-      this.loadDueConfirmations();
-    }
-  }
-
-  confirmAttendance(
-    reservation: ConsultantReservation,
-    patientAttended: boolean,
-  ): void {
-    const profileId = this.requireProfileId();
-    const reservationId = this.reservationId(reservation);
-    if (!profileId || !reservationId) return;
-
-    const payload: ConfirmAttendanceRequest = {
-      reservationId,
-      consultantProfileId: profileId,
-      patientAttended,
-      note: patientAttended
-        ? "بیمار در مطب حاضر شد."
-        : "بیمار در زمان رزرو حاضر نشد.",
-    };
-
-    this.attendanceSavingId = reservationId;
-    this.consultantApi
-      .confirmAttendance(payload)
-      .pipe(
-        finalize(() => {
-          this.attendanceSavingId = null;
-          this.markViewDirty();
-        }),
-      )
-      .subscribe({
-        next: (response) => {
-          this.showFeedback(
-            response.message ||
-              "وضعیت حضور بیمار ثبت شد و منتظر بررسی منشی است",
-            "success",
-          );
-          if (patientAttended) {
-            this.showLeadNotification(
-              "حضور بیمار ثبت شد",
-              `${this.reservationPatientName(reservation)} با شماره ${this.reservationPatientPhone(reservation)} حاضر شد.`,
-            );
-          }
-          this.loadDueConfirmations();
-          this.loadLeads();
-        },
-        error: (error) =>
-          this.showFeedback(
-            this.errorMessage(error, "ثبت تایید حضور انجام نشد"),
-            "error",
-          ),
-      });
-  }
-
   canCompletePatientProfile(reservation: ConsultantReservation): boolean {
     return (
       (reservation.requiresPatientProfile ??
@@ -4028,27 +3908,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadDueConfirmations(): void {
-    const profileId = this.currentProfileId();
-    if (!profileId) return;
-
-    const requestId = ++this.dueConfirmationRequestId;
-    this.dueConfirmationLoadSubscription?.unsubscribe();
-    this.dueConfirmationLoadSubscription = this.consultantApi
-      .getDueConfirmations(profileId)
-      .pipe(finalize(() => this.markViewDirty()))
-      .subscribe({
-        next: (items) => {
-          if (requestId === this.dueConfirmationRequestId)
-            this.dueConfirmations = items ?? [];
-        },
-        error: () => {
-          if (requestId === this.dueConfirmationRequestId)
-            this.dueConfirmations = [];
-        },
-      });
-  }
-
   private loadLeads(quiet = false): void {
     const profileId = this.currentProfileId();
     if (!profileId) return;
@@ -4218,7 +4077,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.loadLeads(true);
           this.loadLeadNotifications();
           this.loadPendingOfflineLeads();
-          this.loadDueConfirmations();
         });
       }, this.pollIntervalMs);
     });
