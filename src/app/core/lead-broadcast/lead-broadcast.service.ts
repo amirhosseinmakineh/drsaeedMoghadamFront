@@ -16,6 +16,10 @@ import {
   BroadcastingLead,
   ConsultantDashboardService,
 } from "../consultant/consultant-dashboard.service";
+import {
+  isLeadTestModeUser,
+  setLeadTestConsultantOnline,
+} from "../lead-test/lead-test-mode";
 
 export interface ActiveBroadcastLead {
   leadAssignmentId: number;
@@ -90,10 +94,13 @@ export class LeadBroadcastService implements OnDestroy {
     this.isOnline = isOnline;
 
     if (!isOnline) {
+      if (isLeadTestModeUser()) setLeadTestConsultantOnline(false);
       this.stopMonitoring();
       this.clearActiveLead();
       return;
     }
+
+    if (isLeadTestModeUser()) setLeadTestConsultantOnline(true);
 
     this.startSignalR();
     this.startPolling();
@@ -101,6 +108,7 @@ export class LeadBroadcastService implements OnDestroy {
   }
 
   stop(): void {
+    if (isLeadTestModeUser()) setLeadTestConsultantOnline(false);
     this.stopMonitoring();
     this.clearActiveLead();
     this.profileId = null;
