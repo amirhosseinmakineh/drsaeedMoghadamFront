@@ -256,6 +256,26 @@ export interface CompletePatientProfileResponse {
   roleName: string;
 }
 
+export interface AddPatientLeadRequest {
+  consultantProfileId: number;
+  userName: string;
+  phoneNumber: string;
+  patientCity?: string;
+  patientRegion?: string;
+  businessName?: string;
+  secondaryPhoneNumber?: string;
+  reportDescription?: string;
+}
+
+export interface AddPatientLeadResponse {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  userName: string;
+  phoneNumber: string;
+  assignmentType: number;
+  leadAssignmentState: number;
+}
+
 export interface ReservationFilters {
   consultantProfileId: number;
   from?: string;
@@ -394,6 +414,20 @@ export class ConsultantDashboardService {
           ),
         ),
       );
+  }
+
+  addPatientLead(
+    payload: AddPatientLeadRequest,
+  ): Observable<ApiCommandResponse<AddPatientLeadResponse>> {
+    return this.http
+      .post<ApiCommandResponse<AddPatientLeadResponse>>(
+        `${this.apiBaseUrl}/Consultant/AddPatientLead`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت بیمار انجام نشد"));
   }
 
   submitLeadCallReport(
