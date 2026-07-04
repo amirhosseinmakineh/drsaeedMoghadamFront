@@ -32,6 +32,7 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { LeadBroadcastService } from "../../core/lead-broadcast/lead-broadcast.service";
 import { LeadBroadcastModalComponent } from "../../shared/ui/lead-broadcast-modal/lead-broadcast-modal.component";
+import { isLeadTestModeUser } from "../../core/lead-test/lead-test-mode";
 
 const LEAD_STATE = {
   New: 1,
@@ -291,6 +292,12 @@ interface ConsultantDashboardLink {
                     }}</strong>
                   </div>
                 </div>
+                @if (isLeadTestMode()) {
+                  <p class="test-mode-banner">
+                    حالت تست لید فعال است — لیدهای «تست» و «TEST» به‌صورت لحظه‌ای
+                    نمایش داده می‌شوند.
+                  </p>
+                }
                 <div class="action-grid">
                   <button
                     class="primary-action"
@@ -1604,6 +1611,16 @@ interface ConsultantDashboardLink {
       .status-summary .bad {
         color: #991b1b;
       }
+      .test-mode-banner {
+        margin: 10px 0 0;
+        padding: 0.75rem 0.9rem;
+        border-radius: 16px;
+        background: rgba(255, 193, 7, 0.14);
+        border: 1px solid rgba(255, 193, 7, 0.35);
+        color: #8a6d00;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
       .action-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2313,7 +2330,12 @@ export class ConsultantDashboardComponent implements OnInit, AfterViewInit, OnDe
     return this.auth.isRoleProfileComplete(this.user());
   }
 
+  isLeadTestMode(): boolean {
+    return isLeadTestModeUser(this.user()?.userId, this.user());
+  }
+
   canGoOnline(): boolean {
+    if (this.isLeadTestMode()) return true;
     if (!this.isAvailable || this.pendingOfflineCount > 0) return false;
     if (!this.dashboardStatusLoaded) return false;
     if (this.onlineStatusBlockReason) return false;
@@ -3344,6 +3366,7 @@ export class ConsultantDashboardComponent implements OnInit, AfterViewInit, OnDe
   }
 
   realtimeBlockedByOfflineQueue(): boolean {
+    if (this.isLeadTestMode()) return false;
     return (
       this.pendingOfflineCount > 0 && this.leadTypeFilter === LEAD_TYPE.RealTime
     );
@@ -4080,6 +4103,7 @@ export class ConsultantDashboardComponent implements OnInit, AfterViewInit, OnDe
 
   private runDailyAutoAbsenceIfDue(): void {
     if (this.autoAbsenceRunning) return;
+    if (this.isLeadTestMode()) return;
 
     const now = new Date();
     if (now.getHours() < 21) return;
@@ -4280,6 +4304,11 @@ export class ConsultantDashboardComponent implements OnInit, AfterViewInit, OnDe
 
   private updatePendingOfflineCount(count: number): void {
     this.pendingOfflineCount = Math.max(0, count);
+    if (this.isLeadTestMode()) {
+      this.canGoOnlineFromStatus = true;
+      this.onlineStatusBlockReason = null;
+      return;
+    }
     if (this.pendingOfflineCount > 0) {
       this.canGoOnlineFromStatus = false;
     }
@@ -4358,7 +4387,7 @@ export class ConsultantDashboardComponent implements OnInit, AfterViewInit, OnDe
     const profileId = this.currentProfileId();
     if (!profileId || this.isOnline || !this.isAvailable) return;
 
-    if (this.pendingOfflineCount > 0) {
+    if (!this.isLeadTestMode() && this.pendingOfflineCount > 0) {
       if (options.notifyWhenBlocked) {
         this.showFeedback(
           "تا زمان تعیین تکلیف لیدهای صف آفلاین، امکان آنلاین شدن وجود ندارد.",
@@ -4368,14 +4397,18 @@ export class ConsultantDashboardComponent implements OnInit, AfterViewInit, OnDe
       return;
     }
 
-    if (this.onlineStatusBlockReason) {
+    if (!this.isLeadTestMode() && this.onlineStatusBlockReason) {
       if (options.notifyWhenBlocked) {
         this.showFeedback(this.onlineStatusBlockReason, "info");
       }
       return;
     }
 
-    if (this.dashboardStatusLoaded && !this.canGoOnlineFromStatus) {
+    if (
+      !this.isLeadTestMode() &&
+      this.dashboardStatusLoaded &&
+      !this.canGoOnlineFromStatus
+    ) {
       if (options.notifyWhenBlocked) {
         this.showFeedback(
           "در حال حاضر امکان آنلاین شدن وجود ندارد. لطفاً چند لحظه بعد دوباره تلاش کنید.",
