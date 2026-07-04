@@ -21,7 +21,7 @@ import {
 import {
   attendanceScoreLabel,
   attendanceStatusPresentation,
-  canConsultantConfirmAttendance,
+  canConsultantConfirmDueReservation,
   isSecretaryReviewCompleted,
   readAttendanceStatus,
 } from "../../core/reservation/reservation-attendance";
@@ -166,16 +166,6 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
                     بیمار نیامد
                   </button>
                 </div>
-              }
-
-              @if (requiresPatientProfile(reservation)) {
-                <button
-                  class="secondary-action compact"
-                  type="button"
-                  (click)="completeProfile.emit(reservation)"
-                >
-                  تکمیل پرونده
-                </button>
               }
             </article>
           }
@@ -466,7 +456,6 @@ export class ConsultantReservationsPanelComponent
 {
   @Input({ required: true }) profileId = 0;
   @Input() profileReady = false;
-  @Output() completeProfile = new EventEmitter<ConsultantReservation>();
   @Output() pendingCountChange = new EventEmitter<number>();
 
   activeTab: ConsultantReservationTab = "pending";
@@ -712,23 +701,7 @@ export class ConsultantReservationsPanelComponent
 
   canConfirm(reservation: ConsultantReservation): boolean {
     if (this.activeTab !== "pending") return false;
-    return canConsultantConfirmAttendance(
-      readAttendanceStatus(
-        reservation,
-        "attendanceConfirmationStatus",
-        "AttendanceConfirmationStatus",
-      ),
-      (reservation.isCanceled ?? reservation.IsCanceled) === true,
-    );
-  }
-
-  requiresPatientProfile(reservation: ConsultantReservation): boolean {
-    return (
-      (reservation.requiresPatientProfile ??
-        reservation.RequiresPatientProfile) === true &&
-      !(reservation.patientUserId ?? reservation.PatientUserId) &&
-      (reservation.isCanceled ?? reservation.IsCanceled) !== true
-    );
+    return canConsultantConfirmDueReservation(reservation);
   }
 
   isCompletedTab(reservation: ConsultantReservation): boolean {
