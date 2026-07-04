@@ -4,9 +4,6 @@ import { firstValueFrom } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { getWebPushVapidPublicKey } from "./web-push-environment";
 
-export const WEB_PUSH_SERVICE_WORKER_URL =
-  "/web-push-scope/web-push-sw.js";
-
 export interface WebPushMessagePayload {
   title: string;
   body: string;
@@ -84,7 +81,11 @@ export class NotificationService {
     }
 
     try {
-      const subscriptionJson = await this.subscribeWithVapidKey(vapidPublicKey);
+      await this.clearLegacyPushSubscriptions();
+      const subscriptionJson = await this.subscribeWithVapidKey(
+        vapidPublicKey,
+        true,
+      );
       if (!subscriptionJson) {
         return {
           ok: false,
@@ -122,11 +123,23 @@ export class NotificationService {
     }
 
     try {
-      return await this.subscribeWithVapidKey(vapidPublicKey);
+      return await this.subscribeWithVapidKey(vapidPublicKey, false);
     } catch (error) {
       console.warn("Web Push subscription could not be refreshed", error);
       return null;
     }
+  }
+
+  async showLocalTestNotification(): Promise<boolean> {
+    const registration = await this.ensureServiceWorkerRegistration();
+    await registration.showNotification("تست محلی PWA", {
+      body: "اگر این را می‌بینی، Service Worker روی گوشی درست کار می‌کند.",
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-96x96.png",
+      tag: "local-test-push",
+      vibrate: [200, 100, 200],
+    } as NotificationOptions);
+    return true;
   }
 
   onTokenRefresh(listener: (token: string) => void): () => void {
@@ -147,14 +160,21 @@ export class NotificationService {
 
   private async subscribeWithVapidKey(
     vapidPublicKey: string,
+    forceResubscribe: boolean,
   ): Promise<string | null> {
     const registration = await this.ensureServiceWorkerRegistration();
+    const desiredKey = this.urlBase64ToUint8Array(vapidPublicKey);
     let subscription = await registration.pushManager.getSubscription();
+
+    if (subscription && (forceResubscribe || !this.hasMatchingVapidKey(subscription, desiredKey))) {
+      await subscription.unsubscribe();
+      subscription = null;
+    }
 
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: desiredKey,
       });
     }
 
@@ -166,6 +186,42 @@ export class NotificationService {
     }
 
     return subscriptionJson;
+  }
+
+  private async clearLegacyPushSubscriptions(): Promise<void> {
+    if (!("serviceWorker" in navigator)) return;
+
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const registration of registrations) {
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        await subscription.unsubscribe().catch(() => undefined);
+      }
+    }
+
+    this.swRegistration = null;
+    this.lastKnownSubscription = null;
+  }
+
+  private hasMatchingVapidKey(
+    subscription: PushSubscription,
+    desiredKey: Uint8Array<ArrayBuffer>,
+  ): boolean {
+    const currentKey = subscription.options?.applicationServerKey;
+    if (!currentKey) return false;
+
+    const currentBuffer =
+      currentKey instanceof ArrayBuffer
+        ? new Uint8Array(currentKey)
+        : new Uint8Array(currentKey as ArrayBuffer);
+
+    if (currentBuffer.length !== desiredKey.length) return false;
+
+    for (let index = 0; index < desiredKey.length; index += 1) {
+      if (currentBuffer[index] !== desiredKey[index]) return false;
+    }
+
+    return true;
   }
 
   private async resolveVapidPublicKey(): Promise<string | null> {
@@ -204,16 +260,20 @@ export class NotificationService {
   }
 
   private async ensureServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
-    if (this.swRegistration) {
+    if (this.swRegistration?.active) {
       await this.swRegistration.update().catch(() => undefined);
       return this.swRegistration;
     }
 
-    const registration = await navigator.serviceWorker.register(
-      WEB_PUSH_SERVICE_WORKER_URL,
-      { scope: "/web-push-scope/" },
-    );
-    await navigator.serviceWorker.ready;
+    const registration = await navigator.serviceWorker.ready;
+    const scriptUrl = registration.active?.scriptURL ?? registration.installing?.scriptURL ?? "";
+    if (
+      !scriptUrl.includes("custom-service-worker.js") &&
+      !scriptUrl.includes("ngsw-worker.js")
+    ) {
+      throw new Error("Service worker for push notifications is not active yet.");
+    }
+
     this.swRegistration = registration;
     return registration;
   }

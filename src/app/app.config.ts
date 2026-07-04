@@ -15,9 +15,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideNoopAnimations(),
     provideHttpClient(withFetch()),
-    provideServiceWorker("ngsw-worker.js", {
+    provideServiceWorker("custom-service-worker.js", {
       enabled: !isDevMode(),
-      registrationStrategy: "registerWhenStable:30000",
+      registrationStrategy: "registerImmediately",
     }),
   ],
 };

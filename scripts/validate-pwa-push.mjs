@@ -19,7 +19,7 @@ const requiredFiles = [
   "ngsw-worker.js",
   "ngsw.json",
   "web-push-config.js",
-  "web-push-scope/web-push-sw.js",
+  "custom-service-worker.js",
   "icons/icon-192x192.png",
 ];
 
@@ -54,7 +54,7 @@ if (!indexHtml.includes('rel="manifest"')) {
 }
 
 const webPushSw = readFileSync(
-  join(dist, "web-push-scope/web-push-sw.js"),
+  join(dist, "custom-service-worker.js"),
   "utf8",
 );
 for (const needle of ["push", "notificationclick", "showNotification"]) {
@@ -95,7 +95,7 @@ try {
   for (const path of [
     "/manifest.webmanifest",
     "/ngsw-worker.js",
-    "/web-push-scope/web-push-sw.js",
+    "/custom-service-worker.js",
     "/web-push-config.js",
   ]) {
     const { status, body } = await fetchPath(path);

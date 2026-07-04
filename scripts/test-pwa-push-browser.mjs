@@ -56,51 +56,13 @@ console.log(
   JSON.stringify(registrations, null, 2),
 );
 
-const hasNgsw = registrations.some((reg) =>
-  reg.scriptURL.includes("ngsw-worker.js"),
+const hasCustomSw = registrations.some((reg) =>
+  reg.scriptURL.includes("custom-service-worker.js"),
 );
-if (!hasNgsw) {
-  throw new Error("Angular ngsw-worker.js was not registered");
+if (!hasCustomSw) {
+  throw new Error("custom-service-worker.js was not registered");
 }
-console.log("OK: Angular service worker registered");
-
-const webPushRegistrationResult = await page.evaluate(async () => {
-  try {
-    const registration = await navigator.serviceWorker.register(
-      "/web-push-scope/web-push-sw.js",
-      { scope: "/web-push-scope/" },
-    );
-    await registration.update().catch(() => undefined);
-    return { ok: true };
-  } catch (error) {
-    return {
-      ok: false,
-      message: error instanceof Error ? error.message : String(error),
-    };
-  }
-});
-
-const registrationsAfterWebPush = await page.evaluate(async () => {
-  const regs = await navigator.serviceWorker.getRegistrations();
-  return regs.map((reg) => ({
-    scope: reg.scope,
-    scriptURL: reg.active?.scriptURL || reg.installing?.scriptURL || "",
-  }));
-});
-
-const webPushRegistered = registrationsAfterWebPush.some((reg) =>
-  reg.scriptURL.includes("web-push-scope/web-push-sw.js"),
-);
-if (!webPushRegistered) {
-  if (webPushRegistrationResult.ok) {
-    throw new Error("Web Push service worker was not registered");
-  }
-  console.log(
-    `WARN: Web Push SW registration unavailable in this environment (${webPushRegistrationResult.message})`,
-  );
-} else {
-  console.log("OK: Web Push service worker registered at isolated scope");
-}
+console.log("OK: custom service worker registered");
 
 const permission = await page.evaluate(async () => {
   if (!("Notification" in window)) return "unsupported";

@@ -193,6 +193,11 @@ export class PushNotificationService {
     message: string;
     deviceToken?: string;
   }> {
+    const localTest = await this.verifyLocalPushDelivery();
+    if (!localTest.ok) {
+      return localTest;
+    }
+
     let subscription = await this.getCurrentPushSubscription();
     if (!subscription) {
       const enabled = await this.enablePushForCurrentProfile(profileId);
@@ -223,6 +228,26 @@ export class PushNotificationService {
       message: synced.message,
       deviceToken: subscription,
     };
+  }
+
+  async verifyLocalPushDelivery(): Promise<{
+    ok: boolean;
+    message: string;
+  }> {
+    try {
+      await this.notifications.showLocalTestNotification();
+      return {
+        ok: true,
+        message: "Service Worker روی این دستگاه آماده است.",
+      };
+    } catch (error) {
+      console.warn("Local push self-test failed", error);
+      return {
+        ok: false,
+        message:
+          "Service Worker روی گوشی notification نشان نمی‌دهد. PWA را از Recent Apps ببندید، دوباره باز کنید و «فعال‌سازی نوتیفیکیشن» را بزنید.",
+      };
+    }
   }
 
   handleNotificationData(data?: Record<string, string>): void {

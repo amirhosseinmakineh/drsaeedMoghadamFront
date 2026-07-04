@@ -2443,8 +2443,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         );
         await this.syncPushRegistrationState();
         this.showFeedback(
-          response.message ||
-            "نوتیفیکیشن تست ارسال شد. برای دیدن روی گوشی، PWA را ببندید.",
+          `${response.message || "Push از سرور ارسال شد."} PWA را کامل ببندید (از Recent Apps) و چند ثانیه صبر کنید.`,
           "success",
         );
       })

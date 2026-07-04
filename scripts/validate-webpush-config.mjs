@@ -7,7 +7,7 @@ const dist = join(root, "dist/demo/browser");
 
 const requiredFiles = [
   "web-push-config.js",
-  "web-push-scope/web-push-sw.js",
+  "custom-service-worker.js",
   "manifest.webmanifest",
 ];
 
