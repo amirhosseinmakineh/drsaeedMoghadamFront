@@ -173,7 +173,6 @@ interface SecretaryDashboardLink {
                       name="secretaryNationalityCode"
                       inputmode="numeric"
                       maxlength="10"
-                      placeholder="0012345678"
                     />
                   </label>
                   <label>
@@ -183,7 +182,6 @@ interface SecretaryDashboardLink {
                       [ngModelOptions]="ngModelBlurOptions"
                       name="secretaryAddress"
                       rows="4"
-                      placeholder="آدرس کامل محل سکونت"
                     ></textarea>
                   </label>
                   <button

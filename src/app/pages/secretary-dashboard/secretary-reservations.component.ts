@@ -85,7 +85,6 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
               [(ngModel)]="searchText"
               [ngModelOptions]="ngModelBlurOptions"
               name="secretaryReservationSearch"
-              placeholder="نام، موبایل یا مشاور"
               (keyup.enter)="applySearch()"
             />
           </label>
