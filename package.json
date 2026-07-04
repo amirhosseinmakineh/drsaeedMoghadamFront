@@ -1,7 +1,7 @@
 {
   "name": "angular-starter",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
     "ng": "ng",
     "build": "npm run optimize:images && node scripts/generate-webpush-config.mjs && ng build --configuration production && node scripts/validate-webpush-config.mjs",
@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@angular/service-worker": "^20.3.0",
+    "@microsoft/signalr": "^10.0.0",
     "http-server": "^14.1.1",
     "rxjs": "^7.8.1",
     "tslib": "^2.5.0"
