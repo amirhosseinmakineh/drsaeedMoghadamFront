@@ -104,6 +104,54 @@ export function canConsultantConfirmAttendance(
   );
 }
 
+export function isReservationDueForConsultantConfirmation(
+  reservation: {
+    reservationAt?: string | null;
+    ReservationAt?: string | null;
+    isDueForConsultantConfirmation?: boolean | null;
+    IsDueForConsultantConfirmation?: boolean | null;
+  },
+  nowMs: number = Date.now(),
+): boolean {
+  const explicit =
+    reservation.isDueForConsultantConfirmation ??
+    reservation.IsDueForConsultantConfirmation;
+  if (explicit === true) return true;
+  if (explicit === false) return false;
+
+  const raw = reservation.reservationAt ?? reservation.ReservationAt ?? "";
+  if (!raw) return false;
+
+  const reservationTime = new Date(raw).getTime();
+  return Number.isFinite(reservationTime) && reservationTime <= nowMs;
+}
+
+export function canConsultantConfirmDueReservation(
+  reservation: {
+    reservationAt?: string | null;
+    ReservationAt?: string | null;
+    isDueForConsultantConfirmation?: boolean | null;
+    IsDueForConsultantConfirmation?: boolean | null;
+    isCanceled?: boolean | null;
+    IsCanceled?: boolean | null;
+    attendanceConfirmationStatus?: number | null;
+    AttendanceConfirmationStatus?: number | null;
+  },
+): boolean {
+  const isCanceled =
+    (reservation.isCanceled ?? reservation.IsCanceled) === true;
+  const status = readAttendanceStatus(
+    reservation,
+    "attendanceConfirmationStatus",
+    "AttendanceConfirmationStatus",
+  );
+
+  return (
+    canConsultantConfirmAttendance(status, isCanceled) &&
+    isReservationDueForConsultantConfirmation(reservation)
+  );
+}
+
 export function canSecretaryReviewAttendance(
   status: AttendanceConfirmationStatus | number | null | undefined,
   isWaitingForSecretaryReview = false,

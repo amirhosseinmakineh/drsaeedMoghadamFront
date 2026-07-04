@@ -839,7 +839,6 @@ interface ConsultantDashboardLink {
               <app-consultant-reservations-panel
                 [profileId]="currentProfileId() ?? 0"
                 [profileReady]="isProfileReady()"
-                (completeProfile)="openPatientProfileFromReservation($event)"
               ></app-consultant-reservations-panel>
             }
           }
@@ -3339,21 +3338,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return (
       this.pendingOfflineCount > 0 && this.leadTypeFilter === LEAD_TYPE.RealTime
     );
-  }
-
-  canCompletePatientProfile(reservation: ConsultantReservation): boolean {
-    return (
-      (reservation.requiresPatientProfile ??
-        reservation.RequiresPatientProfile) === true &&
-      !(reservation.patientUserId ?? reservation.PatientUserId) &&
-      (reservation.isCanceled ?? reservation.IsCanceled) !== true &&
-      Boolean(this.reservationId(reservation))
-    );
-  }
-
-  openPatientProfileFromReservation(reservation: ConsultantReservation): void {
-    if (!this.canCompletePatientProfile(reservation)) return;
-    this.openPatientProfileDialog(reservation);
   }
 
   submitReservation(): void {
