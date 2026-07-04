@@ -14,10 +14,16 @@ export interface ConsultantPushMessageDetail {
   data?: Record<string, string>;
 }
 
+export interface PushSyncResult {
+  ok: boolean;
+  message: string;
+}
+
 @Injectable({ providedIn: "root" })
 export class PushNotificationService {
   private lastRegisteredKey: string | null = null;
-  private tokenSyncPromise: Promise<void> | null = null;
+  private tokenSyncPromise: Promise<PushSyncResult> | null = null;
+  private backendRegistrationReady = false;
 
   constructor(
     private consultantApi: ConsultantDashboardService,
@@ -26,15 +32,25 @@ export class PushNotificationService {
     private notifications: NotificationService,
   ) {
     if (typeof window !== "undefined") {
-      window.addEventListener("focus", () => this.syncForCurrentProfile());
-      this.notifications.onTokenRefresh(() => this.syncForCurrentProfile());
+      window.addEventListener("focus", () => {
+        void this.syncForCurrentProfile();
+      });
+      this.notifications.onTokenRefresh(() => {
+        void this.syncForCurrentProfile();
+      });
       this.notifications.onForegroundMessage((payload) =>
         this.handleForegroundMessage(payload),
       );
     }
   }
 
-  async syncForCurrentProfile(profileId?: number | null): Promise<void> {
+  isBackendRegistrationReady(): boolean {
+    return this.backendRegistrationReady;
+  }
+
+  async syncForCurrentProfile(
+    profileId?: number | null,
+  ): Promise<PushSyncResult> {
     if (this.tokenSyncPromise) return this.tokenSyncPromise;
 
     this.tokenSyncPromise = this.syncToken(profileId).finally(() => {
@@ -44,41 +60,63 @@ export class PushNotificationService {
     return this.tokenSyncPromise;
   }
 
-  private async syncToken(profileId?: number | null): Promise<void> {
+  private async syncToken(profileId?: number | null): Promise<PushSyncResult> {
     const user = this.auth.user();
-    if (!user || !this.auth.authToken()) return;
+    if (!user || !this.auth.authToken()) {
+      this.backendRegistrationReady = false;
+      return { ok: false, message: "برای ثبت نوتیفیکیشن ابتدا وارد حساب شوید." };
+    }
 
     const subscriptionJson = await this.getCurrentPushSubscription();
-    if (!subscriptionJson) return;
+    if (!subscriptionJson) {
+      this.backendRegistrationReady = false;
+      return {
+        ok: false,
+        message: "subscription محلی یافت نشد. دکمه فعال‌سازی نوتیفیکیشن را بزنید.",
+      };
+    }
 
     const resolvedProfileId =
       profileId ?? user.consultantProfileId ?? user.profileId ?? null;
     const registrationKey = `${user.userId ?? resolvedProfileId ?? user.phoneNumber ?? "user"}:${subscriptionJson}`;
-    if (this.lastRegisteredKey === registrationKey) return;
+
+    if (this.lastRegisteredKey === registrationKey && this.backendRegistrationReady) {
+      return { ok: true, message: "subscription قبلاً روی سرور ثبت شده است." };
+    }
 
     const registered = await this.registerSubscriptionWithBackend(
       subscriptionJson,
       resolvedProfileId,
     );
-    if (registered) {
+    this.backendRegistrationReady = registered.ok;
+    if (registered.ok) {
       this.lastRegisteredKey = registrationKey;
+    } else {
+      this.lastRegisteredKey = null;
     }
+
+    return registered;
   }
 
   private async registerSubscriptionWithBackend(
     subscriptionJson: string,
     profileId: number | null,
-  ): Promise<boolean> {
+  ): Promise<PushSyncResult> {
     if (this.auth.user()?.userId) {
       try {
         await firstValueFrom(this.auth.registerPushToken(subscriptionJson));
-        return true;
+        return { ok: true, message: "subscription روی سرور ثبت شد." };
       } catch (error) {
         console.warn("Auth RegisterPushToken failed", error);
       }
     }
 
-    if (!profileId) return false;
+    if (!profileId) {
+      return {
+        ok: false,
+        message: "شناسه پروفایل مشاور برای ثبت subscription یافت نشد.",
+      };
+    }
 
     try {
       await firstValueFrom(
@@ -87,15 +125,22 @@ export class PushNotificationService {
           deviceToken: subscriptionJson,
         }),
       );
-      return true;
+      return { ok: true, message: "subscription روی سرور ثبت شد." };
     } catch (error) {
       console.warn("Consultant RegisterPushToken failed", error);
-      return false;
+      return {
+        ok: false,
+        message: this.extractErrorMessage(
+          error,
+          "ثبت subscription روی سرور انجام نشد.",
+        ),
+      };
     }
   }
 
   resetRegisteredTokenCache(): void {
     this.lastRegisteredKey = null;
+    this.backendRegistrationReady = false;
   }
 
   async getCurrentPushSubscription(): Promise<string | null> {
@@ -104,10 +149,19 @@ export class PushNotificationService {
 
   async enablePushForCurrentProfile(
     profileId?: number | null,
-  ): Promise<{ ok: boolean; message: string }> {
+  ): Promise<PushSyncResult> {
     const result = await this.notifications.enablePushNotifications();
     if (!result.ok) {
+      this.backendRegistrationReady = false;
       return { ok: false, message: result.message };
+    }
+
+    if (!result.subscriptionJson) {
+      this.backendRegistrationReady = false;
+      return {
+        ok: false,
+        message: "subscription محلی ساخته نشد.",
+      };
     }
 
     const resolvedProfileId =
@@ -116,18 +170,59 @@ export class PushNotificationService {
       this.auth.user()?.profileId ??
       null;
 
-    if (result.subscriptionJson) {
-      const registered = await this.registerSubscriptionWithBackend(
-        result.subscriptionJson,
-        resolvedProfileId,
-      );
-      if (registered) {
-        const user = this.auth.user();
-        this.lastRegisteredKey = `${user?.userId ?? resolvedProfileId ?? "user"}:${result.subscriptionJson}`;
-      }
+    const registered = await this.registerSubscriptionWithBackend(
+      result.subscriptionJson,
+      resolvedProfileId,
+    );
+    this.backendRegistrationReady = registered.ok;
+    if (registered.ok) {
+      const user = this.auth.user();
+      this.lastRegisteredKey = `${user?.userId ?? resolvedProfileId ?? "user"}:${result.subscriptionJson}`;
+      return { ok: true, message: "نوتیفیکیشن فعال و روی سرور ثبت شد." };
     }
 
-    return { ok: true, message: result.message };
+    this.lastRegisteredKey = null;
+    return {
+      ok: false,
+      message: `${registered.message} (روی گوشی فعال است ولی سرور هنوز subscription ندارد)`,
+    };
+  }
+
+  async prepareTestPush(profileId: number): Promise<{
+    ok: boolean;
+    message: string;
+    deviceToken?: string;
+  }> {
+    let subscription = await this.getCurrentPushSubscription();
+    if (!subscription) {
+      const enabled = await this.enablePushForCurrentProfile(profileId);
+      if (!enabled.ok) {
+        return { ok: false, message: enabled.message };
+      }
+      subscription = await this.getCurrentPushSubscription();
+    }
+
+    if (!subscription) {
+      return {
+        ok: false,
+        message: "subscription محلی یافت نشد. دوباره فعال‌سازی نوتیفیکیشن را بزنید.",
+      };
+    }
+
+    const synced = await this.syncForCurrentProfile(profileId);
+    if (!synced.ok) {
+      return {
+        ok: false,
+        message: synced.message,
+        deviceToken: subscription,
+      };
+    }
+
+    return {
+      ok: true,
+      message: synced.message,
+      deviceToken: subscription,
+    };
   }
 
   handleNotificationData(data?: Record<string, string>): void {
@@ -158,6 +253,24 @@ export class PushNotificationService {
     if (data["type"] === "test_push") {
       this.router.navigate(["/dashboard/consultant"]);
     }
+  }
+
+  private extractErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof Error && error.message) return error.message;
+    if (typeof error === "object" && error !== null && "error" in error) {
+      const httpError = error as {
+        error?: { message?: string } | string;
+        message?: string;
+      };
+      if (typeof httpError.error === "object" && httpError.error?.message) {
+        return httpError.error.message;
+      }
+      if (typeof httpError.error === "string" && httpError.error) {
+        return httpError.error;
+      }
+      if (httpError.message) return httpError.message;
+    }
+    return fallback;
   }
 
   private handleForegroundMessage(payload: WebPushMessagePayload): void {

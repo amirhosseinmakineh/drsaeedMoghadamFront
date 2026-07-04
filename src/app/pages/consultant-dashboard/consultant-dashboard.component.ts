@@ -342,8 +342,8 @@ interface ConsultantDashboardLink {
                   @if (pushRegistrationReady) {
                     برای تست واقعی PWA، اپ را ببندید و «تست نوتیفیکیشن» بزنید.
                   } @else if (browserNotificationPermission === "granted") {
-                    اجازه داده شده. «فعال‌سازی نوتیفیکیشن» را بزنید تا اتصال push
-                    کامل شود.
+                    روی گوشی فعال است ولی هنوز روی سرور ثبت نشده. «فعال‌سازی
+                    نوتیفیکیشن» را دوباره بزنید.
                   } @else {
                     ابتدا «فعال‌سازی نوتیفیکیشن» را بزنید تا اجازه از مرورگر
                     پرسیده شود.
@@ -509,8 +509,8 @@ interface ConsultantDashboardLink {
                   @if (pushRegistrationReady) {
                     برای تست واقعی PWA، اپ را ببندید و «تست نوتیفیکیشن» بزنید.
                   } @else if (browserNotificationPermission === "granted") {
-                    اجازه داده شده. «فعال‌سازی نوتیفیکیشن» را بزنید تا اتصال push
-                    کامل شود.
+                    روی گوشی فعال است ولی هنوز روی سرور ثبت نشده. «فعال‌سازی
+                    نوتیفیکیشن» را دوباره بزنید.
                   } @else {
                     ابتدا «فعال‌سازی نوتیفیکیشن» را بزنید تا اجازه از مرورگر
                     پرسیده شود.
@@ -2428,33 +2428,26 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.testPushSaving = true;
     this.clearFeedback();
 
-    const runTest = async (): Promise<void> => {
-      if (!this.pushRegistrationReady) {
-        const enabled = await this.pushNotifications.enablePushForCurrentProfile(
-          profileId,
+    void this.pushNotifications
+      .prepareTestPush(profileId)
+      .then(async (prepared) => {
+        if (!prepared.ok || !prepared.deviceToken) {
+          throw new Error(prepared.message);
+        }
+
+        const response = await firstValueFrom(
+          this.consultantApi.sendTestPushNotification({
+            profileId,
+            deviceToken: prepared.deviceToken,
+          }),
         );
         await this.syncPushRegistrationState();
-        if (!enabled.ok) {
-          throw new Error(enabled.message);
-        }
-      } else {
-        await this.pushNotifications.syncForCurrentProfile(profileId);
-      }
-
-      const response = await firstValueFrom(
-        this.consultantApi.sendTestPushNotification({
-          profileId,
-          deviceToken: "",
-        }),
-      );
-      this.showFeedback(
-        response.message ||
-          "نوتیفیکیشن تست ارسال شد. برای دیدن روی گوشی، PWA را ببندید.",
-        "success",
-      );
-    };
-
-    void runTest()
+        this.showFeedback(
+          response.message ||
+            "نوتیفیکیشن تست ارسال شد. برای دیدن روی گوشی، PWA را ببندید.",
+          "success",
+        );
+      })
       .catch((error) => {
         this.showFeedback(
           this.errorMessage(error, "ارسال نوتیفیکیشن تست انجام نشد"),
@@ -3952,12 +3945,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     try {
       const subscription =
         await this.pushNotifications.getCurrentPushSubscription();
-      this.pushRegistrationReady = Boolean(subscription);
-      if (subscription) {
-        void this.pushNotifications.syncForCurrentProfile(
-          this.currentProfileId(),
-        );
+      if (!subscription) {
+        this.pushRegistrationReady = false;
+        this.markViewDirty();
+        return;
       }
+
+      const syncResult = await this.pushNotifications.syncForCurrentProfile(
+        this.currentProfileId(),
+      );
+      this.pushRegistrationReady =
+        syncResult.ok && this.pushNotifications.isBackendRegistrationReady();
     } catch {
       this.pushRegistrationReady = false;
     }
