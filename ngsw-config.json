@@ -12,6 +12,7 @@
           "/index.html",
           "/manifest.webmanifest",
           "/web-push-config.js",
+          "/web-push-scope/web-push-sw.js",
           "/*.css",
           "/*.js"
         ]
