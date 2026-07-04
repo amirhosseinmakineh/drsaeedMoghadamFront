@@ -18,6 +18,8 @@ self.addEventListener("push", (event) => {
     badge: "/icons/icon-96x96.png",
     tag: notificationTag(data),
     renotify: true,
+    vibrate: [200, 100, 200],
+    requireInteraction: data.type === "realtime_lead",
   };
 
   event.waitUntil(
@@ -31,12 +33,8 @@ self.addEventListener("push", (event) => {
         client.postMessage({ type: "web-push-message", payload });
       }
 
-      const hasVisibleClient = windowClients.some(
-        (client) => client.visibilityState === "visible",
-      );
-      if (!hasVisibleClient) {
-        await self.registration.showNotification(title, options);
-      }
+      // Always show OS notification so background/minimized mobile PWA receives alerts.
+      await self.registration.showNotification(title, options);
     })(),
   );
 });
@@ -71,7 +69,7 @@ function notificationTag(data) {
 
 function notificationTitle(data) {
   if (data.type === "offline_leads") return "لیدهای آفلاین";
-  if (data.type === "realtime_lead") return "لید لحظه‌ای جدید";
+  if (data.type === "realtime_lead") return "لید جدید";
   if (data.type === "password_changed") return "تغییر رمز عبور";
   if (data.type === "test_push") return "تست نوتیفیکیشن";
   return "اعلان جدید";
@@ -82,7 +80,7 @@ function notificationBody(data) {
     return `شما ${data.count || "چند"} لید آفلاین دارید.`;
   }
   if (data.type === "realtime_lead") {
-    return "شما یک لید جدید دارید و ۳ دقیقه زمان دارید برای تماس.";
+    return "لید جدید داری — ۳ دقیقه وقت داری برای تماس.";
   }
   if (data.type === "password_changed") {
     return "کلمه عبور شما با موفقیت تغییر کرد.";

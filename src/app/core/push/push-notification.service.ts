@@ -285,28 +285,6 @@ export class PushNotificationService {
     window.dispatchEvent(
       new CustomEvent("consultant-push-message", { detail }),
     );
-
-    if (Notification.permission === "granted") {
-      const notification = new Notification(title, {
-        body,
-        data: payload.data,
-        tag: this.notificationTag(payload.data),
-      });
-      notification.onclick = () => {
-        notification.close();
-        this.handleNotificationData(payload.data);
-      };
-    }
-  }
-
-  private notificationTag(data?: Record<string, string>): string {
-    if (data?.["type"] === "realtime_lead" && data["leadAssignmentId"]) {
-      return `realtime-lead-${data["leadAssignmentId"]}`;
-    }
-    if (data?.["type"] === "offline_leads") return "offline-leads";
-    if (data?.["type"] === "password_changed") return "password-changed";
-    if (data?.["type"] === "test_push") return "test-push";
-    return "consultant-notification";
   }
 
   private titleForData(data?: Record<string, string>): string {
@@ -322,7 +300,7 @@ export class PushNotificationService {
       return `شما ${data["count"] ?? "چند"} لید آفلاین دارید.`;
     }
     if (data?.["type"] === "realtime_lead") {
-      return "شما یک لید جدید دارید و ۳ دقیقه زمان دارید برای تماس.";
+      return "لید جدید داری — ۳ دقیقه وقت داری برای تماس.";
     }
     if (data?.["type"] === "password_changed") {
       return "کلمه عبور شما با موفقیت تغییر کرد.";
