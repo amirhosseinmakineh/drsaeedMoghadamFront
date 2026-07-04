@@ -416,18 +416,24 @@ export class ConsultantDashboardService {
       );
   }
 
-  addPatientLead(
+  createConsultantPatientLead(
     payload: AddPatientLeadRequest,
   ): Observable<ApiCommandResponse<AddPatientLeadResponse>> {
     return this.http
       .post<ApiCommandResponse<AddPatientLeadResponse>>(
-        `${this.apiBaseUrl}/Consultant/AddPatientLead`,
+        `${this.apiBaseUrl}/Consultant/CreateConsultantPatientLead`,
         payload,
         {
           headers: this.authHeaders(),
         },
       )
       .pipe(this.ensureCommandSucceeded("ثبت بیمار انجام نشد"));
+  }
+
+  addPatientLead(
+    payload: AddPatientLeadRequest,
+  ): Observable<ApiCommandResponse<AddPatientLeadResponse>> {
+    return this.createConsultantPatientLead(payload);
   }
 
   submitLeadCallReport(

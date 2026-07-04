@@ -110,6 +110,7 @@ type ConsultantDashboardSection =
   | "overview"
   | "profile"
   | "leads"
+  | "patients"
   | "reservations";
 
 interface ConsultantDashboardLink {
@@ -236,6 +237,10 @@ interface ConsultantDashboardLink {
                 <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                 <strong>لیدهای من</strong>
               </button>
+              <button type="button" (click)="setSection('patients')">
+                <span><app-fa-icon name="doctor"></app-fa-icon></span>
+                <strong>بیماران من</strong>
+              </button>
               @if (isProfileReady()) {
                 <button type="button" (click)="setSection('reservations')">
                   <span><app-fa-icon name="calendar"></app-fa-icon></span>
@@ -348,30 +353,6 @@ interface ConsultantDashboardLink {
                     }}
                   </button>
                 </div>
-
-                <p class="queue-warning info">
-                  @if (pushRegistrationReady) {
-                    برای تست واقعی PWA، اپ را ببندید و «تست نوتیفیکیشن» بزنید.
-                  } @else if (browserNotificationPermission === "granted") {
-                    روی گوشی فعال است ولی هنوز روی سرور ثبت نشده. «فعال‌سازی
-                    نوتیفیکیشن» را دوباره بزنید.
-                  } @else {
-                    ابتدا «فعال‌سازی نوتیفیکیشن» را بزنید تا اجازه از مرورگر
-                    پرسیده شود.
-                  }
-                </p>
-
-                @if (pendingOfflineCount > 0) {
-                  <p class="queue-warning">
-                    {{ pendingOfflineCount }} لید در صف آفلاین منتظر ثبت گزارش
-                    است. تا زمان تعیین تکلیف آن‌ها امکان آنلاین شدن وجود ندارد.
-                  </p>
-                } @else if (isAvailable && !isOnline) {
-                  <p class="queue-warning info">
-                    حضور شما ثبت شده اما برای دریافت لید لحظه‌ای باید «آنلاین»
-                    شوید.
-                  </p>
-                }
               </section>
             }
           }
@@ -393,7 +374,6 @@ interface ConsultantDashboardLink {
                       name="nationalityCode"
                       inputmode="numeric"
                       maxlength="10"
-                      placeholder="0012345678"
                     />
                   </label>
                   <label>
@@ -403,7 +383,6 @@ interface ConsultantDashboardLink {
                       [ngModelOptions]="ngModelBlurOptions"
                       name="consultantAddress"
                       rows="4"
-                      placeholder="آدرس کامل محل سکونت"
                     ></textarea>
                   </label>
                   <button
@@ -515,30 +494,6 @@ interface ConsultantDashboardLink {
                     }}
                   </button>
                 </div>
-
-                <p class="queue-warning info">
-                  @if (pushRegistrationReady) {
-                    برای تست واقعی PWA، اپ را ببندید و «تست نوتیفیکیشن» بزنید.
-                  } @else if (browserNotificationPermission === "granted") {
-                    روی گوشی فعال است ولی هنوز روی سرور ثبت نشده. «فعال‌سازی
-                    نوتیفیکیشن» را دوباره بزنید.
-                  } @else {
-                    ابتدا «فعال‌سازی نوتیفیکیشن» را بزنید تا اجازه از مرورگر
-                    پرسیده شود.
-                  }
-                </p>
-
-                @if (pendingOfflineCount > 0) {
-                  <p class="queue-warning">
-                    {{ pendingOfflineCount }} لید در صف آفلاین منتظر ثبت گزارش
-                    است. تا زمان تعیین تکلیف آن‌ها امکان آنلاین شدن وجود ندارد.
-                  </p>
-                } @else if (isAvailable && !isOnline) {
-                  <p class="queue-warning info">
-                    حضور شما ثبت شده اما برای دریافت لید لحظه‌ای باید «آنلاین»
-                    شوید.
-                  </p>
-                }
               </section>
             }
           }
@@ -563,11 +518,7 @@ interface ConsultantDashboardLink {
             } @else {
               <section class="lead-panel">
                 @if (dueConfirmations.length) {
-                  <div class="queue-warning attendance-lock">
-                    <strong
-                      >برای مشاهده لید لحظه‌ای ابتدا حضورهای موعددار را تعیین
-                      تکلیف کنید.</strong
-                    >
+                  <div class="attendance-lock">
                     <div class="reservation-list">
                       @for (
                         reservation of dueConfirmations;
@@ -613,36 +564,19 @@ interface ConsultantDashboardLink {
                     </div>
                   </div>
                 }
-                @if (
-                  !dueConfirmations.length && realtimeBlockedByOfflineQueue()
-                ) {
-                  <p class="queue-warning">
-                    ابتدا لیدهای آفلاین خود را تعیین تکلیف کنید.
-                  </p>
-                }
                 <header class="panel-heading">
                   <div>
                     <span>لیدهای من</span>
                     <h2>تماس، گزارش و رزرو لیدها</h2>
                   </div>
-                  <div class="panel-heading-actions">
-                    <button
-                      class="primary-action compact"
-                      type="button"
-                      [disabled]="addPatientLeadSaving"
-                      (click)="openAddPatientLeadDialog()"
-                    >
-                      افزودن بیمار / لید
-                    </button>
-                    <button
-                      class="secondary-action compact"
-                      type="button"
-                      [disabled]="leadsLoading"
-                      (click)="refreshDashboard()"
-                    >
-                      بروزرسانی
-                    </button>
-                  </div>
+                  <button
+                    class="secondary-action compact"
+                    type="button"
+                    [disabled]="leadsLoading"
+                    (click)="refreshDashboard()"
+                  >
+                    بروزرسانی
+                  </button>
                 </header>
 
                 <form class="lead-filters" (ngSubmit)="applyLeadFilters()">
@@ -669,7 +603,6 @@ interface ConsultantDashboardLink {
                       <option [ngValue]="null">همه</option>
                       <option [ngValue]="1">لحظه‌ای</option>
                       <option [ngValue]="2">صف آفلاین</option>
-                      <option [ngValue]="3">بیمار من</option>
                     </select>
                   </label>
                   <button
@@ -787,6 +720,152 @@ interface ConsultantDashboardLink {
             }
           }
 
+          @if (activeSection === "patients" && isProfileReady()) {
+            <section class="lead-panel">
+              <header class="panel-heading">
+                <div>
+                  <span>بیماران من</span>
+                  <h2>گزارش و رزرو بیماران</h2>
+                </div>
+                <div class="panel-heading-actions">
+                  <button
+                    class="primary-action compact"
+                    type="button"
+                    [disabled]="addPatientLeadSaving"
+                    (click)="openAddPatientLeadDialog()"
+                  >
+                    افزودن بیمار
+                  </button>
+                  <button
+                    class="secondary-action compact"
+                    type="button"
+                    [disabled]="patientLeadsLoading"
+                    (click)="loadPatientLeads()"
+                  >
+                    بروزرسانی
+                  </button>
+                </div>
+              </header>
+
+              <form class="lead-filters patient-filters" (ngSubmit)="applyPatientFilters()">
+                <label>
+                  وضعیت
+                  <select
+                    [(ngModel)]="patientStateFilter"
+                    [ngModelOptions]="ngModelBlurOptions"
+                    name="consultantPatientState"
+                  >
+                    <option [ngValue]="null">همه</option>
+                    <option [ngValue]="2">تخصیص داده شده</option>
+                    <option [ngValue]="3">تماس برقرار شد</option>
+                    <option [ngValue]="5">تبدیل شده</option>
+                    <option [ngValue]="7">رد شده</option>
+                  </select>
+                </label>
+                <button
+                  class="primary-action compact"
+                  type="submit"
+                  [disabled]="patientLeadsLoading"
+                >
+                  {{ patientLeadsLoading ? "در حال اعمال..." : "اعمال" }}
+                </button>
+              </form>
+
+              @if (patientLeadsLoading) {
+                <div class="loading-state" role="status" aria-live="polite">
+                  <span class="loading-spinner" aria-hidden="true"></span>
+                  <p class="loading-copy">در حال دریافت بیماران...</p>
+                </div>
+              } @else if (!patientLeads.length) {
+                <p class="empty-copy">بیماری برای نمایش وجود ندارد.</p>
+              } @else {
+                <div class="lead-list">
+                  @for (lead of patientLeads; track leadId(lead)) {
+                    <article
+                      class="lead-card"
+                      [attr.id]="'patient-' + leadId(lead)"
+                      [class.highlighted]="
+                        highlightedLeadAssignmentId === leadId(lead)
+                      "
+                    >
+                      <header>
+                        <div>
+                          <span>بیمار من</span>
+                          <h3>{{ leadName(lead) }}</h3>
+                        </div>
+                        <b [class]="leadDisplayBadgeClass(lead)">{{
+                          leadDisplayStatus(lead)
+                        }}</b>
+                      </header>
+
+                      <div class="lead-actions">
+                        <a
+                          class="call-action"
+                          [class.disabled]="isLeadPhoneDisabled(lead)"
+                          [attr.href]="
+                            isLeadPhoneDisabled(lead)
+                              ? null
+                              : 'tel:' + leadPhone(lead)
+                          "
+                          [attr.aria-label]="'تماس با ' + leadName(lead)"
+                          (click)="handleCallClick($event, lead)"
+                        >
+                          <span class="call-icon"
+                            ><app-fa-icon name="phone"></app-fa-icon
+                          ></span>
+                          <span>
+                            <small>تماس</small>
+                            <b>{{ leadPhone(lead) }}</b>
+                          </span>
+                        </a>
+                        <button
+                          class="secondary-action compact"
+                          type="button"
+                          [disabled]="isReportDisabled(lead)"
+                          (click)="openReportDialog(lead)"
+                        >
+                          ثبت گزارش
+                        </button>
+                        <button
+                          class="secondary-action compact"
+                          type="button"
+                          [disabled]="isReservationDisabled(lead)"
+                          (click)="openReservationDialog(lead)"
+                        >
+                          رزرو وقت
+                        </button>
+                      </div>
+                    </article>
+                  }
+                </div>
+
+                <nav class="pager" aria-label="صفحه بندی بیماران مشاور">
+                  <button
+                    type="button"
+                    [disabled]="patientPageNumber <= 1 || patientLeadsLoading"
+                    (click)="changePatientPage(patientPageNumber - 1)"
+                  >
+                    قبلی
+                  </button>
+                  <span
+                    >صفحه {{ patientPageNumber }} از
+                    {{ patientTotalPages }}</span
+                  >
+                  <button
+                    type="button"
+                    [disabled]="
+                      patientPageNumber >= patientTotalPages ||
+                      patientLeadsLoading
+                    "
+                    (click)="changePatientPage(patientPageNumber + 1)"
+                  >
+                    بعدی
+                  </button>
+                </nav>
+              }
+            </section>
+          }
+
           @if (activeSection === "reservations" && isProfileReady()) {
             @if (!isProfileReady()) {
               <section class="consultant-panel locked-panel">
@@ -859,7 +938,6 @@ interface ConsultantDashboardLink {
                 [ngModelOptions]="ngModelBlurOptions"
                 name="leadReportPatientCity"
                 maxlength="80"
-                placeholder="تهران"
               />
             </label>
             <label>
@@ -869,7 +947,6 @@ interface ConsultantDashboardLink {
                 [ngModelOptions]="ngModelBlurOptions"
                 name="leadReportPatientRegion"
                 maxlength="80"
-                placeholder="سعادت‌آباد"
               />
             </label>
           </div>
@@ -880,7 +957,6 @@ interface ConsultantDashboardLink {
               [ngModelOptions]="ngModelBlurOptions"
               name="leadReportBusinessName"
               maxlength="120"
-              placeholder="نام مطب یا کلینیک بیمار"
             />
           </label>
           <label>
@@ -902,7 +978,6 @@ interface ConsultantDashboardLink {
               name="leadReportSecondaryPhoneNumber"
               inputmode="tel"
               maxlength="11"
-              placeholder="09120000000"
             />
           </label>
           <div class="dialog-actions">
@@ -964,7 +1039,6 @@ interface ConsultantDashboardLink {
                 [ngModelOptions]="ngModelBlurOptions"
                 name="reservationPatientCity"
                 maxlength="80"
-                placeholder="تهران"
               />
             </label>
             <label>
@@ -974,7 +1048,6 @@ interface ConsultantDashboardLink {
                 [ngModelOptions]="ngModelBlurOptions"
                 name="reservationPatientRegion"
                 maxlength="80"
-                placeholder="سعادت‌آباد"
               />
             </label>
           </div>
@@ -999,7 +1072,6 @@ interface ConsultantDashboardLink {
               name="reservationSecondaryPhoneNumber"
               inputmode="tel"
               maxlength="20"
-              placeholder="09120000000"
             />
           </label>
 
@@ -1131,15 +1203,11 @@ interface ConsultantDashboardLink {
       <app-base-dialog
         [open]="addPatientLeadDialogOpen"
         [showFooter]="false"
-        title="افزودن بیمار / لید"
+        title="افزودن بیمار"
         [closable]="!addPatientLeadSaving"
         (closed)="closeAddPatientLeadDialog()"
       >
         <form class="dialog-form" (ngSubmit)="submitAddPatientLead()">
-          <p class="dialog-hint">
-            بیمار یا لید اضافه‌شده مستقیماً به شما تخصیص می‌شود و در صف
-            آنلاین/آفلاین قرار نمی‌گیرد.
-          </p>
           <label>
             نام بیمار
             <input
@@ -1147,7 +1215,6 @@ interface ConsultantDashboardLink {
               [ngModelOptions]="ngModelBlurOptions"
               name="addPatientUserName"
               maxlength="120"
-              placeholder="نام و نام خانوادگی"
             />
           </label>
           <label>
@@ -1158,7 +1225,6 @@ interface ConsultantDashboardLink {
               name="addPatientPhoneNumber"
               inputmode="tel"
               maxlength="11"
-              placeholder="09120000000"
             />
           </label>
           <div class="two-col">
@@ -1169,7 +1235,6 @@ interface ConsultantDashboardLink {
                 [ngModelOptions]="ngModelBlurOptions"
                 name="addPatientCity"
                 maxlength="80"
-                placeholder="تهران"
               />
             </label>
             <label>
@@ -1179,7 +1244,6 @@ interface ConsultantDashboardLink {
                 [ngModelOptions]="ngModelBlurOptions"
                 name="addPatientRegion"
                 maxlength="80"
-                placeholder="سعادت‌آباد"
               />
             </label>
           </div>
@@ -1200,7 +1264,6 @@ interface ConsultantDashboardLink {
               name="addPatientSecondaryPhone"
               inputmode="tel"
               maxlength="11"
-              placeholder="09120000000"
             />
           </label>
           <label>
@@ -1225,7 +1288,7 @@ interface ConsultantDashboardLink {
               type="submit"
               [disabled]="addPatientLeadSaving"
             >
-              {{ addPatientLeadSaving ? "در حال ثبت..." : "ثبت بیمار / لید" }}
+              {{ addPatientLeadSaving ? "در حال ثبت..." : "ثبت بیمار" }}
             </button>
           </div>
         </form>
@@ -1609,17 +1672,14 @@ interface ConsultantDashboardLink {
         backface-visibility: hidden;
         -webkit-font-smoothing: antialiased;
       }
-      .queue-warning {
-        margin: 0;
-        padding: 12px 14px;
-        border-radius: 18px;
-        background: color-mix(in srgb, #f59e0b 16%, var(--surface));
-        color: #92400e;
-        font-weight: 950;
-      }
-      .queue-warning.info {
-        background: color-mix(in srgb, var(--brand) 12%, var(--surface));
-        color: color-mix(in srgb, var(--brand) 72%, #3b2a16);
+      .attendance-lock {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding: 14px;
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: var(--surface);
       }
       .panel-heading {
         display: flex;
@@ -1633,20 +1693,14 @@ interface ConsultantDashboardLink {
         gap: 8px;
         justify-content: flex-end;
       }
-      .dialog-hint {
-        margin: 0 0 12px;
-        padding: 12px 14px;
-        border-radius: 16px;
-        background: color-mix(in srgb, var(--brand) 10%, var(--surface));
-        color: var(--muted);
-        font-size: 0.92rem;
-        line-height: 1.7;
-      }
       .lead-filters {
         display: grid;
         grid-template-columns: 1fr 1fr auto;
         gap: 10px;
         align-items: end;
+      }
+      .lead-filters.patient-filters {
+        grid-template-columns: 1fr auto;
       }
       .loading-copy,
       .empty-copy {
@@ -2060,6 +2114,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "profile", label: "پروفایل", icon: "shield" },
     { id: "leads", label: "لیدها", icon: "clipboard" },
+    { id: "patients", label: "بیماران", icon: "doctor" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
   ];
 
@@ -2105,6 +2160,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadTotalPages = 1;
   leadTotalCount = 0;
   highlightedLeadAssignmentId: number | null = null;
+
+  patientLeads: ConsultantLead[] = [];
+  patientLeadsLoading = false;
+  patientStateFilter: number | null = null;
+  patientPageNumber = 1;
+  patientPageSize = 10;
+  patientTotalPages = 1;
+  patientTotalCount = 0;
+  private patientLeadRequestId = 0;
 
   reportDialogOpen = false;
   reportSaving = false;
@@ -2327,6 +2391,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (
       (section === "overview" ||
         section === "leads" ||
+        section === "patients" ||
         section === "reservations") &&
       !this.isProfileReady()
     ) {
@@ -2338,10 +2403,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.activeSection = section;
     this.markViewDirty();
 
-    if (section === "leads" && !this.leads.length && !this.leadsLoading) {
+    if (section === "leads") {
       this.loadLeads();
-    }
-    if (
+    } else if (section === "patients") {
+      this.loadPatientLeads();
+    } else if (
       section === "reservations" &&
       !this.reservations.length &&
       !this.reservationsLoading
@@ -2736,7 +2802,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           next: (response) => {
             if (requestId !== this.leadRequestId) return;
             this.applyConsultantStatusFrom(response.source, response.raw);
-            this.leads = response.items ?? [];
+            const items = (response.items ?? []).filter(
+              (lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient,
+            );
+            this.leads = items;
             this.syncReportedLeadIdsFromLeads(this.leads);
             this.syncReservedLeadIdsFromLeads(this.leads);
             this.leadTotalCount = response.totalCount ?? this.leads.length;
@@ -2833,13 +2902,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const targetId = this.highlightedLeadAssignmentId;
     if (!targetId) return;
 
-    const leadExists = this.leads.some((lead) => this.leadId(lead) === targetId);
-    if (!leadExists) return;
+    const inLeads = this.leads.some((lead) => this.leadId(lead) === targetId);
+    const inPatients = this.patientLeads.some(
+      (lead) => this.leadId(lead) === targetId,
+    );
+    if (!inLeads && !inPatients) return;
 
+    const elementId = inPatients ? `patient-${targetId}` : `lead-${targetId}`;
     this.markViewDirty();
     setTimeout(() => {
       document
-        .getElementById(`lead-${targetId}`)
+        .getElementById(elementId)
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
       setTimeout(() => {
         if (this.highlightedLeadAssignmentId === targetId) {
@@ -2888,6 +2961,69 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.loadLeads();
   }
 
+  applyPatientFilters(): void {
+    this.patientPageNumber = 1;
+    this.loadPatientLeads();
+  }
+
+  changePatientPage(page: number): void {
+    this.patientPageNumber = Math.min(
+      Math.max(1, page),
+      Math.max(1, this.patientTotalPages),
+    );
+    this.loadPatientLeads();
+  }
+
+  loadPatientLeads(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    const requestId = ++this.patientLeadRequestId;
+    this.patientLeadsLoading = true;
+    this.clearFeedback();
+
+    this.consultantApi
+      .getLeads({
+        profileId,
+        leadAssignmentState: this.patientStateFilter,
+        leadAssignmentType: LEAD_TYPE.ConsultantPatient,
+        pageNumber: this.patientPageNumber,
+        pageSize: this.patientPageSize,
+      })
+      .pipe(
+        finalize(() => {
+          if (requestId === this.patientLeadRequestId) {
+            this.patientLeadsLoading = false;
+          }
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this.patientLeadRequestId) return;
+          this.patientLeads = response.items ?? [];
+          this.syncReportedLeadIdsFromLeads(this.patientLeads);
+          this.syncReservedLeadIdsFromLeads(this.patientLeads);
+          this.patientTotalCount = response.totalCount ?? this.patientLeads.length;
+          this.patientPageSize = response.pageSize || this.patientPageSize;
+          this.patientTotalPages = Math.max(
+            1,
+            response.totalPages ||
+              Math.ceil(this.patientTotalCount / this.patientPageSize),
+          );
+          this.patientPageNumber = Math.min(
+            Math.max(1, response.pageNumber || this.patientPageNumber),
+            this.patientTotalPages,
+          );
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "دریافت بیماران انجام نشد"),
+            "error",
+          ),
+      });
+  }
+
   openAddPatientLeadDialog(): void {
     if (!this.isProfileReady()) {
       this.showFeedback("ابتدا پروفایل مشاور را تکمیل کنید", "info");
@@ -2934,7 +3070,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.clearFeedback();
 
     this.consultantApi
-      .addPatientLead({
+      .createConsultantPatientLead({
         consultantProfileId: profileId,
         userName,
         phoneNumber,
@@ -2966,12 +3102,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               ?.LeadAssignmentId ??
             null;
           this.closeAddPatientLeadDialog();
-          this.showFeedback("بیمار / لید با موفقیت ثبت شد", "success");
-          this.leadTypeFilter = LEAD_TYPE.ConsultantPatient;
-          this.leadPageNumber = 1;
-          this.loadLeads();
+          this.showFeedback("بیمار با موفقیت ثبت شد", "success");
+          this.setSection("patients");
+          this.highlightedLeadAssignmentId = leadAssignmentId;
+          this.loadPatientLeads();
           if (leadAssignmentId) {
-            this.highlightedLeadAssignmentId = leadAssignmentId;
             setTimeout(() => this.scrollToHighlightedLead(), 250);
           }
         },
@@ -3126,6 +3261,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
             if (this.leadType(lead) !== LEAD_TYPE.ConsultantPatient) {
               this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: false });
+            }
+            if (this.activeSection === "patients") {
+              this.loadPatientLeads();
             }
           });
         },
@@ -3945,7 +4083,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (requestId !== this.leadRequestId) return;
           this.applyConsultantStatusFrom(response.source, response.raw);
-          this.leads = response.items ?? [];
+          const items = (response.items ?? []).filter(
+            (lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient,
+          );
+          this.leads = items;
           this.syncReportedLeadIdsFromLeads(this.leads);
           this.syncReservedLeadIdsFromLeads(this.leads);
           this.leadTotalCount = response.totalCount ?? this.leads.length;
@@ -4469,15 +4610,32 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = this.leadId(updatedLead);
     if (!leadAssignmentId) return;
 
-    const index = this.leads.findIndex(
+    this.leads = this.replaceLeadInCollection(
+      this.leads,
+      leadAssignmentId,
+      updatedLead,
+    );
+    this.patientLeads = this.replaceLeadInCollection(
+      this.patientLeads,
+      leadAssignmentId,
+      updatedLead,
+    );
+  }
+
+  private replaceLeadInCollection(
+    collection: ConsultantLead[],
+    leadAssignmentId: number,
+    updatedLead: ConsultantLead,
+  ): ConsultantLead[] {
+    const index = collection.findIndex(
       (lead) => this.leadId(lead) === leadAssignmentId,
     );
-    if (index === -1) return;
+    if (index === -1) return collection;
 
-    this.leads = [
-      ...this.leads.slice(0, index),
-      { ...this.leads[index], ...updatedLead },
-      ...this.leads.slice(index + 1),
+    return [
+      ...collection.slice(0, index),
+      { ...collection[index], ...updatedLead },
+      ...collection.slice(index + 1),
     ];
   }
 

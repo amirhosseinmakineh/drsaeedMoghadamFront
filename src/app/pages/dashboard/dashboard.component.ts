@@ -229,14 +229,12 @@ interface ScoreFormModel {
                       [(ngModel)]="userFilters.firstName"
                       [ngModelOptions]="ngModelBlurOptions"
                       name="userFirstName"
-                      placeholder="جستجوی نام"
                   /></label>
                   <label
                     >نام خانوادگی                    <input
                       [(ngModel)]="userFilters.lastName"
                       [ngModelOptions]="ngModelBlurOptions"
                       name="userLastName"
-                      placeholder="جستجوی نام خانوادگی"
                   /></label>
                   <label
                     >موبایل<input
@@ -244,7 +242,6 @@ interface ScoreFormModel {
                       [ngModelOptions]="ngModelBlurOptions"
                       name="userPhone"
                       inputmode="tel"
-                      placeholder="09123456789"
                   /></label>
                   <label>
                     نقش
@@ -321,7 +318,6 @@ interface ScoreFormModel {
                   <button
                     class="export-action primary-export"
                     type="button"
-                    title="شامل خلاصه عملکرد و جزئیات تماس هر مشاور با لیدها"
                     [disabled]="exportingConsultants"
                     (click)="exportConsultantsReport()"
                   >
@@ -333,7 +329,6 @@ interface ScoreFormModel {
                     }}</span>
                   </button>
                   <p>
-                    شامل خلاصه عملکرد و جزئیات تماس هر مشاور با لیدها
                   </p>
                 </div>
 
@@ -343,14 +338,12 @@ interface ScoreFormModel {
                       [(ngModel)]="consultantFilters.firstName"
                       [ngModelOptions]="ngModelBlurOptions"
                       name="consultantFirstName"
-                      placeholder="جستجوی نام"
                   /></label>
                   <label
                     >نام خانوادگی<input
                       [(ngModel)]="consultantFilters.lastName"
                       [ngModelOptions]="ngModelBlurOptions"
                       name="consultantLastName"
-                      placeholder="جستجوی نام خانوادگی"
                   /></label>
                   <label
                     >موبایل<input
@@ -358,7 +351,6 @@ interface ScoreFormModel {
                       [ngModelOptions]="ngModelBlurOptions"
                       name="consultantPhone"
                       inputmode="tel"
-                      placeholder="شماره دقیق"
                   /></label>
                   <button class="primary-filter" type="submit">
                     اعمال فیلتر
@@ -472,7 +464,6 @@ interface ScoreFormModel {
               [ngModelOptions]="ngModelBlurOptions"
               name="dialogPhone"
               inputmode="tel"
-              placeholder="09123456789"
           /></label>
           @if (userDialogMode === "add") {
             <div class="two-col">
@@ -528,7 +519,6 @@ interface ScoreFormModel {
               [(ngModel)]="userForm.avatarImageName"
               [ngModelOptions]="ngModelBlurOptions"
               name="dialogAvatar"
-              placeholder="اختیاری"
           /></label>
           <div class="switch-row">
             <label
@@ -601,7 +591,6 @@ interface ScoreFormModel {
                 [ngModelOptions]="ngModelBlurOptions"
                 name="scoreLeadId"
                 type="number"
-                placeholder="اختیاری"
             /></label>
           </div>
           <label

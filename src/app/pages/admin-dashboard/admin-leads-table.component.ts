@@ -64,7 +64,6 @@ type LeadTableMode = "system" | "consultant";
                 : "دانلود گزارش اکسل لیدها"
             }}
           </button>
-          <p>شامل وضعیت اساین و اطلاعات مشاور</p>
         </div>
       }
 
