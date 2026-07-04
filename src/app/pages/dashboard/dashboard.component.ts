@@ -21,6 +21,7 @@ import {
 import { AuthService } from "../../core/auth/auth.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import { ToastService } from "../../core/toast/toast.service";
+import { AdminReservationsTableComponent } from "../admin-dashboard/admin-reservations-table.component";
 import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendance-table.component";
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
@@ -44,7 +45,8 @@ type DashboardSection =
   | "users"
   | "consultants"
   | "leads"
-  | "leadReports";
+  | "leadReports"
+  | "reservations";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -87,6 +89,7 @@ interface ScoreFormModel {
     AdminLeadsTableComponent,
     AdminLeadCallReportsComponent,
     AdminAttendanceTableComponent,
+    AdminReservationsTableComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -194,6 +197,10 @@ interface ScoreFormModel {
                 <button type="button" (click)="setSection('leadReports')">
                   <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                   <strong>گزارش تماس لیدها</strong>
+                </button>
+                <button type="button" (click)="setSection('reservations')">
+                  <span><app-fa-icon name="calendar"></app-fa-icon></span>
+                  <strong>رزروها و تایید حضور</strong>
                 </button>
               </section>
             }
@@ -390,8 +397,15 @@ interface ScoreFormModel {
                   mode="consultant"
                   [profileId]="selectedLeadsConsultant.profileId"
                   [title]="'لیدهای ' + fullName(selectedLeadsConsultant)"
-                  description="لیدهای مرتبط با مشاور انتخاب‌شده"
                 ></app-admin-leads-table>
+              }
+
+              @if (selectedReservationsConsultant) {
+                <app-admin-reservations-table
+                  mode="consultant"
+                  [profileId]="selectedReservationsConsultant.profileId"
+                  [title]="'رزروهای ' + fullName(selectedReservationsConsultant)"
+                ></app-admin-reservations-table>
               }
             }
 
@@ -399,12 +413,18 @@ interface ScoreFormModel {
               <app-admin-leads-table
                 mode="system"
                 title="مدیریت کامل لیدهای سیستم"
-                description="مشاهده همه لیدهای سیستم همراه فیلتر وضعیت و نوع تخصیص"
               ></app-admin-leads-table>
             }
 
             @if (activeSection === "leadReports") {
               <app-admin-lead-call-reports></app-admin-lead-call-reports>
+            }
+
+            @if (activeSection === "reservations") {
+              <app-admin-reservations-table
+                mode="system"
+                title="مدیریت رزروها و تایید حضور مشاوران"
+              ></app-admin-reservations-table>
             }
           </section>
         } @else {
@@ -1175,6 +1195,7 @@ export class DashboardComponent implements OnInit {
     { id: "consultants", label: "مشاوران", icon: "doctor" },
     { id: "leads", label: "لیدها", icon: "clipboard" },
     { id: "leadReports", label: "گزارش تماس", icon: "clipboard" },
+    { id: "reservations", label: "رزروها", icon: "calendar" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
@@ -1238,6 +1259,7 @@ export class DashboardComponent implements OnInit {
   selectedScoreConsultant: Consultant | null = null;
   selectedAttendanceConsultant: Consultant | null = null;
   selectedLeadsConsultant: Consultant | null = null;
+  selectedReservationsConsultant: Consultant | null = null;
   scoreForm: ScoreFormModel = this.emptyScoreForm();
 
   feedbackMessage = "";
@@ -1266,6 +1288,11 @@ export class DashboardComponent implements OnInit {
       value: (row) => (row.isActive ? "فعال" : "غیرفعال"),
       badge: (row) => (row.isActive ? "success" : "danger"),
     },
+    {
+      key: "lastSeenAt",
+      label: "آخرین بازدید",
+      value: (row) => this.formatDateTime(row.lastSeenAt ?? row.LastSeenAt),
+    },
   ];
 
   readonly consultantColumns: TableColumn<Consultant>[] = [
@@ -1292,6 +1319,7 @@ export class DashboardComponent implements OnInit {
     },
     { action: "attendance", label: "حضور", icon: "calendar" },
     { action: "leads", label: "لیدها", icon: "clipboard" },
+    { action: "reservations", label: "رزروها", icon: "calendar" },
   ];
 
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
@@ -1653,6 +1681,7 @@ export class DashboardComponent implements OnInit {
     if (event.action === "attendance") {
       this.selectedAttendanceConsultant = event.row;
       this.selectedLeadsConsultant = null;
+      this.selectedReservationsConsultant = null;
       this.markDirty();
       return;
     }
@@ -1660,8 +1689,31 @@ export class DashboardComponent implements OnInit {
     if (event.action === "leads") {
       this.selectedLeadsConsultant = event.row;
       this.selectedAttendanceConsultant = null;
+      this.selectedReservationsConsultant = null;
+      this.markDirty();
+      return;
+    }
+
+    if (event.action === "reservations") {
+      this.selectedReservationsConsultant = event.row;
+      this.selectedAttendanceConsultant = null;
+      this.selectedLeadsConsultant = null;
       this.markDirty();
     }
+  }
+
+  private formatDateTime(value?: string | null): string {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString("fa-IR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   }
 
   closeScoreDialog(): void {

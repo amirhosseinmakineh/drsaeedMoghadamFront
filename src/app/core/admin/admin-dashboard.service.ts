@@ -36,6 +36,10 @@ export interface AdminUser {
   IsActive?: boolean;
   isCompleteProfile?: boolean;
   IsCompleteProfile?: boolean;
+  lastSeenAt?: string | null;
+  LastSeenAt?: string | null;
+  createdAt?: string;
+  CreatedAt?: string;
   gender?: number;
   Gender?: number;
   avatarImageName?: string | null;
@@ -224,6 +228,7 @@ export interface SecretaryReservationFilters {
   searchText?: string;
   attendanceConfirmationStatus?: number | null;
   onlyWaitingForSecretaryReview?: boolean;
+  onlyConsultantAttendanceConfirmed?: boolean;
   onlyDue?: boolean;
   includeCanceled?: boolean;
   pageNumber: number;
@@ -492,6 +497,30 @@ export class AdminDashboardService {
     filters: LeadCallReportExportFilters,
   ): Observable<Blob> {
     return this.exportCsvReport("lead-call-reports/export", filters);
+  }
+
+  exportReservationsReport(
+    filters: { from?: string; to?: string; consultantProfileId?: number } = {},
+  ): Observable<Blob> {
+    return this.exportCsvReport("reservations/export", filters);
+  }
+
+  exportConsultantAttendanceConfirmationsReport(
+    filters: { from?: string; to?: string; consultantProfileId?: number } = {},
+  ): Observable<Blob> {
+    return this.exportCsvReport(
+      "consultant-attendance-confirmations/export",
+      filters,
+    );
+  }
+
+  getConsultantAttendanceConfirmations(
+    filters: SecretaryReservationFilters,
+  ): Observable<PaginatedResponse<SecretaryReservation>> {
+    return this.getSecretaryReservations({
+      ...filters,
+      onlyConsultantAttendanceConfirmed: true,
+    });
   }
 
   private exportCsvReport(
