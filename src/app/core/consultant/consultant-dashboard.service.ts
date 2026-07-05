@@ -690,7 +690,7 @@ export class ConsultantDashboardService {
           "pendingOfflineLeadCount",
           "pendingOfflineCount",
         ) ?? 0,
-      currentScore: this.readNumber(source, "currentScore", "score") ?? 0,
+      currentScore: this.readNumber(source, "currentScore", "score") ?? 100,
       canGoOnline: this.readBoolean(source, "canGoOnline") ?? false,
       onlineStatusBlockReason:
         this.readString(source, "onlineStatusBlockReason", "blockReason") ??
