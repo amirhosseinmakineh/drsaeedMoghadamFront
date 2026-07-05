@@ -97,7 +97,7 @@ function notificationBody(data) {
     return `شما ${data.count || "چند"} لید آفلاین دارید.`;
   }
   if (data.type === "realtime_lead") {
-    return "لید جدید داری — ۳ دقیقه وقت داری برای تماس.";
+    return "لید جدید داری — ۲۰ دقیقه وقت داری برای تماس.";
   }
   if (data.type === "password_changed") {
     return "کلمه عبور شما با موفقیت تغییر کرد.";
