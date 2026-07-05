@@ -3,6 +3,11 @@ import { HttpClient } from "@angular/common/http";
 import { firstValueFrom } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { getWebPushVapidPublicKey } from "./web-push-environment";
+import {
+  getPushEnvironmentIssue,
+  getPushManagerUnavailableMessage,
+  hasBasicNotificationApis,
+} from "./pwa-environment";
 
 export const WEB_PUSH_SERVICE_WORKER_URL =
   "/web-push-scope/web-push-sw.js";
@@ -25,6 +30,7 @@ export class NotificationService {
   private swRegistration: ServiceWorkerRegistration | null = null;
   private lastKnownSubscription: string | null = null;
   private resolvedVapidPublicKey: string | null = null;
+  private pushManagerAvailable: boolean | null = null;
   private readonly tokenRefreshListeners = new Set<(token: string) => void>();
   private readonly foregroundListeners = new Set<
     (payload: WebPushMessagePayload) => void
@@ -51,13 +57,26 @@ export class NotificationService {
     return this.canUseNotifications();
   }
 
+  getEnvironmentIssue(): string | null {
+    return getPushEnvironmentIssue();
+  }
+
   async enablePushNotifications(): Promise<EnablePushResult> {
-    if (!this.canUseNotifications()) {
+    const environmentIssue = getPushEnvironmentIssue();
+    if (environmentIssue) {
       return {
         ok: false,
         permission: "unsupported",
-        message:
-          "مرورگر یا حالت فعلی از نوتیفیکیشن PWA پشتیبانی نمی‌کند. روی اندروید PWA را نصب کنید؛ روی iOS حتماً Add to Home Screen بزنید.",
+        message: environmentIssue,
+      };
+    }
+
+    const pushManager = await this.resolvePushManager();
+    if (!pushManager) {
+      return {
+        ok: false,
+        permission: "unsupported",
+        message: getPushManagerUnavailableMessage(),
       };
     }
 
@@ -113,6 +132,9 @@ export class NotificationService {
     if (!this.canUseNotifications()) return null;
     if (Notification.permission !== "granted") return null;
 
+    const pushManager = await this.resolvePushManager();
+    if (!pushManager) return null;
+
     const vapidPublicKey = await this.resolveVapidPublicKey();
     if (!vapidPublicKey) {
       console.warn(
@@ -149,10 +171,13 @@ export class NotificationService {
     vapidPublicKey: string,
   ): Promise<string | null> {
     const registration = await this.ensureServiceWorkerRegistration();
-    let subscription = await registration.pushManager.getSubscription();
+    const pushManager = registration.pushManager;
+    if (!pushManager) return null;
+
+    let subscription = await pushManager.getSubscription();
 
     if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
+      subscription = await pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
       });
@@ -203,8 +228,23 @@ export class NotificationService {
     }
   }
 
+  private async resolvePushManager(): Promise<PushManager | null> {
+    if (this.pushManagerAvailable === false) return null;
+
+    try {
+      const registration = await this.ensureServiceWorkerRegistration();
+      const pushManager = registration.pushManager ?? null;
+      this.pushManagerAvailable = Boolean(pushManager);
+      return pushManager;
+    } catch (error) {
+      console.warn("Web Push service worker could not be prepared", error);
+      this.pushManagerAvailable = false;
+      return null;
+    }
+  }
+
   private async ensureServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
-    if (this.swRegistration) {
+    if (this.swRegistration?.active) {
       await this.swRegistration.update().catch(() => undefined);
       return this.swRegistration;
     }
@@ -213,9 +253,46 @@ export class NotificationService {
       WEB_PUSH_SERVICE_WORKER_URL,
       { scope: "/web-push-scope/" },
     );
-    await navigator.serviceWorker.ready;
+
+    await this.waitForRegistrationActivation(registration);
     this.swRegistration = registration;
     return registration;
+  }
+
+  private async waitForRegistrationActivation(
+    registration: ServiceWorkerRegistration,
+  ): Promise<void> {
+    if (registration.active) return;
+
+    const installingWorker = registration.installing ?? registration.waiting;
+    if (!installingWorker) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 250));
+      if (registration.active) return;
+      throw new Error("Web Push service worker is not active");
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Web Push service worker activation timed out"));
+      }, 15000);
+
+      const handleStateChange = (): void => {
+        if (registration.active) {
+          clearTimeout(timeoutId);
+          installingWorker.removeEventListener("statechange", handleStateChange);
+          resolve();
+        }
+
+        if (installingWorker.state === "redundant") {
+          clearTimeout(timeoutId);
+          installingWorker.removeEventListener("statechange", handleStateChange);
+          reject(new Error("Web Push service worker became redundant"));
+        }
+      };
+
+      installingWorker.addEventListener("statechange", handleStateChange);
+      handleStateChange();
+    });
   }
 
   private normalizePayload(payload: unknown): WebPushMessagePayload {
@@ -249,11 +326,6 @@ export class NotificationService {
   }
 
   private canUseNotifications(): boolean {
-    return (
-      typeof window !== "undefined" &&
-      "Notification" in window &&
-      "serviceWorker" in navigator &&
-      "PushManager" in window
-    );
+    return hasBasicNotificationApis() && getPushEnvironmentIssue() === null;
   }
 }
