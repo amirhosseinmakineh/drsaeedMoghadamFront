@@ -4404,7 +4404,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadReportEditLeads(): void {
+  loadReportEditLeads(): void {
     const profileId = this.currentProfileId();
     if (!profileId) return;
 
