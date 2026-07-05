@@ -56,6 +56,8 @@ const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
   4: "پاسخ نداد",
   5: "شماره اشتباه بود",
   6: "نیاز به پیگیری دارد",
+  7: "اشغال",
+  8: "قطع تماس توسط بیمار",
 };
 
 interface ConsultantProfileForm {
@@ -111,8 +113,11 @@ type ConsultantDashboardSection =
   | "overview"
   | "profile"
   | "leads"
+  | "report-edits"
   | "patients"
   | "reservations";
+
+type ReportDialogMode = "create" | "edit";
 
 interface ConsultantDashboardLink {
   id: ConsultantDashboardSection;
@@ -237,6 +242,10 @@ interface ConsultantDashboardLink {
               <button type="button" (click)="setSection('leads')">
                 <span><app-fa-icon name="clipboard"></app-fa-icon></span>
                 <strong>لیدهای من</strong>
+              </button>
+              <button type="button" (click)="setSection('report-edits')">
+                <span><app-fa-icon name="edit"></app-fa-icon></span>
+                <strong>ویرایش گزارش</strong>
               </button>
               <button type="button" (click)="setSection('patients')">
                 <span><app-fa-icon name="doctor"></app-fa-icon></span>
@@ -826,6 +835,111 @@ interface ConsultantDashboardLink {
             </section>
           }
 
+          @if (activeSection === "report-edits" && isProfileReady()) {
+            <section class="lead-panel">
+              <header class="panel-heading">
+                <div>
+                  <span>ویرایش گزارش</span>
+                  <h2>لیدهای تماس‌گرفته‌شده</h2>
+                </div>
+                <button
+                  class="secondary-action compact"
+                  type="button"
+                  [disabled]="reportEditLeadsLoading"
+                  (click)="loadReportEditLeads()"
+                >
+                  بروزرسانی
+                </button>
+              </header>
+
+              @if (reportEditLeadsLoading) {
+                <div class="loading-state" role="status" aria-live="polite">
+                  <span class="loading-spinner" aria-hidden="true"></span>
+                  <p class="loading-copy">در حال دریافت گزارش‌ها...</p>
+                </div>
+              } @else if (!reportEditLeads.length) {
+                <p class="empty-copy">
+                  فعلاً لیدی با گزارش قابل ویرایش وجود ندارد.
+                </p>
+              } @else {
+                <div class="lead-list">
+                  @for (lead of reportEditLeads; track leadId(lead)) {
+                    <article class="lead-card">
+                      <header>
+                        <div>
+                          <span>{{ leadTypeLabel(leadType(lead)) }}</span>
+                          <h3>{{ leadName(lead) }}</h3>
+                        </div>
+                        <b class="badge info">{{ callResultLabel(lead) }}</b>
+                      </header>
+
+                      <p class="lead-report-summary">
+                        {{ leadReportDescription(lead) }}
+                      </p>
+
+                      <div class="lead-actions">
+                        <a
+                          class="call-action"
+                          [attr.href]="'tel:' + leadPhone(lead)"
+                          [attr.aria-label]="'تماس با ' + leadName(lead)"
+                          (click)="handleCallClick($event, lead)"
+                        >
+                          <span class="call-icon"
+                            ><app-fa-icon name="phone"></app-fa-icon
+                          ></span>
+                          <span>
+                            <small>تماس مجدد</small>
+                            <b>{{ leadPhone(lead) }}</b>
+                          </span>
+                        </a>
+                        <button
+                          class="secondary-action compact"
+                          type="button"
+                          [disabled]="!isLeadReportEditable(lead)"
+                          (click)="openEditReportDialog(lead)"
+                        >
+                          ویرایش گزارش
+                        </button>
+                        <button
+                          class="secondary-action compact"
+                          type="button"
+                          [disabled]="isReservationDisabled(lead)"
+                          (click)="openReservationDialog(lead)"
+                        >
+                          رزرو وقت
+                        </button>
+                      </div>
+                    </article>
+                  }
+                </div>
+
+                <nav class="pager" aria-label="صفحه بندی ویرایش گزارش">
+                  <button
+                    type="button"
+                    [disabled]="reportEditPageNumber <= 1 || reportEditLeadsLoading"
+                    (click)="changeReportEditPage(reportEditPageNumber - 1)"
+                  >
+                    قبلی
+                  </button>
+                  <span
+                    >صفحه {{ reportEditPageNumber }} از
+                    {{ reportEditTotalPages }}</span
+                  >
+                  <button
+                    type="button"
+                    [disabled]="
+                      reportEditPageNumber >= reportEditTotalPages ||
+                      reportEditLeadsLoading
+                    "
+                    (click)="changeReportEditPage(reportEditPageNumber + 1)"
+                  >
+                    بعدی
+                  </button>
+                </nav>
+              }
+            </section>
+          }
+
           @if (activeSection === "reservations" && isProfileReady()) {
             @if (!isProfileReady()) {
               <section class="consultant-panel locked-panel">
@@ -858,12 +972,22 @@ interface ConsultantDashboardLink {
         [showFooter]="false"
         [title]="
           selectedLead
-            ? 'ثبت گزارش برای ' + leadName(selectedLead)
-            : 'ثبت گزارش تماس'
+            ? (reportDialogMode === 'edit' ? 'ویرایش گزارش ' : 'ثبت گزارش برای ') +
+              leadName(selectedLead)
+            : reportDialogMode === 'edit'
+              ? 'ویرایش گزارش تماس'
+              : 'ثبت گزارش تماس'
         "
         (closed)="closeReportDialog()"
       >
-        <form class="dialog-form" (ngSubmit)="submitLeadReport()">
+        <form
+          class="dialog-form"
+          (ngSubmit)="
+            reportDialogMode === 'edit'
+              ? submitEditedLeadReport()
+              : submitLeadReport()
+          "
+        >
           <label>
             نتیجه تماس
             <select
@@ -876,7 +1000,9 @@ interface ConsultantDashboardLink {
               <option [ngValue]="3">رد شد</option>
               <option [ngValue]="4">پاسخ نداد</option>
               <option [ngValue]="5">شماره اشتباه بود</option>
-              <option [ngValue]="6">نیاز به پیگیری دارد</option>
+              <option [ngValue]="6">پیگیری</option>
+              <option [ngValue]="7">اشغال</option>
+              <option [ngValue]="8">قطع تماس توسط بیمار</option>
             </select>
           </label>
           <label>
@@ -951,7 +1077,15 @@ interface ConsultantDashboardLink {
               type="submit"
               [disabled]="reportSaving"
             >
-              {{ reportSaving ? "در حال ثبت..." : "ثبت گزارش" }}
+              {{
+                reportSaving
+                  ? reportDialogMode === "edit"
+                    ? "در حال ویرایش..."
+                    : "در حال ثبت..."
+                  : reportDialogMode === "edit"
+                    ? "ذخیره ویرایش"
+                    : "ثبت گزارش"
+              }}
             </button>
           </div>
         </form>
@@ -2072,6 +2206,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "profile", label: "پروفایل", icon: "shield" },
     { id: "leads", label: "لیدها", icon: "clipboard" },
+    { id: "report-edits", label: "ویرایش گزارش", icon: "edit" },
     { id: "patients", label: "بیماران", icon: "doctor" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
   ];
@@ -2119,6 +2254,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadTotalCount = 0;
   highlightedLeadAssignmentId: number | null = null;
 
+  reportEditLeads: ConsultantLead[] = [];
+  reportEditLeadsLoading = false;
+  reportEditPageNumber = 1;
+  reportEditPageSize = 10;
+  reportEditTotalPages = 1;
+  reportEditTotalCount = 0;
+  private reportEditRequestId = 0;
+  private reportEditLoadSubscription?: Subscription;
+
   patientLeads: ConsultantLead[] = [];
   patientLeadsLoading = false;
   patientStateFilter: number | null = null;
@@ -2129,6 +2273,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private patientLeadRequestId = 0;
 
   reportDialogOpen = false;
+  reportDialogMode: ReportDialogMode = "create";
   reportSaving = false;
   selectedLead: ConsultantLead | null = null;
   reportForm: LeadReportForm = this.emptyLeadReportForm();
@@ -2317,6 +2462,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.autoAbsenceId) clearInterval(this.autoAbsenceId);
     this.pendingOfflineLoadSubscription?.unsubscribe();
     this.leadLoadSubscription?.unsubscribe();
+    this.reportEditLoadSubscription?.unsubscribe();
     this.reservationLoadSubscription?.unsubscribe();
     this.leadNotificationLoadSubscription?.unsubscribe();
     this.dashboardStatusSubscription?.unsubscribe();
@@ -2357,6 +2503,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (
       (section === "overview" ||
         section === "leads" ||
+        section === "report-edits" ||
         section === "patients" ||
         section === "reservations") &&
       !this.isProfileReady()
@@ -2371,6 +2518,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     if (section === "leads") {
       this.loadLeads();
+    } else if (section === "report-edits") {
+      this.loadReportEditLeads();
     } else if (section === "patients") {
       this.loadPatientLeads();
     } else if (
@@ -3094,12 +3243,24 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId || this.isReportDisabled(lead)) return;
 
+    this.reportDialogMode = "create";
     this.reportingLeadIds.add(leadAssignmentId);
     if (this.leadType(lead) !== LEAD_TYPE.ConsultantPatient) {
       this.forceOfflineForReport();
     }
     this.selectedLead = lead;
     this.reportForm = this.emptyLeadReportForm(leadAssignmentId);
+    this.reportDialogOpen = true;
+    this.markViewDirty();
+  }
+
+  openEditReportDialog(lead: ConsultantLead): void {
+    const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId || !this.isLeadReportEditable(lead)) return;
+
+    this.reportDialogMode = "edit";
+    this.selectedLead = lead;
+    this.reportForm = this.leadReportFormFromLead(lead);
     this.reportDialogOpen = true;
     this.markViewDirty();
   }
@@ -3114,6 +3275,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       : false;
 
     this.reportDialogOpen = false;
+    this.reportDialogMode = "create";
     this.reportSaving = false;
     this.selectedLead = null;
 
@@ -3247,6 +3409,107 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
+  submitEditedLeadReport(): void {
+    const validationError = this.validateLeadReportForm();
+    if (validationError) {
+      this.showFeedback(validationError, "error");
+      return;
+    }
+
+    const profileId = this.requireProfileId();
+    const lead = this.selectedLead;
+    const leadAssignmentId = lead ? this.leadId(lead) : null;
+    if (!profileId || !lead || !leadAssignmentId) return;
+
+    this.reportSaving = true;
+    this.clearFeedback();
+
+    const rawAttendanceProbability = this.reportForm.attendanceProbabilityPercent;
+    const attendanceProbabilityPercent =
+      rawAttendanceProbability === null ||
+      rawAttendanceProbability === undefined ||
+      rawAttendanceProbability === ""
+        ? null
+        : Number(rawAttendanceProbability);
+    if (
+      attendanceProbabilityPercent !== null &&
+      (!Number.isFinite(attendanceProbabilityPercent) ||
+        attendanceProbabilityPercent < 0 ||
+        attendanceProbabilityPercent > 100)
+    ) {
+      this.showFeedback("درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد", "error");
+      this.reportSaving = false;
+      return;
+    }
+
+    const secondaryPhone = this.reportForm.secondaryPhoneNumber.trim();
+    if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone)) {
+      this.showFeedback("شماره تماس دوم بیمار معتبر نیست", "error");
+      this.reportSaving = false;
+      return;
+    }
+
+    const payload = {
+      leadAssignmentId,
+      consultantProfileId: profileId,
+      callResult: Number(this.reportForm.callResult),
+      reportDescription: this.normalizedReportDescription(
+        Number(this.reportForm.callResult),
+      ),
+      patientCity: this.reportForm.patientCity.trim(),
+      patientRegion: this.reportForm.patientRegion.trim(),
+      ...(this.reportForm.businessName.trim()
+        ? { businessName: this.reportForm.businessName.trim() }
+        : {}),
+      ...(attendanceProbabilityPercent === null
+        ? {}
+        : { attendanceProbabilityPercent }),
+      ...(secondaryPhone ? { secondaryPhoneNumber: secondaryPhone } : {}),
+    };
+
+    this.consultantApi
+      .updateLeadCallReport(payload)
+      .pipe(
+        finalize(() => {
+          this.reportSaving = false;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          this.markLeadReported(
+            leadAssignmentId,
+            response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
+            true,
+          );
+          this.updateLeadInCollections(leadAssignmentId, {
+            callResult: response.data?.callResult ?? Number(this.reportForm.callResult),
+            CallResult: response.data?.callResult ?? Number(this.reportForm.callResult),
+            reportDescription: payload.reportDescription,
+            ReportDescription: payload.reportDescription,
+            patientCity: payload.patientCity,
+            PatientCity: payload.patientCity,
+            patientRegion: payload.patientRegion,
+            PatientRegion: payload.patientRegion,
+            leadAssignmentState:
+              response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
+            LeadAssignmentState:
+              response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
+          });
+          this.closeReportDialog({ releaseReportLock: false });
+          this.showFeedback("گزارش ویرایش شد", "success");
+          if (this.activeSection === "report-edits") {
+            this.loadReportEditLeads();
+          }
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "ویرایش گزارش تماس انجام نشد"),
+            "error",
+          ),
+      });
+  }
+
   private emptyLeadReportForm(leadAssignmentId?: number): LeadReportForm {
     return {
       callResult: 1,
@@ -3259,6 +3522,79 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         ? this.reservationSecondaryPhoneForLead(leadAssignmentId)
         : "",
     };
+  }
+
+  private leadReportFormFromLead(lead: ConsultantLead): LeadReportForm {
+    const leadAssignmentId = this.leadId(lead);
+    const attendanceProbability =
+      lead.attendanceProbabilityPercent ??
+      lead.AttendanceProbabilityPercent ??
+      null;
+
+    return {
+      callResult: this.leadCallResult(lead) ?? 6,
+      reportDescription:
+        lead.reportDescription?.trim() || lead.ReportDescription?.trim() || "",
+      patientCity: lead.patientCity?.trim() || lead.PatientCity?.trim() || "",
+      patientRegion:
+        lead.patientRegion?.trim() || lead.PatientRegion?.trim() || "",
+      businessName: lead.businessName?.trim() || lead.BusinessName?.trim() || "",
+      attendanceProbabilityPercent: attendanceProbability,
+      secondaryPhoneNumber:
+        lead.secondaryPhoneNumber?.trim() ||
+        lead.SecondaryPhoneNumber?.trim() ||
+        (leadAssignmentId
+          ? this.reservationSecondaryPhoneForLead(leadAssignmentId)
+          : ""),
+    };
+  }
+
+  private recordCallInitiated(leadAssignmentId: number): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    this.consultantApi
+      .recordLeadCallInitiated({
+        leadAssignmentId,
+        consultantProfileId: profileId,
+      })
+      .subscribe({
+        next: (response) => {
+          const initiatedAt =
+            response.data?.callInitiatedAt ??
+            (response.data as { CallInitiatedAt?: string } | undefined)
+              ?.CallInitiatedAt ??
+            new Date().toISOString();
+          this.updateLeadInCollections(leadAssignmentId, {
+            callInitiatedAt: initiatedAt,
+            CallInitiatedAt: initiatedAt,
+          });
+        },
+        error: () => {
+          // local timer stop still keeps report actions enabled
+        },
+      });
+  }
+
+  private updateLeadInCollections(
+    leadAssignmentId: number,
+    patch: Partial<ConsultantLead>,
+  ): void {
+    this.leads = this.replaceLeadInCollection(
+      this.leads,
+      leadAssignmentId,
+      patch,
+    );
+    this.reportEditLeads = this.replaceLeadInCollection(
+      this.reportEditLeads,
+      leadAssignmentId,
+      patch,
+    );
+    this.patientLeads = this.replaceLeadInCollection(
+      this.patientLeads,
+      leadAssignmentId,
+      patch,
+    );
   }
 
   private normalizedReportDescription(callResult: number): string {
@@ -3532,6 +3868,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       !this.isLeadReportSubmitted(lead)
     ) {
       this.stopRealtimeTimer(leadAssignmentId);
+      this.recordCallInitiated(leadAssignmentId);
     }
   }
 
@@ -3737,10 +4074,48 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isLeadExpired(lead: ConsultantLead): boolean {
+    if (this.leadState(lead) === LEAD_STATE.Expired) return true;
+    if (this.hasCallBeenInitiated(lead)) return false;
+    return this.isRealtimeTimedLead(lead) && this.leadRemainingMs(lead) <= 0;
+  }
+
+  hasCallBeenInitiated(lead: ConsultantLead): boolean {
+    const leadAssignmentId = this.leadId(lead);
+    if (leadAssignmentId && this.stoppedTimerLeadIds.has(leadAssignmentId)) {
+      return true;
+    }
+
+    const initiatedAt = lead.callInitiatedAt ?? lead.CallInitiatedAt;
+    return Boolean(initiatedAt);
+  }
+
+  isLeadReportEditable(lead: ConsultantLead): boolean {
+    if (!this.isLeadReportSubmitted(lead)) return false;
+    return this.leadState(lead) === LEAD_STATE.Contacted;
+  }
+
+  leadCallResult(lead: ConsultantLead): number | null {
+    return this.numberOrNull(lead.callResult ?? lead.CallResult ?? null);
+  }
+
+  callResultLabel(lead: ConsultantLead): string {
+    const callResult = this.leadCallResult(lead);
+    if (callResult === null) return "بدون گزارش";
+    return CALL_RESULT_DEFAULT_DESCRIPTIONS[callResult] ?? "نامشخص";
+  }
+
+  leadReportDescription(lead: ConsultantLead): string {
     return (
-      this.leadState(lead) === LEAD_STATE.Expired ||
-      (this.isRealtimeTimedLead(lead) && this.leadRemainingMs(lead) <= 0)
+      lead.reportDescription?.trim() ||
+      lead.ReportDescription?.trim() ||
+      "بدون توضیحات"
     );
+  }
+
+  changeReportEditPage(page: number): void {
+    if (page < 1 || page > this.reportEditTotalPages) return;
+    this.reportEditPageNumber = page;
+    this.loadReportEditLeads();
   }
 
   isLeadPhoneDisabled(lead: ConsultantLead): boolean {
@@ -3828,6 +4203,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       if (!leadAssignmentId || !this.leadHasActiveReservation(lead)) return;
       this.reservedLeadIds.add(leadAssignmentId);
     });
+  }
+
+  private syncCallInitiatedFromLeads(leads: ConsultantLead[]): void {
+    leads.forEach((lead) => {
+      const leadAssignmentId = this.leadId(lead);
+      if (!leadAssignmentId || !this.hasCallBeenInitiated(lead)) return;
+      this.stoppedTimerLeadIds.add(leadAssignmentId);
+    });
+    this.writeJson(this.stoppedTimerStorageKey(), [...this.stoppedTimerLeadIds]);
   }
 
   private syncReservedLeadIdsFromReservations(
@@ -3983,6 +4367,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.leads = items;
           this.syncReportedLeadIdsFromLeads(this.leads);
           this.syncReservedLeadIdsFromLeads(this.leads);
+          this.syncCallInitiatedFromLeads(this.leads);
           this.leadTotalCount = response.totalCount ?? this.leads.length;
           this.leadPageSize = response.pageSize || this.leadPageSize;
           this.leadTotalPages = Math.max(
@@ -4016,6 +4401,59 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               "error",
             );
         },
+      });
+  }
+
+  private loadReportEditLeads(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    const requestId = ++this.reportEditRequestId;
+    this.reportEditLoadSubscription?.unsubscribe();
+    this.reportEditLeadsLoading = true;
+
+    this.reportEditLoadSubscription = this.consultantApi
+      .getLeads({
+        profileId,
+        leadAssignmentState: LEAD_STATE.Contacted,
+        hasSubmittedReport: true,
+        pageNumber: this.reportEditPageNumber,
+        pageSize: this.reportEditPageSize,
+      })
+      .pipe(
+        finalize(() => {
+          if (requestId === this.reportEditRequestId) {
+            this.reportEditLeadsLoading = false;
+          }
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this.reportEditRequestId) return;
+          this.reportEditLeads = (response.items ?? []).filter((lead) =>
+            this.isLeadReportEditable(lead),
+          );
+          this.syncReportedLeadIdsFromLeads(this.reportEditLeads);
+          this.syncReservedLeadIdsFromLeads(this.reportEditLeads);
+          this.syncCallInitiatedFromLeads(this.reportEditLeads);
+          this.reportEditTotalCount = response.totalCount ?? this.reportEditLeads.length;
+          this.reportEditPageSize = response.pageSize || this.reportEditPageSize;
+          this.reportEditTotalPages = Math.max(
+            1,
+            response.totalPages ||
+              Math.ceil(this.reportEditTotalCount / this.reportEditPageSize),
+          );
+          this.reportEditPageNumber = Math.min(
+            Math.max(1, response.pageNumber || this.reportEditPageNumber),
+            this.reportEditTotalPages,
+          );
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "دریافت گزارش‌های قابل ویرایش انجام نشد"),
+            "error",
+          ),
       });
   }
 
@@ -4364,6 +4802,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     )
       return false;
     if (this.isLeadReportSubmitted(lead)) return false;
+    if (this.hasCallBeenInitiated(lead)) return false;
     if (
       this.currentTime < (this.expirationRetryAfter.get(leadAssignmentId) ?? 0)
     )
@@ -4552,7 +4991,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private replaceLeadInCollection(
     collection: ConsultantLead[],
     leadAssignmentId: number,
-    updatedLead: ConsultantLead,
+    updatedLead: ConsultantLead | Partial<ConsultantLead>,
   ): ConsultantLead[] {
     const index = collection.findIndex(
       (lead) => this.leadId(lead) === leadAssignmentId,
@@ -4756,7 +5195,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   validateLeadReportForm(): string | null {
     const callResult = Number(this.reportForm.callResult);
-    if (![1, 2, 3, 4, 5, 6].includes(callResult))
+    if (![1, 2, 3, 4, 5, 6, 7, 8].includes(callResult))
       return "نتیجه تماس معتبر نیست";
 
     const description = this.reportForm.reportDescription.trim();
