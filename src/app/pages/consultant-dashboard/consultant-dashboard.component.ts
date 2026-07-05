@@ -48,6 +48,8 @@ const LEAD_TYPE = {
 
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
+const CONSULTANT_WORK_START_HOUR = 9;
+const CONSULTANT_WORK_END_HOUR = 21;
 
 const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
   1: "تماس برقرار شد",
@@ -2239,7 +2241,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   enablePushSaving = false;
   pushRegistrationReady = false;
   pendingOfflineCount = 0;
-  currentScore = 0;
+  currentScore = 100;
   canGoOnlineFromStatus = false;
   dashboardStatusLoaded = false;
   onlineStatusBlockReason: string | null = null;
@@ -2487,6 +2489,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   canGoOnline(): boolean {
+    if (!this.isConsultantWorkingHours()) return false;
     if (!this.isAvailable || this.pendingOfflineCount > 0) return false;
     if (!this.dashboardStatusLoaded) return false;
     if (this.onlineStatusBlockReason) return false;
@@ -2610,6 +2613,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.requireProfileId();
     if (!profileId) return;
 
+    if (isAvailable && !this.isConsultantWorkingHours()) {
+      this.showFeedback(
+        "امکان ثبت حضور فقط بین ساعت ۹ صبح تا ۹ شب وجود دارد",
+        "error",
+      );
+      return;
+    }
+
     if (!isAvailable && this.isOnline) {
       this.availabilitySaving = true;
       this.clearFeedback();
@@ -2697,6 +2708,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   setOnlineStatus(isOnline: boolean): void {
     const profileId = this.requireProfileId();
     if (!profileId) return;
+
+    if (isOnline && !this.isConsultantWorkingHours()) {
+      this.showFeedback(
+        "امکان آنلاین شدن فقط بین ساعت ۹ صبح تا ۹ شب وجود دارد",
+        "error",
+      );
+      return;
+    }
 
     if (isOnline && !this.canGoOnline()) {
       const message =
@@ -4785,6 +4804,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     )}-${String(date.getDate()).padStart(2, "0")}`;
   }
 
+  private isConsultantWorkingHours(date: Date = new Date()): boolean {
+    const hour = date.getHours();
+    return (
+      hour >= CONSULTANT_WORK_START_HOUR && hour < CONSULTANT_WORK_END_HOUR
+    );
+  }
+
   private expireDueRealtimeLeads(): void {
     this.leads.forEach((lead) => {
       const leadAssignmentId = this.leadId(lead);
@@ -4849,14 +4875,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           ) {
             this.isOnline = response.data.isConsultantOnline;
           }
-          this.leads = this.leads.map((lead) =>
-            this.leadId(lead) === leadAssignmentId
-              ? { ...lead, leadAssignmentState: LEAD_STATE.Expired }
-              : lead,
+          this.leads = this.leads.filter(
+            (lead) => this.leadId(lead) !== leadAssignmentId,
           );
           this.showFeedback(
-            response.message || "لید منقضی شد و امتیاز مشاور کسر شد",
-            "error",
+            response.message ||
+              "مهلت تماس تمام شد. لید برای مشاور آنلاین دیگر ارسال شد",
+            "info",
           );
           this.loadPendingOfflineLeads();
           this.loadLeads(true);
