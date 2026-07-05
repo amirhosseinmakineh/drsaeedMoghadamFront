@@ -39,6 +39,23 @@ self.addEventListener("push", (event) => {
   );
 });
 
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(
+    (async () => {
+      const existing = await self.registration.pushManager.getSubscription();
+      if (existing) return;
+
+      const clientsList = await clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of clientsList) {
+        client.postMessage({ type: "web-push-subscription-lost" });
+      }
+    })(),
+  );
+});
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const data = event.notification?.data || {};

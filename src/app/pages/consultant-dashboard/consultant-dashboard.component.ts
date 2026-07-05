@@ -21,6 +21,7 @@ import {
   SubmitLeadCallReportRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
+import { NotificationService } from "../../core/push/notification.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
@@ -351,6 +352,9 @@ interface ConsultantDashboardLink {
                       testPushSaving ? "در حال ارسال..." : "تست نوتیفیکیشن"
                     }}
                   </button>
+                  @if (pushEnvironmentHint) {
+                    <p class="push-environment-hint">{{ pushEnvironmentHint }}</p>
+                  }
                 </div>
               </section>
             }
@@ -492,6 +496,9 @@ interface ConsultantDashboardLink {
                       testPushSaving ? "در حال ارسال..." : "تست نوتیفیکیشن"
                     }}
                   </button>
+                  @if (pushEnvironmentHint) {
+                    <p class="push-environment-hint">{{ pushEnvironmentHint }}</p>
+                  }
                 </div>
               </section>
             }
@@ -1570,6 +1577,15 @@ interface ConsultantDashboardLink {
         cursor: not-allowed;
         opacity: 0.55;
       }
+      .push-environment-hint {
+        margin: 0.75rem 0 0;
+        padding: 0.75rem 0.9rem;
+        border-radius: 0.75rem;
+        background: rgba(255, 193, 7, 0.12);
+        color: #8a6d1d;
+        font-size: 0.85rem;
+        line-height: 1.6;
+      }
       .full {
         width: 100%;
       }
@@ -2190,6 +2206,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return Notification.permission;
   }
 
+  get pushEnvironmentHint(): string | null {
+    return this.notifications.getEnvironmentIssue();
+  }
+
   private readonly pushMessageListener = (event: Event): void => {
     const detail = (
       event as CustomEvent<{
@@ -2220,6 +2240,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private consultantApi: ConsultantDashboardService,
     private pushNotifications: PushNotificationService,
+    private notifications: NotificationService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
@@ -2570,6 +2591,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   sendTestPushNotification(): void {
     const profileId = this.requireProfileId();
     if (!profileId) return;
+
+    const environmentIssue = this.notifications.getEnvironmentIssue();
+    if (environmentIssue) {
+      this.showFeedback(environmentIssue, "error");
+      return;
+    }
 
     this.testPushSaving = true;
     this.clearFeedback();

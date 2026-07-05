@@ -193,6 +193,11 @@ export class PushNotificationService {
     message: string;
     deviceToken?: string;
   }> {
+    const environmentIssue = this.notifications.getEnvironmentIssue();
+    if (environmentIssue) {
+      return { ok: false, message: environmentIssue };
+    }
+
     let subscription = await this.getCurrentPushSubscription();
     if (!subscription) {
       const enabled = await this.enablePushForCurrentProfile(profileId);
