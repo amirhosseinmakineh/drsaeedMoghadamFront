@@ -94,8 +94,28 @@ export interface ConsultantLead {
   RequiresThreeMinuteCall?: boolean | null;
   callDeadlineAt?: string | null;
   CallDeadlineAt?: string | null;
+  callInitiatedAt?: string | null;
+  CallInitiatedAt?: string | null;
   isReportSubmitted?: boolean | null;
   IsReportSubmitted?: boolean | null;
+  reportSubmittedAt?: string | null;
+  ReportSubmittedAt?: string | null;
+  contactedAt?: string | null;
+  ContactedAt?: string | null;
+  callResult?: number | null;
+  CallResult?: number | null;
+  reportDescription?: string | null;
+  ReportDescription?: string | null;
+  patientCity?: string | null;
+  PatientCity?: string | null;
+  patientRegion?: string | null;
+  PatientRegion?: string | null;
+  businessName?: string | null;
+  BusinessName?: string | null;
+  attendanceProbabilityPercent?: number | null;
+  AttendanceProbabilityPercent?: number | null;
+  secondaryPhoneNumber?: string | null;
+  SecondaryPhoneNumber?: string | null;
   hasActiveReservation?: boolean | null;
   HasActiveReservation?: boolean | null;
   user?: LeadPerson | null;
@@ -108,6 +128,7 @@ export interface LeadFilters {
   profileId: number;
   leadAssignmentState?: number | null;
   leadAssignmentType?: number | null;
+  hasSubmittedReport?: boolean | null;
   pageNumber: number;
   pageSize: number;
 }
@@ -138,6 +159,29 @@ export interface LeadCallReportResponse {
 export interface ExpireLeadNoCallRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
+}
+
+export interface RecordLeadCallInitiatedRequest {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+}
+
+export interface RecordLeadCallInitiatedResponse {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  callInitiatedAt: string;
+}
+
+export interface UpdateLeadCallReportRequest {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  callResult: number;
+  reportDescription: string;
+  patientCity: string;
+  patientRegion: string;
+  businessName?: string;
+  attendanceProbabilityPercent?: number;
+  secondaryPhoneNumber?: string | null;
 }
 
 export interface ExpireLeadNoCallResponse {
@@ -462,6 +506,34 @@ export class ConsultantDashboardService {
         },
       )
       .pipe(this.ensureCommandSucceeded("منقضی کردن لید انجام نشد"));
+  }
+
+  recordLeadCallInitiated(
+    payload: RecordLeadCallInitiatedRequest,
+  ): Observable<ApiCommandResponse<RecordLeadCallInitiatedResponse>> {
+    return this.http
+      .post<ApiCommandResponse<RecordLeadCallInitiatedResponse>>(
+        `${this.apiBaseUrl}/Consultant/RecordLeadCallInitiated`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت شروع تماس انجام نشد"));
+  }
+
+  updateLeadCallReport(
+    payload: UpdateLeadCallReportRequest,
+  ): Observable<ApiCommandResponse<LeadCallReportResponse>> {
+    return this.http
+      .post<ApiCommandResponse<LeadCallReportResponse>>(
+        `${this.apiBaseUrl}/Consultant/UpdateLeadCallReport`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("ویرایش گزارش تماس انجام نشد"));
   }
 
   createReservation(
