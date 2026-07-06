@@ -20,6 +20,11 @@ import {
   reportFileName,
 } from "../../utils/file-download.util";
 import {
+  LeadAssignmentState,
+  leadAssignmentStatePresentation,
+  readLeadAssignmentState,
+} from "../../core/lead/lead-assignment-state";
+import {
   TableColumn,
   TableComponent,
 } from "../../shared/base/table/table.component";
@@ -84,6 +89,7 @@ type LeadTableMode = "system" | "consultant";
             <option [ngValue]="null">همه وضعیت‌ها</option>
             <option [ngValue]="1">جدید</option>
             <option [ngValue]="2">تخصیص داده شده</option>
+            <option [ngValue]="3">تماس گرفته شده</option>
             <option [ngValue]="4">در انتظار پیگیری</option>
             <option [ngValue]="5">تبدیل شده</option>
             <option [ngValue]="6">منقضی شده</option>
@@ -295,8 +301,9 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     {
       key: "leadAssignmentState",
       label: "وضعیت",
-      value: (row) => this.stateLabel(this.leadState(row)),
-      badge: (row) => this.stateBadge(this.leadState(row)),
+      value: (row) => leadAssignmentStatePresentation(this.leadState(row)).label,
+      badge: (row) =>
+        leadAssignmentStatePresentation(this.leadState(row)).badge,
     },
     {
       key: "leadAssignmentType",
