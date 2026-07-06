@@ -108,6 +108,80 @@ export interface AttendanceItem {
   description: string | null;
 }
 
+export interface UserPresenceOverviewItem {
+  userId: string;
+  UserId?: string;
+  firstName: string;
+  FirstName?: string;
+  lastName: string;
+  LastName?: string;
+  phoneNumber: string;
+  PhoneNumber?: string;
+  roleName: string;
+  RoleName?: string;
+  isCurrentlyOnline: boolean;
+  IsCurrentlyOnline?: boolean;
+  lastSeenAtPersian?: string | null;
+  LastSeenAtPersian?: string | null;
+  consultantIsOnline?: boolean | null;
+  ConsultantIsOnline?: boolean | null;
+  consultantIsAvailable?: boolean | null;
+  ConsultantIsAvailable?: boolean | null;
+  selectedDatePersian?: string;
+  SelectedDatePersian?: string;
+  firstLoginAtPersian?: string | null;
+  FirstLoginAtPersian?: string | null;
+  lastLogoutAtPersian?: string | null;
+  LastLogoutAtPersian?: string | null;
+  firstOnlineAtPersian?: string | null;
+  FirstOnlineAtPersian?: string | null;
+  lastOfflineAtPersian?: string | null;
+  LastOfflineAtPersian?: string | null;
+  firstCheckInAtPersian?: string | null;
+  FirstCheckInAtPersian?: string | null;
+  lastCheckOutAtPersian?: string | null;
+  LastCheckOutAtPersian?: string | null;
+  eventCountForDay?: number;
+  EventCountForDay?: number;
+}
+
+export interface UserPresenceEventItem {
+  id: number;
+  Id?: number;
+  userId: string;
+  UserId?: string;
+  firstName: string;
+  FirstName?: string;
+  lastName: string;
+  LastName?: string;
+  phoneNumber: string;
+  PhoneNumber?: string;
+  roleName: string;
+  RoleName?: string;
+  eventType: number;
+  EventType?: number;
+  eventTypeLabel: string;
+  EventTypeLabel?: string;
+  occurredAtPersian: string;
+  OccurredAtPersian?: string;
+  description?: string | null;
+  Description?: string | null;
+}
+
+export interface UserPresenceFilters {
+  date: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  roleName?: string;
+  isCurrentlyOnline?: boolean | null;
+  search?: string;
+  eventType?: number | null;
+  userId?: string;
+  pageNumber: number;
+  pageSize: number;
+}
+
 export interface LeadAssignmentItem {
   id?: number;
   Id?: number;
@@ -479,6 +553,67 @@ export class AdminDashboardService {
           }),
         ),
       );
+  }
+
+  getUserPresenceOverview(
+    filters: UserPresenceFilters,
+  ): Observable<PaginatedResponse<UserPresenceOverviewItem>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/admin/presence/overview`, {
+        headers: this.authHeaders(),
+        params: this.toPresenceParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<UserPresenceOverviewItem>(response, filters),
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت وضعیت حضور کاربران انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  getUserPresenceEvents(
+    filters: UserPresenceFilters,
+  ): Observable<PaginatedResponse<UserPresenceEventItem>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/admin/presence/events`, {
+        headers: this.authHeaders(),
+        params: this.toPresenceParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<UserPresenceEventItem>(response, filters),
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت رویدادهای حضور انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  private toPresenceParams(filters: UserPresenceFilters): HttpParams {
+    const params: Record<string, string | number | boolean> = {
+      date: filters.date,
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+    };
+
+    if (filters.firstName) params["firstName"] = filters.firstName;
+    if (filters.lastName) params["lastName"] = filters.lastName;
+    if (filters.phoneNumber) params["phoneNumber"] = filters.phoneNumber;
+    if (filters.roleName) params["roleName"] = filters.roleName;
+    if (filters.search) params["search"] = filters.search;
+    if (filters.userId) params["userId"] = filters.userId;
+    if (filters.eventType != null) params["eventType"] = filters.eventType;
+    if (filters.isCurrentlyOnline != null) {
+      params["isCurrentlyOnline"] = filters.isCurrentlyOnline;
+    }
+
+    return this.toParams(params);
   }
 
   exportUsersReport(): Observable<Blob> {

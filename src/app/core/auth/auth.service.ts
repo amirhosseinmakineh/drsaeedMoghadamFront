@@ -180,6 +180,19 @@ export class AuthService {
   }
 
   logout(): void {
+    const token = this.authToken();
+    if (token) {
+      this.http
+        .post<ApiResponse<unknown>>(
+          `${environment.apiBaseUrl}/Auth/Logout`,
+          {},
+          {
+            headers: new HttpHeaders({ Authorization: `Bearer ${token}` }),
+          },
+        )
+        .subscribe({ error: () => undefined });
+    }
+
     this.currentUser.set(null);
 
     try {

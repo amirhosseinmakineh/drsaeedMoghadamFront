@@ -25,6 +25,7 @@ import { AdminReservationsTableComponent } from "../admin-dashboard/admin-reserv
 import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendance-table.component";
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
+import { AdminPresenceDashboardComponent } from "../admin-dashboard/admin-presence-dashboard.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -46,7 +47,8 @@ type DashboardSection =
   | "consultants"
   | "leads"
   | "leadReports"
-  | "reservations";
+  | "reservations"
+  | "presence";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -90,6 +92,7 @@ interface ScoreFormModel {
     AdminLeadCallReportsComponent,
     AdminAttendanceTableComponent,
     AdminReservationsTableComponent,
+    AdminPresenceDashboardComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -201,6 +204,10 @@ interface ScoreFormModel {
                 <button type="button" (click)="setSection('reservations')">
                   <span><app-fa-icon name="calendar"></app-fa-icon></span>
                   <strong>رزروها و تایید حضور</strong>
+                </button>
+                <button type="button" (click)="setSection('presence')">
+                  <span><app-fa-icon name="clock"></app-fa-icon></span>
+                  <strong>حضور و آنلاین کاربران</strong>
                 </button>
               </section>
             }
@@ -425,6 +432,10 @@ interface ScoreFormModel {
                 mode="system"
                 title="مدیریت رزروها و تایید حضور مشاوران"
               ></app-admin-reservations-table>
+            }
+
+            @if (activeSection === "presence") {
+              <app-admin-presence-dashboard></app-admin-presence-dashboard>
             }
           </section>
         } @else {
@@ -1196,6 +1207,7 @@ export class DashboardComponent implements OnInit {
     { id: "leads", label: "لیدها", icon: "clipboard" },
     { id: "leadReports", label: "گزارش تماس", icon: "clipboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
+    { id: "presence", label: "حضور و آنلاین", icon: "clock" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
