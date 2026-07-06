@@ -46,8 +46,8 @@ const LEAD_TYPE = {
   ConsultantPatient: 3,
 } as const;
 
-const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
-const REALTIME_CALL_WINDOW_MINUTES = 20;
+const REALTIME_CALL_WINDOW_MS = 3 * 60 * 1000;
+const REALTIME_CALL_WINDOW_MINUTES = 3;
 const CONSULTANT_WORK_START_HOUR = 9;
 const CONSULTANT_WORK_END_HOUR = 21;
 
@@ -2322,6 +2322,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private readonly reportedLeadIds = new Set<number>();
   private readonly reservedLeadIds = new Set<number>();
   private readonly reportingLeadIds = new Set<number>();
+  private readonly timerExpiredReportPromptedLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
   private feedbackAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
   private suppressLeadCardActionsUntil = 0;
@@ -3304,6 +3305,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       !this.reportedLeadIds.has(leadAssignmentId)
     ) {
       this.reportingLeadIds.delete(leadAssignmentId);
+      this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
       if (!isConsultantPatientLead) {
         this.restoreOnlineAfterRequiredAction();
       }
@@ -3384,6 +3386,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.leadState(lead) === LEAD_STATE.Pending;
           this.reportedLeadIds.add(leadAssignmentId);
           this.reportingLeadIds.delete(leadAssignmentId);
+          this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
           const status = this.applyConsultantStatusFrom(
             response,
             response.data,
@@ -4138,25 +4141,35 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isLeadPhoneDisabled(lead: ConsultantLead): boolean {
-    return (
-      this.isLeadInReportProgress(lead) ||
-      this.isLeadExpired(lead) ||
-      this.leadPhone(lead) === "-" ||
-      this.expiringLeadIds.has(this.leadId(lead) ?? -1)
-    );
+    if (this.isLeadInReportProgress(lead)) return true;
+    if (this.leadPhone(lead) === "-") return true;
+    if (this.expiringLeadIds.has(this.leadId(lead) ?? -1)) return true;
+    if (
+      this.leadType(lead) === LEAD_TYPE.RealTime &&
+      this.isActiveRealtimeLead(lead) &&
+      !this.isLeadReportSubmitted(lead)
+    ) {
+      return false;
+    }
+    return this.isLeadExpired(lead);
   }
 
   isReportDisabled(lead: ConsultantLead): boolean {
     const state = this.leadState(lead);
     const leadAssignmentId = this.leadId(lead);
-    return (
-      !leadAssignmentId ||
-      this.isLeadExpired(lead) ||
-      this.reportingLeadIds.has(leadAssignmentId) ||
-      this.isLeadReportSubmitted(lead) ||
-      state === LEAD_STATE.Converted ||
-      state === LEAD_STATE.Rejected
-    );
+    if (!leadAssignmentId) return true;
+    if (this.isLeadReportSubmitted(lead)) return true;
+    if (state === LEAD_STATE.Expired) return true;
+    if (state === LEAD_STATE.Converted || state === LEAD_STATE.Rejected) {
+      return true;
+    }
+    if (
+      this.leadType(lead) === LEAD_TYPE.RealTime &&
+      this.isActiveRealtimeLead(lead)
+    ) {
+      return false;
+    }
+    return this.reportingLeadIds.has(leadAssignmentId);
   }
 
   isReservationDisabled(lead: ConsultantLead): boolean {
@@ -4409,7 +4422,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
           this.hydrateRealtimeTimers();
           this.notifyNewLeads(this.leads);
-          this.expireDueRealtimeLeads();
+          this.openReportForDueRealtimeLeads();
           this.scrollToHighlightedLead();
         },
         error: (error) => {
@@ -4531,7 +4544,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (!this.hasActiveRealtimeTimers()) return;
           this.ngZone.run(() => {
             this.currentTime = Date.now();
-            this.expireDueRealtimeLeads();
+            this.openReportForDueRealtimeLeads();
             this.markViewDirty();
           });
         }, 1000);
@@ -4576,7 +4589,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private hasActiveRealtimeTimers(): boolean {
     return this.leads.some(
-      (lead) => this.isRealtimeTimedLead(lead) && !this.isLeadExpired(lead),
+      (lead) =>
+        this.leadType(lead) === LEAD_TYPE.RealTime &&
+        !this.isLeadReportSubmitted(lead) &&
+        (this.isRealtimeTimedLead(lead) ||
+          this.shouldPromptRealtimeReport(lead)),
     );
   }
 
@@ -4809,6 +4826,38 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return (
       hour >= CONSULTANT_WORK_START_HOUR && hour < CONSULTANT_WORK_END_HOUR
     );
+  }
+
+  private openReportForDueRealtimeLeads(): void {
+    if (this.reportDialogOpen) return;
+
+    for (const lead of this.leads) {
+      const leadAssignmentId = this.leadId(lead);
+      if (!leadAssignmentId || !this.shouldPromptRealtimeReport(lead)) continue;
+      if (this.timerExpiredReportPromptedLeadIds.has(leadAssignmentId)) continue;
+
+      this.timerExpiredReportPromptedLeadIds.add(leadAssignmentId);
+      this.stopRealtimeTimer(leadAssignmentId);
+      this.openReportDialog(lead);
+      this.showFeedback(
+        "مهلت تماس تمام شد. لطفاً گزارش تماس را ثبت کنید.",
+        "info",
+      );
+      return;
+    }
+  }
+
+  private shouldPromptRealtimeReport(lead: ConsultantLead): boolean {
+    const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId) return false;
+    if (this.leadType(lead) !== LEAD_TYPE.RealTime) return false;
+    if (!this.isActiveRealtimeLead(lead)) return false;
+    if (this.isLeadReportSubmitted(lead)) return false;
+    if (this.hasCallBeenInitiated(lead)) return false;
+    if (this.reportingLeadIds.has(leadAssignmentId)) return false;
+    if (this.leadState(lead) === LEAD_STATE.Expired) return false;
+
+    return this.leadRemainingMs(lead) <= 0;
   }
 
   private expireDueRealtimeLeads(): void {
@@ -5075,20 +5124,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private leadDeadlineMs(lead: ConsultantLead): number {
-    const now = Date.now();
     const backendDeadline = this.parseLeadDeadline(lead);
-    if (backendDeadline && backendDeadline > now) {
-      return backendDeadline;
-    }
+    if (backendDeadline) return backendDeadline;
 
-    if (backendDeadline && backendDeadline <= now && this.isActiveRealtimeLead(lead)) {
-      const leadAssignmentId = this.leadId(lead);
-      const startedAt = leadAssignmentId
-        ? (this.timerStarts[String(leadAssignmentId)] ?? now)
-        : now;
-      return startedAt + REALTIME_CALL_WINDOW_MS;
-    }
-
+    const now = Date.now();
     const leadAssignmentId = this.leadId(lead);
     const startedAt = leadAssignmentId
       ? (this.timerStarts[String(leadAssignmentId)] ?? now)
