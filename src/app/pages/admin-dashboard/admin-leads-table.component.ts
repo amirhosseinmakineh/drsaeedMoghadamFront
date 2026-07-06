@@ -24,6 +24,12 @@ import {
   TableComponent,
 } from "../../shared/base/table/table.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
+import {
+  leadAssignmentStateLabel,
+  leadAssignmentTypeLabel,
+  resolveLeadAssignmentState,
+  resolveLeadAssignmentType,
+} from "../../core/lead/lead-enums";
 
 type LeadTableMode = "system" | "consultant";
 
@@ -93,7 +99,7 @@ type LeadTableMode = "system" | "consultant";
             name="leadAssignmentType"
           >
             <option [ngValue]="null">همه نوع‌ها</option>
-            <option [ngValue]="1">هم‌زمان</option>
+            <option [ngValue]="1">آنی</option>
             <option [ngValue]="2">صف آفلاین</option>
             <option [ngValue]="3">بیمار مشاور</option>
           </select>
@@ -506,7 +512,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   }
 
   private leadState(row: LeadAssignmentItem): number | null {
-    return this.numberOrNull(
+    return resolveLeadAssignmentState(
       row.leadAssignmentState ??
         row.LeadAssignmentState ??
         row.state ??
@@ -518,7 +524,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   }
 
   private leadType(row: LeadAssignmentItem): number | null {
-    return this.numberOrNull(
+    return resolveLeadAssignmentType(
       row.leadAssignmentType ??
         row.LeadAssignmentType ??
         row.assignmentType ??
@@ -542,16 +548,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   }
 
   private stateLabel(value: number | null): string {
-    const labels: Record<number, string> = {
-      1: "جدید",
-      2: "تخصیص داده شده",
-      4: "در انتظار پیگیری",
-      5: "تبدیل شده",
-      6: "منقضی شده",
-      7: "رد شده",
-    };
-
-    return value === null ? "نامشخص" : (labels[value] ?? "نامشخص");
+    return leadAssignmentStateLabel(value);
   }
 
   private stateBadge(value: number | null): string {
@@ -562,10 +559,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   }
 
   private typeLabel(value: number | null): string {
-    if (value === null) return "نامشخص";
-    if (value === 2) return "صف آفلاین";
-    if (value === 3) return "بیمار مشاور";
-    return "هم‌زمان";
+    return leadAssignmentTypeLabel(value);
   }
 
   private errorMessage(error: unknown, fallback: string): string {

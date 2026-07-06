@@ -42,6 +42,13 @@ export class NotificationService {
   constructor(private http: HttpClient) {
     if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data?.type === "web-push-subscription-lost") {
+          this.swRegistration = null;
+          this.lastKnownSubscription = null;
+          this.pushManagerAvailable = null;
+          return;
+        }
+
         if (event.data?.type !== "web-push-message") return;
         const payload = this.normalizePayload(event.data.payload);
         for (const listener of this.foregroundListeners) {
@@ -70,6 +77,69 @@ export class NotificationService {
 
   getEnvironmentHint(): string | null {
     return getPushEnvironmentHint();
+  }
+
+  async getWebPushRegistration(): Promise<ServiceWorkerRegistration | null> {
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+      return null;
+    }
+
+    try {
+      const existing = await navigator.serviceWorker.getRegistration(
+        "/web-push-scope/",
+      );
+      if (existing?.active) return existing;
+
+      return await this.ensureServiceWorkerRegistration();
+    } catch (error) {
+      console.warn("Web Push service worker registration is unavailable", error);
+      return null;
+    }
+  }
+
+  async showLocalNotification(
+    title: string,
+    body: string,
+    options: {
+      tag?: string;
+      requireInteraction?: boolean;
+      data?: Record<string, string>;
+    } = {},
+  ): Promise<boolean> {
+    if (!hasBasicNotificationApis() || Notification.permission !== "granted") {
+      return false;
+    }
+
+    const notificationOptions = {
+      body,
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-96x96.png",
+      tag: options.tag ?? "consultant-notification",
+      renotify: true,
+      requireInteraction: options.requireInteraction ?? false,
+      data: options.data,
+    };
+
+    try {
+      const registration = await this.getWebPushRegistration();
+      if (registration?.showNotification) {
+        await registration.showNotification(title, notificationOptions);
+        return true;
+      }
+    } catch {
+      // Fall back to the Notification constructor below.
+    }
+
+    try {
+      new Notification(title, {
+        body,
+        icon: notificationOptions.icon,
+        tag: notificationOptions.tag,
+      });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async requestBasicNotificationPermission(): Promise<NotificationPermission | "unsupported"> {
