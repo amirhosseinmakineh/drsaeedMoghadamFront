@@ -4725,7 +4725,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private showNewLeadNotification(lead: ConsultantLead): void {
     const isRealtime = this.leadType(lead) === LEAD_TYPE.RealTime;
-    const title = isRealtime ? "لید لحظه‌ای جدید" : "لید جدید برای شما";
+    const title = isRealtime ? "لید آنی جدید" : "لید جدید برای شما";
     const timing =
       isRealtime && this.isRealtimeTimedLead(lead)
         ? `؛ مهلت تماس ${REALTIME_CALL_WINDOW_MINUTES} دقیقه است.`
