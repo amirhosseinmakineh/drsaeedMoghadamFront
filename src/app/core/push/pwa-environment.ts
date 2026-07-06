@@ -39,23 +39,52 @@ export function hasBasicNotificationApis(): boolean {
   );
 }
 
-export function getPushEnvironmentIssue(): string | null {
-  if (!hasBasicNotificationApis()) {
-    return "مرورگر شما از نوتیفیکیشن PWA پشتیبانی نمی‌کند.";
+export function hasBrowserNotificationSupport(): boolean {
+  return typeof window !== "undefined" && "Notification" in window;
+}
+
+export function getBrowserNotificationIssue(): string | null {
+  if (!hasBrowserNotificationSupport()) {
+    return "مرورگر شما اعلان مرورگر را پشتیبانی نمی‌کند.";
   }
 
   if (isIosDevice() && !isStandalonePwa()) {
     return (
-      "روی iPhone/iPad باید سایت را با Share → Add to Home Screen نصب کنید " +
-      "و از آیکن روی صفحه اصلی باز کنید. باز کردن از داخل Safari نوتیف نمی‌دهد."
+      "روی iPhone/iPad برای دریافت اعلان، سایت را با Share → Add to Home Screen نصب کنید " +
+      "و از آیکن صفحه اصلی باز کنید."
     );
   }
 
-  if (isMobileDevice() && !isStandalonePwa()) {
+  return null;
+}
+
+export function getPushEnvironmentIssue(): string | null {
+  if (!hasBasicNotificationApis()) {
+    return "مرورگر شما از نوتیفیکیشن پشتیبانی نمی‌کند. از Chrome یا Safari به‌روز استفاده کنید.";
+  }
+
+  if (isIosDevice() && !isStandalonePwa()) {
     return (
-      "برای نوتیفیکیشن، PWA را نصب کنید: در Chrome منو → Install app " +
-      "یا Add to Home screen، سپس از آیکن نصب‌شده باز کنید."
+      "روی iPhone/iPad برای اعلان پس‌زمینه، اپ را با Share → Add to Home Screen نصب کنید " +
+      "و از آیکن صفحه اصلی باز کنید."
     );
+  }
+
+  return null;
+}
+
+export function getPushAdvisoryHint(): string | null {
+  if (getPushEnvironmentIssue()) return null;
+
+  if (isAndroidDevice() && !isStandalonePwa()) {
+    return (
+      "روی اندروید می‌توانید همین‌جا در مرورگر اعلان را فعال کنید. " +
+      "برای تجربه بهتر، PWA را هم نصب کنید."
+    );
+  }
+
+  if (!isMobileDevice() && !isStandalonePwa()) {
+    return "برای دریافت اعلان وقتی تب بسته است، PWA را نصب کنید.";
   }
 
   return null;
@@ -71,13 +100,12 @@ export function getPushManagerUnavailableMessage(): string {
 
   if (isAndroidDevice()) {
     return (
-      "Push روی این گوشی فعال نیست. PWA را از آیکن نصب‌شده باز کنید " +
-      "و اجازه Notification را در تنظیمات مرورگر/اپ فعال کنید."
+      "Push روی این گوشی فعال نیست. از Chrome به‌روز استفاده کنید " +
+      "و اجازه Notification را در تنظیمات مرورگر فعال کنید."
     );
   }
 
   return (
-    "Push Manager روی این دستگاه در دسترس نیست. PWA را نصب کنید " +
-    "و از مرورگر Chrome یا Safari به‌روز استفاده کنید."
+    "Push Manager روی این دستگاه در دسترس نیست. از مرورگر Chrome یا Safari به‌روز استفاده کنید."
   );
 }

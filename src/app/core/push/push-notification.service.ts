@@ -152,6 +152,13 @@ export class PushNotificationService {
   ): Promise<PushSyncResult> {
     const result = await this.notifications.enablePushNotifications();
     if (!result.ok) {
+      if (result.permission === "granted" && !result.subscriptionJson) {
+        return {
+          ok: true,
+          message: result.message,
+        };
+      }
+
       this.backendRegistrationReady = false;
       return { ok: false, message: result.message };
     }
@@ -159,8 +166,8 @@ export class PushNotificationService {
     if (!result.subscriptionJson) {
       this.backendRegistrationReady = false;
       return {
-        ok: false,
-        message: "subscription محلی ساخته نشد.",
+        ok: true,
+        message: result.message,
       };
     }
 

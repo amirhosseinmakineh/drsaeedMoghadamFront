@@ -2382,7 +2382,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   get pushEnvironmentHint(): string | null {
-    return this.notifications.getEnvironmentIssue();
+    return (
+      this.notifications.getEnvironmentIssue() ??
+      this.notifications.getPushAdvisoryHint()
+    );
   }
 
   private readonly pushMessageListener = (event: Event): void => {
@@ -2778,6 +2781,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             "success",
           );
           void this.pushNotifications.syncForCurrentProfile(profileId);
+          if (isOnline) {
+            void this.ensureLeadNotificationsEnabled();
+          }
           this.configurePollTimer();
           this.refreshDashboard();
         },
@@ -4589,8 +4595,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private configurePollTimer(): void {
-    const desiredInterval =
-      this.isOnline && this.isProfileReady() ? 10000 : 30000;
+    const desiredInterval = this.resolvePollIntervalMs();
 
     if (this.pollId && desiredInterval === this.pollIntervalMs) return;
 
@@ -4740,15 +4745,71 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private showLeadNotification(title: string, body: string): void {
     if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(title, { body });
+      new Notification(title, { body, tag: "consultant-lead-alert" });
     } else {
       this.showFeedback(body, "success");
     }
 
+    this.playLeadAlertSound();
+
     const navigatorWithVibration = navigator as Navigator & {
       vibrate?: (pattern: number | number[]) => boolean;
     };
-    navigatorWithVibration.vibrate?.([200, 100, 200]);
+    navigatorWithVibration.vibrate?.([200, 100, 200, 100, 200]);
+  }
+
+  private async ensureLeadNotificationsEnabled(): Promise<void> {
+    if (this.browserNotificationPermission === "granted") {
+      await this.syncPushRegistrationState();
+      this.configurePollTimer();
+      return;
+    }
+
+    if (this.browserNotificationPermission === "denied") return;
+
+    const result = await this.notifications.enableBrowserNotifications();
+    if (result.ok) {
+      await this.syncPushRegistrationState();
+      void this.pushNotifications.enablePushForCurrentProfile(
+        this.currentProfileId(),
+      );
+      this.configurePollTimer();
+    }
+  }
+
+  private resolvePollIntervalMs(): number {
+    if (!this.isProfileReady()) return 30000;
+    if (!this.isOnline) return 30000;
+    if (!this.pushNotifications.isBackendRegistrationReady()) return 5000;
+    return 10000;
+  }
+
+  private playLeadAlertSound(): void {
+    if (typeof window === "undefined") return;
+
+    try {
+      const AudioContextCtor =
+        window.AudioContext ||
+        (window as Window & { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (!AudioContextCtor) return;
+
+      const context = new AudioContextCtor();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = 880;
+      gain.gain.value = 0.05;
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.2);
+      oscillator.onended = () => {
+        void context.close();
+      };
+    } catch {
+      // Audio is best-effort only.
+    }
   }
 
   private async syncPushRegistrationState(): Promise<void> {
@@ -4762,7 +4823,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       const subscription =
         await this.pushNotifications.getCurrentPushSubscription();
       if (!subscription) {
-        this.pushRegistrationReady = false;
+        this.pushRegistrationReady = true;
         this.markViewDirty();
         return;
       }
@@ -4773,7 +4834,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.pushRegistrationReady =
         syncResult.ok && this.pushNotifications.isBackendRegistrationReady();
     } catch {
-      this.pushRegistrationReady = false;
+      this.pushRegistrationReady = true;
     }
 
     this.markViewDirty();

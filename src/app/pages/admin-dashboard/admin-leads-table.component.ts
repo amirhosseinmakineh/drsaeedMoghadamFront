@@ -78,6 +78,7 @@ type LeadTableMode = "system" | "consultant";
             <option [ngValue]="null">همه وضعیت‌ها</option>
             <option [ngValue]="1">جدید</option>
             <option [ngValue]="2">تخصیص داده شده</option>
+            <option [ngValue]="3">تماس گرفته شده</option>
             <option [ngValue]="4">در انتظار پیگیری</option>
             <option [ngValue]="5">تبدیل شده</option>
             <option [ngValue]="6">منقضی شده</option>
@@ -545,6 +546,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     const labels: Record<number, string> = {
       1: "جدید",
       2: "تخصیص داده شده",
+      3: "تماس گرفته شده",
       4: "در انتظار پیگیری",
       5: "تبدیل شده",
       6: "منقضی شده",
@@ -555,7 +557,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   }
 
   private stateBadge(value: number | null): string {
-    if (value === 1 || value === 2) return "info";
+    if (value === 1 || value === 2 || value === 3) return "info";
     if (value === 5) return "success";
     if (value === 4 || value === 6) return "warn";
     return "danger";

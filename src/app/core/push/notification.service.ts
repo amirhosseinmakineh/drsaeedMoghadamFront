@@ -4,9 +4,12 @@ import { firstValueFrom } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { getWebPushVapidPublicKey } from "./web-push-environment";
 import {
+  getBrowserNotificationIssue,
+  getPushAdvisoryHint,
   getPushEnvironmentIssue,
   getPushManagerUnavailableMessage,
   hasBasicNotificationApis,
+  hasBrowserNotificationSupport,
 } from "./pwa-environment";
 
 export const WEB_PUSH_SERVICE_WORKER_URL =
@@ -49,16 +52,49 @@ export class NotificationService {
   }
 
   getPermissionStatus(): NotificationPermission | "unsupported" {
-    if (!this.canUseNotifications()) return "unsupported";
+    if (!hasBrowserNotificationSupport()) return "unsupported";
     return Notification.permission;
   }
 
   isSupported(): boolean {
-    return this.canUseNotifications();
+    return this.canUseWebPush() || this.canUseBrowserNotifications();
   }
 
   getEnvironmentIssue(): string | null {
-    return getPushEnvironmentIssue();
+    return getBrowserNotificationIssue() ?? getPushEnvironmentIssue();
+  }
+
+  getPushAdvisoryHint(): string | null {
+    return getPushAdvisoryHint();
+  }
+
+  async enableBrowserNotifications(): Promise<EnablePushResult> {
+    const browserIssue = getBrowserNotificationIssue();
+    if (browserIssue) {
+      return {
+        ok: false,
+        permission: "unsupported",
+        message: browserIssue,
+      };
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      return {
+        ok: false,
+        permission,
+        message:
+          permission === "denied"
+            ? "اجازه اعلان رد شده است. از تنظیمات مرورگر دوباره فعال کنید."
+            : "اجازه اعلان داده نشد.",
+      };
+    }
+
+    return {
+      ok: true,
+      permission,
+      message: "اعلان مرورگر فعال شد. لیدهای جدید حتی با باز بودن داشبورد به شما نمایش داده می‌شوند.",
+    };
   }
 
   async enablePushNotifications(): Promise<EnablePushResult> {
@@ -120,16 +156,27 @@ export class NotificationService {
       };
     } catch (error) {
       console.warn("Web Push subscription could not be created", error);
+      const browserFallback = await this.enableBrowserNotifications();
+      if (browserFallback.ok) {
+        return {
+          ...browserFallback,
+          message:
+            "اعلان مرورگر فعال شد. برای اعلان پس‌زمینه، مرورگر را به‌روز نگه دارید یا PWA را نصب کنید.",
+        };
+      }
+
       return {
         ok: false,
         permission,
-        message: "خطا در فعال‌سازی Web Push. PWA را یک‌بار ببندید و دوباره امتحان کنید.",
+        message:
+          browserFallback.message ||
+          "خطا در فعال‌سازی Web Push. یک‌بار صفحه را ببندید و دوباره امتحان کنید.",
       };
     }
   }
 
   async getSubscriptionJson(): Promise<string | null> {
-    if (!this.canUseNotifications()) return null;
+    if (!this.canUseWebPush()) return null;
     if (Notification.permission !== "granted") return null;
 
     const pushManager = await this.resolvePushManager();
@@ -325,7 +372,11 @@ export class NotificationService {
     return outputArray;
   }
 
-  private canUseNotifications(): boolean {
+  private canUseWebPush(): boolean {
     return hasBasicNotificationApis() && getPushEnvironmentIssue() === null;
+  }
+
+  private canUseBrowserNotifications(): boolean {
+    return hasBrowserNotificationSupport() && getBrowserNotificationIssue() === null;
   }
 }
