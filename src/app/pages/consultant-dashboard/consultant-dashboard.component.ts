@@ -2382,7 +2382,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   get pushEnvironmentHint(): string | null {
-    return this.notifications.getEnvironmentIssue();
+    return this.notifications.getEnvironmentHint();
   }
 
   private readonly pushMessageListener = (event: Event): void => {
@@ -2460,6 +2460,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     window.addEventListener("focus", this.onPushStateSync);
     document.addEventListener("visibilitychange", this.onPushStateSync);
     void this.pushNotifications.syncForCurrentProfile(this.profileId);
+    if (this.isOnline) {
+      void this.ensureLeadNotificationPermission();
+    }
     this.applyLeadRouteParams(this.route.snapshot.queryParamMap);
     this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
       (params) => {
@@ -2777,6 +2780,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               (isOnline ? "شما آنلاین شدید" : "شما آفلاین شدید"),
             "success",
           );
+          if (isOnline) {
+            void this.ensureLeadNotificationPermission();
+          }
           void this.pushNotifications.syncForCurrentProfile(profileId);
           this.configurePollTimer();
           this.refreshDashboard();
@@ -4589,8 +4595,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private configurePollTimer(): void {
-    const desiredInterval =
-      this.isOnline && this.isProfileReady() ? 10000 : 30000;
+    const pushReady =
+      this.pushRegistrationReady ||
+      this.browserNotificationPermission === "granted";
+    let desiredInterval = 30000;
+    if (this.isOnline && this.isProfileReady()) {
+      desiredInterval = pushReady ? 10000 : 5000;
+    }
 
     if (this.pollId && desiredInterval === this.pollIntervalMs) return;
 
@@ -4739,21 +4750,90 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private showLeadNotification(title: string, body: string): void {
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(title, { body });
-    } else {
+    void this.displayLeadNotification(title, body);
+    this.toast.info(body);
+    this.playLeadAlertSound();
+  }
+
+  private async displayLeadNotification(
+    title: string,
+    body: string,
+  ): Promise<void> {
+    if (!("Notification" in window) || Notification.permission !== "granted") {
       this.showFeedback(body, "success");
+      return;
+    }
+
+    const options = {
+      body,
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-96x96.png",
+      tag: "consultant-lead-alert",
+      renotify: true,
+    };
+
+    try {
+      const registration = await navigator.serviceWorker?.ready;
+      if (registration?.showNotification) {
+        await registration.showNotification(title, options);
+        return;
+      }
+    } catch {
+      // Fall back to the Notification constructor below.
+    }
+
+    try {
+      new Notification(title, { body, icon: options.icon, tag: options.tag });
+    } catch {
+      this.showFeedback(body, "success");
+    }
+  }
+
+  private playLeadAlertSound(): void {
+    if (typeof window === "undefined") return;
+
+    try {
+      const AudioContextCtor =
+        window.AudioContext ||
+        (window as Window & { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (!AudioContextCtor) return;
+
+      const context = new AudioContextCtor();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = 880;
+      gain.gain.value = 0.08;
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.18);
+      oscillator.onended = () => void context.close();
+    } catch {
+      // Audio is optional; vibration still runs below.
     }
 
     const navigatorWithVibration = navigator as Navigator & {
       vibrate?: (pattern: number | number[]) => boolean;
     };
-    navigatorWithVibration.vibrate?.([200, 100, 200]);
+    navigatorWithVibration.vibrate?.([200, 100, 200, 100, 200]);
+  }
+
+  private async ensureLeadNotificationPermission(): Promise<void> {
+    const permission = await this.notifications.requestBasicNotificationPermission();
+    if (permission === "granted") {
+      void this.pushNotifications.syncForCurrentProfile(this.currentProfileId());
+    }
+    await this.syncPushRegistrationState();
+    this.configurePollTimer();
+    this.markViewDirty();
   }
 
   private async syncPushRegistrationState(): Promise<void> {
     if (this.browserNotificationPermission !== "granted") {
       this.pushRegistrationReady = false;
+      this.configurePollTimer();
       this.markViewDirty();
       return;
     }
@@ -4763,6 +4843,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         await this.pushNotifications.getCurrentPushSubscription();
       if (!subscription) {
         this.pushRegistrationReady = false;
+        this.configurePollTimer();
         this.markViewDirty();
         return;
       }
@@ -4776,6 +4857,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.pushRegistrationReady = false;
     }
 
+    this.configurePollTimer();
     this.markViewDirty();
   }
 

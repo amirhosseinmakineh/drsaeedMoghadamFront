@@ -4,7 +4,10 @@ import { firstValueFrom } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { getWebPushVapidPublicKey } from "./web-push-environment";
 import {
+  canAttemptPushNotifications,
+  getPushEnvironmentHint,
   getPushEnvironmentIssue,
+  getPushEnvironmentWarning,
   getPushManagerUnavailableMessage,
   hasBasicNotificationApis,
 } from "./pwa-environment";
@@ -59,6 +62,21 @@ export class NotificationService {
 
   getEnvironmentIssue(): string | null {
     return getPushEnvironmentIssue();
+  }
+
+  getEnvironmentWarning(): string | null {
+    return getPushEnvironmentWarning();
+  }
+
+  getEnvironmentHint(): string | null {
+    return getPushEnvironmentHint();
+  }
+
+  async requestBasicNotificationPermission(): Promise<NotificationPermission | "unsupported"> {
+    if (!hasBasicNotificationApis()) return "unsupported";
+    if (Notification.permission === "granted") return "granted";
+    if (Notification.permission === "denied") return "denied";
+    return Notification.requestPermission();
   }
 
   async enablePushNotifications(): Promise<EnablePushResult> {
@@ -326,6 +344,6 @@ export class NotificationService {
   }
 
   private canUseNotifications(): boolean {
-    return hasBasicNotificationApis() && getPushEnvironmentIssue() === null;
+    return canAttemptPushNotifications();
   }
 }
