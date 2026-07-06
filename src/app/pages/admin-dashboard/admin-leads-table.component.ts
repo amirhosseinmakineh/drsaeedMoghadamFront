@@ -20,6 +20,11 @@ import {
   reportFileName,
 } from "../../utils/file-download.util";
 import {
+  LeadAssignmentState,
+  leadAssignmentStatePresentation,
+  readLeadAssignmentState,
+} from "../../core/lead/lead-assignment-state";
+import {
   TableColumn,
   TableComponent,
 } from "../../shared/base/table/table.component";
@@ -78,6 +83,7 @@ type LeadTableMode = "system" | "consultant";
             <option [ngValue]="null">همه وضعیت‌ها</option>
             <option [ngValue]="1">جدید</option>
             <option [ngValue]="2">تخصیص داده شده</option>
+            <option [ngValue]="3">تماس گرفته شده</option>
             <option [ngValue]="4">در انتظار پیگیری</option>
             <option [ngValue]="5">تبدیل شده</option>
             <option [ngValue]="6">منقضی شده</option>
@@ -289,8 +295,9 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     {
       key: "leadAssignmentState",
       label: "وضعیت",
-      value: (row) => this.stateLabel(this.leadState(row)),
-      badge: (row) => this.stateBadge(this.leadState(row)),
+      value: (row) => leadAssignmentStatePresentation(this.leadState(row)).label,
+      badge: (row) =>
+        leadAssignmentStatePresentation(this.leadState(row)).badge,
     },
     {
       key: "leadAssignmentType",
@@ -505,15 +512,15 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     );
   }
 
-  private leadState(row: LeadAssignmentItem): number | null {
-    return this.numberOrNull(
-      row.leadAssignmentState ??
-        row.LeadAssignmentState ??
-        row.state ??
-        row.State ??
-        row.status ??
-        row.Status ??
-        null,
+  private leadState(row: LeadAssignmentItem): LeadAssignmentState | null {
+    return readLeadAssignmentState(
+      row,
+      "leadAssignmentState",
+      "LeadAssignmentState",
+      "state",
+      "State",
+      "status",
+      "Status",
     );
   }
 
@@ -539,26 +546,6 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     if (value === null || value === undefined || value === "") return null;
     const numeric = typeof value === "number" ? value : Number(value);
     return Number.isFinite(numeric) ? numeric : null;
-  }
-
-  private stateLabel(value: number | null): string {
-    const labels: Record<number, string> = {
-      1: "جدید",
-      2: "تخصیص داده شده",
-      4: "در انتظار پیگیری",
-      5: "تبدیل شده",
-      6: "منقضی شده",
-      7: "رد شده",
-    };
-
-    return value === null ? "نامشخص" : (labels[value] ?? "نامشخص");
-  }
-
-  private stateBadge(value: number | null): string {
-    if (value === 1 || value === 2) return "info";
-    if (value === 5) return "success";
-    if (value === 4 || value === 6) return "warn";
-    return "danger";
   }
 
   private typeLabel(value: number | null): string {
