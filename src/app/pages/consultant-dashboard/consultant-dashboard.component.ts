@@ -13,6 +13,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
 import { Subscription, finalize, firstValueFrom, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
+  CompletePatientProfileRequest,
   ConsultantDashboardService,
   ConsultantDashboardStatus,
   ConsultantLead,
@@ -94,6 +95,8 @@ interface PatientProfileForm {
   phoneNumber: string;
   password: string;
   gender: number;
+  nationalCode: string;
+  address: string;
 }
 
 interface AddPatientLeadForm {
@@ -1271,6 +1274,28 @@ interface ConsultantDashboardLink {
                 <option [ngValue]="2">زن</option>
               </select>
             </label>
+
+            <div class="two-col">
+              <label>
+                کد ملی
+                <input
+                  [(ngModel)]="patientProfileForm.nationalCode"
+                  [ngModelOptions]="ngModelBlurOptions"
+                  name="patientNationalCode"
+                  inputmode="numeric"
+                  maxlength="10"
+                />
+              </label>
+              <label>
+                آدرس
+                <input
+                  [(ngModel)]="patientProfileForm.address"
+                  [ngModelOptions]="ngModelBlurOptions"
+                  name="patientAddress"
+                  maxlength="500"
+                />
+              </label>
+            </div>
           </section>
 
           <div class="dialog-actions">
@@ -3843,13 +3868,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload = this.buildPatientRegistrationRequest(reservationId);
+    const payload = this.buildCompletePatientProfileRequest(reservationId);
 
     this.patientProfileSaving = true;
     this.clearFeedback();
 
-    this.auth
-      .register(payload)
+    this.consultantApi
+      .completePatientProfile(payload)
       .pipe(
         finalize(() => {
           this.patientProfileSaving = false;
@@ -5390,22 +5415,27 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return "رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد";
     if (![1, 2].includes(Number(this.patientProfileForm.gender)))
       return "جنسیت بیمار معتبر نیست";
+    if (!/^\d{10}$/.test(this.patientProfileForm.nationalCode.trim()))
+      return "کد ملی بیمار باید ۱۰ رقم باشد";
+    if (!this.patientProfileForm.address.trim())
+      return "آدرس بیمار الزامی است";
     return null;
   }
 
-  private buildPatientRegistrationRequest(
+  private buildCompletePatientProfileRequest(
     reservationId: number,
-  ): RegisterRequest {
+  ): CompletePatientProfileRequest {
     return {
+      reservationId,
       firstName: this.patientProfileForm.firstName.trim(),
       lastName: this.patientProfileForm.lastName.trim(),
       phoneNumber: this.patientProfileForm.phoneNumber.trim(),
       passwordHash: this.patientProfileForm.password,
-      isCompleteProfile: true,
       avatarImageName: this.defaultPatientAvatarImageName(),
       gender: Number(this.patientProfileForm.gender),
-      roleName: "Patient",
-      reservationId,
+      birthDate: new Date(2000, 0, 1).toISOString(),
+      nationalCode: this.patientProfileForm.nationalCode.trim(),
+      address: this.patientProfileForm.address.trim(),
     };
   }
 
@@ -5416,6 +5446,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       phoneNumber: "",
       password: "",
       gender: 1,
+      nationalCode: "",
+      address: "",
     };
   }
 

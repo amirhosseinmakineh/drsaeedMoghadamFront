@@ -48,6 +48,10 @@ export interface AdminUser {
   ProfileId?: number;
   consultantProfileId?: number;
   ConsultantProfileId?: number;
+  consultantIsOnline?: boolean | null;
+  ConsultantIsOnline?: boolean | null;
+  consultantIsAvailable?: boolean | null;
+  ConsultantIsAvailable?: boolean | null;
 }
 
 export interface SaveUserRequest {
@@ -86,6 +90,12 @@ export interface Consultant {
   PhoneNumber?: string;
   profileId: number;
   ProfileId?: number;
+  lastSeenAt?: string | null;
+  LastSeenAt?: string | null;
+  consultantIsOnline?: boolean | null;
+  ConsultantIsOnline?: boolean | null;
+  consultantIsAvailable?: boolean | null;
+  ConsultantIsAvailable?: boolean | null;
   attendanceResponse?: unknown;
   scoreLogResponse?: unknown;
   leadsAssignmentItemsResponse?: unknown;
@@ -513,13 +523,23 @@ export class AdminDashboardService {
         lastName: user.lastName || user.LastName || "",
         phoneNumber: phone,
         profileId:
-          profile?.profileId ??
-          profile?.ProfileId ??
           user.consultantProfileId ??
           user.ConsultantProfileId ??
+          profile?.profileId ??
+          profile?.ProfileId ??
           user.profileId ??
           user.ProfileId ??
           0,
+        consultantIsOnline:
+          user.consultantIsOnline ??
+          user.ConsultantIsOnline ??
+          profile?.consultantIsOnline ??
+          null,
+        consultantIsAvailable:
+          user.consultantIsAvailable ??
+          user.ConsultantIsAvailable ??
+          null,
+        lastSeenAt: user.lastSeenAt ?? user.LastSeenAt ?? null,
         attendanceResponse: profile?.attendanceResponse,
         scoreLogResponse: profile?.scoreLogResponse,
         leadsAssignmentItemsResponse: profile?.leadsAssignmentItemsResponse,

@@ -21,33 +21,31 @@ import {
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 
-type PresenceTab = "overview" | "events";
-
 @Component({
   selector: "app-admin-presence-dashboard",
   standalone: true,
   imports: [CommonModule, FormsModule, BaseDatepickerComponent, TableComponent],
   template: `
-    <section class="admin-panel presence-panel">
+    <section class="presence-panel">
       <header class="panel-heading">
         <div>
-          <span>حضور و آنلاین</span>
-          <h2>وضعیت آنلاین و فعالیت کاربران</h2>
+          <span>وضعیت مشاوران</span>
+          <h2>حضور، آنلاین و آخرین بازدید مشاوران</h2>
           @if (selectedDatePersian) {
-            <p>تاریخ انتخاب‌شده: {{ selectedDatePersian }}</p>
+            <p>تاریخ: {{ selectedDatePersian }}</p>
           }
         </div>
         <button
           class="secondary-action compact"
           type="button"
           [disabled]="overviewLoading || eventsLoading"
-          (click)="reloadActiveTab()"
+          (click)="loadAll()"
         >
           بروزرسانی
         </button>
       </header>
 
-      <form class="date-filter" (ngSubmit)="applyDateFilter()">
+      <form class="date-filter" (ngSubmit)="applyDate()">
         <label>
           انتخاب روز
           <app-base-datepicker
@@ -57,122 +55,28 @@ type PresenceTab = "overview" | "events";
             (dateChange)="onDateChange($event)"
           ></app-base-datepicker>
         </label>
-        <button class="primary-filter" type="submit">نمایش اطلاعات این روز</button>
+        <button class="primary-filter" type="submit">نمایش</button>
       </form>
 
-      <div class="tab-bar" role="tablist" aria-label="نمای حضور">
-        <button
-          type="button"
-          role="tab"
-          [class.active]="activeTab === 'overview'"
-          (click)="setTab('overview')"
-        >
-          خلاصه کاربران
-        </button>
-        <button
-          type="button"
-          role="tab"
-          [class.active]="activeTab === 'events'"
-          (click)="setTab('events')"
-        >
-          رویدادهای روز
-        </button>
-      </div>
+      <app-base-table
+        [columns]="overviewColumns"
+        [data]="overviewItems"
+        [showAdd]="false"
+        [showEdit]="false"
+        [showDelete]="false"
+        [loading]="overviewLoading"
+        [currentPage]="overviewFilters.pageNumber"
+        [pageSize]="overviewFilters.pageSize"
+        [totalCount]="overviewTotalCount"
+        [totalPages]="overviewTotalPages"
+        emptyText="مشاوری برای این روز یافت نشد"
+        (pageChange)="changeOverviewPage($event)"
+      ></app-base-table>
 
-      @if (activeTab === "overview") {
-        <form class="filter-grid" (ngSubmit)="applyOverviewFilters()">
-          <label>
-            نام
-            <input
-              [(ngModel)]="overviewFilters.firstName"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="presenceFirstName"
-            />
-          </label>
-          <label>
-            نام خانوادگی
-            <input
-              [(ngModel)]="overviewFilters.lastName"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="presenceLastName"
-            />
-          </label>
-          <label>
-            موبایل
-            <input
-              [(ngModel)]="overviewFilters.phoneNumber"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="presencePhone"
-            />
-          </label>
-          <label>
-            نقش
-            <input
-              [(ngModel)]="overviewFilters.roleName"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="presenceRole"
-            />
-          </label>
-          <label>
-            وضعیت آنلاین
-            <select
-              [(ngModel)]="overviewOnlineFilter"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="presenceOnline"
-            >
-              <option value="all">همه</option>
-              <option value="online">فقط آنلاین</option>
-              <option value="offline">فقط آفلاین</option>
-            </select>
-          </label>
-          <button class="primary-filter" type="submit">اعمال فیلتر</button>
-        </form>
-
-        <app-base-table
-          [columns]="overviewColumns"
-          [data]="overviewItems"
-          [showAdd]="false"
-          [showEdit]="false"
-          [showDelete]="false"
-          [loading]="overviewLoading"
-          [currentPage]="overviewFilters.pageNumber"
-          [pageSize]="overviewFilters.pageSize"
-          [totalCount]="overviewTotalCount"
-          [totalPages]="overviewTotalPages"
-          emptyText="کاربری برای این روز یافت نشد"
-          (pageChange)="changeOverviewPage($event)"
-        ></app-base-table>
-      }
-
-      @if (activeTab === "events") {
-        <form class="filter-grid events-filter" (ngSubmit)="applyEventsFilters()">
-          <label>
-            جستجو (نام یا موبایل)
-            <input
-              [(ngModel)]="eventsFilters.search"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="presenceSearch"
-            />
-          </label>
-          <label>
-            نوع رویداد
-            <select
-              [(ngModel)]="eventsTypeFilter"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="presenceEventType"
-            >
-              <option value="">همه رویدادها</option>
-              <option value="1">ورود به سیستم</option>
-              <option value="2">خروج از سیستم</option>
-              <option value="3">آنلاین شدن</option>
-              <option value="4">آفلاین شدن</option>
-              <option value="5">ثبت حضور</option>
-              <option value="6">ثبت عدم حضور</option>
-            </select>
-          </label>
-          <button class="primary-filter" type="submit">اعمال فیلتر</button>
-        </form>
-
+      <section class="events-block">
+        <header class="events-heading">
+          <h3>رویدادهای حضور و آنلاین در این روز</h3>
+        </header>
         <app-base-table
           [columns]="eventColumns"
           [data]="eventItems"
@@ -187,7 +91,7 @@ type PresenceTab = "overview" | "events";
           emptyText="رویدادی برای این روز ثبت نشده است"
           (pageChange)="changeEventsPage($event)"
         ></app-base-table>
-      }
+      </section>
 
       @if (feedback) {
         <p class="feedback error">{{ feedback }}</p>
@@ -198,124 +102,87 @@ type PresenceTab = "overview" | "events";
     `
       .presence-panel {
         display: grid;
-        gap: 16px;
-        padding: 18px;
+        gap: 14px;
+        padding: 16px;
         border: 1px solid var(--line);
-        border-radius: 30px;
+        border-radius: 24px;
         background: var(--surface);
         box-shadow: var(--shadow);
       }
-      .panel-heading {
+      .panel-heading,
+      .events-heading {
         display: flex;
         justify-content: space-between;
         gap: 12px;
+        align-items: start;
       }
       .panel-heading span {
         display: inline-flex;
-        margin-bottom: 8px;
-        padding: 5px 12px;
+        margin-bottom: 6px;
+        padding: 4px 10px;
         border-radius: 999px;
         background: color-mix(in srgb, var(--brand) 14%, transparent);
         color: var(--brand);
         font-weight: 950;
+        font-size: 0.82rem;
       }
-      .panel-heading h2 {
+      .panel-heading h2,
+      .events-heading h3 {
         margin: 0;
-        font-size: 1.35rem;
+        font-size: 1.15rem;
       }
       .panel-heading p {
-        margin: 8px 0 0;
+        margin: 6px 0 0;
         color: var(--muted);
         font-weight: 800;
+        font-size: 0.9rem;
       }
       .date-filter {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: 12px;
+        gap: 10px;
         align-items: end;
-        padding: 14px;
-        border: 1px dashed var(--line);
-        border-radius: 22px;
-        background: color-mix(in srgb, var(--brand) 5%, var(--surface));
       }
-      .tab-bar {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .tab-bar button {
-        min-height: 42px;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 8px 16px;
-        background: var(--surface-muted);
-        color: var(--text);
-        font: inherit;
-        font-weight: 900;
-      }
-      .tab-bar button.active {
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--brand), var(--brand-2));
-        color: #1b1712;
-      }
-      .filter-grid {
+      .events-block {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-        align-items: end;
-      }
-      .events-filter {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+        gap: 10px;
+        padding-top: 8px;
+        border-top: 1px dashed var(--line);
       }
       label {
         display: grid;
-        gap: 8px;
+        gap: 6px;
         color: var(--muted);
         font-weight: 950;
+        font-size: 0.9rem;
       }
-      input,
-      select {
-        min-height: 48px;
-        border: 1px solid var(--line);
+      .primary-filter,
+      .secondary-action {
+        min-height: 44px;
         border-radius: 16px;
-        padding: 10px 12px;
-        background: var(--surface);
-        color: var(--text);
         font: inherit;
+        font-weight: 950;
       }
       .primary-filter {
-        min-height: 50px;
         border: 0;
-        border-radius: 18px;
+        padding: 0 18px;
         background: linear-gradient(135deg, var(--brand), var(--brand-2));
         color: #1b1712;
-        font: inherit;
-        font-weight: 950;
       }
       .secondary-action {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-height: 48px;
         border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 12px 16px;
+        padding: 0 14px;
         background: var(--surface-muted);
         color: var(--text);
-        font: inherit;
-        font-weight: 950;
       }
       .compact {
-        min-height: 40px;
-        border-radius: 999px;
-        padding: 9px 13px;
+        min-height: 38px;
         font-size: 0.86rem;
       }
       .feedback {
         margin: 0;
         padding: 10px 12px;
-        border-radius: 18px;
+        border-radius: 14px;
         font-weight: 900;
       }
       .feedback.error {
@@ -324,12 +191,9 @@ type PresenceTab = "overview" | "events";
       }
       @media (max-width: 760px) {
         .presence-panel {
-          padding: 14px;
-          border-radius: 24px;
+          padding: 12px;
         }
-        .date-filter,
-        .filter-grid,
-        .events-filter {
+        .date-filter {
           grid-template-columns: 1fr;
         }
       }
@@ -338,7 +202,6 @@ type PresenceTab = "overview" | "events";
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminPresenceDashboardComponent implements OnInit {
-  activeTab: PresenceTab = "overview";
   selectedDate = new Date();
   selectedDatePersian = "";
   feedback = "";
@@ -347,15 +210,12 @@ export class AdminPresenceDashboardComponent implements OnInit {
   overviewLoading = false;
   overviewTotalCount = 0;
   overviewTotalPages = 1;
-  overviewOnlineFilter: "all" | "online" | "offline" = "all";
+  overviewFilters: UserPresenceFilters = this.createFilters();
 
   eventItems: UserPresenceEventItem[] = [];
   eventsLoading = false;
   eventsTotalCount = 0;
   eventsTotalPages = 1;
-  eventsTypeFilter = "";
-
-  overviewFilters: UserPresenceFilters = this.createFilters();
   eventsFilters: UserPresenceFilters = this.createFilters();
 
   readonly datePickerLabel = { fa: "تاریخ شمسی", en: "Persian date" };
@@ -368,27 +228,26 @@ export class AdminPresenceDashboardComponent implements OnInit {
   readonly overviewColumns: TableColumn<UserPresenceOverviewItem>[] = [
     {
       key: "firstName",
-      label: "نام کامل",
+      label: "مشاور",
       value: (row) => this.fullName(row),
     },
     {
-      key: "phoneNumber",
-      label: "موبایل",
-      value: (row) => row.phoneNumber || row.PhoneNumber || "-",
-    },
-    {
-      key: "roleName",
-      label: "نقش",
-      value: (row) => this.roleLabel(row.roleName || row.RoleName || ""),
-      badge: () => "info",
-    },
-    {
       key: "isCurrentlyOnline",
-      label: "وضعیت فعلی",
+      label: "آنلاین",
       value: (row) =>
-        row.isCurrentlyOnline || row.IsCurrentlyOnline ? "آنلاین" : "آفلاین",
+        row.isCurrentlyOnline || row.IsCurrentlyOnline ? "بله" : "خیر",
       badge: (row) =>
         row.isCurrentlyOnline || row.IsCurrentlyOnline ? "success" : "danger",
+    },
+    {
+      key: "consultantIsAvailable",
+      label: "حضور",
+      value: (row) =>
+        row.consultantIsAvailable || row.ConsultantIsAvailable ? "حاضر" : "غایب",
+      badge: (row) =>
+        row.consultantIsAvailable || row.ConsultantIsAvailable
+          ? "success"
+          : "danger",
     },
     {
       key: "lastSeenAtPersian",
@@ -397,32 +256,8 @@ export class AdminPresenceDashboardComponent implements OnInit {
         row.lastSeenAtPersian || row.LastSeenAtPersian || "ثبت نشده",
     },
     {
-      key: "firstLoginAtPersian",
-      label: "اولین ورود روز",
-      value: (row) =>
-        row.firstLoginAtPersian || row.FirstLoginAtPersian || "-",
-    },
-    {
-      key: "lastLogoutAtPersian",
-      label: "آخرین خروج روز",
-      value: (row) =>
-        row.lastLogoutAtPersian || row.LastLogoutAtPersian || "-",
-    },
-    {
-      key: "firstOnlineAtPersian",
-      label: "اولین آنلاین",
-      value: (row) =>
-        row.firstOnlineAtPersian || row.FirstOnlineAtPersian || "-",
-    },
-    {
-      key: "lastOfflineAtPersian",
-      label: "آخرین آفلاین",
-      value: (row) =>
-        row.lastOfflineAtPersian || row.LastOfflineAtPersian || "-",
-    },
-    {
       key: "firstCheckInAtPersian",
-      label: "ثبت حضور",
+      label: "ثبت حضور روز",
       value: (row) =>
         row.firstCheckInAtPersian || row.FirstCheckInAtPersian || "-",
     },
@@ -433,45 +268,35 @@ export class AdminPresenceDashboardComponent implements OnInit {
         row.lastCheckOutAtPersian || row.LastCheckOutAtPersian || "-",
     },
     {
-      key: "eventCountForDay",
-      label: "تعداد رویداد",
-      value: (row) => String(row.eventCountForDay ?? row.EventCountForDay ?? 0),
-      badge: () => "warn",
+      key: "firstOnlineAtPersian",
+      label: "آنلاین شدن",
+      value: (row) =>
+        row.firstOnlineAtPersian || row.FirstOnlineAtPersian || "-",
+    },
+    {
+      key: "lastOfflineAtPersian",
+      label: "آفلاین شدن",
+      value: (row) =>
+        row.lastOfflineAtPersian || row.LastOfflineAtPersian || "-",
     },
   ];
 
   readonly eventColumns: TableColumn<UserPresenceEventItem>[] = [
     {
       key: "occurredAtPersian",
-      label: "زمان (شمسی)",
+      label: "زمان",
       value: (row) => row.occurredAtPersian || row.OccurredAtPersian || "-",
     },
     {
       key: "firstName",
-      label: "نام کامل",
+      label: "مشاور",
       value: (row) => this.fullName(row),
-    },
-    {
-      key: "phoneNumber",
-      label: "موبایل",
-      value: (row) => row.phoneNumber || row.PhoneNumber || "-",
-    },
-    {
-      key: "roleName",
-      label: "نقش",
-      value: (row) => this.roleLabel(row.roleName || row.RoleName || ""),
-      badge: () => "info",
     },
     {
       key: "eventTypeLabel",
       label: "رویداد",
       value: (row) => row.eventTypeLabel || row.EventTypeLabel || "-",
       badge: (row) => this.eventBadge(row.eventType ?? row.EventType ?? 0),
-    },
-    {
-      key: "description",
-      label: "توضیح",
-      value: (row) => row.description || row.Description || "-",
     },
   ];
 
@@ -484,8 +309,7 @@ export class AdminPresenceDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.syncSelectedDatePersian();
-    this.loadOverview();
-    this.loadEvents();
+    this.loadAll();
   }
 
   onDateChange(date: Date): void {
@@ -493,54 +317,15 @@ export class AdminPresenceDashboardComponent implements OnInit {
     this.markDirty();
   }
 
-  applyDateFilter(): void {
-    this.overviewFilters = {
-      ...this.createFilters(),
-      firstName: this.overviewFilters.firstName,
-      lastName: this.overviewFilters.lastName,
-      phoneNumber: this.overviewFilters.phoneNumber,
-      roleName: this.overviewFilters.roleName,
-      isCurrentlyOnline: this.resolveOnlineFilter(),
-    };
-    this.eventsFilters = {
-      ...this.createFilters(),
-      search: this.eventsFilters.search,
-      eventType: this.resolveEventTypeFilter(),
-    };
+  applyDate(): void {
+    this.overviewFilters = this.createFilters();
+    this.eventsFilters = this.createFilters();
     this.syncSelectedDatePersian();
-    this.reloadActiveTab();
+    this.loadAll();
   }
 
-  setTab(tab: PresenceTab): void {
-    this.activeTab = tab;
-    this.markDirty();
-  }
-
-  reloadActiveTab(): void {
-    if (this.activeTab === "overview") {
-      this.loadOverview();
-      return;
-    }
-    this.loadEvents();
-  }
-
-  applyOverviewFilters(): void {
-    this.overviewFilters = {
-      ...this.overviewFilters,
-      pageNumber: 1,
-      date: this.toDateString(this.selectedDate),
-      isCurrentlyOnline: this.resolveOnlineFilter(),
-    };
+  loadAll(): void {
     this.loadOverview();
-  }
-
-  applyEventsFilters(): void {
-    this.eventsFilters = {
-      ...this.eventsFilters,
-      pageNumber: 1,
-      date: this.toDateString(this.selectedDate),
-      eventType: this.resolveEventTypeFilter(),
-    };
     this.loadEvents();
   }
 
@@ -564,7 +349,6 @@ export class AdminPresenceDashboardComponent implements OnInit {
       .getUserPresenceOverview({
         ...this.overviewFilters,
         date: this.toDateString(this.selectedDate),
-        isCurrentlyOnline: this.resolveOnlineFilter(),
       })
       .pipe(
         finalize(() => {
@@ -585,18 +369,13 @@ export class AdminPresenceDashboardComponent implements OnInit {
             response.totalPages ||
               Math.ceil(this.overviewTotalCount / this.overviewFilters.pageSize),
           );
-          const firstItem = this.overviewItems[0];
-          if (firstItem?.selectedDatePersian || firstItem?.SelectedDatePersian) {
-            this.selectedDatePersian =
-              firstItem.selectedDatePersian || firstItem.SelectedDatePersian || "";
-          }
           this.markDirty();
         },
         error: (error) => {
           if (requestId === this.overviewRequestId) {
             this.feedback = this.errorMessage(
               error,
-              "دریافت وضعیت حضور کاربران انجام نشد",
+              "دریافت وضعیت مشاوران انجام نشد",
             );
             this.markDirty();
           }
@@ -607,14 +386,12 @@ export class AdminPresenceDashboardComponent implements OnInit {
   private loadEvents(): void {
     const requestId = ++this.eventsRequestId;
     this.eventsLoading = true;
-    this.feedback = "";
     this.markDirty();
 
     this.adminApi
       .getUserPresenceEvents({
         ...this.eventsFilters,
         date: this.toDateString(this.selectedDate),
-        eventType: this.resolveEventTypeFilter(),
       })
       .pipe(
         finalize(() => {
@@ -640,7 +417,7 @@ export class AdminPresenceDashboardComponent implements OnInit {
           if (requestId === this.eventsRequestId) {
             this.feedback = this.errorMessage(
               error,
-              "دریافت رویدادهای حضور انجام نشد",
+              "دریافت رویدادهای مشاوران انجام نشد",
             );
             this.markDirty();
           }
@@ -664,18 +441,6 @@ export class AdminPresenceDashboardComponent implements OnInit {
     });
   }
 
-  private resolveOnlineFilter(): boolean | null {
-    if (this.overviewOnlineFilter === "online") return true;
-    if (this.overviewOnlineFilter === "offline") return false;
-    return null;
-  }
-
-  private resolveEventTypeFilter(): number | null {
-    if (!this.eventsTypeFilter) return null;
-    const value = Number(this.eventsTypeFilter);
-    return Number.isFinite(value) ? value : null;
-  }
-
   private toDateString(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -684,24 +449,15 @@ export class AdminPresenceDashboardComponent implements OnInit {
   }
 
   private fullName(
-    row: Pick<UserPresenceOverviewItem, "firstName" | "lastName" | "FirstName" | "LastName">,
+    row: Pick<
+      UserPresenceOverviewItem,
+      "firstName" | "lastName" | "FirstName" | "LastName"
+    >,
   ): string {
     return [row.firstName || row.FirstName, row.lastName || row.LastName]
       .filter(Boolean)
       .join(" ")
       .trim();
-  }
-
-  private roleLabel(role: string): string {
-    const labels: Record<string, string> = {
-      Admin: "مدیر",
-      Consultant: "مشاور",
-      Secretary: "منشی",
-      Patient: "بیمار",
-      NormalUser: "کاربر",
-      User: "کاربر",
-    };
-    return (labels[role] ?? role) || "-";
   }
 
   private eventBadge(eventType: number): string {

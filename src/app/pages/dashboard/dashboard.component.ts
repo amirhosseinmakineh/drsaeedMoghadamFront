@@ -168,10 +168,12 @@ interface ScoreFormModel {
       <main class="dashboard-content">
         @if (isAdmin()) {
           <section class="admin-shell">
-            <header class="dashboard-hero admin-hero">
-              <span>داشبورد ادمین</span>
-              <h2>مدیریت کلینیک، {{ displayName() }}</h2>
-            </header>
+            @if (activeSection === "overview") {
+              <header class="dashboard-hero admin-hero">
+                <span>داشبورد ادمین</span>
+                <h2>مدیریت کلینیک، {{ displayName() }}</h2>
+              </header>
+            }
 
             @if (feedbackMessage) {
               <p
@@ -207,7 +209,7 @@ interface ScoreFormModel {
                 </button>
                 <button type="button" (click)="setSection('presence')">
                   <span><app-fa-icon name="clock"></app-fa-icon></span>
-                  <strong>حضور و آنلاین کاربران</strong>
+                  <strong>وضعیت مشاوران</strong>
                 </button>
               </section>
             }
@@ -320,11 +322,11 @@ interface ScoreFormModel {
             }
 
             @if (activeSection === "consultants") {
-              <section class="admin-panel">
+              <section class="admin-panel consultants-panel">
                 <header class="panel-heading consultants-heading">
                   <div>
                     <span>مشاوران</span>
-                    <h2>مدیریت مشاوران</h2>
+                    <h2>مدیریت مشاوران و لیدها</h2>
                   </div>
                 </header>
 
@@ -342,8 +344,6 @@ interface ScoreFormModel {
                         : "دانلود گزارش کامل مشاوران"
                     }}</span>
                   </button>
-                  <p>
-                  </p>
                 </div>
 
                 <form class="filter-grid" (ngSubmit)="applyConsultantFilters()">
@@ -371,6 +371,47 @@ interface ScoreFormModel {
                   </button>
                 </form>
 
+                @if (
+                  selectedAttendanceConsultant ||
+                  selectedLeadsConsultant ||
+                  selectedReservationsConsultant
+                ) {
+                  <div id="consultant-detail-panel" class="consultant-detail-panel">
+                    @if (selectedAttendanceConsultant) {
+                      <app-admin-attendance-table
+                        [consultantProfileId]="
+                          selectedAttendanceConsultant.profileId
+                        "
+                        [title]="
+                          'حضور و غیاب ' +
+                          fullName(selectedAttendanceConsultant)
+                        "
+                      ></app-admin-attendance-table>
+                    }
+
+                    @if (selectedLeadsConsultant) {
+                      <app-admin-leads-table
+                        mode="consultant"
+                        [profileId]="selectedLeadsConsultant.profileId"
+                        [title]="
+                          'لیدهای ' + fullName(selectedLeadsConsultant)
+                        "
+                      ></app-admin-leads-table>
+                    }
+
+                    @if (selectedReservationsConsultant) {
+                      <app-admin-reservations-table
+                        mode="consultant"
+                        [profileId]="selectedReservationsConsultant.profileId"
+                        [title]="
+                          'رزروهای ' +
+                          fullName(selectedReservationsConsultant)
+                        "
+                      ></app-admin-reservations-table>
+                    }
+                  </div>
+                }
+
                 <app-base-table
                   title="لیست مشاوران"
                   [columns]="consultantColumns"
@@ -388,32 +429,12 @@ interface ScoreFormModel {
                   (actionClick)="handleConsultantAction($event)"
                   (pageChange)="changeConsultantsPage($event)"
                 ></app-base-table>
-              </section>
 
-              @if (selectedAttendanceConsultant) {
-                <app-admin-attendance-table
-                  [consultantProfileId]="selectedAttendanceConsultant.profileId"
-                  [title]="
-                    'حضور و غیاب ' + fullName(selectedAttendanceConsultant)
-                  "
-                ></app-admin-attendance-table>
-              }
-
-              @if (selectedLeadsConsultant) {
                 <app-admin-leads-table
-                  mode="consultant"
-                  [profileId]="selectedLeadsConsultant.profileId"
-                  [title]="'لیدهای ' + fullName(selectedLeadsConsultant)"
+                  mode="system"
+                  title="گزارش لیدهای تخصیص‌یافته به مشاوران"
                 ></app-admin-leads-table>
-              }
-
-              @if (selectedReservationsConsultant) {
-                <app-admin-reservations-table
-                  mode="consultant"
-                  [profileId]="selectedReservationsConsultant.profileId"
-                  [title]="'رزروهای ' + fullName(selectedReservationsConsultant)"
-                ></app-admin-reservations-table>
-              }
+              </section>
             }
 
             @if (activeSection === "leads") {
@@ -691,7 +712,7 @@ interface ScoreFormModel {
         display: grid;
         align-content: start;
         gap: 18px;
-        min-height: calc(100vh - 72px);
+        align-self: start;
         padding: 20px;
         border-radius: 34px;
       }
@@ -830,7 +851,15 @@ interface ScoreFormModel {
       }
       .admin-shell {
         display: grid;
-        gap: 18px;
+        gap: 14px;
+        align-content: start;
+      }
+      .consultants-panel {
+        gap: 14px;
+      }
+      .consultant-detail-panel {
+        display: grid;
+        gap: 14px;
       }
       .admin-hero h2 {
         font-size: clamp(1.65rem, 4vw, 2.45rem);
@@ -1207,7 +1236,7 @@ export class DashboardComponent implements OnInit {
     { id: "leads", label: "لیدها", icon: "clipboard" },
     { id: "leadReports", label: "گزارش تماس", icon: "clipboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
-    { id: "presence", label: "حضور و آنلاین", icon: "clock" },
+    { id: "presence", label: "وضعیت مشاوران", icon: "clock" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
@@ -1315,10 +1344,29 @@ export class DashboardComponent implements OnInit {
       value: (row) => row.phoneNumber || row.PhoneNumber || "-",
     },
     {
-      key: "profileId",
-      label: "شناسه پروفایل",
-      value: (row) => row.profileId ?? row.ProfileId ?? "-",
-      badge: () => "info",
+      key: "consultantIsOnline",
+      label: "آنلاین",
+      value: (row) =>
+        row.consultantIsOnline || row.ConsultantIsOnline ? "بله" : "خیر",
+      badge: (row) =>
+        row.consultantIsOnline || row.ConsultantIsOnline ? "success" : "danger",
+    },
+    {
+      key: "consultantIsAvailable",
+      label: "حضور",
+      value: (row) =>
+        row.consultantIsAvailable || row.ConsultantIsAvailable
+          ? "حاضر"
+          : "غایب",
+      badge: (row) =>
+        row.consultantIsAvailable || row.ConsultantIsAvailable
+          ? "success"
+          : "danger",
+    },
+    {
+      key: "lastSeenAt",
+      label: "آخرین بازدید",
+      value: (row) => this.formatDateTime(row.lastSeenAt ?? row.LastSeenAt),
     },
   ];
 
@@ -1676,7 +1724,7 @@ export class DashboardComponent implements OnInit {
     const profileId = event.row.profileId ?? event.row.ProfileId ?? 0;
     if (!profileId) {
       this.showFeedback(
-        "پروفایل مشاور هنوز ایجاد نشده است. ابتدا مشاور باید وارد داشبورد شود و پروفایل خود را تکمیل کند.",
+        "شناسه پروفایل مشاور یافت نشد. لطفاً صفحه را بروزرسانی کنید.",
         "error",
       );
       return;
@@ -1695,6 +1743,7 @@ export class DashboardComponent implements OnInit {
       this.selectedLeadsConsultant = null;
       this.selectedReservationsConsultant = null;
       this.markDirty();
+      this.scrollToConsultantDetail();
       return;
     }
 
@@ -1703,6 +1752,7 @@ export class DashboardComponent implements OnInit {
       this.selectedAttendanceConsultant = null;
       this.selectedReservationsConsultant = null;
       this.markDirty();
+      this.scrollToConsultantDetail();
       return;
     }
 
@@ -1711,7 +1761,16 @@ export class DashboardComponent implements OnInit {
       this.selectedAttendanceConsultant = null;
       this.selectedLeadsConsultant = null;
       this.markDirty();
+      this.scrollToConsultantDetail();
     }
+  }
+
+  private scrollToConsultantDetail(): void {
+    queueMicrotask(() => {
+      document
+        .getElementById("consultant-detail-panel")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   private formatDateTime(value?: string | null): string {
