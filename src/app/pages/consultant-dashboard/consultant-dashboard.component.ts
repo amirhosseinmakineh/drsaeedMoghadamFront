@@ -30,27 +30,18 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ConsultantReservationsPanelComponent } from "./consultant-reservations-panel.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
-
-const LEAD_STATE = {
-  New: 1,
-  Assigned: 2,
-  Contacted: 3,
-  Pending: 4,
-  Converted: 5,
-  Expired: 6,
-  Rejected: 7,
-} as const;
-
-const LEAD_TYPE = {
-  RealTime: 1,
-  OfflineQueue: 2,
-  ConsultantPatient: 3,
-} as const;
+import {
+  LeadAssignmentState as LEAD_STATE,
+  LeadAssignmentType as LEAD_TYPE,
+  isConsultantWorkingHours,
+  leadAssignmentStateLabel,
+  leadAssignmentTypeLabel,
+  resolveLeadAssignmentState,
+  resolveLeadAssignmentType,
+} from "../../core/lead/lead-enums";
 
 const REALTIME_CALL_WINDOW_MS = 3 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 3;
-const CONSULTANT_WORK_START_HOUR = 9;
-const CONSULTANT_WORK_END_HOUR = 21;
 
 const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
   1: "تماس برقرار شد",
@@ -575,7 +566,7 @@ interface ConsultantDashboardLink {
                       name="consultantLeadType"
                     >
                       <option [ngValue]="null">همه</option>
-                      <option [ngValue]="1">لحظه‌ای</option>
+                      <option [ngValue]="1">آنی</option>
                       <option [ngValue]="2">صف آفلاین</option>
                     </select>
                   </label>
@@ -2406,6 +2397,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (pushType === "test_push") {
+      void this.showLeadNotification(
+        detail.title || "تست نوتیفیکیشن",
+        detail.body ||
+          "اگر این پیام را می‌بینید، Web Push روی دستگاه شما فعال است.",
+      );
+      return;
+    }
+
     if (detail.body) this.showFeedback(detail.body, "success");
   };
 
@@ -2824,11 +2824,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }),
         );
         await this.syncPushRegistrationState();
-        this.showFeedback(
+        const message =
           response.message ||
-            "نوتیفیکیشن تست ارسال شد. برای دیدن روی گوشی، PWA را ببندید.",
-          "success",
-        );
+          "نوتیفیکیشن تست ارسال شد. اگر پیام سیستمی ندیدید، اجازه Notification را بررسی کنید.";
+        void this.showLeadNotification("تست نوتیفیکیشن", message);
+        this.showFeedback(message, "success");
       })
       .catch((error) => {
         this.showFeedback(
@@ -3055,7 +3055,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     void this.pushNotifications.syncForCurrentProfile(this.currentProfileId());
 
     this.showLeadNotification(
-      detail.title || "لید لحظه‌ای جدید",
+      detail.title || "لید آنی جدید",
       detail.body ||
         `لید جدید دریافت شد؛ مهلت تماس ${REALTIME_CALL_WINDOW_MINUTES} دقیقه است.`,
     );
@@ -4027,7 +4027,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   leadState(lead: ConsultantLead): number | null {
-    return this.numberOrNull(
+    return resolveLeadAssignmentState(
       lead.leadAssignmentState ??
         lead.LeadAssignmentState ??
         lead.state ??
@@ -4039,7 +4039,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   leadType(lead: ConsultantLead): number | null {
-    return this.numberOrNull(
+    return resolveLeadAssignmentType(
       lead.leadAssignmentType ??
         lead.LeadAssignmentType ??
         lead.assignmentType ??
@@ -4051,24 +4051,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   stateLabel(value: number | null): string {
-    const labels: Record<number, string> = {
-      1: "جدید",
-      2: "تخصیص داده شده",
-      3: "تماس برقرار شد",
-      4: "در انتظار تعیین تکلیف",
-      5: "تبدیل شده",
-      6: "منقضی شده",
-      7: "رد شده",
-    };
-
-    return value === null ? "نامشخص" : (labels[value] ?? "نامشخص");
+    return leadAssignmentStateLabel(value);
   }
 
   leadTypeLabel(value: number | null): string {
-    if (value === LEAD_TYPE.OfflineQueue) return "صف آفلاین";
-    if (value === LEAD_TYPE.RealTime) return "لحظه‌ای";
-    if (value === LEAD_TYPE.ConsultantPatient) return "بیمار من";
-    return "نامشخص";
+    return leadAssignmentTypeLabel(value);
   }
 
   leadDisplayStatus(lead: ConsultantLead): string {
@@ -4738,7 +4725,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private showNewLeadNotification(lead: ConsultantLead): void {
     const isRealtime = this.leadType(lead) === LEAD_TYPE.RealTime;
-    const title = isRealtime ? "لید لحظه‌ای جدید" : "لید جدید برای شما";
+    const title = isRealtime ? "لید آنی جدید" : "لید جدید برای شما";
     const timing =
       isRealtime && this.isRealtimeTimedLead(lead)
         ? `؛ مهلت تماس ${REALTIME_CALL_WINDOW_MINUTES} دقیقه است.`
@@ -4750,43 +4737,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private showLeadNotification(title: string, body: string): void {
-    void this.displayLeadNotification(title, body);
+    void this.notifications.showLocalNotification(title, body, {
+      tag: "consultant-lead-alert",
+      requireInteraction: title.includes("لید") || title.includes("تست"),
+    });
     this.toast.info(body);
     this.playLeadAlertSound();
-  }
-
-  private async displayLeadNotification(
-    title: string,
-    body: string,
-  ): Promise<void> {
-    if (!("Notification" in window) || Notification.permission !== "granted") {
-      this.showFeedback(body, "success");
-      return;
-    }
-
-    const options = {
-      body,
-      icon: "/icons/icon-192x192.png",
-      badge: "/icons/icon-96x96.png",
-      tag: "consultant-lead-alert",
-      renotify: true,
-    };
-
-    try {
-      const registration = await navigator.serviceWorker?.ready;
-      if (registration?.showNotification) {
-        await registration.showNotification(title, options);
-        return;
-      }
-    } catch {
-      // Fall back to the Notification constructor below.
-    }
-
-    try {
-      new Notification(title, { body, icon: options.icon, tag: options.tag });
-    } catch {
-      this.showFeedback(body, "success");
-    }
   }
 
   private playLeadAlertSound(): void {
@@ -4821,10 +4777,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private async ensureLeadNotificationPermission(): Promise<void> {
-    const permission = await this.notifications.requestBasicNotificationPermission();
-    if (permission === "granted") {
-      void this.pushNotifications.syncForCurrentProfile(this.currentProfileId());
+    await this.notifications.requestBasicNotificationPermission();
+
+    const profileId = this.currentProfileId();
+    if (profileId && !this.notifications.getEnvironmentIssue()) {
+      if (!this.pushRegistrationReady) {
+        await this.pushNotifications.enablePushForCurrentProfile(profileId);
+      } else {
+        await this.pushNotifications.syncForCurrentProfile(profileId);
+      }
     }
+
     await this.syncPushRegistrationState();
     this.configurePollTimer();
     this.markViewDirty();
@@ -4929,10 +4892,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private isConsultantWorkingHours(date: Date = new Date()): boolean {
-    const hour = date.getHours();
-    return (
-      hour >= CONSULTANT_WORK_START_HOUR && hour < CONSULTANT_WORK_END_HOUR
-    );
+    return isConsultantWorkingHours(date);
   }
 
   private openReportForDueRealtimeLeads(): void {
