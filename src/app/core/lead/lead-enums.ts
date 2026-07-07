@@ -74,6 +74,50 @@ export function isConsultantWorkingHours(date: Date = new Date()): boolean {
   return hour >= CONSULTANT_WORK_START_HOUR && hour < CONSULTANT_WORK_END_HOUR;
 }
 
+export function isOfflineLeadExpiredState(
+  type: number | null,
+  state: number | null,
+): boolean {
+  return type === LeadAssignmentType.OfflineQueue && state === LeadAssignmentState.Expired;
+}
+
+export function isActionableOfflineLead(
+  type: number | null,
+  state: number | null,
+): boolean {
+  if (type !== LeadAssignmentType.OfflineQueue) return false;
+  if (state === null) return true;
+  return (
+    state !== LeadAssignmentState.Converted &&
+    state !== LeadAssignmentState.Rejected &&
+    state !== LeadAssignmentState.Expired
+  );
+}
+
+export const ADMIN_LEAD_STATE_FILTER_OPTIONS: ReadonlyArray<{
+  value: number | null;
+  label: string;
+}> = [
+  { value: null, label: "همه وضعیت‌ها" },
+  { value: LeadAssignmentState.New, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.New] },
+  { value: LeadAssignmentState.Assigned, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.Assigned] },
+  { value: LeadAssignmentState.Contacted, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.Contacted] },
+  { value: LeadAssignmentState.Pending, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.Pending] },
+  { value: LeadAssignmentState.Converted, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.Converted] },
+  { value: LeadAssignmentState.Expired, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.Expired] },
+  { value: LeadAssignmentState.Rejected, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.Rejected] },
+];
+
+export const ADMIN_LEAD_TYPE_FILTER_OPTIONS: ReadonlyArray<{
+  value: number | null;
+  label: string;
+}> = [
+  { value: null, label: "همه نوع‌ها" },
+  { value: LeadAssignmentType.RealTime, label: LEAD_ASSIGNMENT_TYPE_LABELS[LeadAssignmentType.RealTime] },
+  { value: LeadAssignmentType.OfflineQueue, label: LEAD_ASSIGNMENT_TYPE_LABELS[LeadAssignmentType.OfflineQueue] },
+  { value: LeadAssignmentType.ConsultantPatient, label: LEAD_ASSIGNMENT_TYPE_LABELS[LeadAssignmentType.ConsultantPatient] },
+];
+
 function resolveEnumValue(
   value: unknown,
   byName: Record<string, number>,

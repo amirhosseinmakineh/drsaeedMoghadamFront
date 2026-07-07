@@ -34,6 +34,7 @@ import {
   LeadAssignmentState as LEAD_STATE,
   LeadAssignmentType as LEAD_TYPE,
   isConsultantWorkingHours,
+  isOfflineLeadExpiredState,
   leadAssignmentStateLabel,
   leadAssignmentTypeLabel,
   resolveLeadAssignmentState,
@@ -554,7 +555,8 @@ interface ConsultantDashboardLink {
                     >
                       <option [ngValue]="null">همه</option>
                       <option [ngValue]="1">جدید</option>
-                      <option [ngValue]="4">در انتظار تعیین تکلیف</option>
+                      <option [ngValue]="2">تخصیص‌یافته</option>
+                      <option [ngValue]="4">در انتظار</option>
                       <option [ngValue]="7">رد شده</option>
                     </select>
                   </label>
@@ -4114,6 +4116,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isLeadExpired(lead: ConsultantLead): boolean {
+    if (this.leadType(lead) === LEAD_TYPE.OfflineQueue) return false;
     if (this.leadState(lead) === LEAD_STATE.Expired) return true;
     if (this.hasCallBeenInitiated(lead)) return false;
     return this.isRealtimeTimedLead(lead) && this.leadRemainingMs(lead) <= 0;
@@ -4355,21 +4358,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.pendingOfflineLoadSubscription?.unsubscribe();
 
     this.pendingOfflineLoadSubscription = this.consultantApi
-      .getLeads({
-        profileId,
-        leadAssignmentState: LEAD_STATE.Pending,
-        leadAssignmentType: LEAD_TYPE.OfflineQueue,
-        pageNumber: 1,
-        pageSize: 50,
-      })
+      .getDashboardStatus(profileId)
       .pipe(finalize(() => this.markViewDirty()))
       .subscribe({
-        next: (response) => {
+        next: (status) => {
           if (requestId !== this.pendingOfflineRequestId) return;
-          this.applyConsultantStatusFrom(response.source, response.raw);
-          this.updatePendingOfflineCount(
-            response.totalCount ?? response.items.length,
-          );
+          this.pendingOfflineCount = Math.max(0, status.pendingOfflineLeadCount);
+          this.canGoOnlineFromStatus = status.canGoOnline;
+          this.onlineStatusBlockReason = status.onlineStatusBlockReason ?? null;
         },
         error: () => {
           if (requestId === this.pendingOfflineRequestId) return;
@@ -4411,9 +4407,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (requestId !== this.leadRequestId) return;
           this.applyConsultantStatusFrom(response.source, response.raw);
-          const items = (response.items ?? []).filter(
-            (lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient,
-          );
+          const items = (response.items ?? [])
+            .filter((lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient)
+            .filter(
+              (lead) =>
+                !isOfflineLeadExpiredState(
+                  this.leadType(lead),
+                  this.leadState(lead),
+                ),
+            );
           this.leads = items;
           this.syncReportedLeadIdsFromLeads(this.leads);
           this.syncReservedLeadIdsFromLeads(this.leads);
@@ -5148,9 +5150,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private updatePendingOfflineCount(count: number): void {
     this.pendingOfflineCount = Math.max(0, count);
-    if (this.pendingOfflineCount > 0) {
-      this.canGoOnlineFromStatus = false;
-    }
   }
 
   private selectedReservationDateTime(): Date | null {

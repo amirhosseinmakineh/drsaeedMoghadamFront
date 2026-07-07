@@ -30,6 +30,9 @@ import {
 } from "../../shared/base/table/table.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import {
+  ADMIN_LEAD_STATE_FILTER_OPTIONS,
+  ADMIN_LEAD_TYPE_FILTER_OPTIONS,
+  isOfflineLeadExpiredState,
   leadAssignmentStateLabel,
   leadAssignmentTypeLabel,
   resolveLeadAssignmentState,
@@ -86,14 +89,9 @@ type LeadTableMode = "system" | "consultant";
             [ngModelOptions]="ngModelBlurOptions"
             name="leadAssignmentState"
           >
-            <option [ngValue]="null">همه وضعیت‌ها</option>
-            <option [ngValue]="1">جدید</option>
-            <option [ngValue]="2">تخصیص داده شده</option>
-            <option [ngValue]="3">تماس گرفته شده</option>
-            <option [ngValue]="4">در انتظار پیگیری</option>
-            <option [ngValue]="5">تبدیل شده</option>
-            <option [ngValue]="6">منقضی شده</option>
-            <option [ngValue]="7">رد شده</option>
+            @for (option of stateFilterOptions; track option.label) {
+              <option [ngValue]="option.value">{{ option.label }}</option>
+            }
           </select>
         </label>
 
@@ -104,10 +102,9 @@ type LeadTableMode = "system" | "consultant";
             [ngModelOptions]="ngModelBlurOptions"
             name="leadAssignmentType"
           >
-            <option [ngValue]="null">همه نوع‌ها</option>
-            <option [ngValue]="1">آنی</option>
-            <option [ngValue]="2">صف آفلاین</option>
-            <option [ngValue]="3">بیمار مشاور</option>
+            @for (option of typeFilterOptions; track option.label) {
+              <option [ngValue]="option.value">{{ option.label }}</option>
+            }
           </select>
         </label>
 
@@ -285,6 +282,8 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   private hasRequestedLoad = false;
   private loadRequestId = 0;
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
+  readonly stateFilterOptions = ADMIN_LEAD_STATE_FILTER_OPTIONS;
+  readonly typeFilterOptions = ADMIN_LEAD_TYPE_FILTER_OPTIONS;
 
   readonly columns: TableColumn<LeadAssignmentItem>[] = [
     { key: "id", label: "شناسه", value: (row) => this.leadId(row) ?? "-" },
@@ -406,7 +405,17 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       .subscribe({
         next: (response) => {
           if (requestId !== this.loadRequestId) return;
-          this.items = response.items ?? [];
+          const rawItems = response.items ?? [];
+          this.items =
+            this.filters.leadAssignmentState === 6
+              ? rawItems
+              : rawItems.filter(
+                  (row) =>
+                    !isOfflineLeadExpiredState(
+                      this.leadType(row),
+                      this.leadState(row),
+                    ),
+                );
           this.totalCount = response.totalCount ?? this.items.length;
           this.totalPages = Math.max(
             1,
