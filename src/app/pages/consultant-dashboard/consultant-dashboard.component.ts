@@ -41,8 +41,8 @@ import {
   resolveLeadAssignmentType,
 } from "../../core/lead/lead-enums";
 
-const REALTIME_CALL_WINDOW_MS = 3 * 60 * 1000;
-const REALTIME_CALL_WINDOW_MINUTES = 3;
+const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
+const REALTIME_CALL_WINDOW_MINUTES = 20;
 
 const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
   1: "تماس برقرار شد",
@@ -616,7 +616,17 @@ interface ConsultantDashboardLink {
                             [class.danger]="leadRemainingMs(lead) <= 120000"
                           >
                             <span>مهلت تماس لحظه‌ای</span>
-                            <strong>{{ realtimeCountdown(lead) }}</strong>
+                            <strong
+                              class="timer-countdown"
+                              role="button"
+                              tabindex="0"
+                              (click)="handleTimerClick(lead)"
+                              (keydown.enter)="handleTimerClick(lead)"
+                              (keydown.space)="
+                                $event.preventDefault(); handleTimerClick(lead)
+                              "
+                              >{{ realtimeCountdown(lead) }}</strong
+                            >
                           </div>
                         }
 
@@ -1941,6 +1951,10 @@ interface ConsultantDashboardLink {
       .timer-row.danger {
         background: color-mix(in srgb, var(--danger) 12%, var(--surface));
         color: #991b1b;
+      }
+      .timer-countdown {
+        cursor: pointer;
+        user-select: none;
       }
       .lead-actions {
         display: grid;
@@ -3927,6 +3941,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  handleTimerClick(lead: ConsultantLead): void {
+    const leadAssignmentId = this.leadId(lead);
+    if (
+      !leadAssignmentId ||
+      this.leadType(lead) !== LEAD_TYPE.RealTime ||
+      this.stoppedTimerLeadIds.has(leadAssignmentId) ||
+      this.isLeadReportSubmitted(lead)
+    ) {
+      return;
+    }
+
+    this.stopRealtimeTimer(leadAssignmentId);
+    this.forceOfflineForReport();
+  }
+
   leadId(lead: ConsultantLead): number | null {
     const value =
       lead.id ?? lead.Id ?? lead.leadAssignmentId ?? lead.LeadAssignmentId;
@@ -4643,16 +4672,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
       activeLeadIds.add(leadAssignmentId);
       const key = String(leadAssignmentId);
-      const backendDeadline = this.parseLeadDeadline(lead);
-
-      if (backendDeadline && backendDeadline > now) {
-        const derivedStart = backendDeadline - REALTIME_CALL_WINDOW_MS;
-        if (this.timerStarts[key] !== derivedStart) {
-          this.timerStarts[key] = derivedStart;
-          changed = true;
-        }
-        return;
-      }
 
       if (
         !this.timerStarts[key] ||
@@ -5190,9 +5209,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private leadDeadlineMs(lead: ConsultantLead): number {
-    const backendDeadline = this.parseLeadDeadline(lead);
-    if (backendDeadline) return backendDeadline;
-
     const now = Date.now();
     const leadAssignmentId = this.leadId(lead);
     const startedAt = leadAssignmentId
