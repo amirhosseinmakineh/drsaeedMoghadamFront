@@ -869,17 +869,53 @@ export class ConsultantDashboardService {
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {
-    if (error instanceof Error && error.message) return error;
-    if (typeof error === "object" && error !== null && "error" in error) {
+    if (error instanceof Error && error.message) {
+      if (!error.message.startsWith("Http failure response")) {
+        return error;
+      }
+    }
+
+    if (typeof error === "object" && error !== null) {
       const httpError = error as {
-        error?: { message?: string } | string;
+        status?: number;
+        error?:
+          | {
+              message?: string;
+              title?: string;
+              errors?: Record<string, string[]>;
+            }
+          | string;
         message?: string;
       };
-      if (typeof httpError.error === "object" && httpError.error?.message)
-        return new Error(httpError.error.message);
-      if (typeof httpError.error === "string" && httpError.error)
+
+      if (typeof httpError.error === "object" && httpError.error) {
+        if (httpError.error.message) {
+          return new Error(httpError.error.message);
+        }
+
+        const validationMessages = httpError.error.errors
+          ? Object.values(httpError.error.errors).flat().filter(Boolean)
+          : [];
+        if (validationMessages.length) {
+          return new Error(validationMessages.join(" "));
+        }
+      }
+
+      if (typeof httpError.error === "string" && httpError.error.trim()) {
         return new Error(httpError.error);
-      if (httpError.message) return new Error(httpError.message);
+      }
+
+      if (httpError.status === 500) {
+        return new Error(`${fallback} (خطای سرور)`);
+      }
+
+      if (httpError.status === 400) {
+        return new Error("درخواست نامعتبر است. لطفاً دوباره تلاش کنید.");
+      }
+
+      if (httpError.message && !httpError.message.startsWith("Http failure response")) {
+        return new Error(httpError.message);
+      }
     }
 
     return new Error(fallback);
