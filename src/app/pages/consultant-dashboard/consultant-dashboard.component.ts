@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { Subscription, finalize, firstValueFrom, switchMap } from "rxjs";
+import { Subscription, finalize, firstValueFrom, forkJoin, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
   CompletePatientProfileRequest,
@@ -40,6 +40,14 @@ import {
   resolveLeadAssignmentState,
   resolveLeadAssignmentType,
 } from "../../core/lead/lead-enums";
+import {
+  expectedOfflineStateAfterReport,
+  isFollowUpOfflineLead,
+  isOfflineLeadBlockingOnline,
+  isUnreportedOfflineLeadState,
+  leadFollowUpDisplayLabel,
+  leadOfflineDisplayStatus,
+} from "../../core/lead/lead-offline-workflow";
 
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
@@ -294,6 +302,19 @@ interface ConsultantDashboardLink {
                     }}</strong>
                   </div>
                 </div>
+                @if (hasUnreportedOfflineLeads()) {
+                  <p class="offline-block-banner" role="alert">
+                    {{ pendingOfflineCount }} لید آفلاین بدون گزارش دارید. تا ثبت
+                    گزارش همه، امکان آنلاین شدن وجود ندارد.
+                    <button
+                      class="secondary-action compact"
+                      type="button"
+                      (click)="openUnreportedOfflineLeads()"
+                    >
+                      مشاهده لیدها
+                    </button>
+                  </p>
+                }
                 <div class="action-grid">
                   <button
                     class="primary-action"
@@ -438,6 +459,20 @@ interface ConsultantDashboardLink {
                   </div>
                 </div>
 
+                @if (hasUnreportedOfflineLeads()) {
+                  <p class="offline-block-banner" role="alert">
+                    {{ pendingOfflineCount }} لید آفلاین بدون گزارش دارید. تا ثبت
+                    گزارش همه، امکان آنلاین شدن وجود ندارد.
+                    <button
+                      class="secondary-action compact"
+                      type="button"
+                      (click)="openUnreportedOfflineLeads()"
+                    >
+                      مشاهده لیدها
+                    </button>
+                  </p>
+                }
+
                 <div class="action-grid">
                   <button
                     class="primary-action"
@@ -545,6 +580,12 @@ interface ConsultantDashboardLink {
                   </button>
                 </header>
 
+                @if (hasUnreportedOfflineLeads()) {
+                  <p class="offline-block-banner" role="alert">
+                    {{ pendingOfflineCount }} لید آفلاین بدون گزارش مانده است.
+                  </p>
+                }
+
                 <form class="lead-filters" (ngSubmit)="applyLeadFilters()">
                   <label>
                     وضعیت
@@ -556,7 +597,7 @@ interface ConsultantDashboardLink {
                       <option [ngValue]="null">همه</option>
                       <option [ngValue]="1">جدید</option>
                       <option [ngValue]="2">تخصیص‌یافته</option>
-                      <option [ngValue]="4">در انتظار</option>
+                      <option [ngValue]="4">پیگیری</option>
                       <option [ngValue]="7">رد شده</option>
                     </select>
                   </label>
@@ -627,6 +668,13 @@ interface ConsultantDashboardLink {
                               "
                               >{{ realtimeCountdown(lead) }}</strong
                             >
+                          </div>
+                        }
+
+                        @if (isFollowUpOfflineLeadDisplay(lead)) {
+                          <div class="follow-up-row">
+                            <span>وضعیت پیگیری</span>
+                            <strong>{{ leadFollowUpLabel(lead) }}</strong>
                           </div>
                         }
 
@@ -1896,6 +1944,29 @@ interface ConsultantDashboardLink {
       .lead-card.expired {
         opacity: 0.72;
       }
+      .offline-block-banner {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 18px;
+        border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line));
+        background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+        color: var(--text);
+        font-weight: 800;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .follow-up-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: color-mix(in srgb, var(--warn) 10%, transparent);
+        color: var(--text);
+        font-weight: 800;
+      }
       .lead-card header {
         display: flex;
         align-items: flex-start;
@@ -2535,10 +2606,35 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   canGoOnline(): boolean {
     if (!this.isConsultantWorkingHours()) return false;
-    if (!this.isAvailable || this.pendingOfflineCount > 0) return false;
+    if (!this.isAvailable || this.hasUnreportedOfflineLeads()) return false;
     if (!this.dashboardStatusLoaded) return false;
     if (this.onlineStatusBlockReason) return false;
     return this.canGoOnlineFromStatus;
+  }
+
+  hasUnreportedOfflineLeads(): boolean {
+    return this.pendingOfflineCount > 0;
+  }
+
+  openUnreportedOfflineLeads(): void {
+    this.activeSection = "leads";
+    this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
+    this.leadStateFilter = null;
+    this.leadPageNumber = 1;
+    this.loadLeads();
+    this.markViewDirty();
+  }
+
+  isFollowUpOfflineLeadDisplay(lead: ConsultantLead): boolean {
+    return isFollowUpOfflineLead(
+      this.leadType(lead),
+      this.leadState(lead),
+      this.leadCallResult(lead),
+    );
+  }
+
+  leadFollowUpLabel(lead: ConsultantLead): string {
+    return leadFollowUpDisplayLabel(this.leadCallResult(lead));
   }
 
   setSection(section: ConsultantDashboardSection): void {
@@ -2765,8 +2861,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (isOnline && !this.canGoOnline()) {
       const message =
         this.onlineStatusBlockReason ||
-        (this.pendingOfflineCount > 0
-          ? "تا زمان تعیین تکلیف لیدهای صف آفلاین، امکان آنلاین شدن وجود ندارد."
+        (this.hasUnreportedOfflineLeads()
+          ? `${this.pendingOfflineCount} لید آفلاین بدون گزارش دارید. ابتدا گزارش همه را ثبت کنید.`
           : "ابتدا حضور خود را ثبت کنید");
       this.showFeedback(message, "error");
       return;
@@ -2949,21 +3045,29 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
       const pendingRequestId = ++this.pendingOfflineRequestId;
       this.pendingOfflineLoadSubscription?.unsubscribe();
-      this.pendingOfflineLoadSubscription = this.consultantApi
-        .getLeads({
+      this.pendingOfflineLoadSubscription = forkJoin({
+        newLeads: this.consultantApi.getLeads({
           profileId,
-          leadAssignmentState: LEAD_STATE.Pending,
+          leadAssignmentState: LEAD_STATE.New,
           leadAssignmentType: LEAD_TYPE.OfflineQueue,
           pageNumber: 1,
-          pageSize: 50,
-        })
+          pageSize: 1,
+        }),
+        assignedLeads: this.consultantApi.getLeads({
+          profileId,
+          leadAssignmentState: LEAD_STATE.Assigned,
+          leadAssignmentType: LEAD_TYPE.OfflineQueue,
+          pageNumber: 1,
+          pageSize: 1,
+        }),
+      })
         .pipe(finalize(() => this.markViewDirty()))
         .subscribe({
-          next: (response) => {
+          next: ({ newLeads, assignedLeads }) => {
             if (pendingRequestId !== this.pendingOfflineRequestId) return;
-            this.applyConsultantStatusFrom(response.source, response.raw);
             this.updatePendingOfflineCount(
-              response.totalCount ?? response.items.length,
+              (newLeads.totalCount ?? newLeads.items.length) +
+                (assignedLeads.totalCount ?? assignedLeads.items.length),
             );
             pendingLoaded = true;
             maybeFinish();
@@ -3430,7 +3534,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         next: (response) => {
           const wasBlockingOfflineLead =
             this.leadType(lead) === LEAD_TYPE.OfflineQueue &&
-            this.leadState(lead) === LEAD_STATE.Pending;
+            isUnreportedOfflineLeadState(this.leadState(lead));
+          const submittedCallResult = Number(this.reportForm.callResult);
+          const expectedOfflineState =
+            this.leadType(lead) === LEAD_TYPE.OfflineQueue
+              ? expectedOfflineStateAfterReport(submittedCallResult)
+              : (response.data?.leadAssignmentState ?? LEAD_STATE.Contacted);
           this.reportedLeadIds.add(leadAssignmentId);
           this.reportingLeadIds.delete(leadAssignmentId);
           this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
@@ -3446,13 +3555,22 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
           this.markLeadReported(
             leadAssignmentId,
-            response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
+            response.data?.leadAssignmentState ?? expectedOfflineState,
             response.data?.isReportSubmitted ?? true,
           );
-          if (wasBlockingOfflineLead)
+          this.updateLeadInCollections(leadAssignmentId, {
+            callResult: response.data?.callResult ?? submittedCallResult,
+            CallResult: response.data?.callResult ?? submittedCallResult,
+            leadAssignmentState:
+              response.data?.leadAssignmentState ?? expectedOfflineState,
+            LeadAssignmentState:
+              response.data?.leadAssignmentState ?? expectedOfflineState,
+          });
+          if (wasBlockingOfflineLead) {
             this.updatePendingOfflineCount(
               Math.max(0, this.pendingOfflineCount - 1),
             );
+          }
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           this.suppressLeadCardActionsUntil = Date.now() + 600;
@@ -3778,7 +3896,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   realtimeBlockedByOfflineQueue(): boolean {
     return (
-      this.pendingOfflineCount > 0 && this.leadTypeFilter === LEAD_TYPE.RealTime
+      this.hasUnreportedOfflineLeads() &&
+      this.leadTypeFilter === LEAD_TYPE.RealTime
     );
   }
 
@@ -4093,6 +4212,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.isLeadInReportProgress(lead)) return "در حال ثبت گزارش";
     if (this.isLeadExpired(lead)) return "منقضی شده";
     if (this.isRealtimeTimedLead(lead)) return "در انتظار تماس";
+    if (this.leadType(lead) === LEAD_TYPE.OfflineQueue) {
+      return leadOfflineDisplayStatus(
+        this.leadType(lead),
+        this.leadState(lead),
+        this.leadCallResult(lead),
+      );
+    }
     return this.stateLabel(this.leadState(lead));
   }
 
@@ -4100,6 +4226,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.isLeadInReportProgress(lead)) return "badge info";
     if (this.isLeadExpired(lead)) return "badge warn";
     if (this.isRealtimeTimedLead(lead)) return "badge info";
+    if (isFollowUpOfflineLead(
+      this.leadType(lead),
+      this.leadState(lead),
+      this.leadCallResult(lead),
+    )) {
+      return "badge warn";
+    }
+    if (
+      isOfflineLeadBlockingOnline(this.leadType(lead), this.leadState(lead))
+    ) {
+      return "badge danger";
+    }
     return this.stateBadgeClass(this.leadState(lead));
   }
 
@@ -4264,6 +4402,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const state = this.leadState(lead);
     return (
       state === LEAD_STATE.Contacted ||
+      state === LEAD_STATE.Pending ||
       state === LEAD_STATE.Converted ||
       state === LEAD_STATE.Rejected
     );
@@ -4371,12 +4510,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.isAvailable = status.isAvailable;
     this.isOnline = status.isOnline;
     this.canGoOnlineFromStatus = status.canGoOnline;
-    this.updatePendingOfflineCount(status.pendingOfflineLeadCount);
     this.currentScore = status.currentScore;
     this.dashboardStatusLoaded = true;
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.applyConsultantStatusFrom(status.raw);
     this.configurePollTimer();
+    this.loadPendingOfflineLeads();
   }
 
   private loadPendingOfflineLeads(): void {
@@ -4386,20 +4525,46 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const requestId = ++this.pendingOfflineRequestId;
     this.pendingOfflineLoadSubscription?.unsubscribe();
 
-    this.pendingOfflineLoadSubscription = this.consultantApi
-      .getDashboardStatus(profileId)
+    this.pendingOfflineLoadSubscription = forkJoin({
+      newLeads: this.consultantApi.getLeads({
+        profileId,
+        leadAssignmentType: LEAD_TYPE.OfflineQueue,
+        leadAssignmentState: LEAD_STATE.New,
+        pageNumber: 1,
+        pageSize: 1,
+      }),
+      assignedLeads: this.consultantApi.getLeads({
+        profileId,
+        leadAssignmentType: LEAD_TYPE.OfflineQueue,
+        leadAssignmentState: LEAD_STATE.Assigned,
+        pageNumber: 1,
+        pageSize: 1,
+      }),
+    })
       .pipe(finalize(() => this.markViewDirty()))
       .subscribe({
-        next: (status) => {
+        next: ({ newLeads, assignedLeads }) => {
           if (requestId !== this.pendingOfflineRequestId) return;
-          this.pendingOfflineCount = Math.max(0, status.pendingOfflineLeadCount);
-          this.canGoOnlineFromStatus = status.canGoOnline;
-          this.onlineStatusBlockReason = status.onlineStatusBlockReason ?? null;
+          this.updatePendingOfflineCount(
+            (newLeads.totalCount ?? newLeads.items.length) +
+              (assignedLeads.totalCount ?? assignedLeads.items.length),
+          );
+          this.enforceUnreportedOfflinePolicy();
         },
         error: () => {
-          if (requestId === this.pendingOfflineRequestId) return;
+          if (requestId !== this.pendingOfflineRequestId) return;
         },
       });
+  }
+
+  private enforceUnreportedOfflinePolicy(): void {
+    if (!this.isOnline || !this.hasUnreportedOfflineLeads()) return;
+
+    this.showFeedback(
+      `${this.pendingOfflineCount} لید آفلاین بدون گزارش دارید. اتصال آنلاین قطع شد.`,
+      "error",
+    );
+    this.forceOfflineForReport();
   }
 
   private loadLeads(quiet = false): void {
@@ -5277,10 +5442,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.currentProfileId();
     if (!profileId || this.isOnline || !this.isAvailable) return;
 
-    if (this.pendingOfflineCount > 0) {
+    if (this.hasUnreportedOfflineLeads()) {
       if (options.notifyWhenBlocked) {
         this.showFeedback(
-          "تا زمان تعیین تکلیف لیدهای صف آفلاین، امکان آنلاین شدن وجود ندارد.",
+          `${this.pendingOfflineCount} لید آفلاین بدون گزارش دارید. ابتدا گزارش همه را ثبت کنید.`,
           "info",
         );
       }
@@ -5327,7 +5492,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.loadPendingOfflineLeads();
           if (options.notifyWhenBlocked) {
             this.showFeedback(
-              "تا زمان تعیین تکلیف لیدهای صف آفلاین، امکان آنلاین شدن وجود ندارد.",
+              `${this.pendingOfflineCount} لید آفلاین بدون گزارش دارید. ابتدا گزارش همه را ثبت کنید.`,
               "info",
             );
           }

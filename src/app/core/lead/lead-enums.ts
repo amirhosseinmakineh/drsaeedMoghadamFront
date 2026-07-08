@@ -21,7 +21,7 @@ export const LEAD_ASSIGNMENT_STATE_LABELS: Record<number, string> = {
   [LeadAssignmentState.New]: "جدید",
   [LeadAssignmentState.Assigned]: "تخصیص‌یافته",
   [LeadAssignmentState.Contacted]: "تماس گرفته شده",
-  [LeadAssignmentState.Pending]: "در انتظار",
+  [LeadAssignmentState.Pending]: "پیگیری",
   [LeadAssignmentState.Converted]: "تبدیل شده",
   [LeadAssignmentState.Expired]: "منقضی شده",
   [LeadAssignmentState.Rejected]: "رد شده",
@@ -81,16 +81,14 @@ export function isOfflineLeadExpiredState(
   return type === LeadAssignmentType.OfflineQueue && state === LeadAssignmentState.Expired;
 }
 
+/** Offline leads that still need the first call report before going online. */
 export function isActionableOfflineLead(
   type: number | null,
   state: number | null,
 ): boolean {
   if (type !== LeadAssignmentType.OfflineQueue) return false;
-  if (state === null) return true;
   return (
-    state !== LeadAssignmentState.Converted &&
-    state !== LeadAssignmentState.Rejected &&
-    state !== LeadAssignmentState.Expired
+    state === LeadAssignmentState.New || state === LeadAssignmentState.Assigned
   );
 }
 
