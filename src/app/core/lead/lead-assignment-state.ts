@@ -28,7 +28,7 @@ const STATE_PRESENTATIONS: Record<
     badge: "info",
   },
   [LeadAssignmentState.Assigned]: {
-    label: "تخصیص داده شده",
+    label: "تخصیص‌یافته",
     badge: "info",
   },
   [LeadAssignmentState.Contacted]: {

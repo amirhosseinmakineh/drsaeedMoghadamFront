@@ -931,7 +931,7 @@ interface ConsultantDashboardLink {
                   >
                     <option [ngValue]="null">همه</option>
                     <option [ngValue]="3">تماس گرفته شده</option>
-                    <option [ngValue]="4">در انتظار</option>
+                    <option [ngValue]="4">پیگیری</option>
                     <option [ngValue]="5">تبدیل شده</option>
                     <option [ngValue]="6">منقضی شده</option>
                     <option [ngValue]="7">رد شده</option>
@@ -2706,6 +2706,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.leadType(lead),
       this.leadState(lead),
       this.leadCallResult(lead),
+      this.isLeadReportSubmitted(lead),
     );
   }
 
@@ -3613,7 +3614,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         next: (response) => {
           const wasBlockingOfflineLead =
             this.leadType(lead) === LEAD_TYPE.OfflineQueue &&
-            isUnreportedOfflineLeadState(this.leadState(lead));
+            isUnreportedOfflineLeadState(
+              this.leadState(lead),
+              this.isLeadReportSubmitted(lead),
+            );
           const submittedCallResult = Number(this.reportForm.callResult);
           const expectedOfflineState =
             this.leadType(lead) === LEAD_TYPE.OfflineQueue
@@ -4290,12 +4294,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadDisplayStatus(lead: ConsultantLead): string {
     if (this.isLeadInReportProgress(lead)) return "در حال ثبت گزارش";
     if (this.isLeadExpired(lead)) return "منقضی شده";
-    if (this.isRealtimeTimedLead(lead)) return "در انتظار تماس";
     if (this.leadType(lead) === LEAD_TYPE.OfflineQueue) {
       return leadOfflineDisplayStatus(
         this.leadType(lead),
         this.leadState(lead),
         this.leadCallResult(lead),
+        this.isLeadReportSubmitted(lead),
       );
     }
     return this.stateLabel(this.leadState(lead));
@@ -4304,16 +4308,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadDisplayBadgeClass(lead: ConsultantLead): string {
     if (this.isLeadInReportProgress(lead)) return "badge info";
     if (this.isLeadExpired(lead)) return "badge warn";
-    if (this.isRealtimeTimedLead(lead)) return "badge info";
     if (isFollowUpOfflineLead(
       this.leadType(lead),
       this.leadState(lead),
       this.leadCallResult(lead),
+      this.isLeadReportSubmitted(lead),
     )) {
       return "badge warn";
     }
     if (
-      isOfflineLeadBlockingOnline(this.leadType(lead), this.leadState(lead))
+      isOfflineLeadBlockingOnline(
+        this.leadType(lead),
+        this.leadState(lead),
+        this.isLeadReportSubmitted(lead),
+      )
     ) {
       return "badge danger";
     }
@@ -4490,15 +4498,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private leadHasSubmittedReportFromBackend(lead: ConsultantLead): boolean {
     if (Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)) return true;
     if (Boolean(lead.reportSubmittedAt ?? lead.ReportSubmittedAt)) return true;
-    if (this.leadCallResult(lead) !== null) return true;
-
-    const state = this.leadState(lead);
-    return (
-      state === LEAD_STATE.Contacted ||
-      state === LEAD_STATE.Pending ||
-      state === LEAD_STATE.Converted ||
-      state === LEAD_STATE.Rejected
-    );
+    return this.leadCallResult(lead) !== null;
   }
 
   private reportEditLeadMatchesSearch(

@@ -28,9 +28,7 @@ export const LEAD_CALL_RESULT_LABELS: Record<number, string> = {
 };
 
 const FOLLOW_UP_CALL_RESULTS = new Set<number>([
-  LeadCallResult.Rejected,
   LeadCallResult.NoAnswer,
-  LeadCallResult.WrongNumber,
   LeadCallResult.NeedsFollowUp,
   LeadCallResult.Busy,
   LeadCallResult.PatientHungUp,
@@ -41,18 +39,26 @@ export function isFollowUpCallResult(callResult: number | null | undefined): boo
 }
 
 /** Offline leads still waiting for the first call report. */
-export function isUnreportedOfflineLeadState(state: number | null | undefined): boolean {
+export function isUnreportedOfflineLeadState(
+  state: number | null | undefined,
+  isReportSubmitted = false,
+): boolean {
+  if (isReportSubmitted) return false;
+
   return (
-    state === LeadAssignmentState.New || state === LeadAssignmentState.Assigned
+    state === LeadAssignmentState.New ||
+    state === LeadAssignmentState.Assigned ||
+    state === LeadAssignmentState.Pending
   );
 }
 
 export function isOfflineLeadBlockingOnline(
   type: number | null | undefined,
   state: number | null | undefined,
+  isReportSubmitted = false,
 ): boolean {
   if (type !== LeadAssignmentType.OfflineQueue) return false;
-  return isUnreportedOfflineLeadState(state);
+  return isUnreportedOfflineLeadState(state, isReportSubmitted);
 }
 
 /** Offline lead reported with a non-terminal outcome that stays in follow-up. */
@@ -60,8 +66,9 @@ export function isFollowUpOfflineLead(
   type: number | null | undefined,
   state: number | null | undefined,
   callResult?: number | null,
+  isReportSubmitted = false,
 ): boolean {
-  if (type !== LeadAssignmentType.OfflineQueue) return false;
+  if (type !== LeadAssignmentType.OfflineQueue || !isReportSubmitted) return false;
   if (state === LeadAssignmentState.Pending) return true;
   if (
     state === LeadAssignmentState.Contacted &&
@@ -73,13 +80,16 @@ export function isFollowUpOfflineLead(
 }
 
 export function expectedOfflineStateAfterReport(callResult: number): number {
-  if (
-    callResult === LeadCallResult.Connected ||
-    callResult === LeadCallResult.Converted
-  ) {
+  if (callResult === LeadCallResult.Connected) {
     return LeadAssignmentState.Contacted;
   }
-  if (callResult === LeadCallResult.Rejected) {
+  if (callResult === LeadCallResult.Converted) {
+    return LeadAssignmentState.Converted;
+  }
+  if (
+    callResult === LeadCallResult.Rejected ||
+    callResult === LeadCallResult.WrongNumber
+  ) {
     return LeadAssignmentState.Rejected;
   }
   return LeadAssignmentState.Pending;
@@ -102,11 +112,12 @@ export function leadOfflineDisplayStatus(
   type: number | null | undefined,
   state: number | null | undefined,
   callResult?: number | null,
+  isReportSubmitted = false,
 ): string {
-  if (isFollowUpOfflineLead(type, state, callResult)) {
+  if (isFollowUpOfflineLead(type, state, callResult, isReportSubmitted)) {
     return leadFollowUpDisplayLabel(callResult);
   }
-  if (isUnreportedOfflineLeadState(state)) {
+  if (isUnreportedOfflineLeadState(state, isReportSubmitted)) {
     return "منتظر گزارش تماس";
   }
   return leadAssignmentStateLabel(state ?? null);
@@ -126,12 +137,26 @@ export function countUnreportedOfflineLeads(
     State?: number | null;
     status?: number | null;
     Status?: number | null;
+    isReportSubmitted?: boolean | null;
+    IsReportSubmitted?: boolean | null;
+    reportSubmittedAt?: string | null;
+    ReportSubmittedAt?: string | null;
+    callResult?: number | null;
+    CallResult?: number | null;
   }>,
   resolveType: (lead: (typeof leads)[number]) => number | null,
   resolveState: (lead: (typeof leads)[number]) => number | null,
+  resolveReportSubmitted?: (lead: (typeof leads)[number]) => boolean,
 ): number {
   return leads.reduce((count, lead) => {
-    if (isOfflineLeadBlockingOnline(resolveType(lead), resolveState(lead))) {
+    const isReportSubmitted = resolveReportSubmitted?.(lead) ?? false;
+    if (
+      isOfflineLeadBlockingOnline(
+        resolveType(lead),
+        resolveState(lead),
+        isReportSubmitted,
+      )
+    ) {
       return count + 1;
     }
     return count;
