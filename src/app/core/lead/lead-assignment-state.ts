@@ -36,7 +36,7 @@ const STATE_PRESENTATIONS: Record<
     badge: "info",
   },
   [LeadAssignmentState.Pending]: {
-    label: "در انتظار پیگیری",
+    label: "پیگیری",
     badge: "warn",
   },
   [LeadAssignmentState.Converted]: {
