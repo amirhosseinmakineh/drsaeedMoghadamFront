@@ -896,7 +896,7 @@ interface ConsultantDashboardLink {
               <header class="panel-heading">
                 <div>
                   <span>ویرایش گزارش</span>
-                  <h2>لیدهای تماس‌گرفته‌شده</h2>
+                  <h2>گزارش‌های ثبت‌شده</h2>
                 </div>
                 <button
                   class="secondary-action compact"
@@ -908,25 +908,85 @@ interface ConsultantDashboardLink {
                 </button>
               </header>
 
+              <form
+                class="lead-filters report-edit-filters"
+                (ngSubmit)="applyReportEditFilters()"
+              >
+                <label>
+                  جستجو
+                  <input
+                    type="search"
+                    [(ngModel)]="reportEditSearchTerm"
+                    [ngModelOptions]="ngModelBlurOptions"
+                    name="reportEditSearch"
+                    placeholder="نام، موبایل، شهر یا توضیحات"
+                  />
+                </label>
+                <label>
+                  وضعیت
+                  <select
+                    [(ngModel)]="reportEditStateFilter"
+                    [ngModelOptions]="ngModelBlurOptions"
+                    name="reportEditState"
+                  >
+                    <option [ngValue]="null">همه</option>
+                    <option [ngValue]="3">تماس گرفته شده</option>
+                    <option [ngValue]="4">در انتظار</option>
+                    <option [ngValue]="5">تبدیل شده</option>
+                    <option [ngValue]="6">منقضی شده</option>
+                    <option [ngValue]="7">رد شده</option>
+                  </select>
+                </label>
+                <label>
+                  نوع
+                  <select
+                    [(ngModel)]="reportEditTypeFilter"
+                    [ngModelOptions]="ngModelBlurOptions"
+                    name="reportEditType"
+                  >
+                    <option [ngValue]="null">همه</option>
+                    <option [ngValue]="1">آنی</option>
+                    <option [ngValue]="2">صف آفلاین</option>
+                    <option [ngValue]="3">بیمار مشاور</option>
+                  </select>
+                </label>
+                <button
+                  class="primary-action compact"
+                  type="submit"
+                  [disabled]="reportEditLeadsLoading"
+                >
+                  {{ reportEditLeadsLoading ? "در حال اعمال..." : "اعمال" }}
+                </button>
+              </form>
+
               @if (reportEditLeadsLoading) {
                 <div class="loading-state" role="status" aria-live="polite">
                   <span class="loading-spinner" aria-hidden="true"></span>
                   <p class="loading-copy">در حال دریافت گزارش‌ها...</p>
                 </div>
-              } @else if (!reportEditLeads.length) {
+              } @else if (!visibleReportEditLeads().length) {
                 <p class="empty-copy">
-                  فعلاً لیدی با گزارش قابل ویرایش وجود ندارد.
+                  @if (reportEditSearchTerm.trim()) {
+                    گزارشی با این جستجو پیدا نشد.
+                  } @else {
+                    فعلاً گزارش ثبت‌شده‌ای برای ویرایش وجود ندارد.
+                  }
                 </p>
               } @else {
                 <div class="lead-list">
-                  @for (lead of reportEditLeads; track leadId(lead)) {
+                  @for (lead of visibleReportEditLeads(); track leadId(lead)) {
                     <article class="lead-card">
                       <header>
                         <div>
                           <span>{{ leadTypeLabel(leadType(lead)) }}</span>
                           <h3>{{ leadName(lead) }}</h3>
                         </div>
-                        <b class="badge info">{{ callResultLabel(lead) }}</b>
+                        <div class="lead-badges">
+                          <b class="badge muted">{{
+                            stateLabel(leadState(lead))
+                          }}</b>
+                          <b class="badge info">{{ callResultLabel(lead) }}</b>
+                        </div>
                       </header>
 
                       <p class="lead-report-summary">
@@ -951,7 +1011,6 @@ interface ConsultantDashboardLink {
                         <button
                           class="secondary-action compact"
                           type="button"
-                          [disabled]="!isLeadReportEditable(lead)"
                           (click)="openEditReportDialog(lead)"
                         >
                           ویرایش گزارش
@@ -1872,6 +1931,9 @@ interface ConsultantDashboardLink {
       .lead-filters.patient-filters {
         grid-template-columns: 1fr auto;
       }
+      .lead-filters.report-edit-filters {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 0.8fr) auto;
+      }
       .loading-copy,
       .empty-copy {
         margin: 0;
@@ -1995,6 +2057,17 @@ interface ConsultantDashboardLink {
       .badge.info {
         background: color-mix(in srgb, var(--brand) 16%, transparent);
         color: var(--brand);
+      }
+      .badge.muted {
+        background: color-mix(in srgb, var(--muted) 14%, var(--surface));
+        color: var(--muted);
+      }
+      .lead-badges {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
       }
       .badge.success {
         background: color-mix(in srgb, #22c55e 16%, var(--surface));
@@ -2361,8 +2434,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   reportEditLeads: ConsultantLead[] = [];
   reportEditLeadsLoading = false;
+  reportEditSearchTerm = "";
+  reportEditStateFilter: number | null = null;
+  reportEditTypeFilter: number | null = null;
   reportEditPageNumber = 1;
-  reportEditPageSize = 10;
+  reportEditPageSize = 25;
   reportEditTotalPages = 1;
   reportEditTotalCount = 0;
   private reportEditRequestId = 0;
@@ -3010,6 +3086,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       let leadStatusLoaded = false;
       const maybeFinish = () => {
         if (!leadsLoaded || !pendingLoaded || !leadStatusLoaded) return;
+        if (this.activeSection === "report-edits") {
+          this.loadReportEditLeads();
+        }
         afterLoad?.();
       };
 
@@ -4300,8 +4379,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isLeadReportEditable(lead: ConsultantLead): boolean {
-    if (!this.isLeadReportSubmitted(lead)) return false;
-    return this.leadState(lead) === LEAD_STATE.Contacted;
+    return this.isLeadReportSubmitted(lead);
+  }
+
+  visibleReportEditLeads(): ConsultantLead[] {
+    const term = this.reportEditSearchTerm.trim().toLowerCase();
+    if (!term) return this.reportEditLeads;
+    return this.reportEditLeads.filter((lead) =>
+      this.reportEditLeadMatchesSearch(lead, term),
+    );
+  }
+
+  applyReportEditFilters(): void {
+    this.reportEditPageNumber = 1;
+    this.loadReportEditLeads();
   }
 
   leadCallResult(lead: ConsultantLead): number | null {
@@ -4398,6 +4489,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private leadHasSubmittedReportFromBackend(lead: ConsultantLead): boolean {
     if (Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)) return true;
+    if (Boolean(lead.reportSubmittedAt ?? lead.ReportSubmittedAt)) return true;
+    if (this.leadCallResult(lead) !== null) return true;
 
     const state = this.leadState(lead);
     return (
@@ -4406,6 +4499,31 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       state === LEAD_STATE.Converted ||
       state === LEAD_STATE.Rejected
     );
+  }
+
+  private reportEditLeadMatchesSearch(
+    lead: ConsultantLead,
+    term: string,
+  ): boolean {
+    const haystack = [
+      this.leadName(lead),
+      this.leadPhone(lead),
+      this.leadReportDescription(lead),
+      this.callResultLabel(lead),
+      this.stateLabel(this.leadState(lead)),
+      this.leadTypeLabel(this.leadType(lead)),
+      lead.patientCity,
+      lead.PatientCity,
+      lead.patientRegion,
+      lead.PatientRegion,
+      lead.businessName,
+      lead.BusinessName,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(term);
   }
 
   private syncReportedLeadIdsFromLeads(leads: ConsultantLead[]): void {
@@ -4661,8 +4779,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportEditLoadSubscription = this.consultantApi
       .getLeads({
         profileId,
-        leadAssignmentState: LEAD_STATE.Contacted,
         hasSubmittedReport: true,
+        ...(this.reportEditStateFilter !== null
+          ? { leadAssignmentState: this.reportEditStateFilter }
+          : {}),
+        ...(this.reportEditTypeFilter !== null
+          ? { leadAssignmentType: this.reportEditTypeFilter }
+          : {}),
         pageNumber: this.reportEditPageNumber,
         pageSize: this.reportEditPageSize,
       })
@@ -5285,7 +5408,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     nextState: number,
     isReportSubmitted = true,
   ): void {
-    this.leads = this.leads.map((lead) => {
+    const updateLead = (lead: ConsultantLead): ConsultantLead => {
       if (this.leadId(lead) !== leadAssignmentId) return lead;
 
       return {
@@ -5296,7 +5419,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         LeadAssignmentState: nextState,
         state: nextState,
       };
-    });
+    };
+
+    this.leads = this.leads.map(updateLead);
+    this.patientLeads = this.patientLeads.map(updateLead);
+    this.reportEditLeads = this.reportEditLeads.map(updateLead);
   }
 
   private mergeLeadFromBackend(updatedLead: ConsultantLead): void {
@@ -5310,6 +5437,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
     this.patientLeads = this.replaceLeadInCollection(
       this.patientLeads,
+      leadAssignmentId,
+      updatedLead,
+    );
+    this.reportEditLeads = this.replaceLeadInCollection(
+      this.reportEditLeads,
       leadAssignmentId,
       updatedLead,
     );
