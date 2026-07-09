@@ -68,34 +68,46 @@ self.addEventListener("push", (event) => {
   if (type === "RealtimeLead") {
     const leadId = data.leadId;
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
+    const title = payload.title || "لید جدید!";
+    const body =
+      payload.body || "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!";
+    const baseOptions = {
+      body,
+      tag,
+      renotify: true,
+      requireInteraction: true,
+      silent: false,
+      vibrate: [300, 120, 300, 120, 300],
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-96x96.png",
+      data,
+    };
 
     event.waitUntil(
-      self.registration
-        .showNotification(payload.title || "لید جدید!", {
-          body:
-            payload.body ||
-            "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!",
-          tag,
-          renotify: true,
-          requireInteraction: true,
-          silent: false,
-          vibrate: [300, 120, 300, 120, 300],
-          icon: "/icons/icon-192x192.png",
-          badge: "/icons/icon-96x96.png",
-          data,
-          actions: [
-            { action: "pickup", title: "برداریدش!" },
-            { action: "dismiss", title: "بستن" },
-          ],
-        })
-        .then(() =>
-          notifyClients({
-            type: "RealtimeLead",
-            leadId: Number(leadId),
-            title: payload.title,
-            body: payload.body,
-          }),
-        ),
+      (async () => {
+        await notifyClients({
+          type: "RealtimeLead",
+          leadId: Number(leadId),
+          title,
+          body,
+        });
+        await notifyClients({
+          type: "web-push-message",
+          payload: { title, body, data },
+        });
+
+        try {
+          await self.registration.showNotification(title, {
+            ...baseOptions,
+            actions: [
+              { action: "pickup", title: "برداریدش!" },
+              { action: "dismiss", title: "بستن" },
+            ],
+          });
+        } catch {
+          await self.registration.showNotification(title, baseOptions);
+        }
+      })(),
     );
     return;
   }

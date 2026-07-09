@@ -2,6 +2,10 @@ import { Injectable, OnDestroy } from "@angular/core";
 import { Router } from "@angular/router";
 import { Subject, firstValueFrom } from "rxjs";
 import { AuthService } from "../auth/auth.service";
+import {
+  BroadcastRealtimeLeadItem,
+  ConsultantDashboardService,
+} from "../consultant/consultant-dashboard.service";
 import { NotificationService } from "../push/notification.service";
 import { playRealtimeLeadAlertSound } from "../push/lead-alert-sound";
 import { ToastService } from "../toast/toast.service";
@@ -28,11 +32,29 @@ export class RealtimeLeadAlertService implements OnDestroy {
   private readonly handledLeadIds = new Set<number>();
   private readonly limitNotifiedDates = new Set<string>();
   private initialized = false;
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private pollingProfileId: number | null = null;
+  private pollingInFlight = false;
+  private readonly onPushMessage = (event: Event): void => {
+    const detail = (
+      event as CustomEvent<{
+        title?: string;
+        body?: string;
+        data?: Record<string, string>;
+      }>
+    ).detail;
+    const leadId = Number(detail?.data?.["leadId"]);
+    if (detail?.data?.["type"] !== "RealtimeLead" || !Number.isFinite(leadId)) {
+      return;
+    }
+    void this.notifyIncomingLead(leadId, detail.title, detail.body);
+  };
 
   readonly alerts$ = this.alertsSubject.asObservable();
 
   constructor(
     private readonly auth: AuthService,
+    private readonly consultantApi: ConsultantDashboardService,
     private readonly pickupService: RealtimeLeadPickupService,
     private readonly notifications: NotificationService,
     private readonly toast: ToastService,
@@ -49,10 +71,31 @@ export class RealtimeLeadAlertService implements OnDestroy {
         void this.handleServiceWorkerMessage(event.data);
       },
     );
+    window.addEventListener("consultant-push-message", this.onPushMessage);
   }
 
   ngOnDestroy(): void {
+    this.stopPolling();
+    window.removeEventListener("consultant-push-message", this.onPushMessage);
     this.alertsSubject.complete();
+  }
+
+  startPolling(profileId: number): void {
+    this.pollingProfileId = profileId;
+    if (this.pollTimer) return;
+
+    void this.pollBroadcastLeads();
+    this.pollTimer = setInterval(() => {
+      void this.pollBroadcastLeads();
+    }, 5000);
+  }
+
+  stopPolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+    this.pollingProfileId = null;
   }
 
   async tryPickupLead(leadId: number): Promise<void> {
@@ -123,6 +166,39 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.emitAlerts();
   }
 
+  private async pollBroadcastLeads(): Promise<void> {
+    if (this.pollingInFlight) return;
+    const profileId = this.pollingProfileId;
+    if (!profileId || this.auth.user()?.role !== "consultant") return;
+
+    this.pollingInFlight = true;
+    try {
+      const response = await firstValueFrom(
+        this.consultantApi.getBroadcastRealtimeLeads(profileId),
+      );
+      if (!response.canReceive) return;
+
+      for (const lead of response.leads ?? []) {
+        const leadId = this.readBroadcastLeadId(lead);
+        if (!leadId) continue;
+        await this.notifyIncomingLead(
+          leadId,
+          "لید جدید!",
+          "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!",
+        );
+      }
+    } catch {
+      // Polling is a fallback; ignore transient API errors.
+    } finally {
+      this.pollingInFlight = false;
+    }
+  }
+
+  private readBroadcastLeadId(lead: BroadcastRealtimeLeadItem): number | null {
+    const leadId = Number(lead.leadAssignmentId ?? lead.LeadAssignmentId ?? 0);
+    return Number.isFinite(leadId) && leadId > 0 ? leadId : null;
+  }
+
   private async handleServiceWorkerMessage(
     message: ServiceWorkerMessage | undefined,
   ): Promise<void> {
@@ -132,7 +208,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
     switch (message.type) {
       case "RealtimeLead":
-        await this.handleIncomingLead(
+        await this.notifyIncomingLead(
           message.leadId,
           message.title,
           message.body,
@@ -158,7 +234,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
   }
 
-  private async handleIncomingLead(
+  private async notifyIncomingLead(
     leadId: number,
     title?: string,
     body?: string,

@@ -54,6 +54,7 @@ import {
   leadFollowUpDisplayLabel,
   leadOfflineDisplayStatus,
 } from "../../core/lead/lead-offline-workflow";
+import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
 
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
@@ -2580,6 +2581,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private destroyed = false;
   private pollIntervalMs = 30000;
   private routeParamsInitialized = false;
+  private knownOfflineLeadIds = new Set<number>();
+  private offlineLeadIdsInitialized = false;
   private readonly markViewDirty: () => void;
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly onPushStateSync = (): void => {
@@ -2656,6 +2659,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private consultantApi: ConsultantDashboardService,
     private pushNotifications: PushNotificationService,
     private notifications: NotificationService,
+    private realtimeLeadAlerts: RealtimeLeadAlertService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
@@ -2692,6 +2696,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.stoppedTimerLeadIds.add(leadAssignmentId);
     }
     preloadOfflineLeadAlertSound();
+    this.realtimeLeadAlerts.initialize();
     void this.syncPushRegistrationState();
     window.addEventListener("consultant-push-message", this.pushMessageListener);
     window.addEventListener("consultant-lead-picked-up", this.leadPickedUpListener);
@@ -2717,6 +2722,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.isProfileReady()) {
       this.refreshDashboard();
       this.startTimers();
+      this.syncRealtimeLeadPolling();
     } else {
       this.activeSection = "profile";
     }
@@ -2724,6 +2730,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.realtimeLeadAlerts.stopPolling();
     if (this.feedbackAutoDismissTimer) clearTimeout(this.feedbackAutoDismissTimer);
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
@@ -3046,9 +3053,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             "success",
           );
           if (isOnline) {
-            void this.ensureOfflineLeadPushRegistration();
+            void this.ensureLeadPushRegistration(true);
+          } else {
+            this.realtimeLeadAlerts.stopPolling();
           }
           void this.pushNotifications.syncForCurrentProfile(profileId);
+          this.syncRealtimeLeadPolling();
           this.configurePollTimer();
           this.refreshDashboard();
         },
@@ -4689,6 +4699,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.applyConsultantStatusFrom(status.raw);
     this.configurePollTimer();
+    this.syncRealtimeLeadPolling();
     this.loadPendingOfflineLeads();
   }
 
@@ -4961,7 +4972,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.browserNotificationPermission === "granted";
     let desiredInterval = 30000;
     if (this.isProfileReady()) {
-      desiredInterval = pushReady ? 30000 : 15000;
+      if (this.isOnline) {
+        desiredInterval = 10000;
+      } else {
+        desiredInterval = pushReady ? 30000 : 15000;
+      }
     }
 
     if (this.pollId && desiredInterval === this.pollIntervalMs) return;
@@ -4977,6 +4992,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         if (!this.isProfileReady() || this.destroyed) return;
         this.ngZone.run(() => {
           this.loadLeads(true);
+          this.pollOfflineLeadNotifications();
           this.loadPendingOfflineLeads();
         });
       }, this.pollIntervalMs);
@@ -5034,22 +5050,93 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (changed) this.writeJson(this.timerStorageKey(), this.timerStarts);
   }
 
-  private async ensureOfflineLeadPushRegistration(): Promise<void> {
-    await this.pushNotifications.syncPushRegistrationIfReady(
-      this.currentProfileId(),
-    );
+  private async ensureLeadPushRegistration(requestPermission = false): Promise<void> {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    if (requestPermission && this.browserNotificationPermission === "default") {
+      const enabled = await this.pushNotifications.enablePushForCurrentProfile(
+        profileId,
+      );
+      if (!enabled.ok && enabled.message) {
+        this.toast.info(enabled.message);
+      }
+    } else {
+      await this.pushNotifications.syncPushRegistrationIfReady(profileId);
+    }
+
     await this.syncPushRegistrationState();
     this.maybePromptPushSetup();
     this.configurePollTimer();
     this.markViewDirty();
   }
 
+  private async ensureOfflineLeadPushRegistration(): Promise<void> {
+    await this.ensureLeadPushRegistration(false);
+  }
+
   private maybePromptPushSetup(): void {
     if (!this.shouldShowPushSetupBanner) return;
 
     this.toast.info(
-      "برای دریافت لید آفلاین با صدا، دکمه «فعال‌سازی نوتیفیکیشن لید آفلاین» را بزنید.",
+      "برای دریافت لید لحظه‌ای و آفلاین، دکمه «فعال‌سازی نوتیفیکیشن» را بزنید.",
     );
+  }
+
+  private syncRealtimeLeadPolling(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId || !this.isOnline) {
+      this.realtimeLeadAlerts.stopPolling();
+      return;
+    }
+    this.realtimeLeadAlerts.startPolling(profileId);
+  }
+
+  private detectNewOfflineLeads(leads: ConsultantLead[]): void {
+    const offlineLeadIds = leads
+      .map((lead) => this.leadId(lead))
+      .filter((leadId): leadId is number => leadId != null && leadId > 0);
+
+    if (!this.offlineLeadIdsInitialized) {
+      offlineLeadIds.forEach((leadId) => this.knownOfflineLeadIds.add(leadId));
+      this.offlineLeadIdsInitialized = true;
+      return;
+    }
+
+    const newOfflineLeads = offlineLeadIds.filter(
+      (leadId) => !this.knownOfflineLeadIds.has(leadId),
+    );
+    offlineLeadIds.forEach((leadId) => this.knownOfflineLeadIds.add(leadId));
+
+    if (!newOfflineLeads.length) return;
+
+    const count = newOfflineLeads.length;
+    const { title, body } = resolveOfflineLeadPushContent({
+      data: { type: "offline_leads", count: String(count) },
+    });
+    void this.showLeadNotification(title, body, "offline-leads", {
+      type: "offline_leads",
+      count: String(count),
+    });
+    playOfflineLeadAlertSound();
+  }
+
+  private pollOfflineLeadNotifications(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    this.consultantApi
+      .getLeads({
+        profileId,
+        leadAssignmentType: LEAD_TYPE.OfflineQueue,
+        pageNumber: 1,
+        pageSize: 100,
+      })
+      .subscribe({
+        next: (response) => {
+          this.detectNewOfflineLeads(response.items ?? []);
+        },
+      });
   }
 
   private showLeadNotification(
