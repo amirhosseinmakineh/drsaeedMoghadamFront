@@ -27,7 +27,7 @@ import {
   PushNotificationService,
   resolveOfflineLeadPushContent,
 } from "../../core/push/push-notification.service";
-import { playOfflineLeadAlertSound } from "../../core/push/lead-alert-sound";
+import { playOfflineLeadAlertSound, preloadOfflineLeadAlertSound } from "../../core/push/lead-alert-sound";
 import { NotificationService } from "../../core/push/notification.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
@@ -2613,11 +2613,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     )) {
       this.stoppedTimerLeadIds.add(leadAssignmentId);
     }
+    preloadOfflineLeadAlertSound();
     void this.syncPushRegistrationState();
     window.addEventListener("consultant-push-message", this.pushMessageListener);
     window.addEventListener("focus", this.onPushStateSync);
     document.addEventListener("visibilitychange", this.onPushStateSync);
-    void this.pushNotifications.syncForCurrentProfile(this.profileId);
     if (this.isProfileReady()) {
       void this.ensureOfflineLeadPushRegistration();
     }
@@ -4949,17 +4949,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private async ensureOfflineLeadPushRegistration(): Promise<void> {
-    await this.notifications.requestBasicNotificationPermission();
-
-    const profileId = this.currentProfileId();
-    if (profileId && !this.notifications.getEnvironmentIssue()) {
-      if (!this.pushRegistrationReady) {
-        await this.pushNotifications.enablePushForCurrentProfile(profileId);
-      } else {
-        await this.pushNotifications.syncForCurrentProfile(profileId);
-      }
-    }
-
+    await this.pushNotifications.registerForConsultantOnLogin();
     await this.syncPushRegistrationState();
     this.configurePollTimer();
     this.markViewDirty();

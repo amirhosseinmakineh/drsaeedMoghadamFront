@@ -46,6 +46,11 @@ export class PushNotificationService {
   ) {
     if (typeof window !== "undefined") {
       window.addEventListener("focus", () => {
+        const user = this.auth.user();
+        if (user?.role === "consultant") {
+          void this.registerForConsultantOnLogin();
+          return;
+        }
         void this.syncForCurrentProfile();
       });
       this.notifications.onTokenRefresh(() => {
@@ -263,6 +268,11 @@ export class PushNotificationService {
       return { ok: false, message: "ثبت Web Push فقط برای مشاور لازم است." };
     }
 
+    const environmentIssue = this.notifications.getEnvironmentIssue();
+    if (environmentIssue) {
+      return { ok: false, message: environmentIssue };
+    }
+
     const profileId = user.consultantProfileId ?? user.profileId ?? null;
     const permission = this.notifications.getPermissionStatus();
     if (permission === "denied") {
@@ -273,7 +283,10 @@ export class PushNotificationService {
     }
 
     if (permission === "granted") {
-      return this.syncForCurrentProfile(profileId);
+      const subscription = await this.getCurrentPushSubscription();
+      if (subscription) {
+        return this.syncForCurrentProfile(profileId);
+      }
     }
 
     return this.enablePushForCurrentProfile(profileId);
