@@ -260,6 +260,26 @@ export class NotificationService {
     return this.lastKnownSubscription;
   }
 
+  async closeRealtimeLeadNotification(leadId: number): Promise<void> {
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const registration = await this.getWebPushRegistration();
+    if (!registration) return;
+
+    const tag = `realtime-lead-${leadId}`;
+    const notifications = await registration.getNotifications({ tag });
+    notifications.forEach((notification) => notification.close());
+
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: "CloseRealtimeLeadNotification",
+        leadId,
+      });
+    }
+  }
+
   private async subscribeWithVapidKey(
     vapidPublicKey: string,
   ): Promise<string | null> {
