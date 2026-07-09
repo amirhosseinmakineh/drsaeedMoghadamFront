@@ -1,6 +1,7 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-09-offline-push";
+const SW_VERSION = "2026-07-09-realtime-offline-push";
+const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 const OFFLINE_LEAD_PUSH_TITLE = "لید آفلاین جدید!";
 const OFFLINE_LEAD_ALERT_SOUND_URL = "/sounds/offline-lead-alert.mp3";
 const OFFLINE_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 400, 120, 400];
@@ -10,53 +11,142 @@ function formatOfflineLeadPushBody(count) {
   return `${leadCount} لید آفلاین داری، بیا اینارو تعیین تکلیف کن`;
 }
 
-self.addEventListener("push", (event) => {
-  let payload = { title: "اعلان جدید", body: "", data: {} };
-
-  try {
-    payload = event.data?.json() ?? payload;
-  } catch {
-    payload.body = event.data?.text() ?? "";
+function parsePushPayload(event) {
+  if (!event.data) {
+    return { title: "", body: "", data: {} };
   }
 
-  const data = payload.data || {};
-  if (data.type && data.type !== "offline_leads" && data.type !== "test_push") {
+  try {
+    const payload = event.data.json();
+    return {
+      title: payload.title ?? "",
+      body: payload.body ?? "",
+      data: payload.data ?? {},
+    };
+  } catch {
+    return {
+      title: "اعلان",
+      body: event.data.text() ?? "",
+      data: {},
+    };
+  }
+}
+
+function notifyClients(message) {
+  return clients
+    .matchAll({ type: "window", includeUncontrolled: true })
+    .then((clientList) => {
+      clientList.forEach((client) => client.postMessage(message));
+    });
+}
+
+function closeRealtimeLeadNotifications(leadId) {
+  const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
+  return self.registration.getNotifications({ tag }).then((notifications) => {
+    notifications.forEach((notification) => notification.close());
+  });
+}
+
+self.addEventListener("push", (event) => {
+  const payload = parsePushPayload(event);
+  const data = payload.data ?? {};
+  const type = data.type ?? "";
+
+  if (type === "RealtimeLeadTaken") {
+    const leadId = data.leadId;
+    event.waitUntil(
+      closeRealtimeLeadNotifications(leadId).then(() =>
+        notifyClients({
+          type: "RealtimeLeadTaken",
+          leadId: Number(leadId),
+        }),
+      ),
+    );
     return;
   }
 
-  const isOfflineLead = data.type === "offline_leads";
-  const title = isOfflineLead
-    ? OFFLINE_LEAD_PUSH_TITLE
-    : payload.title || notificationTitle(data);
-  const options = {
-    body: isOfflineLead
-      ? formatOfflineLeadPushBody(data.count)
-      : payload.body || notificationBody(data),
-    data,
-    icon: "/icons/icon-192x192.png",
-    badge: "/icons/icon-96x96.png",
-    tag: notificationTag(data),
-    renotify: true,
-    vibrate: isOfflineLead ? OFFLINE_LEAD_VIBRATE_PATTERN : [200, 100, 200],
-    requireInteraction: isOfflineLead,
-    silent: false,
-    sound: isOfflineLead ? OFFLINE_LEAD_ALERT_SOUND_URL : undefined,
-  };
+  if (type === "RealtimeLead") {
+    const leadId = data.leadId;
+    const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
 
-  event.waitUntil(
-    (async () => {
-      const windowClients = await clients.matchAll({
-        type: "window",
-        includeUncontrolled: true,
-      });
+    event.waitUntil(
+      self.registration
+        .showNotification(payload.title || "لید جدید!", {
+          body:
+            payload.body ||
+            "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!",
+          tag,
+          renotify: true,
+          requireInteraction: true,
+          silent: false,
+          vibrate: [300, 120, 300, 120, 300],
+          icon: "/icons/icon-192x192.png",
+          badge: "/icons/icon-96x96.png",
+          data,
+          actions: [
+            { action: "pickup", title: "برداریدش!" },
+            { action: "dismiss", title: "بستن" },
+          ],
+        })
+        .then(() =>
+          notifyClients({
+            type: "RealtimeLead",
+            leadId: Number(leadId),
+            title: payload.title,
+            body: payload.body,
+          }),
+        ),
+    );
+    return;
+  }
 
-      for (const client of windowClients) {
-        client.postMessage({ type: "web-push-message", payload });
-      }
+  if (type === "offline_leads" || type === "test_push") {
+    const isOfflineLead = type === "offline_leads";
+    const title = isOfflineLead
+      ? OFFLINE_LEAD_PUSH_TITLE
+      : payload.title || notificationTitle(data);
+    const options = {
+      body: isOfflineLead
+        ? formatOfflineLeadPushBody(data.count)
+        : payload.body || notificationBody(data),
+      data,
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-96x96.png",
+      tag: notificationTag(data),
+      renotify: true,
+      vibrate: isOfflineLead ? OFFLINE_LEAD_VIBRATE_PATTERN : [200, 100, 200],
+      requireInteraction: isOfflineLead,
+      silent: false,
+      sound: isOfflineLead ? OFFLINE_LEAD_ALERT_SOUND_URL : undefined,
+    };
 
-      await self.registration.showNotification(title, options);
-    })(),
-  );
+    event.waitUntil(
+      (async () => {
+        const windowClients = await clients.matchAll({
+          type: "window",
+          includeUncontrolled: true,
+        });
+
+        for (const client of windowClients) {
+          client.postMessage({ type: "web-push-message", payload });
+        }
+
+        await self.registration.showNotification(title, options);
+      })(),
+    );
+    return;
+  }
+
+  if (payload.title || payload.body) {
+    event.waitUntil(
+      self.registration.showNotification(payload.title || "اعلان", {
+        body: payload.body,
+        data,
+        icon: "/icons/icon-192x192.png",
+        badge: "/icons/icon-96x96.png",
+      }),
+    );
+  }
 });
 
 self.addEventListener("pushsubscriptionchange", (event) => {
@@ -79,19 +169,57 @@ self.addEventListener("pushsubscriptionchange", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const data = event.notification?.data || {};
-  const url = notificationUrl(data);
+  const type = data.type ?? "";
+  const action = event.action;
 
+  if (type === "RealtimeLead") {
+    const leadId = Number(data.leadId);
+    const message =
+      action === "pickup"
+        ? { type: "RealtimeLeadPickup", leadId }
+        : { type: "RealtimeLeadOpen", leadId };
+
+    event.waitUntil(
+      notifyClients(message).then(() => {
+        const url = `/dashboard/consultant?section=leads&type=realtime&leadAssignmentId=${encodeURIComponent(data.leadId)}`;
+        return clients
+          .matchAll({ type: "window", includeUncontrolled: true })
+          .then((clientList) => {
+            for (const client of clientList) {
+              if ("focus" in client) {
+                client.navigate?.(url);
+                return client.focus();
+              }
+            }
+            return clients.openWindow(url);
+          });
+      }),
+    );
+    return;
+  }
+
+  const url = notificationUrl(data);
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if ("focus" in client) {
-          client.navigate?.(url);
-          return client.focus();
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if ("focus" in client) {
+            client.navigate?.(url);
+            return client.focus();
+          }
         }
-      }
-      return clients.openWindow(url);
-    }),
+        return clients.openWindow(url);
+      }),
   );
+});
+
+self.addEventListener("message", (event) => {
+  const data = event.data ?? {};
+
+  if (data.type === "CloseRealtimeLeadNotification" && data.leadId) {
+    event.waitUntil(closeRealtimeLeadNotifications(data.leadId));
+  }
 });
 
 function notificationTag(data) {
