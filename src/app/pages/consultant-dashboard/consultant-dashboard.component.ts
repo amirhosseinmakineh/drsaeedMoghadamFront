@@ -321,6 +321,23 @@ interface ConsultantDashboardLink {
                     </button>
                   </p>
                 }
+                @if (shouldShowPushSetupBanner) {
+                  <div class="push-setup-banner">
+                    <strong>برای دریافت لید آفلاین با صدا، نوتیفیکیشن را فعال کنید</strong>
+                    <p>
+                      بدون فعال‌سازی، هیچ اعلانی برای لیدهای آفلاین دریافت نمی‌کنید.
+                      روی دکمه زیر بزنید و Allow را انتخاب کنید.
+                    </p>
+                    <button
+                      class="primary-action full"
+                      type="button"
+                      [disabled]="enablePushSaving || pushRegistrationReady"
+                      (click)="enablePushNotifications()"
+                    >
+                      فعال‌سازی نوتیفیکیشن لید آفلاین
+                    </button>
+                  </div>
+                }
                 <div class="action-grid">
                   <button
                     class="primary-action"
@@ -477,6 +494,24 @@ interface ConsultantDashboardLink {
                       مشاهده لیدها
                     </button>
                   </p>
+                }
+
+                @if (shouldShowPushSetupBanner) {
+                  <div class="push-setup-banner">
+                    <strong>برای دریافت لید آفلاین با صدا، نوتیفیکیشن را فعال کنید</strong>
+                    <p>
+                      بدون فعال‌سازی، هیچ اعلانی برای لیدهای آفلاین دریافت نمی‌کنید.
+                      روی دکمه زیر بزنید و Allow را انتخاب کنید.
+                    </p>
+                    <button
+                      class="primary-action full"
+                      type="button"
+                      [disabled]="enablePushSaving || pushRegistrationReady"
+                      (click)="enablePushNotifications()"
+                    >
+                      فعال‌سازی نوتیفیکیشن لید آفلاین
+                    </button>
+                  </div>
                 }
 
                 <div class="action-grid">
@@ -1864,6 +1899,25 @@ interface ConsultantDashboardLink {
         font-size: 0.85rem;
         line-height: 1.6;
       }
+      .push-setup-banner {
+        margin: 0 0 0.9rem;
+        padding: 0.9rem 1rem;
+        border-radius: 0.9rem;
+        border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+        background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+        display: grid;
+        gap: 0.75rem;
+      }
+      .push-setup-banner strong {
+        display: block;
+        font-size: 0.95rem;
+      }
+      .push-setup-banner p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        line-height: 1.7;
+      }
       .full {
         width: 100%;
       }
@@ -2543,6 +2597,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return this.notifications.getEnvironmentHint();
   }
 
+  get shouldShowPushSetupBanner(): boolean {
+    if (!this.isProfileReady()) return false;
+    if (this.pushRegistrationReady) return false;
+    if (this.notifications.getEnvironmentIssue()) return false;
+    return this.browserNotificationPermission !== "denied";
+  }
+
   private readonly pushMessageListener = (event: Event): void => {
     const detail = (
       event as CustomEvent<{
@@ -3035,7 +3096,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .enablePushForCurrentProfile(profileId)
       .then(async (result) => {
         await this.syncPushRegistrationState();
-        this.showFeedback(result.message, result.ok ? "success" : "error");
+        const message = result.ok
+          ? `${result.message} حالا «تست نوتیفیکیشن» را بزنید.`
+          : result.message;
+        this.showFeedback(message, result.ok ? "success" : "error");
       })
       .catch((error) => {
         this.showFeedback(
@@ -4949,10 +5013,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private async ensureOfflineLeadPushRegistration(): Promise<void> {
-    await this.pushNotifications.registerForConsultantOnLogin();
+    await this.pushNotifications.syncPushRegistrationIfReady(
+      this.currentProfileId(),
+    );
     await this.syncPushRegistrationState();
+    this.maybePromptPushSetup();
     this.configurePollTimer();
     this.markViewDirty();
+  }
+
+  private maybePromptPushSetup(): void {
+    if (!this.shouldShowPushSetupBanner) return;
+
+    this.toast.info(
+      "برای دریافت لید آفلاین با صدا، دکمه «فعال‌سازی نوتیفیکیشن لید آفلاین» را بزنید.",
+    );
   }
 
   private showLeadNotification(

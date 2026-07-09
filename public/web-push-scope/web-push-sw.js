@@ -1,5 +1,6 @@
 /* global self, clients */
 
+const SW_VERSION = "2026-07-09-offline-push";
 const OFFLINE_LEAD_PUSH_TITLE = "لید آفلاین جدید!";
 const OFFLINE_LEAD_ALERT_SOUND_URL = "/sounds/offline-lead-alert.mp3";
 const OFFLINE_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 400, 120, 400];
@@ -122,3 +123,11 @@ function notificationUrl(data) {
   if (data.type === "test_push") return "/dashboard/consultant";
   return "/dashboard/consultant";
 }
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});

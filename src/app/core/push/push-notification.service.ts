@@ -48,7 +48,7 @@ export class PushNotificationService {
       window.addEventListener("focus", () => {
         const user = this.auth.user();
         if (user?.role === "consultant") {
-          void this.registerForConsultantOnLogin();
+          void this.syncPushRegistrationIfReady();
           return;
         }
         void this.syncForCurrentProfile();
@@ -263,6 +263,17 @@ export class PushNotificationService {
   }
 
   async registerForConsultantOnLogin(): Promise<PushSyncResult> {
+    return this.syncPushRegistrationIfReady();
+  }
+
+  needsPushUserActivation(): boolean {
+    const permission = this.notifications.getPermissionStatus();
+    return permission === "default" || permission === "unsupported";
+  }
+
+  async syncPushRegistrationIfReady(
+    profileId?: number | null,
+  ): Promise<PushSyncResult> {
     const user = this.auth.user();
     if (!user || !this.auth.authToken() || user.role !== "consultant") {
       return { ok: false, message: "ثبت Web Push فقط برای مشاور لازم است." };
@@ -273,23 +284,29 @@ export class PushNotificationService {
       return { ok: false, message: environmentIssue };
     }
 
-    const profileId = user.consultantProfileId ?? user.profileId ?? null;
+    const resolvedProfileId =
+      profileId ?? user.consultantProfileId ?? user.profileId ?? null;
     const permission = this.notifications.getPermissionStatus();
     if (permission === "denied") {
       return {
         ok: false,
-        message: "اجازه نوتیفیکیشن رد شده است.",
+        message: "اجازه نوتیفیکیشن رد شده است. از تنظیمات مرورگر/PWA دوباره فعال کنید.",
       };
     }
 
-    if (permission === "granted") {
-      const subscription = await this.getCurrentPushSubscription();
-      if (subscription) {
-        return this.syncForCurrentProfile(profileId);
-      }
+    if (permission !== "granted") {
+      return {
+        ok: false,
+        message: "برای فعال‌سازی نوتیفیکیشن، دکمه «فعال‌سازی نوتیفیکیشن» را بزنید.",
+      };
     }
 
-    return this.enablePushForCurrentProfile(profileId);
+    const subscription = await this.getCurrentPushSubscription();
+    if (!subscription) {
+      return this.enablePushForCurrentProfile(resolvedProfileId);
+    }
+
+    return this.syncForCurrentProfile(resolvedProfileId);
   }
 
   private extractErrorMessage(error: unknown, fallback: string): string {
