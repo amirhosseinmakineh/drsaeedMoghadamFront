@@ -2,6 +2,20 @@ import { OFFLINE_LEAD_ALERT_SOUND_URL } from "./offline-lead-push-message";
 
 let sharedAlertAudio: HTMLAudioElement | null = null;
 
+export function preloadOfflineLeadAlertSound(): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    if (!sharedAlertAudio) {
+      sharedAlertAudio = new Audio(OFFLINE_LEAD_ALERT_SOUND_URL);
+      sharedAlertAudio.preload = "auto";
+    }
+    sharedAlertAudio.load();
+  } catch {
+    // Optional preload.
+  }
+}
+
 export function playOfflineLeadAlertSound(): void {
   if (typeof window === "undefined") return;
 
