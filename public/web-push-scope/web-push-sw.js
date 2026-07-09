@@ -24,9 +24,13 @@ self.addEventListener("push", (event) => {
   }
 
   const isOfflineLead = data.type === "offline_leads";
-  const title = payload.title || notificationTitle(data);
+  const title = isOfflineLead
+    ? OFFLINE_LEAD_PUSH_TITLE
+    : payload.title || notificationTitle(data);
   const options = {
-    body: payload.body || notificationBody(data),
+    body: isOfflineLead
+      ? formatOfflineLeadPushBody(data.count)
+      : payload.body || notificationBody(data),
     data,
     icon: "/icons/icon-192x192.png",
     badge: "/icons/icon-96x96.png",

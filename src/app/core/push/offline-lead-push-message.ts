@@ -19,6 +19,13 @@ export function resolveOfflineLeadPushContent(
   } = {},
 ): { title: string; body: string } {
   const count = payload.data?.["count"];
+  if (payload.data?.["type"] === "offline_leads") {
+    return {
+      title: OFFLINE_LEAD_PUSH_TITLE,
+      body: formatOfflineLeadPushBody(count),
+    };
+  }
+
   return {
     title: payload.title || OFFLINE_LEAD_PUSH_TITLE,
     body: payload.body || formatOfflineLeadPushBody(count),

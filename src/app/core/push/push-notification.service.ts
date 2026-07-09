@@ -303,8 +303,14 @@ export class PushNotificationService {
       return;
     }
 
-    const title = payload.title || this.titleForData(payload.data);
-    const body = payload.body || this.bodyForData(payload.data);
+    const title =
+      pushType === "offline_leads"
+        ? this.titleForData(payload.data)
+        : payload.title || this.titleForData(payload.data);
+    const body =
+      pushType === "offline_leads"
+        ? this.bodyForData(payload.data)
+        : payload.body || this.bodyForData(payload.data);
     const detail: ConsultantPushMessageDetail = {
       title,
       body,
