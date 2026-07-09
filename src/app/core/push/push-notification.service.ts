@@ -7,7 +7,7 @@ import {
   NotificationService,
   WebPushMessagePayload,
 } from "./notification.service";
-import { playOfflineLeadAlertSound } from "./lead-alert-sound";
+import { playOfflineLeadAlertSound, playRealtimeLeadAlertSound } from "./lead-alert-sound";
 import {
   formatOfflineLeadPushBody,
   OFFLINE_LEAD_PUSH_TITLE,
@@ -257,6 +257,17 @@ export class PushNotificationService {
       return;
     }
 
+    if (data["type"] === "RealtimeLead" && data["leadId"]) {
+      this.router.navigate(["/dashboard/consultant"], {
+        queryParams: {
+          section: "leads",
+          type: "realtime",
+          leadAssignmentId: data["leadId"],
+        },
+      });
+      return;
+    }
+
     if (data["type"] === "test_push") {
       this.router.navigate(["/dashboard/consultant"]);
     }
@@ -329,7 +340,12 @@ export class PushNotificationService {
 
   private handleForegroundMessage(payload: WebPushMessagePayload): void {
     const pushType = payload.data?.["type"];
-    if (pushType && pushType !== "offline_leads" && pushType !== "test_push") {
+    if (
+      pushType &&
+      pushType !== "offline_leads" &&
+      pushType !== "test_push" &&
+      pushType !== "RealtimeLead"
+    ) {
       return;
     }
 
@@ -351,6 +367,10 @@ export class PushNotificationService {
       playOfflineLeadAlertSound();
     }
 
+    if (pushType === "RealtimeLead") {
+      playRealtimeLeadAlertSound();
+    }
+
     window.dispatchEvent(
       new CustomEvent("consultant-push-message", { detail }),
     );
@@ -358,6 +378,7 @@ export class PushNotificationService {
 
   private titleForData(data?: Record<string, string>): string {
     if (data?.["type"] === "offline_leads") return OFFLINE_LEAD_PUSH_TITLE;
+    if (data?.["type"] === "RealtimeLead") return "لید جدید!";
     if (data?.["type"] === "test_push") return "تست نوتیفیکیشن";
     return "اعلان جدید";
   }
@@ -365,6 +386,9 @@ export class PushNotificationService {
   private bodyForData(data?: Record<string, string>): string {
     if (data?.["type"] === "offline_leads") {
       return formatOfflineLeadPushBody(data["count"]);
+    }
+    if (data?.["type"] === "RealtimeLead") {
+      return "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!";
     }
     if (data?.["type"] === "test_push") {
       return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";

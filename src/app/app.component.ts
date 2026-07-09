@@ -5,6 +5,7 @@ import { filter, Subscription } from "rxjs";
 import { AuthDialogComponent } from "./auth/auth-dialog.component";
 import { AuthService, AuthUser } from "./core/auth/auth.service";
 import { PushNotificationService } from "./core/push/push-notification.service";
+import { RealtimeLeadAlertComponent } from "./shared/ui/realtime-lead-alert/realtime-lead-alert.component";
 import { LanguageCode, NAV_ITEMS, pickText } from "./models/clinic.model";
 import { FaIconComponent } from "./shared/ui/fa-icon/fa-icon.component";
 import { ToastContainerComponent } from "./shared/ui/toast-container/toast-container.component";
@@ -26,9 +27,11 @@ interface LanguageAwarePage {
     AuthDialogComponent,
     FaIconComponent,
     ToastContainerComponent,
+    RealtimeLeadAlertComponent,
   ],
   template: `
     <app-toast-container></app-toast-container>
+    <app-realtime-lead-alert></app-realtime-lead-alert>
     <div class="app-shell light" [attr.dir]="direction">
       <header *ngIf="!isDashboardRoute()" class="site-header">
         <a

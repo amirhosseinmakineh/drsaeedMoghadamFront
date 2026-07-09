@@ -24,6 +24,13 @@ export function playOfflineLeadAlertSound(): void {
   vibrateOfflineLeadAlert();
 }
 
+export function playRealtimeLeadAlertSound(): void {
+  if (typeof window === "undefined") return;
+
+  playAttentionBeeps();
+  vibrateOfflineLeadAlert();
+}
+
 function playAlertAudioFile(): void {
   try {
     if (!sharedAlertAudio) {

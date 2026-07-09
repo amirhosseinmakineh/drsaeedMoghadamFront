@@ -2620,6 +2620,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (pushType === "RealtimeLead") {
+      return;
+    }
+
     if (pushType === "test_push") {
       void this.showLeadNotification(
         detail.title || "تست نوتیفیکیشن",
@@ -2630,6 +2634,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     if (detail.body) this.showFeedback(detail.body, "success");
+  };
+
+  private readonly leadPickedUpListener = (event: Event): void => {
+    const leadId = (event as CustomEvent<{ leadId?: number }>).detail?.leadId;
+    if (!leadId || !this.isProfileReady()) return;
+
+    this.activeSection = "leads";
+    this.leadTypeFilter = LEAD_TYPE.RealTime;
+    this.highlightedLeadAssignmentId = leadId;
+    this.refreshDashboard();
+    this.loadLeads();
+    this.markViewDirty();
+    this.scrollToHighlightedLead();
   };
 
   constructor(
@@ -2677,6 +2694,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     preloadOfflineLeadAlertSound();
     void this.syncPushRegistrationState();
     window.addEventListener("consultant-push-message", this.pushMessageListener);
+    window.addEventListener("consultant-lead-picked-up", this.leadPickedUpListener);
     window.addEventListener("focus", this.onPushStateSync);
     document.addEventListener("visibilitychange", this.onPushStateSync);
     if (this.isProfileReady()) {
@@ -2719,6 +2737,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     window.removeEventListener(
       "consultant-push-message",
       this.pushMessageListener,
+    );
+    window.removeEventListener(
+      "consultant-lead-picked-up",
+      this.leadPickedUpListener,
     );
     window.removeEventListener("focus", this.onPushStateSync);
     document.removeEventListener("visibilitychange", this.onPushStateSync);
