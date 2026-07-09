@@ -57,6 +57,24 @@ export interface ConsultantDashboardStatus {
   raw?: unknown;
 }
 
+export interface BroadcastRealtimeLeadItem {
+  leadAssignmentId?: number;
+  LeadAssignmentId?: number;
+  userName?: string | null;
+  UserName?: string | null;
+  createdAt?: string;
+  CreatedAt?: string;
+}
+
+export interface BroadcastRealtimeLeadsResponse {
+  canReceive?: boolean;
+  CanReceive?: boolean;
+  blockReason?: string | null;
+  BlockReason?: string | null;
+  leads?: BroadcastRealtimeLeadItem[];
+  Leads?: BroadcastRealtimeLeadItem[];
+}
+
 export interface ConsultantLead {
   id?: number;
   Id?: number;
@@ -440,6 +458,27 @@ export class ConsultantDashboardService {
       );
   }
 
+  getBroadcastRealtimeLeads(
+    profileId: number,
+  ): Observable<BroadcastRealtimeLeadsResponse> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetBroadcastRealtimeLeads`, {
+        headers: this.authHeaders(),
+        params: this.toParams({ profileId }),
+      })
+      .pipe(
+        map((response) => this.normalizeBroadcastRealtimeLeads(response)),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(
+              error,
+              "دریافت لیدهای لحظه‌ای در دسترس انجام نشد",
+            ),
+          ),
+        ),
+      );
+  }
+
   getLeads(
     filters: LeadFilters,
   ): Observable<PaginatedResponse<ConsultantLead>> {
@@ -696,6 +735,25 @@ export class ConsultantDashboardService {
         this.readString(source, "onlineStatusBlockReason", "blockReason") ??
         null,
       raw: response,
+    };
+  }
+
+  private normalizeBroadcastRealtimeLeads(
+    response: unknown,
+  ): BroadcastRealtimeLeadsResponse {
+    const source = this.unwrapResponseData(response);
+    const leads = this.readItems<BroadcastRealtimeLeadItem>(source);
+    const nestedLeads = this.readItems<BroadcastRealtimeLeadItem>(
+      this.readValue(source, "leads", "Leads"),
+    );
+    const resolvedLeads = leads.length ? leads : nestedLeads;
+
+    return {
+      canReceive:
+        this.readBoolean(source, "canReceive", "CanReceive") ?? false,
+      blockReason:
+        this.readString(source, "blockReason", "BlockReason") ?? null,
+      leads: resolvedLeads,
     };
   }
 

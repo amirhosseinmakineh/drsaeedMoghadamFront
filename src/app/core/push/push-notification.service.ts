@@ -274,7 +274,15 @@ export class PushNotificationService {
   }
 
   async registerForConsultantOnLogin(): Promise<PushSyncResult> {
-    return this.syncPushRegistrationIfReady();
+    const user = this.auth.user();
+    const profileId = user?.consultantProfileId ?? user?.profileId ?? null;
+    const permission = this.notifications.getPermissionStatus();
+
+    if (permission === "default" && profileId) {
+      return this.enablePushForCurrentProfile(profileId);
+    }
+
+    return this.syncPushRegistrationIfReady(profileId);
   }
 
   needsPushUserActivation(): boolean {
