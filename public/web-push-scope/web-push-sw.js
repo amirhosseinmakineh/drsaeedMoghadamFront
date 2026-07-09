@@ -1,8 +1,13 @@
 /* global self, clients */
 
-const OFFLINE_LEAD_PUSH_TITLE = "لید جدید دارید";
-const OFFLINE_LEAD_PUSH_BODY =
-  "تعداد لیدهای آفلاین جدید برای شما اختصاص داده شد.";
+const OFFLINE_LEAD_PUSH_TITLE = "لید آفلاین جدید!";
+const OFFLINE_LEAD_ALERT_SOUND_URL = "/sounds/offline-lead-alert.mp3";
+const OFFLINE_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 400, 120, 400];
+
+function formatOfflineLeadPushBody(count) {
+  const leadCount = count || "چند";
+  return `${leadCount} لید آفلاین داری، بیا اینارو تعیین تکلیف کن`;
+}
 
 self.addEventListener("push", (event) => {
   let payload = { title: "اعلان جدید", body: "", data: {} };
@@ -18,6 +23,7 @@ self.addEventListener("push", (event) => {
     return;
   }
 
+  const isOfflineLead = data.type === "offline_leads";
   const title = payload.title || notificationTitle(data);
   const options = {
     body: payload.body || notificationBody(data),
@@ -26,8 +32,10 @@ self.addEventListener("push", (event) => {
     badge: "/icons/icon-96x96.png",
     tag: notificationTag(data),
     renotify: true,
-    vibrate: [200, 100, 200],
-    requireInteraction: false,
+    vibrate: isOfflineLead ? OFFLINE_LEAD_VIBRATE_PATTERN : [200, 100, 200],
+    requireInteraction: isOfflineLead,
+    silent: false,
+    sound: isOfflineLead ? OFFLINE_LEAD_ALERT_SOUND_URL : undefined,
   };
 
   event.waitUntil(
@@ -95,10 +103,7 @@ function notificationTitle(data) {
 
 function notificationBody(data) {
   if (data.type === "offline_leads") {
-    if (data.count) {
-      return `شما ${data.count} لید آفلاین دارید.`;
-    }
-    return OFFLINE_LEAD_PUSH_BODY;
+    return formatOfflineLeadPushBody(data.count);
   }
   if (data.type === "test_push") {
     return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";

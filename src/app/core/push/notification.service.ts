@@ -103,6 +103,8 @@ export class NotificationService {
     options: {
       tag?: string;
       requireInteraction?: boolean;
+      vibrate?: number[];
+      sound?: string;
       data?: Record<string, string>;
     } = {},
   ): Promise<boolean> {
@@ -118,6 +120,13 @@ export class NotificationService {
       renotify: true,
       requireInteraction: options.requireInteraction ?? false,
       data: options.data,
+      silent: false,
+      vibrate: options.vibrate,
+      sound: options.sound,
+    } as NotificationOptions & {
+      renotify?: boolean;
+      vibrate?: number[];
+      sound?: string;
     };
 
     try {
@@ -131,11 +140,7 @@ export class NotificationService {
     }
 
     try {
-      new Notification(title, {
-        body,
-        icon: notificationOptions.icon,
-        tag: notificationOptions.tag,
-      });
+      new Notification(title, notificationOptions);
       return true;
     } catch {
       return false;

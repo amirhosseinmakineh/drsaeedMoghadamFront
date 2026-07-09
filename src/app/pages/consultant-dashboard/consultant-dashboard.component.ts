@@ -22,10 +22,12 @@ import {
   SubmitLeadCallReportRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import {
-  OFFLINE_LEAD_PUSH_BODY,
-  OFFLINE_LEAD_PUSH_TITLE,
+  OFFLINE_LEAD_ALERT_SOUND_URL,
+  OFFLINE_LEAD_VIBRATE_PATTERN,
   PushNotificationService,
+  resolveOfflineLeadPushContent,
 } from "../../core/push/push-notification.service";
+import { playOfflineLeadAlertSound } from "../../core/push/lead-alert-sound";
 import { NotificationService } from "../../core/push/notification.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
@@ -3232,13 +3234,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.loadLeads();
     this.loadPendingOfflineLeads();
 
-    const title = detail.title || OFFLINE_LEAD_PUSH_TITLE;
-    const body =
-      detail.body ||
-      (detail.data?.["count"]
-        ? `شما ${detail.data["count"]} لید آفلاین دارید.`
-        : OFFLINE_LEAD_PUSH_BODY);
-    void this.showLeadNotification(title, body, "offline-leads");
+    const { title, body } = resolveOfflineLeadPushContent(detail);
+    void this.showLeadNotification(title, body, "offline-leads", detail.data);
     this.showFeedback(body, "success");
   }
 
@@ -4972,46 +4969,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     title: string,
     body: string,
     tag = "consultant-lead-alert",
+    data?: Record<string, string>,
   ): void {
+    const isOfflineLead = tag === "offline-leads";
     void this.notifications.showLocalNotification(title, body, {
       tag,
-      requireInteraction: tag === "offline-leads" || title.includes("تست"),
+      requireInteraction: isOfflineLead || title.includes("تست"),
+      vibrate: isOfflineLead ? OFFLINE_LEAD_VIBRATE_PATTERN : undefined,
+      sound: isOfflineLead ? OFFLINE_LEAD_ALERT_SOUND_URL : undefined,
+      data,
     });
     this.toast.info(body);
-    if (tag === "offline-leads" || title.includes("لید")) {
-      this.playLeadAlertSound();
+    if (!isOfflineLead && title.includes("لید")) {
+      playOfflineLeadAlertSound();
     }
-  }
-
-  private playLeadAlertSound(): void {
-    if (typeof window === "undefined") return;
-
-    try {
-      const AudioContextCtor =
-        window.AudioContext ||
-        (window as Window & { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext;
-      if (!AudioContextCtor) return;
-
-      const context = new AudioContextCtor();
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.value = 880;
-      gain.gain.value = 0.08;
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.18);
-      oscillator.onended = () => void context.close();
-    } catch {
-      // Audio is optional; vibration still runs below.
-    }
-
-    const navigatorWithVibration = navigator as Navigator & {
-      vibrate?: (pattern: number | number[]) => boolean;
-    };
-    navigatorWithVibration.vibrate?.([200, 100, 200, 100, 200]);
   }
 
   private async syncPushRegistrationState(): Promise<void> {

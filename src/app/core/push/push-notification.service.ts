@@ -7,10 +7,19 @@ import {
   NotificationService,
   WebPushMessagePayload,
 } from "./notification.service";
+import { playOfflineLeadAlertSound } from "./lead-alert-sound";
+import {
+  formatOfflineLeadPushBody,
+  OFFLINE_LEAD_PUSH_TITLE,
+} from "./offline-lead-push-message";
 
-export const OFFLINE_LEAD_PUSH_TITLE = "لید جدید دارید";
-export const OFFLINE_LEAD_PUSH_BODY =
-  "تعداد لیدهای آفلاین جدید برای شما اختصاص داده شد.";
+export {
+  formatOfflineLeadPushBody,
+  OFFLINE_LEAD_ALERT_SOUND_URL,
+  OFFLINE_LEAD_PUSH_TITLE,
+  OFFLINE_LEAD_VIBRATE_PATTERN,
+  resolveOfflineLeadPushContent,
+} from "./offline-lead-push-message";
 
 export interface ConsultantPushMessageDetail {
   title: string;
@@ -302,6 +311,10 @@ export class PushNotificationService {
       data: payload.data,
     };
 
+    if (pushType === "offline_leads") {
+      playOfflineLeadAlertSound();
+    }
+
     window.dispatchEvent(
       new CustomEvent("consultant-push-message", { detail }),
     );
@@ -315,10 +328,7 @@ export class PushNotificationService {
 
   private bodyForData(data?: Record<string, string>): string {
     if (data?.["type"] === "offline_leads") {
-      if (data["count"]) {
-        return `شما ${data["count"]} لید آفلاین دارید.`;
-      }
-      return OFFLINE_LEAD_PUSH_BODY;
+      return formatOfflineLeadPushBody(data["count"]);
     }
     if (data?.["type"] === "test_push") {
       return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";
