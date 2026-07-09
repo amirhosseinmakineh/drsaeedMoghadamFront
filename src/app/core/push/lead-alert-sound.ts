@@ -1,51 +1,8 @@
-import { OFFLINE_LEAD_ALERT_SOUND_URL } from "./offline-lead-push-message";
-
-let sharedAlertAudio: HTMLAudioElement | null = null;
-
-export function preloadOfflineLeadAlertSound(): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    if (!sharedAlertAudio) {
-      sharedAlertAudio = new Audio(OFFLINE_LEAD_ALERT_SOUND_URL);
-      sharedAlertAudio.preload = "auto";
-    }
-    sharedAlertAudio.load();
-  } catch {
-    // Optional preload.
-  }
-}
-
-export function playOfflineLeadAlertSound(): void {
-  if (typeof window === "undefined") return;
-
-  playAlertAudioFile();
-  playAttentionBeeps();
-  vibrateOfflineLeadAlert();
-}
-
 export function playRealtimeLeadAlertSound(): void {
   if (typeof window === "undefined") return;
 
   playAttentionBeeps();
-  vibrateOfflineLeadAlert();
-}
-
-function playAlertAudioFile(): void {
-  try {
-    if (!sharedAlertAudio) {
-      sharedAlertAudio = new Audio(OFFLINE_LEAD_ALERT_SOUND_URL);
-      sharedAlertAudio.preload = "auto";
-    }
-
-    sharedAlertAudio.currentTime = 0;
-    sharedAlertAudio.volume = 1;
-    void sharedAlertAudio.play().catch(() => {
-      // Fall back to synthesized beeps below.
-    });
-  } catch {
-    // Ignore and rely on synthesized beeps.
-  }
+  vibrateRealtimeLeadAlert();
 }
 
 function playAttentionBeeps(): void {
@@ -84,9 +41,9 @@ function playAttentionBeeps(): void {
   }
 }
 
-function vibrateOfflineLeadAlert(): void {
+function vibrateRealtimeLeadAlert(): void {
   const navigatorWithVibration = navigator as Navigator & {
     vibrate?: (pattern: number | number[]) => boolean;
   };
-  navigatorWithVibration.vibrate?.([400, 120, 400, 120, 400, 120, 400, 120, 400]);
+  navigatorWithVibration.vibrate?.([300, 120, 300, 120, 300]);
 }

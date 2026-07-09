@@ -8,7 +8,6 @@ const dist = join(root, "dist/demo/browser");
 const requiredFiles = [
   "web-push-config.js",
   "web-push-scope/web-push-sw.js",
-  "sounds/offline-lead-alert.mp3",
   "manifest.webmanifest",
 ];
 

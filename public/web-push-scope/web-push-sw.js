@@ -1,15 +1,7 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-09-realtime-offline-push";
+const SW_VERSION = "2026-07-09-realtime-push";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
-const OFFLINE_LEAD_PUSH_TITLE = "لید آفلاین جدید!";
-const OFFLINE_LEAD_ALERT_SOUND_URL = "/sounds/offline-lead-alert.mp3";
-const OFFLINE_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 400, 120, 400];
-
-function formatOfflineLeadPushBody(count) {
-  const leadCount = count || "چند";
-  return `${leadCount} لید آفلاین داری، بیا اینارو تعیین تکلیف کن`;
-}
 
 function parsePushPayload(event) {
   if (!event.data) {
@@ -112,24 +104,18 @@ self.addEventListener("push", (event) => {
     return;
   }
 
-  if (type === "offline_leads" || type === "test_push") {
-    const isOfflineLead = type === "offline_leads";
-    const title = isOfflineLead
-      ? OFFLINE_LEAD_PUSH_TITLE
-      : payload.title || notificationTitle(data);
+  if (type === "test_push") {
+    const title = payload.title || notificationTitle(data);
     const options = {
-      body: isOfflineLead
-        ? formatOfflineLeadPushBody(data.count)
-        : payload.body || notificationBody(data),
+      body: payload.body || notificationBody(data),
       data,
       icon: "/icons/icon-192x192.png",
       badge: "/icons/icon-96x96.png",
       tag: notificationTag(data),
       renotify: true,
-      vibrate: isOfflineLead ? OFFLINE_LEAD_VIBRATE_PATTERN : [200, 100, 200],
-      requireInteraction: isOfflineLead,
+      vibrate: [200, 100, 200],
+      requireInteraction: false,
       silent: false,
-      sound: isOfflineLead ? OFFLINE_LEAD_ALERT_SOUND_URL : undefined,
     };
 
     event.waitUntil(
@@ -235,21 +221,16 @@ self.addEventListener("message", (event) => {
 });
 
 function notificationTag(data) {
-  if (data.type === "offline_leads") return "offline-leads";
   if (data.type === "test_push") return "test-push";
   return "consultant-notification";
 }
 
 function notificationTitle(data) {
-  if (data.type === "offline_leads") return OFFLINE_LEAD_PUSH_TITLE;
   if (data.type === "test_push") return "تست نوتیفیکیشن";
   return "اعلان جدید";
 }
 
 function notificationBody(data) {
-  if (data.type === "offline_leads") {
-    return formatOfflineLeadPushBody(data.count);
-  }
   if (data.type === "test_push") {
     return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";
   }
@@ -257,9 +238,6 @@ function notificationBody(data) {
 }
 
 function notificationUrl(data) {
-  if (data.type === "offline_leads") {
-    return "/dashboard/consultant?section=leads&type=offline";
-  }
   if (data.type === "test_push") return "/dashboard/consultant";
   return "/dashboard/consultant";
 }

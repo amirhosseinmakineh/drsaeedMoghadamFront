@@ -32,7 +32,6 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import {
   ADMIN_LEAD_STATE_FILTER_OPTIONS,
   ADMIN_LEAD_TYPE_FILTER_OPTIONS,
-  isOfflineLeadExpiredState,
   leadAssignmentStateLabel,
   leadAssignmentTypeLabel,
   resolveLeadAssignmentState,
@@ -405,17 +404,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       .subscribe({
         next: (response) => {
           if (requestId !== this.loadRequestId) return;
-          const rawItems = response.items ?? [];
-          this.items =
-            this.filters.leadAssignmentState === 6
-              ? rawItems
-              : rawItems.filter(
-                  (row) =>
-                    !isOfflineLeadExpiredState(
-                      this.leadType(row),
-                      this.leadState(row),
-                    ),
-                );
+          this.items = response.items ?? [];
           this.totalCount = response.totalCount ?? this.items.length;
           this.totalPages = Math.max(
             1,

@@ -7,19 +7,7 @@ import {
   NotificationService,
   WebPushMessagePayload,
 } from "./notification.service";
-import { playOfflineLeadAlertSound, playRealtimeLeadAlertSound } from "./lead-alert-sound";
-import {
-  formatOfflineLeadPushBody,
-  OFFLINE_LEAD_PUSH_TITLE,
-} from "./offline-lead-push-message";
-
-export {
-  formatOfflineLeadPushBody,
-  OFFLINE_LEAD_ALERT_SOUND_URL,
-  OFFLINE_LEAD_PUSH_TITLE,
-  OFFLINE_LEAD_VIBRATE_PATTERN,
-  resolveOfflineLeadPushContent,
-} from "./offline-lead-push-message";
+import { playRealtimeLeadAlertSound } from "./lead-alert-sound";
 
 export interface ConsultantPushMessageDetail {
   title: string;
@@ -250,12 +238,6 @@ export class PushNotificationService {
 
   handleNotificationData(data?: Record<string, string>): void {
     if (!data) return;
-    if (data["type"] === "offline_leads") {
-      this.router.navigate(["/dashboard/consultant"], {
-        queryParams: { section: "leads", type: "offline" },
-      });
-      return;
-    }
 
     if (data["type"] === "RealtimeLead" && data["leadId"]) {
       this.router.navigate(["/dashboard/consultant"], {
@@ -350,30 +332,19 @@ export class PushNotificationService {
     const pushType = payload.data?.["type"];
     if (
       pushType &&
-      pushType !== "offline_leads" &&
       pushType !== "test_push" &&
       pushType !== "RealtimeLead"
     ) {
       return;
     }
 
-    const title =
-      pushType === "offline_leads"
-        ? this.titleForData(payload.data)
-        : payload.title || this.titleForData(payload.data);
-    const body =
-      pushType === "offline_leads"
-        ? this.bodyForData(payload.data)
-        : payload.body || this.bodyForData(payload.data);
+    const title = payload.title || this.titleForData(payload.data);
+    const body = payload.body || this.bodyForData(payload.data);
     const detail: ConsultantPushMessageDetail = {
       title,
       body,
       data: payload.data,
     };
-
-    if (pushType === "offline_leads") {
-      playOfflineLeadAlertSound();
-    }
 
     if (pushType === "RealtimeLead") {
       playRealtimeLeadAlertSound();
@@ -385,16 +356,12 @@ export class PushNotificationService {
   }
 
   private titleForData(data?: Record<string, string>): string {
-    if (data?.["type"] === "offline_leads") return OFFLINE_LEAD_PUSH_TITLE;
     if (data?.["type"] === "RealtimeLead") return "لید جدید!";
     if (data?.["type"] === "test_push") return "تست نوتیفیکیشن";
     return "اعلان جدید";
   }
 
   private bodyForData(data?: Record<string, string>): string {
-    if (data?.["type"] === "offline_leads") {
-      return formatOfflineLeadPushBody(data["count"]);
-    }
     if (data?.["type"] === "RealtimeLead") {
       return "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!";
     }

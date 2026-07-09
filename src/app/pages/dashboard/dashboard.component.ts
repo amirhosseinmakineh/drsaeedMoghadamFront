@@ -15,7 +15,6 @@ import {
   Consultant,
   ConsultantFilters,
   SaveUserRequest,
-  ScoreRequest,
   UserFilters,
 } from "../../core/admin/admin-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
@@ -69,13 +68,6 @@ interface UserFormModel {
   birthDate: string;
   isActive: boolean;
   roleName: string;
-}
-
-interface ScoreFormModel {
-  reason: number;
-  scoreValue: number;
-  description: string;
-  leadAssignmentId: number | null;
 }
 
 @Component({
@@ -602,67 +594,6 @@ interface ScoreFormModel {
             </button>
             <button class="solid-action" type="submit" [disabled]="userSaving">
               {{ userSaving ? "در حال ذخیره..." : "ذخیره" }}
-            </button>
-          </div>
-        </form>
-      </app-base-dialog>
-
-      <app-base-dialog
-        [open]="scoreDialogOpen"
-        [showFooter]="false"
-        [title]="
-          selectedScoreConsultant
-            ? 'ثبت امتیاز برای ' + fullName(selectedScoreConsultant)
-            : 'ثبت امتیاز'
-        "
-        (closed)="closeScoreDialog()"
-      >
-        <form class="dialog-form" (ngSubmit)="submitScoreForm()">
-          <label>
-            نوع امتیاز
-            <select
-              [(ngModel)]="scoreForm.reason"
-              name="scoreReason"
-              (ngModelChange)="syncScoreSign()"
-            >
-              <option [ngValue]="5">پاداش مدیر</option>
-              <option [ngValue]="6">جریمه مدیر</option>
-            </select>
-          </label>
-          <div class="two-col">
-            <label
-              >مقدار امتیاز<input
-                [(ngModel)]="scoreForm.scoreValue"
-                [ngModelOptions]="ngModelBlurOptions"
-                name="scoreValue"
-                type="number"
-            /></label>
-            <label
-              >شناسه لید مرتبط<input
-                [(ngModel)]="scoreForm.leadAssignmentId"
-                [ngModelOptions]="ngModelBlurOptions"
-                name="scoreLeadId"
-                type="number"
-            /></label>
-          </div>
-          <label
-            >توضیح<textarea
-              [(ngModel)]="scoreForm.description"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="scoreDescription"
-              rows="3"
-            ></textarea>
-          </label>
-          <div class="dialog-actions">
-            <button
-              class="ghost-action"
-              type="button"
-              (click)="closeScoreDialog()"
-            >
-              انصراف
-            </button>
-            <button class="solid-action" type="submit" [disabled]="scoreSaving">
-              {{ scoreSaving ? "در حال ثبت..." : "ثبت امتیاز" }}
             </button>
           </div>
         </form>
@@ -1295,13 +1226,9 @@ export class DashboardComponent implements OnInit {
   deleteDialogOpen = false;
   userToDelete: AdminUser | null = null;
 
-  scoreDialogOpen = false;
-  scoreSaving = false;
-  selectedScoreConsultant: Consultant | null = null;
   selectedAttendanceConsultant: Consultant | null = null;
   selectedLeadsConsultant: Consultant | null = null;
   selectedReservationsConsultant: Consultant | null = null;
-  scoreForm: ScoreFormModel = this.emptyScoreForm();
 
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
@@ -1371,12 +1298,6 @@ export class DashboardComponent implements OnInit {
   ];
 
   readonly consultantActions = [
-    {
-      action: "score",
-      label: "ثبت امتیاز",
-      icon: "award",
-      tone: "primary" as const,
-    },
     { action: "attendance", label: "حضور", icon: "calendar" },
     { action: "leads", label: "لیدها", icon: "clipboard" },
     { action: "reservations", label: "رزروها", icon: "calendar" },
@@ -1730,14 +1651,6 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    if (event.action === "score") {
-      this.selectedScoreConsultant = event.row;
-      this.scoreForm = this.emptyScoreForm();
-      this.scoreDialogOpen = true;
-      this.markDirty();
-      return;
-    }
-
     if (event.action === "attendance") {
       this.selectedAttendanceConsultant = event.row;
       this.selectedLeadsConsultant = null;
@@ -1787,67 +1700,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  closeScoreDialog(): void {
-    this.scoreDialogOpen = false;
-    this.scoreSaving = false;
-    this.selectedScoreConsultant = null;
-    this.markDirty();
-  }
-
-  syncScoreSign(): void {
-    const rawValue = Math.abs(Number(this.scoreForm.scoreValue || 0)) || 10;
-    this.scoreForm.scoreValue =
-      this.scoreForm.reason === 6 ? -rawValue : rawValue;
-  }
-
-  submitScoreForm(): void {
-    const validationError = this.validateScoreForm();
-    if (validationError) {
-      this.showFeedback(validationError, "error");
-      return;
-    }
-
-    const scoreValue = Number(this.scoreForm.scoreValue);
-
-    this.scoreSaving = true;
-    this.clearFeedback();
-
-    const payload: ScoreRequest = {
-      consultantProfileId: this.selectedScoreConsultant!.profileId,
-      source: 2,
-      reason: Number(this.scoreForm.reason),
-      scoreValue,
-      description: this.scoreForm.description.trim() || null,
-      leadAssignmentId: this.scoreForm.leadAssignmentId
-        ? Number(this.scoreForm.leadAssignmentId)
-        : null,
-      createdByUserId: this.user()?.userId ?? null,
-    };
-
-    this.adminApi
-      .createScore(payload)
-      .pipe(
-        finalize(() => {
-          this.scoreSaving = false;
-          this.markDirty();
-        }),
-      )
-      .subscribe({
-        next: (response) => {
-          this.closeScoreDialog();
-          this.showFeedback(
-            response.message || "امتیاز با موفقیت ثبت شد",
-            "success",
-          );
-        },
-        error: (error) =>
-          this.showFeedback(
-            this.errorMessage(error, "ثبت امتیاز انجام نشد"),
-            "error",
-          ),
-      });
-  }
-
   fullName(user: { firstName?: string; lastName?: string }): string {
     const value = user as {
       firstName?: string;
@@ -1872,32 +1724,6 @@ export class DashboardComponent implements OnInit {
     };
 
     return labels[roleName] ?? roleName;
-  }
-
-  validateScoreForm(): string | null {
-    if (!this.selectedScoreConsultant?.profileId)
-      return "شناسه پروفایل مشاور یافت نشد";
-
-    const scoreValue = Number(this.scoreForm.scoreValue);
-    if (!Number.isFinite(scoreValue) || scoreValue === 0)
-      return "مقدار امتیاز معتبر نیست";
-    if (this.scoreForm.reason === 5 && scoreValue <= 0)
-      return "امتیاز تشویقی مدیر باید مثبت باشد";
-    if (this.scoreForm.reason === 6 && scoreValue >= 0)
-      return "امتیاز جریمه مدیر باید منفی باشد";
-
-    const leadAssignmentId = this.scoreForm.leadAssignmentId;
-    if (
-      leadAssignmentId !== null &&
-      leadAssignmentId !== undefined &&
-      (!Number.isInteger(Number(leadAssignmentId)) ||
-        Number(leadAssignmentId) <= 0)
-    )
-      return "شناسه لید مرتبط معتبر نیست";
-
-    if (!this.scoreForm.description.trim()) return "توضیح امتیاز الزامی است";
-
-    return null;
   }
 
   validateUserForm(): string | null {
@@ -1998,15 +1824,6 @@ export class DashboardComponent implements OnInit {
       lastName: consultant.lastName || consultant.LastName || "",
       phoneNumber: consultant.phoneNumber || consultant.PhoneNumber || "",
       profileId: consultant.profileId ?? consultant.ProfileId ?? 0,
-    };
-  }
-
-  private emptyScoreForm(): ScoreFormModel {
-    return {
-      reason: 5,
-      scoreValue: 10,
-      description: "",
-      leadAssignmentId: null,
     };
   }
 

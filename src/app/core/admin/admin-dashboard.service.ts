@@ -380,16 +380,6 @@ export interface ReviewAttendanceRequest {
   note: string | null;
 }
 
-export interface ScoreRequest {
-  consultantProfileId: number;
-  source: number;
-  reason: number;
-  scoreValue: number;
-  description: string | null;
-  leadAssignmentId: number | null;
-  createdByUserId: string | null;
-}
-
 interface LeadPerson {
   userName?: string | null;
   UserName?: string | null;
@@ -545,14 +535,6 @@ export class AdminDashboardService {
         leadsAssignmentItemsResponse: profile?.leadsAssignmentItemsResponse,
       };
     });
-  }
-
-  createScore(payload: ScoreRequest): Observable<ApiCommandResponse> {
-    return this.http
-      .post<ApiCommandResponse>(`${this.apiBaseUrl}/ScoreLog`, payload, {
-        headers: this.authHeaders(),
-      })
-      .pipe(this.ensureCommandSucceeded("ثبت امتیاز انجام نشد"));
   }
 
   getAttendance(

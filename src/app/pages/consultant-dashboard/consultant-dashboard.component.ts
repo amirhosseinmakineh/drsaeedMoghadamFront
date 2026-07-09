@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { Subscription, finalize, firstValueFrom, forkJoin, switchMap } from "rxjs";
+import { Subscription, finalize, firstValueFrom, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
   CompletePatientProfileRequest,
@@ -21,13 +21,8 @@ import {
   CreateReservationRequest,
   SubmitLeadCallReportRequest,
 } from "../../core/consultant/consultant-dashboard.service";
-import {
-  OFFLINE_LEAD_ALERT_SOUND_URL,
-  OFFLINE_LEAD_VIBRATE_PATTERN,
-  PushNotificationService,
-  resolveOfflineLeadPushContent,
-} from "../../core/push/push-notification.service";
-import { playOfflineLeadAlertSound, preloadOfflineLeadAlertSound } from "../../core/push/lead-alert-sound";
+import { PushNotificationService } from "../../core/push/push-notification.service";
+import { playRealtimeLeadAlertSound } from "../../core/push/lead-alert-sound";
 import { NotificationService } from "../../core/push/notification.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
@@ -40,20 +35,11 @@ import {
   LeadAssignmentState as LEAD_STATE,
   LeadAssignmentType as LEAD_TYPE,
   isConsultantWorkingHours,
-  isOfflineLeadExpiredState,
   leadAssignmentStateLabel,
   leadAssignmentTypeLabel,
   resolveLeadAssignmentState,
   resolveLeadAssignmentType,
 } from "../../core/lead/lead-enums";
-import {
-  expectedOfflineStateAfterReport,
-  isFollowUpOfflineLead,
-  isOfflineLeadBlockingOnline,
-  isUnreportedOfflineLeadState,
-  leadFollowUpDisplayLabel,
-  leadOfflineDisplayStatus,
-} from "../../core/lead/lead-offline-workflow";
 import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
 
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
@@ -309,24 +295,11 @@ interface ConsultantDashboardLink {
                     }}</strong>
                   </div>
                 </div>
-                @if (hasUnreportedOfflineLeads()) {
-                  <p class="offline-block-banner" role="alert">
-                    {{ pendingOfflineCount }} لید آفلاین بدون گزارش دارید. تا ثبت
-                    گزارش همه، امکان آنلاین شدن وجود ندارد.
-                    <button
-                      class="secondary-action compact"
-                      type="button"
-                      (click)="openUnreportedOfflineLeads()"
-                    >
-                      مشاهده لیدها
-                    </button>
-                  </p>
-                }
                 @if (shouldShowPushSetupBanner) {
                   <div class="push-setup-banner">
-                    <strong>برای دریافت لید آفلاین با صدا، نوتیفیکیشن را فعال کنید</strong>
+                    <strong>برای دریافت لید لحظه‌ای، نوتیفیکیشن را فعال کنید</strong>
                     <p>
-                      بدون فعال‌سازی، هیچ اعلانی برای لیدهای آفلاین دریافت نمی‌کنید.
+                      بدون فعال‌سازی، اعلان لیدهای لحظه‌ای دریافت نمی‌شود.
                       روی دکمه زیر بزنید و Allow را انتخاب کنید.
                     </p>
                     <button
@@ -335,7 +308,7 @@ interface ConsultantDashboardLink {
                       [disabled]="enablePushSaving || pushRegistrationReady"
                       (click)="enablePushNotifications()"
                     >
-                      فعال‌سازی نوتیفیکیشن لید آفلاین
+                      فعال‌سازی نوتیفیکیشن لید لحظه‌ای
                     </button>
                   </div>
                 }
@@ -483,25 +456,12 @@ interface ConsultantDashboardLink {
                   </div>
                 </div>
 
-                @if (hasUnreportedOfflineLeads()) {
-                  <p class="offline-block-banner" role="alert">
-                    {{ pendingOfflineCount }} لید آفلاین بدون گزارش دارید. تا ثبت
-                    گزارش همه، امکان آنلاین شدن وجود ندارد.
-                    <button
-                      class="secondary-action compact"
-                      type="button"
-                      (click)="openUnreportedOfflineLeads()"
-                    >
-                      مشاهده لیدها
-                    </button>
-                  </p>
-                }
 
                 @if (shouldShowPushSetupBanner) {
                   <div class="push-setup-banner">
-                    <strong>برای دریافت لید آفلاین با صدا، نوتیفیکیشن را فعال کنید</strong>
+                    <strong>برای دریافت لید لحظه‌ای، نوتیفیکیشن را فعال کنید</strong>
                     <p>
-                      بدون فعال‌سازی، هیچ اعلانی برای لیدهای آفلاین دریافت نمی‌کنید.
+                      بدون فعال‌سازی، اعلان لیدهای لحظه‌ای دریافت نمی‌شود.
                       روی دکمه زیر بزنید و Allow را انتخاب کنید.
                     </p>
                     <button
@@ -510,7 +470,7 @@ interface ConsultantDashboardLink {
                       [disabled]="enablePushSaving || pushRegistrationReady"
                       (click)="enablePushNotifications()"
                     >
-                      فعال‌سازی نوتیفیکیشن لید آفلاین
+                      فعال‌سازی نوتیفیکیشن لید لحظه‌ای
                     </button>
                   </div>
                 }
@@ -622,11 +582,6 @@ interface ConsultantDashboardLink {
                   </button>
                 </header>
 
-                @if (hasUnreportedOfflineLeads()) {
-                  <p class="offline-block-banner" role="alert">
-                    {{ pendingOfflineCount }} لید آفلاین بدون گزارش مانده است.
-                  </p>
-                }
 
                 <form class="lead-filters" (ngSubmit)="applyLeadFilters()">
                   <label>
@@ -652,7 +607,6 @@ interface ConsultantDashboardLink {
                     >
                       <option [ngValue]="null">همه</option>
                       <option [ngValue]="1">آنی</option>
-                      <option [ngValue]="2">صف آفلاین</option>
                     </select>
                   </label>
                   <button
@@ -713,12 +667,6 @@ interface ConsultantDashboardLink {
                           </div>
                         }
 
-                        @if (isFollowUpOfflineLeadDisplay(lead)) {
-                          <div class="follow-up-row">
-                            <span>وضعیت پیگیری</span>
-                            <strong>{{ leadFollowUpLabel(lead) }}</strong>
-                          </div>
-                        }
 
                         <div class="lead-actions">
                           <a
@@ -2067,19 +2015,6 @@ interface ConsultantDashboardLink {
       .lead-card.expired {
         opacity: 0.72;
       }
-      .offline-block-banner {
-        margin: 0;
-        padding: 12px 14px;
-        border-radius: 18px;
-        border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line));
-        background: color-mix(in srgb, var(--warn) 12%, var(--surface));
-        color: var(--text);
-        font-weight: 800;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-      }
       .follow-up-row {
         display: flex;
         justify-content: space-between;
@@ -2477,8 +2412,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   testPushSaving = false;
   enablePushSaving = false;
   pushRegistrationReady = false;
-  pendingOfflineCount = 0;
-  currentScore = 100;
   canGoOnlineFromStatus = false;
   dashboardStatusLoaded = false;
   onlineStatusBlockReason: string | null = null;
@@ -2570,10 +2503,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private timerStarts: Record<string, number> = {};
   private readonly stoppedTimerLeadIds = new Set<number>();
   private leadRequestId = 0;
-  private pendingOfflineRequestId = 0;
   private reservationRequestId = 0;
   private visibleLeadLoadingRequestId = 0;
-  private pendingOfflineLoadSubscription: Subscription | null = null;
   private leadLoadSubscription: Subscription | null = null;
   private reservationLoadSubscription: Subscription | null = null;
   private dashboardStatusSubscription: Subscription | null = null;
@@ -2581,8 +2512,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private destroyed = false;
   private pollIntervalMs = 30000;
   private routeParamsInitialized = false;
-  private knownOfflineLeadIds = new Set<number>();
-  private offlineLeadIdsInitialized = false;
   private readonly markViewDirty: () => void;
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly onPushStateSync = (): void => {
@@ -2618,11 +2547,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!detail) return;
 
     const pushType = detail.data?.["type"];
-    if (pushType === "offline_leads") {
-      this.handleOfflineLeadsPush(detail);
-      return;
-    }
-
     if (pushType === "RealtimeLead") {
       return;
     }
@@ -2695,7 +2619,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     )) {
       this.stoppedTimerLeadIds.add(leadAssignmentId);
     }
-    preloadOfflineLeadAlertSound();
     this.realtimeLeadAlerts.initialize();
     void this.syncPushRegistrationState();
     window.addEventListener("consultant-push-message", this.pushMessageListener);
@@ -2703,7 +2626,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     window.addEventListener("focus", this.onPushStateSync);
     document.addEventListener("visibilitychange", this.onPushStateSync);
     if (this.isProfileReady()) {
-      void this.ensureOfflineLeadPushRegistration();
+      void this.ensureLeadPushRegistration(false);
     }
     this.applyLeadRouteParams(this.route.snapshot.queryParamMap);
     this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
@@ -2735,7 +2658,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
     if (this.autoAbsenceId) clearInterval(this.autoAbsenceId);
-    this.pendingOfflineLoadSubscription?.unsubscribe();
     this.leadLoadSubscription?.unsubscribe();
     this.reportEditLoadSubscription?.unsubscribe();
     this.reservationLoadSubscription?.unsubscribe();
@@ -2766,35 +2688,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   canGoOnline(): boolean {
     if (!this.isConsultantWorkingHours()) return false;
-    if (!this.isAvailable || this.hasUnreportedOfflineLeads()) return false;
+    if (!this.isAvailable) return false;
     if (!this.dashboardStatusLoaded) return false;
     if (this.onlineStatusBlockReason) return false;
     return this.canGoOnlineFromStatus;
-  }
-
-  hasUnreportedOfflineLeads(): boolean {
-    return this.pendingOfflineCount > 0;
-  }
-
-  openUnreportedOfflineLeads(): void {
-    this.activeSection = "leads";
-    this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
-    this.leadStateFilter = null;
-    this.leadPageNumber = 1;
-    this.loadLeads();
-    this.markViewDirty();
-  }
-
-  isFollowUpOfflineLeadDisplay(lead: ConsultantLead): boolean {
-    return isFollowUpOfflineLead(
-      this.leadType(lead),
-      this.leadState(lead),
-      this.leadCallResult(lead),
-    );
-  }
-
-  leadFollowUpLabel(lead: ConsultantLead): string {
-    return leadFollowUpDisplayLabel(this.leadCallResult(lead));
   }
 
   setSection(section: ConsultantDashboardSection): void {
@@ -3021,9 +2918,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (isOnline && !this.canGoOnline()) {
       const message =
         this.onlineStatusBlockReason ||
-        (this.hasUnreportedOfflineLeads()
-          ? `${this.pendingOfflineCount} لید آفلاین بدون گزارش دارید. ابتدا گزارش همه را ثبت کنید.`
-          : "ابتدا حضور خود را ثبت کنید");
+        "ابتدا حضور خود را ثبت کنید";
       this.showFeedback(message, "error");
       return;
     }
@@ -3067,7 +2962,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.errorMessage(error, "تغییر وضعیت آنلاین انجام نشد"),
             "error",
           );
-          this.loadPendingOfflineLeads();
         },
       });
   }
@@ -3148,7 +3042,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   refreshDashboard(): void {
     if (!this.isProfileReady()) return;
     this.loadDashboardStatus(() => {
-      this.loadPendingOfflineLeads();
       this.loadLeads();
       this.loadReservations();
     });
@@ -3171,10 +3064,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       }
 
       let leadsLoaded = false;
-      let pendingLoaded = false;
       let leadStatusLoaded = false;
       const maybeFinish = () => {
-        if (!leadsLoaded || !pendingLoaded || !leadStatusLoaded) return;
+        if (!leadsLoaded || !leadStatusLoaded) return;
         if (this.activeSection === "report-edits") {
           this.loadReportEditLeads();
         }
@@ -3207,42 +3099,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           error: () => {
             if (leadStatusRequestId !== this.leadStatusRefreshRequestId) return;
             leadStatusLoaded = true;
-            maybeFinish();
-          },
-        });
-
-      const pendingRequestId = ++this.pendingOfflineRequestId;
-      this.pendingOfflineLoadSubscription?.unsubscribe();
-      this.pendingOfflineLoadSubscription = forkJoin({
-        newLeads: this.consultantApi.getLeads({
-          profileId,
-          leadAssignmentState: LEAD_STATE.New,
-          leadAssignmentType: LEAD_TYPE.OfflineQueue,
-          pageNumber: 1,
-          pageSize: 1,
-        }),
-        assignedLeads: this.consultantApi.getLeads({
-          profileId,
-          leadAssignmentState: LEAD_STATE.Assigned,
-          leadAssignmentType: LEAD_TYPE.OfflineQueue,
-          pageNumber: 1,
-          pageSize: 1,
-        }),
-      })
-        .pipe(finalize(() => this.markViewDirty()))
-        .subscribe({
-          next: ({ newLeads, assignedLeads }) => {
-            if (pendingRequestId !== this.pendingOfflineRequestId) return;
-            this.updatePendingOfflineCount(
-              (newLeads.totalCount ?? newLeads.items.length) +
-                (assignedLeads.totalCount ?? assignedLeads.items.length),
-            );
-            pendingLoaded = true;
-            maybeFinish();
-          },
-          error: () => {
-            if (pendingRequestId !== this.pendingOfflineRequestId) return;
-            pendingLoaded = true;
             maybeFinish();
           },
         });
@@ -3301,9 +3157,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.activeSection = "leads";
     const type = params.get("type");
-    if (type === "offline") {
-      this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
-    } else if (type === "realtime") {
+    if (type === "realtime") {
       this.leadTypeFilter = LEAD_TYPE.RealTime;
       this.leadStateFilter = null;
     }
@@ -3317,22 +3171,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.leadPageNumber = 1;
-  }
-
-  private handleOfflineLeadsPush(detail: {
-    title?: string;
-    body?: string;
-    data?: Record<string, string>;
-  }): void {
-    this.activeSection = "leads";
-    this.leadTypeFilter = LEAD_TYPE.OfflineQueue;
-    this.leadPageNumber = 1;
-    this.loadLeads();
-    this.loadPendingOfflineLeads();
-
-    const { title, body } = resolveOfflineLeadPushContent(detail);
-    void this.showLeadNotification(title, body, "offline-leads", detail.data);
-    this.showFeedback(body, "success");
   }
 
   private scrollToHighlightedLead(): void {
@@ -3561,9 +3399,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.reportDialogMode = "create";
     this.reportingLeadIds.add(leadAssignmentId);
-    if (this.leadType(lead) !== LEAD_TYPE.ConsultantPatient) {
-      this.forceOfflineForReport();
-    }
     this.selectedLead = lead;
     this.reportForm = this.emptyLeadReportForm(leadAssignmentId);
     this.reportDialogOpen = true;
@@ -3602,9 +3437,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     ) {
       this.reportingLeadIds.delete(leadAssignmentId);
       this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
-      if (!isConsultantPatientLead) {
-        this.restoreOnlineAfterRequiredAction();
-      }
     }
   }
 
@@ -3677,45 +3509,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          const wasBlockingOfflineLead =
-            this.leadType(lead) === LEAD_TYPE.OfflineQueue &&
-            isUnreportedOfflineLeadState(this.leadState(lead));
-          const submittedCallResult = Number(this.reportForm.callResult);
-          const expectedOfflineState =
-            this.leadType(lead) === LEAD_TYPE.OfflineQueue
-              ? expectedOfflineStateAfterReport(submittedCallResult)
-              : (response.data?.leadAssignmentState ?? LEAD_STATE.Contacted);
-          this.reportedLeadIds.add(leadAssignmentId);
-          this.reportingLeadIds.delete(leadAssignmentId);
-          this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
-          const status = this.applyConsultantStatusFrom(
-            response,
-            response.data,
-          );
-          if (
-            status.isOnline === null &&
-            typeof response.data?.isConsultantOnline === "boolean"
-          ) {
-            this.isOnline = response.data.isConsultantOnline;
-          }
-          this.markLeadReported(
-            leadAssignmentId,
-            response.data?.leadAssignmentState ?? expectedOfflineState,
-            response.data?.isReportSubmitted ?? true,
-          );
-          this.updateLeadInCollections(leadAssignmentId, {
-            callResult: response.data?.callResult ?? submittedCallResult,
-            CallResult: response.data?.callResult ?? submittedCallResult,
-            leadAssignmentState:
-              response.data?.leadAssignmentState ?? expectedOfflineState,
-            LeadAssignmentState:
-              response.data?.leadAssignmentState ?? expectedOfflineState,
-          });
-          if (wasBlockingOfflineLead) {
-            this.updatePendingOfflineCount(
-              Math.max(0, this.pendingOfflineCount - 1),
-            );
-          }
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           this.suppressLeadCardActionsUntil = Date.now() + 600;
@@ -3725,9 +3518,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.showFeedback("گزارش ثبت شد", "success");
           this.markViewDirty();
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
-            if (this.leadType(lead) !== LEAD_TYPE.ConsultantPatient) {
-              this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: false });
-            }
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
             }
@@ -3956,7 +3746,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationDialogOpen = false;
     this.reservationSaving = false;
     this.selectedReservationLead = null;
-    this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
   }
 
   setReservationDate(date: Date): void {
@@ -4039,13 +3828,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return "badge info";
   }
 
-  realtimeBlockedByOfflineQueue(): boolean {
-    return (
-      this.hasUnreportedOfflineLeads() &&
-      this.leadTypeFilter === LEAD_TYPE.RealTime
-    );
-  }
-
   submitReservation(): void {
     const profileId = this.requireProfileId();
     const lead = this.selectedReservationLead;
@@ -4116,8 +3898,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
           if (shouldOpenPatientProfile && reservation) {
             this.openPatientProfileDialog(reservation);
-          } else {
-            this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
           }
         },
         error: (error) =>
@@ -4175,7 +3955,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               "ثبت‌نام بیمار و تشکیل پرونده رزرو با موفقیت انجام شد",
             "success",
           );
-          this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
           this.loadReservations();
         },
         error: (error) =>
@@ -4217,7 +3996,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.stopRealtimeTimer(leadAssignmentId);
-    this.forceOfflineForReport();
   }
 
   leadId(lead: ConsultantLead): number | null {
@@ -4357,13 +4135,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.isLeadInReportProgress(lead)) return "در حال ثبت گزارش";
     if (this.isLeadExpired(lead)) return "منقضی شده";
     if (this.isRealtimeTimedLead(lead)) return "در انتظار تماس";
-    if (this.leadType(lead) === LEAD_TYPE.OfflineQueue) {
-      return leadOfflineDisplayStatus(
-        this.leadType(lead),
-        this.leadState(lead),
-        this.leadCallResult(lead),
-      );
-    }
     return this.stateLabel(this.leadState(lead));
   }
 
@@ -4371,18 +4142,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.isLeadInReportProgress(lead)) return "badge info";
     if (this.isLeadExpired(lead)) return "badge warn";
     if (this.isRealtimeTimedLead(lead)) return "badge info";
-    if (isFollowUpOfflineLead(
-      this.leadType(lead),
-      this.leadState(lead),
-      this.leadCallResult(lead),
-    )) {
-      return "badge warn";
-    }
-    if (
-      isOfflineLeadBlockingOnline(this.leadType(lead), this.leadState(lead))
-    ) {
-      return "badge danger";
-    }
     return this.stateBadgeClass(this.leadState(lead));
   }
 
@@ -4428,7 +4187,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isLeadExpired(lead: ConsultantLead): boolean {
-    if (this.leadType(lead) === LEAD_TYPE.OfflineQueue) return false;
     if (this.leadState(lead) === LEAD_STATE.Expired) return true;
     if (this.hasCallBeenInitiated(lead)) return false;
     return this.isRealtimeTimedLead(lead) && this.leadRemainingMs(lead) <= 0;
@@ -4694,62 +4452,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.isAvailable = status.isAvailable;
     this.isOnline = status.isOnline;
     this.canGoOnlineFromStatus = status.canGoOnline;
-    this.currentScore = status.currentScore;
     this.dashboardStatusLoaded = true;
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.applyConsultantStatusFrom(status.raw);
     this.configurePollTimer();
     this.syncRealtimeLeadPolling();
-    this.loadPendingOfflineLeads();
-  }
-
-  private loadPendingOfflineLeads(): void {
-    const profileId = this.currentProfileId();
-    if (!profileId) return;
-
-    const requestId = ++this.pendingOfflineRequestId;
-    this.pendingOfflineLoadSubscription?.unsubscribe();
-
-    this.pendingOfflineLoadSubscription = forkJoin({
-      newLeads: this.consultantApi.getLeads({
-        profileId,
-        leadAssignmentType: LEAD_TYPE.OfflineQueue,
-        leadAssignmentState: LEAD_STATE.New,
-        pageNumber: 1,
-        pageSize: 1,
-      }),
-      assignedLeads: this.consultantApi.getLeads({
-        profileId,
-        leadAssignmentType: LEAD_TYPE.OfflineQueue,
-        leadAssignmentState: LEAD_STATE.Assigned,
-        pageNumber: 1,
-        pageSize: 1,
-      }),
-    })
-      .pipe(finalize(() => this.markViewDirty()))
-      .subscribe({
-        next: ({ newLeads, assignedLeads }) => {
-          if (requestId !== this.pendingOfflineRequestId) return;
-          this.updatePendingOfflineCount(
-            (newLeads.totalCount ?? newLeads.items.length) +
-              (assignedLeads.totalCount ?? assignedLeads.items.length),
-          );
-          this.enforceUnreportedOfflinePolicy();
-        },
-        error: () => {
-          if (requestId !== this.pendingOfflineRequestId) return;
-        },
-      });
-  }
-
-  private enforceUnreportedOfflinePolicy(): void {
-    if (!this.isOnline || !this.hasUnreportedOfflineLeads()) return;
-
-    this.showFeedback(
-      `${this.pendingOfflineCount} لید آفلاین بدون گزارش دارید. اتصال آنلاین قطع شد.`,
-      "error",
-    );
-    this.forceOfflineForReport();
   }
 
   private loadLeads(quiet = false): void {
@@ -4787,14 +4494,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (requestId !== this.leadRequestId) return;
           this.applyConsultantStatusFrom(response.source, response.raw);
           const items = (response.items ?? [])
-            .filter((lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient)
-            .filter(
-              (lead) =>
-                !isOfflineLeadExpiredState(
-                  this.leadType(lead),
-                  this.leadState(lead),
-                ),
-            );
+            .filter((lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient);
           this.leads = items;
           this.syncReportedLeadIdsFromLeads(this.leads);
           this.syncReservedLeadIdsFromLeads(this.leads);
@@ -4992,8 +4692,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         if (!this.isProfileReady() || this.destroyed) return;
         this.ngZone.run(() => {
           this.loadLeads(true);
-          this.pollOfflineLeadNotifications();
-          this.loadPendingOfflineLeads();
         });
       }, this.pollIntervalMs);
     });
@@ -5071,15 +4769,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.markViewDirty();
   }
 
-  private async ensureOfflineLeadPushRegistration(): Promise<void> {
-    await this.ensureLeadPushRegistration(false);
-  }
-
   private maybePromptPushSetup(): void {
     if (!this.shouldShowPushSetupBanner) return;
 
     this.toast.info(
-      "برای دریافت لید لحظه‌ای و آفلاین، دکمه «فعال‌سازی نوتیفیکیشن» را بزنید.",
+      "برای دریافت لید لحظه‌ای، دکمه «فعال‌سازی نوتیفیکیشن» را بزنید.",
     );
   }
 
@@ -5092,70 +4786,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.realtimeLeadAlerts.startPolling(profileId);
   }
 
-  private detectNewOfflineLeads(leads: ConsultantLead[]): void {
-    const offlineLeadIds = leads
-      .map((lead) => this.leadId(lead))
-      .filter((leadId): leadId is number => leadId != null && leadId > 0);
-
-    if (!this.offlineLeadIdsInitialized) {
-      offlineLeadIds.forEach((leadId) => this.knownOfflineLeadIds.add(leadId));
-      this.offlineLeadIdsInitialized = true;
-      return;
-    }
-
-    const newOfflineLeads = offlineLeadIds.filter(
-      (leadId) => !this.knownOfflineLeadIds.has(leadId),
-    );
-    offlineLeadIds.forEach((leadId) => this.knownOfflineLeadIds.add(leadId));
-
-    if (!newOfflineLeads.length) return;
-
-    const count = newOfflineLeads.length;
-    const { title, body } = resolveOfflineLeadPushContent({
-      data: { type: "offline_leads", count: String(count) },
-    });
-    void this.showLeadNotification(title, body, "offline-leads", {
-      type: "offline_leads",
-      count: String(count),
-    });
-    playOfflineLeadAlertSound();
-  }
-
-  private pollOfflineLeadNotifications(): void {
-    const profileId = this.currentProfileId();
-    if (!profileId) return;
-
-    this.consultantApi
-      .getLeads({
-        profileId,
-        leadAssignmentType: LEAD_TYPE.OfflineQueue,
-        pageNumber: 1,
-        pageSize: 100,
-      })
-      .subscribe({
-        next: (response) => {
-          this.detectNewOfflineLeads(response.items ?? []);
-        },
-      });
-  }
-
   private showLeadNotification(
     title: string,
     body: string,
     tag = "consultant-lead-alert",
     data?: Record<string, string>,
   ): void {
-    const isOfflineLead = tag === "offline-leads";
     void this.notifications.showLocalNotification(title, body, {
       tag,
-      requireInteraction: isOfflineLead || title.includes("تست"),
-      vibrate: isOfflineLead ? OFFLINE_LEAD_VIBRATE_PATTERN : undefined,
-      sound: isOfflineLead ? OFFLINE_LEAD_ALERT_SOUND_URL : undefined,
+      requireInteraction: title.includes("تست"),
       data,
     });
     this.toast.info(body);
-    if (!isOfflineLead && title.includes("لید")) {
-      playOfflineLeadAlertSound();
+    if (title.includes("لید")) {
+      playRealtimeLeadAlertSound();
     }
   }
 
@@ -5365,7 +5009,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               "مهلت تماس تمام شد. لید برای مشاور آنلاین دیگر ارسال شد",
             "info",
           );
-          this.loadPendingOfflineLeads();
           this.loadLeads(true);
         },
         error: (error) => {
@@ -5521,10 +5164,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     ];
   }
 
-  private updatePendingOfflineCount(count: number): void {
-    this.pendingOfflineCount = Math.max(0, count);
-  }
-
   private selectedReservationDateTime(): Date | null {
     const date = this.reservationForm.reservationDate;
     const time = this.reservationForm.reservationTime;
@@ -5593,100 +5232,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       [...this.stoppedTimerLeadIds],
     );
     this.markViewDirty();
-  }
-
-  private forceOfflineForReport(): void {
-    const profileId = this.currentProfileId();
-    if (!profileId || !this.isOnline) return;
-
-    this.onlineSaving = true;
-    this.isOnline = false;
-    this.consultantApi
-      .setOnlineStatus({ profileId, isOnline: false, isOffline: true })
-      .pipe(
-        finalize(() => {
-          this.onlineSaving = false;
-          this.markViewDirty();
-        }),
-      )
-      .subscribe({
-        next: (response) => {
-          const status = this.applyConsultantStatusFrom(
-            response,
-            response.data,
-          );
-          if (status.isOnline === null) this.isOnline = false;
-          this.configurePollTimer();
-        },
-        error: () => {
-          this.isOnline = false;
-          this.configurePollTimer();
-        },
-      });
-  }
-
-  private restoreOnlineAfterRequiredAction(
-    options: { notifyWhenBlocked?: boolean } = {},
-  ): void {
-    const profileId = this.currentProfileId();
-    if (!profileId || this.isOnline || !this.isAvailable) return;
-
-    if (this.hasUnreportedOfflineLeads()) {
-      if (options.notifyWhenBlocked) {
-        this.showFeedback(
-          `${this.pendingOfflineCount} لید آفلاین بدون گزارش دارید. ابتدا گزارش همه را ثبت کنید.`,
-          "info",
-        );
-      }
-      return;
-    }
-
-    if (this.onlineStatusBlockReason) {
-      if (options.notifyWhenBlocked) {
-        this.showFeedback(this.onlineStatusBlockReason, "info");
-      }
-      return;
-    }
-
-    if (this.dashboardStatusLoaded && !this.canGoOnlineFromStatus) {
-      if (options.notifyWhenBlocked) {
-        this.showFeedback(
-          "در حال حاضر امکان آنلاین شدن وجود ندارد. لطفاً چند لحظه بعد دوباره تلاش کنید.",
-          "info",
-        );
-      }
-      return;
-    }
-
-    this.onlineSaving = true;
-    this.consultantApi
-      .setOnlineStatus({ profileId, isOnline: true, isOffline: false })
-      .pipe(
-        finalize(() => {
-          this.onlineSaving = false;
-          this.markViewDirty();
-        }),
-      )
-      .subscribe({
-        next: (response) => {
-          const status = this.applyConsultantStatusFrom(
-            response,
-            response.data,
-          );
-          if (status.isOnline === null) this.isOnline = true;
-          if (status.isAvailable === null) this.isAvailable = true;
-          this.refreshDashboard();
-        },
-        error: () => {
-          this.loadPendingOfflineLeads();
-          if (options.notifyWhenBlocked) {
-            this.showFeedback(
-              `${this.pendingOfflineCount} لید آفلاین بدون گزارش دارید. ابتدا گزارش همه را ثبت کنید.`,
-              "info",
-            );
-          }
-        },
-      });
   }
 
   private defaultPatientAvatarImageName(): string {
