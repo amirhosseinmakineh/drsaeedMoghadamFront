@@ -1,5 +1,9 @@
 /* global self, clients */
 
+const OFFLINE_LEAD_PUSH_TITLE = "لید جدید دارید";
+const OFFLINE_LEAD_PUSH_BODY =
+  "تعداد لیدهای آفلاین جدید برای شما اختصاص داده شد.";
+
 self.addEventListener("push", (event) => {
   let payload = { title: "اعلان جدید", body: "", data: {} };
 
@@ -10,6 +14,10 @@ self.addEventListener("push", (event) => {
   }
 
   const data = payload.data || {};
+  if (data.type && data.type !== "offline_leads" && data.type !== "test_push") {
+    return;
+  }
+
   const title = payload.title || notificationTitle(data);
   const options = {
     body: payload.body || notificationBody(data),
@@ -19,7 +27,7 @@ self.addEventListener("push", (event) => {
     tag: notificationTag(data),
     renotify: true,
     vibrate: [200, 100, 200],
-    requireInteraction: data.type === "realtime_lead",
+    requireInteraction: false,
   };
 
   event.waitUntil(
@@ -33,7 +41,6 @@ self.addEventListener("push", (event) => {
         client.postMessage({ type: "web-push-message", payload });
       }
 
-      // Always show OS notification so background/minimized mobile PWA receives alerts.
       await self.registration.showNotification(title, options);
     })(),
   );
@@ -75,32 +82,23 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 function notificationTag(data) {
-  if (data.type === "realtime_lead" && data.leadAssignmentId) {
-    return `realtime-lead-${data.leadAssignmentId}`;
-  }
   if (data.type === "offline_leads") return "offline-leads";
-  if (data.type === "password_changed") return "password-changed";
   if (data.type === "test_push") return "test-push";
   return "consultant-notification";
 }
 
 function notificationTitle(data) {
-  if (data.type === "offline_leads") return "لیدهای آفلاین";
-  if (data.type === "realtime_lead") return "لید جدید";
-  if (data.type === "password_changed") return "تغییر رمز عبور";
+  if (data.type === "offline_leads") return OFFLINE_LEAD_PUSH_TITLE;
   if (data.type === "test_push") return "تست نوتیفیکیشن";
   return "اعلان جدید";
 }
 
 function notificationBody(data) {
   if (data.type === "offline_leads") {
-    return `شما ${data.count || "چند"} لید آفلاین دارید.`;
-  }
-  if (data.type === "realtime_lead") {
-    return "لید جدید داری — ۲۰ دقیقه وقت داری برای تماس.";
-  }
-  if (data.type === "password_changed") {
-    return "کلمه عبور شما با موفقیت تغییر کرد.";
+    if (data.count) {
+      return `شما ${data.count} لید آفلاین دارید.`;
+    }
+    return OFFLINE_LEAD_PUSH_BODY;
   }
   if (data.type === "test_push") {
     return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";
@@ -112,13 +110,6 @@ function notificationUrl(data) {
   if (data.type === "offline_leads") {
     return "/dashboard/consultant?section=leads&type=offline";
   }
-  if (data.type === "realtime_lead") {
-    const leadAssignmentId = data.leadAssignmentId
-      ? `&leadAssignmentId=${encodeURIComponent(data.leadAssignmentId)}`
-      : "";
-    return `/dashboard/consultant?section=leads&type=realtime${leadAssignmentId}`;
-  }
-  if (data.type === "password_changed") return "/";
   if (data.type === "test_push") return "/dashboard/consultant";
   return "/dashboard/consultant";
 }

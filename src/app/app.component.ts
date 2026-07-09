@@ -330,7 +330,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.applyDocumentState();
-    void this.pushNotifications.syncForCurrentProfile();
+    const user = this.auth.user();
+    if (user?.role === "consultant") {
+      void this.pushNotifications.registerForConsultantOnLogin();
+    } else {
+      void this.pushNotifications.syncForCurrentProfile();
+    }
     window.addEventListener("open-auth-dialog", this.openAuthFromPage);
     this.routerSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))

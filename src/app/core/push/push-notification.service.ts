@@ -8,6 +8,10 @@ import {
   WebPushMessagePayload,
 } from "./notification.service";
 
+export const OFFLINE_LEAD_PUSH_TITLE = "لید جدید دارید";
+export const OFFLINE_LEAD_PUSH_BODY =
+  "تعداد لیدهای آفلاین جدید برای شما اختصاص داده شد.";
+
 export interface ConsultantPushMessageDetail {
   title: string;
   body: string;
@@ -239,25 +243,31 @@ export class PushNotificationService {
       return;
     }
 
-    if (data["type"] === "realtime_lead") {
-      this.router.navigate(["/dashboard/consultant"], {
-        queryParams: {
-          section: "leads",
-          type: "realtime",
-          leadAssignmentId: data["leadAssignmentId"] ?? null,
-        },
-      });
-      return;
-    }
-
-    if (data["type"] === "password_changed") {
-      this.router.navigate(["/"]);
-      return;
-    }
-
     if (data["type"] === "test_push") {
       this.router.navigate(["/dashboard/consultant"]);
     }
+  }
+
+  async registerForConsultantOnLogin(): Promise<PushSyncResult> {
+    const user = this.auth.user();
+    if (!user || !this.auth.authToken() || user.role !== "consultant") {
+      return { ok: false, message: "ثبت Web Push فقط برای مشاور لازم است." };
+    }
+
+    const profileId = user.consultantProfileId ?? user.profileId ?? null;
+    const permission = this.notifications.getPermissionStatus();
+    if (permission === "denied") {
+      return {
+        ok: false,
+        message: "اجازه نوتیفیکیشن رد شده است.",
+      };
+    }
+
+    if (permission === "granted") {
+      return this.syncForCurrentProfile(profileId);
+    }
+
+    return this.enablePushForCurrentProfile(profileId);
   }
 
   private extractErrorMessage(error: unknown, fallback: string): string {
@@ -279,6 +289,11 @@ export class PushNotificationService {
   }
 
   private handleForegroundMessage(payload: WebPushMessagePayload): void {
+    const pushType = payload.data?.["type"];
+    if (pushType && pushType !== "offline_leads" && pushType !== "test_push") {
+      return;
+    }
+
     const title = payload.title || this.titleForData(payload.data);
     const body = payload.body || this.bodyForData(payload.data);
     const detail: ConsultantPushMessageDetail = {
@@ -293,22 +308,17 @@ export class PushNotificationService {
   }
 
   private titleForData(data?: Record<string, string>): string {
-    if (data?.["type"] === "offline_leads") return "لیدهای آفلاین";
-    if (data?.["type"] === "realtime_lead") return "لید لحظه‌ای جدید";
-    if (data?.["type"] === "password_changed") return "تغییر رمز عبور";
+    if (data?.["type"] === "offline_leads") return OFFLINE_LEAD_PUSH_TITLE;
     if (data?.["type"] === "test_push") return "تست نوتیفیکیشن";
     return "اعلان جدید";
   }
 
   private bodyForData(data?: Record<string, string>): string {
     if (data?.["type"] === "offline_leads") {
-      return `شما ${data["count"] ?? "چند"} لید آفلاین دارید.`;
-    }
-    if (data?.["type"] === "realtime_lead") {
-      return "لید جدید داری — ۲۰ دقیقه وقت داری برای تماس.";
-    }
-    if (data?.["type"] === "password_changed") {
-      return "کلمه عبور شما با موفقیت تغییر کرد.";
+      if (data["count"]) {
+        return `شما ${data["count"]} لید آفلاین دارید.`;
+      }
+      return OFFLINE_LEAD_PUSH_BODY;
     }
     if (data?.["type"] === "test_push") {
       return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";
