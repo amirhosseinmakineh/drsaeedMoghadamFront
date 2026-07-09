@@ -1,7 +1,6 @@
 /** Mirrors `DentalDashboard.Domain.Enums.LeadAssignmentType`. */
 export const LeadAssignmentType = {
   RealTime: 1,
-  OfflineQueue: 2,
   ConsultantPatient: 3,
 } as const;
 
@@ -30,7 +29,6 @@ export const LEAD_ASSIGNMENT_STATE_LABELS: Record<number, string> = {
 /** Mirrors `AdminReportPersianLabels.ToPersian(LeadAssignmentType)`. */
 export const LEAD_ASSIGNMENT_TYPE_LABELS: Record<number, string> = {
   [LeadAssignmentType.RealTime]: "آنی",
-  [LeadAssignmentType.OfflineQueue]: "صف آفلاین",
   [LeadAssignmentType.ConsultantPatient]: "بیمار مشاور",
 };
 
@@ -39,7 +37,6 @@ export const CONSULTANT_WORK_END_HOUR = 21;
 
 const LEAD_ASSIGNMENT_TYPE_BY_NAME: Record<string, number> = {
   realtime: LeadAssignmentType.RealTime,
-  offlinequeue: LeadAssignmentType.OfflineQueue,
   consultantpatient: LeadAssignmentType.ConsultantPatient,
 };
 
@@ -74,24 +71,6 @@ export function isConsultantWorkingHours(date: Date = new Date()): boolean {
   return hour >= CONSULTANT_WORK_START_HOUR && hour < CONSULTANT_WORK_END_HOUR;
 }
 
-export function isOfflineLeadExpiredState(
-  type: number | null,
-  state: number | null,
-): boolean {
-  return type === LeadAssignmentType.OfflineQueue && state === LeadAssignmentState.Expired;
-}
-
-/** Offline leads that still need the first call report before going online. */
-export function isActionableOfflineLead(
-  type: number | null,
-  state: number | null,
-): boolean {
-  if (type !== LeadAssignmentType.OfflineQueue) return false;
-  return (
-    state === LeadAssignmentState.New || state === LeadAssignmentState.Assigned
-  );
-}
-
 export const ADMIN_LEAD_STATE_FILTER_OPTIONS: ReadonlyArray<{
   value: number | null;
   label: string;
@@ -112,7 +91,6 @@ export const ADMIN_LEAD_TYPE_FILTER_OPTIONS: ReadonlyArray<{
 }> = [
   { value: null, label: "همه نوع‌ها" },
   { value: LeadAssignmentType.RealTime, label: LEAD_ASSIGNMENT_TYPE_LABELS[LeadAssignmentType.RealTime] },
-  { value: LeadAssignmentType.OfflineQueue, label: LEAD_ASSIGNMENT_TYPE_LABELS[LeadAssignmentType.OfflineQueue] },
   { value: LeadAssignmentType.ConsultantPatient, label: LEAD_ASSIGNMENT_TYPE_LABELS[LeadAssignmentType.ConsultantPatient] },
 ];
 

@@ -13,7 +13,6 @@
           "/manifest.webmanifest",
           "/web-push-config.js",
           "/web-push-scope/web-push-sw.js",
-          "/sounds/offline-lead-alert.mp3",
           "/*.css",
           "/*.js"
         ]

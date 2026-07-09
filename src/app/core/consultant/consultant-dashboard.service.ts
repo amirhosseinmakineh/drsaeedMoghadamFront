@@ -50,8 +50,6 @@ export interface ConsultantDashboardStatus {
   isOnline: boolean;
   lastOnlineAt: string | null;
   lastOfflineAt: string | null;
-  pendingOfflineLeadCount: number;
-  currentScore: number;
   canGoOnline: boolean;
   onlineStatusBlockReason: string | null;
   raw?: unknown;
@@ -206,8 +204,6 @@ export interface ExpireLeadNoCallResponse {
   leadAssignmentId: number;
   consultantProfileId: number;
   leadAssignmentState: number;
-  deductedScore: number;
-  currentScore: number;
   isConsultantOnline: boolean;
 }
 
@@ -723,13 +719,6 @@ export class ConsultantDashboardService {
         ) ?? false,
       lastOnlineAt: this.readString(source, "lastOnlineAt") ?? null,
       lastOfflineAt: this.readString(source, "lastOfflineAt") ?? null,
-      pendingOfflineLeadCount:
-        this.readNumber(
-          source,
-          "pendingOfflineLeadCount",
-          "pendingOfflineCount",
-        ) ?? 0,
-      currentScore: this.readNumber(source, "currentScore", "score") ?? 100,
       canGoOnline: this.readBoolean(source, "canGoOnline") ?? false,
       onlineStatusBlockReason:
         this.readString(source, "onlineStatusBlockReason", "blockReason") ??
