@@ -36,6 +36,16 @@ import {
 
             <p class="lead-alert-card__message">
               {{ leadAlertMessage }}
+              @if (alert.userName || alert.phoneNumber) {
+                <span class="lead-alert-card__details">
+                  @if (alert.userName) {
+                    <span>{{ alert.userName }}</span>
+                  }
+                  @if (alert.phoneNumber) {
+                    <span dir="ltr">{{ alert.phoneNumber }}</span>
+                  }
+                </span>
+              }
               <button
                 type="button"
                 class="lead-alert-card__action"
@@ -116,6 +126,17 @@ import {
         font-weight: 900;
         line-height: 1.7;
         text-align: center;
+      }
+
+      .lead-alert-card__details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        width: 100%;
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: color-mix(in srgb, var(--text) 88%, var(--brand));
       }
 
       .lead-alert-card__action {

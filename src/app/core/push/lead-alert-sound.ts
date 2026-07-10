@@ -1,11 +1,11 @@
 export function playRealtimeLeadAlertSound(): void {
   if (typeof window === "undefined") return;
 
-  playAttentionBeeps();
+  playGentleLeadChime();
   vibrateRealtimeLeadAlert();
 }
 
-function playAttentionBeeps(): void {
+function playGentleLeadChime(): void {
   try {
     const AudioContextCtor =
       window.AudioContext ||
@@ -14,28 +14,39 @@ function playAttentionBeeps(): void {
     if (!AudioContextCtor) return;
 
     const context = new AudioContextCtor();
-    const gain = context.createGain();
-    gain.gain.value = 0.28;
-    gain.connect(context.destination);
+    const masterGain = context.createGain();
+    masterGain.gain.value = 0.0001;
+    masterGain.connect(context.destination);
 
-    const pattern = [
-      { frequency: 980, start: 0, duration: 0.16 },
-      { frequency: 1180, start: 0.24, duration: 0.16 },
-      { frequency: 1380, start: 0.48, duration: 0.22 },
-      { frequency: 1180, start: 0.8, duration: 0.16 },
-      { frequency: 980, start: 1.04, duration: 0.2 },
+    const notes = [
+      { frequency: 784, start: 0, duration: 0.22, peak: 0.34 },
+      { frequency: 988, start: 0.18, duration: 0.28, peak: 0.3 },
+      { frequency: 1175, start: 0.42, duration: 0.34, peak: 0.24 },
     ];
 
-    pattern.forEach(({ frequency, start, duration }) => {
+    notes.forEach(({ frequency, start, duration, peak }) => {
       const oscillator = context.createOscillator();
-      oscillator.type = "square";
-      oscillator.frequency.value = frequency;
-      oscillator.connect(gain);
-      oscillator.start(context.currentTime + start);
-      oscillator.stop(context.currentTime + start + duration);
+      const noteGain = context.createGain();
+      const startAt = context.currentTime + start;
+      const endAt = startAt + duration;
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      oscillator.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      noteGain.gain.setValueAtTime(0.0001, startAt);
+      noteGain.gain.exponentialRampToValueAtTime(peak, startAt + 0.03);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, endAt);
+
+      oscillator.start(startAt);
+      oscillator.stop(endAt + 0.02);
     });
 
-    window.setTimeout(() => void context.close(), 1400);
+    masterGain.gain.exponentialRampToValueAtTime(0.22, context.currentTime + 0.02);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.95);
+
+    window.setTimeout(() => void context.close(), 1100);
   } catch {
     // Audio is optional.
   }
@@ -45,5 +56,5 @@ function vibrateRealtimeLeadAlert(): void {
   const navigatorWithVibration = navigator as Navigator & {
     vibrate?: (pattern: number | number[]) => boolean;
   };
-  navigatorWithVibration.vibrate?.([300, 120, 300, 120, 300]);
+  navigatorWithVibration.vibrate?.([220, 90, 220, 90, 280]);
 }
