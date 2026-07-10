@@ -275,7 +275,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
           .pipe(catchError(() => of(null))),
       );
     } catch {
-      // Pickup already marks the consultant offline on the backend.
+      // Ignore transient offline API errors; dashboard refresh will reconcile status.
     }
   }
 

@@ -17,15 +17,12 @@ export interface PickupLeadResponse {
   leadAssignmentId?: number;
   consultantProfileId?: number;
   callDeadlineAt?: string;
-  isConsultantOnline?: boolean;
 }
 
 interface PickupLeadData {
   leadAssignmentId?: number;
   consultantProfileId?: number;
   callDeadlineAt?: string;
-  isConsultantOnline?: boolean;
-  IsConsultantOnline?: boolean;
 }
 
 interface CanPickupData {
@@ -84,7 +81,6 @@ export class RealtimeLeadPickupService {
             leadAssignmentId: data?.leadAssignmentId,
             consultantProfileId: data?.consultantProfileId,
             callDeadlineAt: data?.callDeadlineAt,
-            isConsultantOnline: this.readConsultantOnline(data),
           };
         }),
         catchError((error: HttpErrorResponse) => of(this.mapPickupError(error))),
@@ -109,17 +105,6 @@ export class RealtimeLeadPickupService {
     }
 
     return { status: "error", message };
-  }
-
-  private readConsultantOnline(data: PickupLeadData | undefined): boolean {
-    if (!data) return false;
-    if (typeof data.isConsultantOnline === "boolean") {
-      return data.isConsultantOnline;
-    }
-    if (typeof data.IsConsultantOnline === "boolean") {
-      return data.IsConsultantOnline;
-    }
-    return false;
   }
 
   private authHeaders(): HttpHeaders {
