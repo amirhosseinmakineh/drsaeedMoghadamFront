@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-09-realtime-push";
+const SW_VERSION = "2026-07-10-lead-dedup-minimal";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 
 function parsePushPayload(event) {
@@ -76,16 +76,24 @@ self.addEventListener("push", (event) => {
 
     event.waitUntil(
       (async () => {
-        await notifyClients({
-          type: "RealtimeLead",
-          leadId: Number(leadId),
-          title,
-          body,
+        const windowClients = await clients.matchAll({
+          type: "window",
+          includeUncontrolled: true,
         });
-        await notifyClients({
-          type: "web-push-message",
-          payload: { title, body, data },
-        });
+
+        for (const client of windowClients) {
+          client.postMessage({
+            type: "web-push-message",
+            payload: { title, body, data },
+          });
+        }
+
+        const hasVisibleClient = windowClients.some(
+          (client) => client.visibilityState === "visible",
+        );
+        if (hasVisibleClient) {
+          return;
+        }
 
         try {
           await self.registration.showNotification(title, {
