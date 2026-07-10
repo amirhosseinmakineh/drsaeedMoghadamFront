@@ -1,7 +1,25 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-10-lead-second-notif-fix";
+const SW_VERSION = "2026-07-10-lead-always-os-push";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
+
+function notificationAsset(path) {
+  return new URL(path, self.location.origin).href;
+}
+
+async function showRealtimeLeadNotification(title, body, baseOptions) {
+  try {
+    await self.registration.showNotification(title, {
+      ...baseOptions,
+      actions: [
+        { action: "pickup", title: "روی آن کلیک کنید." },
+        { action: "dismiss", title: "بستن" },
+      ],
+    });
+  } catch {
+    await self.registration.showNotification(title, baseOptions);
+  }
+}
 
 function parsePushPayload(event) {
   if (!event.data) {
@@ -69,8 +87,8 @@ self.addEventListener("push", (event) => {
       requireInteraction: true,
       silent: false,
       vibrate: [300, 120, 300, 120, 300],
-      icon: "/icons/icon-192x192.png",
-      badge: "/icons/icon-96x96.png",
+      icon: notificationAsset("/icons/icon-192x192.png"),
+      badge: notificationAsset("/icons/icon-96x96.png"),
       data,
     };
 
@@ -81,30 +99,13 @@ self.addEventListener("push", (event) => {
           includeUncontrolled: true,
         });
 
+        await showRealtimeLeadNotification(title, body, baseOptions);
+
         for (const client of windowClients) {
           client.postMessage({
             type: "web-push-message",
             payload: { title, body, data },
           });
-        }
-
-        const hasVisibleClient = windowClients.some(
-          (client) => client.visibilityState === "visible",
-        );
-        if (hasVisibleClient) {
-          return;
-        }
-
-        try {
-          await self.registration.showNotification(title, {
-            ...baseOptions,
-            actions: [
-              { action: "pickup", title: "روی آن کلیک کنید." },
-              { action: "dismiss", title: "بستن" },
-            ],
-          });
-        } catch {
-          await self.registration.showNotification(title, baseOptions);
         }
       })(),
     );
@@ -116,8 +117,8 @@ self.addEventListener("push", (event) => {
     const options = {
       body: payload.body || notificationBody(data),
       data,
-      icon: "/icons/icon-192x192.png",
-      badge: "/icons/icon-96x96.png",
+      icon: notificationAsset("/icons/icon-192x192.png"),
+      badge: notificationAsset("/icons/icon-96x96.png"),
       tag: notificationTag(data),
       renotify: true,
       vibrate: [200, 100, 200],
@@ -147,8 +148,8 @@ self.addEventListener("push", (event) => {
       self.registration.showNotification(payload.title || "اعلان", {
         body: payload.body,
         data,
-        icon: "/icons/icon-192x192.png",
-        badge: "/icons/icon-96x96.png",
+        icon: notificationAsset("/icons/icon-192x192.png"),
+        badge: notificationAsset("/icons/icon-96x96.png"),
       }),
     );
   }

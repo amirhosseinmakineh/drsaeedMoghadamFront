@@ -188,12 +188,12 @@ export class RealtimeLeadAlertService implements OnDestroy {
       if (!response.canReceive) return;
 
       const lead = response.leads?.find((item) => {
-        const leadId = this.readBroadcastLeadId(item);
+        const itemLeadId = this.readBroadcastLeadId(item);
         return (
-          leadId &&
-          !this.handledLeadIds.has(leadId) &&
-          !this.activeAlerts.has(leadId) &&
-          !this.processingLeadIds.has(leadId)
+          itemLeadId &&
+          !this.handledLeadIds.has(itemLeadId) &&
+          !this.activeAlerts.has(itemLeadId) &&
+          !this.processingLeadIds.has(itemLeadId)
         );
       });
       if (!lead) return;
@@ -278,6 +278,10 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
       playRealtimeLeadAlertSound();
       this.emitAlerts();
+
+      if (this.isAppInForeground()) {
+        void this.notifications.closeRealtimeLeadNotification(leadId);
+      }
     } finally {
       this.processingLeadIds.delete(leadId);
     }
@@ -315,6 +319,15 @@ export class RealtimeLeadAlertService implements OnDestroy {
         this.handledLeadIds.delete(leadId);
         this.dismissedLeadCooldownTimers.delete(leadId);
       }, DISMISSED_LEAD_COOLDOWN_MS),
+    );
+  }
+
+  private isAppInForeground(): boolean {
+    if (typeof document === "undefined") return false;
+
+    return (
+      document.visibilityState === "visible" &&
+      (typeof document.hasFocus !== "function" || document.hasFocus())
     );
   }
 
