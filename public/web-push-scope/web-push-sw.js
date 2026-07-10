@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-10-realtime-pickup-actions";
+const SW_VERSION = "2026-07-10-realtime-lead-dedup";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 
 function parsePushPayload(event) {
@@ -82,10 +82,6 @@ self.addEventListener("push", (event) => {
           leadId: Number(leadId),
           title,
           body,
-        });
-        await notifyClients({
-          type: "web-push-message",
-          payload: { title, body, data },
         });
 
         try {

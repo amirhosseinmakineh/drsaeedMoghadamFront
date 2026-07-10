@@ -30,7 +30,6 @@ export interface EnablePushResult {
 
 @Injectable({ providedIn: "root" })
 export class NotificationService {
-  private static instanceCount = 0;
   private swRegistration: ServiceWorkerRegistration | null = null;
   private lastKnownSubscription: string | null = null;
   private resolvedVapidPublicKey: string | null = null;
@@ -41,13 +40,6 @@ export class NotificationService {
   >();
 
   constructor(private http: HttpClient) {
-    NotificationService.instanceCount += 1;
-    console.log(
-      "[LeadDiag] NotificationService constructor",
-      NotificationService.instanceCount,
-      new Date(),
-    );
-
     if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker.addEventListener("message", (event) => {
         if (event.data?.type === "web-push-subscription-lost") {
