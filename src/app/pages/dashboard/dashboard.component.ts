@@ -25,6 +25,7 @@ import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendan
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
 import { AdminPresenceDashboardComponent } from "../admin-dashboard/admin-presence-dashboard.component";
+import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consultant-profile.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -44,6 +45,7 @@ type DashboardSection =
   | "overview"
   | "users"
   | "consultants"
+  | "consultantProfile"
   | "leads"
   | "leadReports"
   | "reservations"
@@ -85,6 +87,7 @@ interface UserFormModel {
     AdminAttendanceTableComponent,
     AdminReservationsTableComponent,
     AdminPresenceDashboardComponent,
+    AdminConsultantProfileComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,6 +99,17 @@ interface UserFormModel {
     >
       <header class="dashboard-mobile-header">
         <div class="mobile-header-info">
+          @if (isAdmin()) {
+            <button
+              class="mobile-menu-btn"
+              type="button"
+              (click)="toggleMobileSidebar()"
+              [attr.aria-expanded]="mobileSidebarOpen"
+              aria-label="باز و بسته کردن منو"
+            >
+              <app-fa-icon name="dashboard"></app-fa-icon>
+            </button>
+          }
           <span class="mobile-avatar"
             ><app-fa-icon name="user"></app-fa-icon
           ></span>
@@ -115,9 +129,19 @@ interface UserFormModel {
         </button>
       </header>
 
+      @if (isAdmin() && mobileSidebarOpen) {
+        <button
+          class="mobile-sidebar-backdrop"
+          type="button"
+          aria-label="بستن منو"
+          (click)="closeMobileSidebar()"
+        ></button>
+      }
+
       <aside
         class="dashboard-sidebar"
         [class.mobile-app-nav]="isAdmin()"
+        [class.mobile-sidebar-open]="isAdmin() && mobileSidebarOpen"
       >
         <a class="dashboard-brand" routerLink="/">
           <span class="brand-mark"
@@ -146,6 +170,16 @@ interface UserFormModel {
             <span>{{ item.label }}</span>
           </button>
         </nav>
+
+        @if (isAdmin()) {
+          <button
+            class="mobile-sidebar-close"
+            type="button"
+            (click)="closeMobileSidebar()"
+          >
+            بستن منو
+          </button>
+        }
 
         <button
           class="secondary-btn logout-btn"
@@ -186,6 +220,10 @@ interface UserFormModel {
                 <button type="button" (click)="setSection('consultants')">
                   <span><app-fa-icon name="doctor"></app-fa-icon></span>
                   <strong>مدیریت مشاوران</strong>
+                </button>
+                <button type="button" (click)="setSection('consultantProfile')">
+                  <span><app-fa-icon name="user"></app-fa-icon></span>
+                  <strong>پروفایل مشاور</strong>
                 </button>
                 <button type="button" (click)="setSection('leads')">
                   <span><app-fa-icon name="clipboard"></app-fa-icon></span>
@@ -427,6 +465,12 @@ interface UserFormModel {
                   title="گزارش لیدهای تخصیص‌یافته به مشاوران"
                 ></app-admin-leads-table>
               </section>
+            }
+
+            @if (activeSection === "consultantProfile") {
+              <app-admin-consultant-profile
+                [profileId]="selectedProfileConsultantId"
+              ></app-admin-consultant-profile>
             }
 
             @if (activeSection === "leads") {
@@ -993,6 +1037,11 @@ interface UserFormModel {
       .dashboard-mobile-header {
         display: none;
       }
+      .mobile-sidebar-backdrop,
+      .mobile-sidebar-close,
+      .mobile-menu-btn {
+        display: none;
+      }
       @media (max-width: 980px) {
         .dashboard-layout {
           grid-template-columns: 1fr;
@@ -1074,57 +1123,94 @@ interface UserFormModel {
         }
         .dashboard-layout.admin-mode {
           width: 100%;
-          padding: 10px 10px calc(108px + env(safe-area-inset-bottom, 0px));
+          padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px));
+        }
+        .mobile-sidebar-backdrop {
+          display: block;
+          position: fixed;
+          inset: 0;
+          z-index: 95;
+          border: 0;
+          background: rgba(20, 16, 12, 0.42);
+        }
+        .mobile-menu-btn {
+          display: inline-grid;
+          place-items: center;
+          width: 42px;
+          height: 42px;
+          border: 1px solid var(--line);
+          border-radius: 16px;
+          background: var(--surface-muted);
+          color: var(--brand);
+          flex-shrink: 0;
+        }
+        .dashboard-layout.admin-mode .dashboard-sidebar {
+          position: fixed;
+          z-index: 100;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: min(300px, 86vw);
+          margin: 0;
+          padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+          border-radius: 0 28px 28px 0;
+          border-inline-start: 0;
+          transform: translateX(-105%);
+          transition: transform 0.28s ease;
+          overflow-y: auto;
+          box-shadow: 12px 0 32px rgba(93, 64, 32, 0.16);
+        }
+        .dashboard-layout.admin-mode .dashboard-sidebar.mobile-sidebar-open {
+          transform: translateX(0);
+        }
+        .admin-mode .dashboard-brand,
+        .admin-mode .dashboard-user-card {
+          display: grid;
+        }
+        .admin-mode .logout-btn {
+          display: none;
+        }
+        .mobile-sidebar-close {
+          display: block;
+          width: 100%;
+          border: 1px solid var(--line);
+          border-radius: 18px;
+          padding: 10px 12px;
+          background: var(--surface-muted);
+          font: inherit;
+          font-weight: 950;
+        }
+        .admin-mode .dashboard-nav {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+        .admin-mode .dashboard-nav button {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-height: 48px;
+          padding: 10px 12px;
+          border-radius: 16px;
+          text-align: start;
+          font-size: 0.9rem;
+          line-height: 1.4;
+        }
+        .admin-mode .dashboard-nav button span {
+          display: block;
+          overflow: visible;
+          -webkit-line-clamp: unset;
+        }
+        .admin-mode .dashboard-nav app-fa-icon {
+          color: var(--brand);
+          font-size: 1rem;
+          flex-shrink: 0;
+        }
+        .dashboard-content {
+          padding-top: 10px;
         }
         .dashboard-layout.patient-mode {
           width: 100%;
           padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px));
-        }
-        .dashboard-layout.admin-mode .dashboard-sidebar {
-          position: fixed;
-          z-index: 80;
-          inset-inline: 10px;
-          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-          top: auto;
-          min-height: 0;
-          padding: 8px;
-          border-radius: 28px;
-          background: var(--surface);
-          box-shadow: 0 8px 22px rgba(93, 64, 32, 0.08);
-          contain: layout paint;
-        }
-        .admin-mode .dashboard-brand,
-        .admin-mode .dashboard-user-card,
-        .admin-mode .logout-btn {
-          display: none;
-        }
-        .admin-mode .dashboard-nav {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 6px;
-        }
-        .admin-mode .dashboard-nav button {
-          display: grid;
-          place-items: center;
-          gap: 3px;
-          min-height: 54px;
-          padding: 6px 4px;
-          border-radius: 18px;
-          text-align: center;
-          font-size: 0.68rem;
-          line-height: 1.2;
-        }
-        .admin-mode .dashboard-nav button span {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .admin-mode .dashboard-nav app-fa-icon {
-          color: var(--brand);
-          font-size: 1.1rem;
-        }
-        .dashboard-content {
-          padding-top: 10px;
         }
         .dashboard-hero,
         .admin-panel {
@@ -1164,6 +1250,7 @@ export class DashboardComponent implements OnInit {
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "users", label: "کاربران", icon: "users" },
     { id: "consultants", label: "مشاوران", icon: "doctor" },
+    { id: "consultantProfile", label: "پروفایل مشاور", icon: "user" },
     { id: "leads", label: "لیدها", icon: "clipboard" },
     { id: "leadReports", label: "گزارش تماس", icon: "clipboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
@@ -1229,6 +1316,8 @@ export class DashboardComponent implements OnInit {
   selectedAttendanceConsultant: Consultant | null = null;
   selectedLeadsConsultant: Consultant | null = null;
   selectedReservationsConsultant: Consultant | null = null;
+  selectedProfileConsultantId: number | null = null;
+  mobileSidebarOpen = false;
 
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
@@ -1298,6 +1387,7 @@ export class DashboardComponent implements OnInit {
   ];
 
   readonly consultantActions = [
+    { action: "profile", label: "پروفایل", icon: "user" },
     { action: "attendance", label: "حضور", icon: "calendar" },
     { action: "leads", label: "لیدها", icon: "clipboard" },
     { action: "reservations", label: "رزروها", icon: "calendar" },
@@ -1394,11 +1484,23 @@ export class DashboardComponent implements OnInit {
 
   setSection(section: DashboardSection): void {
     this.activeSection = section;
+    this.closeMobileSidebar();
     this.markDirty();
 
     if (section === "users" && !this.users.length) this.loadUsers();
     if (section === "consultants" && !this.consultants.length)
       this.loadConsultants();
+  }
+
+  toggleMobileSidebar(): void {
+    this.mobileSidebarOpen = !this.mobileSidebarOpen;
+    this.markDirty();
+  }
+
+  closeMobileSidebar(): void {
+    if (!this.mobileSidebarOpen) return;
+    this.mobileSidebarOpen = false;
+    this.markDirty();
   }
 
   logout(): void {
@@ -1648,6 +1750,15 @@ export class DashboardComponent implements OnInit {
         "شناسه پروفایل مشاور یافت نشد. لطفاً صفحه را بروزرسانی کنید.",
         "error",
       );
+      return;
+    }
+
+    if (event.action === "profile") {
+      this.selectedProfileConsultantId = profileId;
+      this.selectedAttendanceConsultant = null;
+      this.selectedLeadsConsultant = null;
+      this.selectedReservationsConsultant = null;
+      this.setSection("consultantProfile");
       return;
     }
 
