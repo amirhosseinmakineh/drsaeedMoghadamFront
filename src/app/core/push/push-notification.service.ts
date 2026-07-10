@@ -112,40 +112,58 @@ export class PushNotificationService {
     subscriptionJson: string,
     profileId: number | null,
   ): Promise<PushSyncResult> {
+    const errors: string[] = [];
+
+    if (profileId) {
+      try {
+        await firstValueFrom(
+          this.consultantApi.registerPushToken({
+            profileId,
+            deviceToken: subscriptionJson,
+          }),
+        );
+        return { ok: true, message: "subscription روی سرور ثبت شد." };
+      } catch (error) {
+        console.warn("Consultant RegisterPushToken failed", error);
+        errors.push(
+          this.extractErrorMessage(
+            error,
+            "ثبت subscription از مسیر مشاور انجام نشد.",
+          ),
+        );
+      }
+    }
+
     if (this.auth.user()?.userId) {
       try {
         await firstValueFrom(this.auth.registerPushToken(subscriptionJson));
         return { ok: true, message: "subscription روی سرور ثبت شد." };
       } catch (error) {
         console.warn("Auth RegisterPushToken failed", error);
+        errors.push(
+          this.extractErrorMessage(
+            error,
+            "ثبت subscription از مسیر کاربر انجام نشد.",
+          ),
+        );
       }
     }
 
     if (!profileId) {
       return {
         ok: false,
-        message: "شناسه پروفایل مشاور برای ثبت subscription یافت نشد.",
+        message:
+          errors[0] ??
+          "شناسه پروفایل مشاور برای ثبت subscription یافت نشد.",
       };
     }
 
-    try {
-      await firstValueFrom(
-        this.consultantApi.registerPushToken({
-          profileId,
-          deviceToken: subscriptionJson,
-        }),
-      );
-      return { ok: true, message: "subscription روی سرور ثبت شد." };
-    } catch (error) {
-      console.warn("Consultant RegisterPushToken failed", error);
-      return {
-        ok: false,
-        message: this.extractErrorMessage(
-          error,
-          "ثبت subscription روی سرور انجام نشد.",
-        ),
-      };
-    }
+    return {
+      ok: false,
+      message:
+        errors.join(" ") ||
+        "ثبت subscription روی سرور انجام نشد.",
+    };
   }
 
   resetRegisteredTokenCache(): void {
