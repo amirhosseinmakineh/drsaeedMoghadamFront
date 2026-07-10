@@ -23,11 +23,17 @@ type ServiceWorkerMessage =
   | { type: "RealtimeLeadPickup"; leadId: number }
   | { type: "RealtimeLeadOpen"; leadId: number };
 
+const DISMISSED_LEAD_COOLDOWN_MS = 10_000;
+
 @Injectable({ providedIn: "root" })
 export class RealtimeLeadAlertService implements OnDestroy {
   private readonly alertsSubject = new Subject<readonly RealtimeLeadAlert[]>();
   private readonly activeAlerts = new Map<number, RealtimeLeadAlert>();
   private readonly handledLeadIds = new Set<number>();
+  private readonly dismissedLeadCooldownTimers = new Map<
+    number,
+    ReturnType<typeof setTimeout>
+  >();
   private readonly processingLeadIds = new Set<number>();
   private readonly limitNotifiedDates = new Set<string>();
   private initialized = false;
@@ -75,6 +81,10 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPolling();
+    for (const timer of this.dismissedLeadCooldownTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.dismissedLeadCooldownTimers.clear();
     window.removeEventListener("consultant-push-message", this.onPushMessage);
     this.alertsSubject.complete();
   }
@@ -160,7 +170,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
   dismissLead(leadId: number): void {
     this.activeAlerts.delete(leadId);
-    this.handledLeadIds.add(leadId);
+    this.suppressLeadTemporarily(leadId);
     void this.notifications.closeRealtimeLeadNotification(leadId);
     this.emitAlerts();
   }
@@ -177,7 +187,15 @@ export class RealtimeLeadAlertService implements OnDestroy {
       );
       if (!response.canReceive) return;
 
-      const lead = response.leads?.[0];
+      const lead = response.leads?.find((item) => {
+        const leadId = this.readBroadcastLeadId(item);
+        return (
+          leadId &&
+          !this.handledLeadIds.has(leadId) &&
+          !this.activeAlerts.has(leadId) &&
+          !this.processingLeadIds.has(leadId)
+        );
+      });
       if (!lead) return;
 
       const leadId = this.readBroadcastLeadId(lead);
@@ -282,6 +300,21 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.toast.info(
       message ??
         "سقف روزانه ۱۰ لید پر شده است. امروز دیگر نمی‌توانید لید بردارید.",
+    );
+  }
+
+  private suppressLeadTemporarily(leadId: number): void {
+    this.handledLeadIds.add(leadId);
+
+    const existingTimer = this.dismissedLeadCooldownTimers.get(leadId);
+    if (existingTimer) clearTimeout(existingTimer);
+
+    this.dismissedLeadCooldownTimers.set(
+      leadId,
+      setTimeout(() => {
+        this.handledLeadIds.delete(leadId);
+        this.dismissedLeadCooldownTimers.delete(leadId);
+      }, DISMISSED_LEAD_COOLDOWN_MS),
     );
   }
 

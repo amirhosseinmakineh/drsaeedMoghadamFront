@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-10-lead-dedup-minimal";
+const SW_VERSION = "2026-07-10-lead-second-notif-fix";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 
 function parsePushPayload(event) {
