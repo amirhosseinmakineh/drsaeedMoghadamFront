@@ -11,7 +11,6 @@ import {
   LEAD_ALERT_PUSH_BODY,
   LEAD_ALERT_PUSH_TITLE,
 } from "../lead/lead-alert-copy";
-import { playRealtimeLeadAlertSound } from "./lead-alert-sound";
 
 export interface ConsultantPushMessageDetail {
   title: string;
@@ -26,7 +25,6 @@ export interface PushSyncResult {
 
 @Injectable({ providedIn: "root" })
 export class PushNotificationService {
-  private static instanceCount = 0;
   private lastRegisteredKey: string | null = null;
   private tokenSyncPromise: Promise<PushSyncResult> | null = null;
   private backendRegistrationReady = false;
@@ -37,13 +35,6 @@ export class PushNotificationService {
     private router: Router,
     private notifications: NotificationService,
   ) {
-    PushNotificationService.instanceCount += 1;
-    console.log(
-      "[LeadDiag] PushNotificationService constructor",
-      PushNotificationService.instanceCount,
-      new Date(),
-    );
-
     if (typeof window !== "undefined") {
       window.addEventListener("focus", () => {
         const user = this.auth.user();
@@ -363,11 +354,10 @@ export class PushNotificationService {
     if (!user || user.role !== "consultant") return;
 
     const pushType = payload.data?.["type"];
-    if (
-      pushType &&
-      pushType !== "test_push" &&
-      pushType !== "RealtimeLead"
-    ) {
+    if (pushType === "RealtimeLead") {
+      return;
+    }
+    if (pushType && pushType !== "test_push") {
       return;
     }
 
@@ -378,15 +368,6 @@ export class PushNotificationService {
       body,
       data: payload.data,
     };
-
-    if (pushType === "RealtimeLead") {
-      console.log(
-        "Lead notification received",
-        { source: "foreground-web-push", payload },
-        new Date(),
-      );
-      playRealtimeLeadAlertSound();
-    }
 
     window.dispatchEvent(
       new CustomEvent("consultant-push-message", { detail }),
