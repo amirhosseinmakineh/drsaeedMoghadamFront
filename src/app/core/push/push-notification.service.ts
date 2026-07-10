@@ -354,10 +354,11 @@ export class PushNotificationService {
     if (!user || user.role !== "consultant") return;
 
     const pushType = payload.data?.["type"];
-    if (pushType === "RealtimeLead") {
-      return;
-    }
-    if (pushType && pushType !== "test_push") {
+    if (
+      pushType &&
+      pushType !== "test_push" &&
+      pushType !== "RealtimeLead"
+    ) {
       return;
     }
 
