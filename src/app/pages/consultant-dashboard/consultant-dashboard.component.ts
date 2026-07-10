@@ -4827,9 +4827,22 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private syncRealtimeLeadPolling(): void {
     const profileId = this.currentProfileId();
     if (!profileId || !this.isOnline) {
+      this.realtimeLeadAlerts.setPushPrimaryMode(false);
       this.realtimeLeadAlerts.stopPolling();
       return;
     }
+
+    const pushReady =
+      this.pushRegistrationReady &&
+      this.browserNotificationPermission === "granted";
+
+    if (pushReady) {
+      this.realtimeLeadAlerts.setPushPrimaryMode(true);
+      this.realtimeLeadAlerts.stopPolling();
+      return;
+    }
+
+    this.realtimeLeadAlerts.setPushPrimaryMode(false);
     this.realtimeLeadAlerts.startPolling(profileId);
   }
 
@@ -4888,6 +4901,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.browserNotificationPermission !== "granted") {
       this.pushRegistrationReady = false;
       this.configurePollTimer();
+      this.syncRealtimeLeadPolling();
       this.markViewDirty();
       return;
     }
@@ -4898,6 +4912,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       if (!subscription) {
         this.pushRegistrationReady = false;
         this.configurePollTimer();
+        this.syncRealtimeLeadPolling();
         this.markViewDirty();
         return;
       }
@@ -4912,6 +4927,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.configurePollTimer();
+    this.syncRealtimeLeadPolling();
     this.markViewDirty();
   }
 

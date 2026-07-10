@@ -25,6 +25,7 @@ type ServiceWorkerMessage =
 @Injectable({ providedIn: "root" })
 export class RealtimeLeadAlertService implements OnDestroy {
   private static readonly REDISPATCH_COOLDOWN_MS = 10_000;
+  private static readonly FALLBACK_POLL_INTERVAL_MS = 10_000;
 
   private readonly alertsSubject = new Subject<readonly RealtimeLeadAlert[]>();
   private readonly activeAlerts = new Map<number, RealtimeLeadAlert>();
@@ -33,6 +34,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
   private readonly processingLeadIds = new Set<number>();
   private readonly limitNotifiedDates = new Set<string>();
   private initialized = false;
+  private pushPrimaryMode = false;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private pollingProfileId: number | null = null;
   private pollingInFlight = false;
@@ -84,14 +86,23 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.alertsSubject.complete();
   }
 
+  setPushPrimaryMode(enabled: boolean): void {
+    this.pushPrimaryMode = enabled;
+    if (enabled) {
+      this.stopPolling();
+    }
+  }
+
   startPolling(profileId: number): void {
+    if (this.pushPrimaryMode) return;
+
     this.pollingProfileId = profileId;
     if (this.pollTimer) return;
 
     void this.pollBroadcastLeads();
     this.pollTimer = setInterval(() => {
       void this.pollBroadcastLeads();
-    }, 5000);
+    }, RealtimeLeadAlertService.FALLBACK_POLL_INTERVAL_MS);
   }
 
   stopPolling(): void {
@@ -104,6 +115,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
   teardownOnLogout(): void {
     this.stopPolling();
+    this.pushPrimaryMode = false;
     this.activeAlerts.clear();
     this.suppressedLeadIds.clear();
     this.dismissedAtByLeadId.clear();
@@ -181,7 +193,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
   }
 
   private async pollBroadcastLeads(): Promise<void> {
-    if (this.pollingInFlight) return;
+    if (this.pushPrimaryMode || this.pollingInFlight) return;
     const profileId = this.pollingProfileId;
     if (!profileId || this.auth.user()?.role !== "consultant") return;
 

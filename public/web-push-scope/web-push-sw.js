@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-10-realtime-lead-restore";
+const SW_VERSION = "2026-07-10-option1-push-primary";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 
 function parsePushPayload(event) {
@@ -66,7 +66,7 @@ self.addEventListener("push", (event) => {
     const baseOptions = {
       body,
       tag,
-      renotify: true,
+      renotify: false,
       requireInteraction: true,
       silent: false,
       vibrate: [300, 120, 300, 120, 300],
@@ -87,6 +87,18 @@ self.addEventListener("push", (event) => {
             type: "web-push-message",
             payload: { title, body, data },
           });
+        }
+
+        const hasVisibleClient = windowClients.some(
+          (client) => client.visibilityState === "visible",
+        );
+        if (hasVisibleClient) {
+          return;
+        }
+
+        const existing = await self.registration.getNotifications({ tag });
+        if (existing.length > 0) {
+          return;
         }
 
         try {
