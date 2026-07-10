@@ -28,6 +28,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
   private readonly alertsSubject = new Subject<readonly RealtimeLeadAlert[]>();
   private readonly activeAlerts = new Map<number, RealtimeLeadAlert>();
   private readonly handledLeadIds = new Set<number>();
+  private readonly processingLeadIds = new Set<number>();
   private readonly limitNotifiedDates = new Set<string>();
   private initialized = false;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -176,11 +177,13 @@ export class RealtimeLeadAlertService implements OnDestroy {
       );
       if (!response.canReceive) return;
 
-      for (const lead of response.leads ?? []) {
-        const leadId = this.readBroadcastLeadId(lead);
-        if (!leadId) continue;
-        await this.notifyIncomingLead(leadId);
-      }
+      const lead = response.leads?.[0];
+      if (!lead) return;
+
+      const leadId = this.readBroadcastLeadId(lead);
+      if (!leadId) return;
+
+      await this.notifyIncomingLead(leadId);
     } catch {
       // Polling is a fallback; ignore transient API errors.
     } finally {
@@ -201,9 +204,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (this.auth.user()?.role !== "consultant") return;
 
     switch (message.type) {
-      case "RealtimeLead":
-        await this.notifyIncomingLead(message.leadId);
-        break;
       case "RealtimeLeadTaken":
         this.dismissLead(message.leadId);
         break;
@@ -225,30 +225,44 @@ export class RealtimeLeadAlertService implements OnDestroy {
   }
 
   private async notifyIncomingLead(leadId: number): Promise<void> {
-    if (!leadId || this.handledLeadIds.has(leadId) || this.activeAlerts.has(leadId)) {
+    if (
+      !leadId ||
+      this.handledLeadIds.has(leadId) ||
+      this.activeAlerts.has(leadId) ||
+      this.processingLeadIds.has(leadId)
+    ) {
       return;
     }
 
-    const profileId = this.getProfileId();
-    if (!profileId) return;
+    this.processingLeadIds.add(leadId);
+    try {
+      const profileId = this.getProfileId();
+      if (!profileId) return;
 
-    const canPickup = await firstValueFrom(
-      this.pickupService.canPickupLead(profileId),
-    );
-    if (!canPickup) {
-      this.showDailyLimitNotificationOnce();
-      void this.notifications.closeRealtimeLeadNotification(leadId);
-      return;
+      const canPickup = await firstValueFrom(
+        this.pickupService.canPickupLead(profileId),
+      );
+      if (!canPickup) {
+        this.showDailyLimitNotificationOnce();
+        void this.notifications.closeRealtimeLeadNotification(leadId);
+        return;
+      }
+
+      if (this.handledLeadIds.has(leadId) || this.activeAlerts.has(leadId)) {
+        return;
+      }
+
+      this.activeAlerts.set(leadId, {
+        leadId,
+        isSubmitting: false,
+        receivedAt: new Date(),
+      });
+
+      playRealtimeLeadAlertSound();
+      this.emitAlerts();
+    } finally {
+      this.processingLeadIds.delete(leadId);
     }
-
-    this.activeAlerts.set(leadId, {
-      leadId,
-      isSubmitting: false,
-      receivedAt: new Date(),
-    });
-
-    playRealtimeLeadAlertSound();
-    this.emitAlerts();
   }
 
   private notifyLeadPickedUp(leadId: number): void {
