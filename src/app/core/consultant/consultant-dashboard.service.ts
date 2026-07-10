@@ -60,6 +60,8 @@ export interface BroadcastRealtimeLeadItem {
   LeadAssignmentId?: number;
   userName?: string | null;
   UserName?: string | null;
+  phoneNumber?: string | null;
+  PhoneNumber?: string | null;
   createdAt?: string;
   CreatedAt?: string;
 }

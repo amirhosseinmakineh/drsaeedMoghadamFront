@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-10-lead-always-os-push";
+const SW_VERSION = "2026-07-10-lead-reminder-os-push";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 
 function notificationAsset(path) {
@@ -78,18 +78,33 @@ self.addEventListener("push", (event) => {
   if (type === "RealtimeLead") {
     const leadId = data.leadId;
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
-    const title = payload.title || "لید جدیدی دارید";
-    const body = payload.body || "جهت دریافت روی آن کلیک کنید.";
+    const userName = (data.userName || data.UserName || "").trim();
+    const phoneNumber = (data.phoneNumber || data.PhoneNumber || "").trim();
+    const isReminder = data.isReminder === "true";
+    const title =
+      payload.title ||
+      (userName
+        ? `${isReminder ? "یادآوری لید" : "لید جدید"}: ${userName}`
+        : "لید جدیدی دارید");
+    const body =
+      payload.body ||
+      (phoneNumber
+        ? `شماره تماس: ${phoneNumber} — جهت دریافت روی اعلان کلیک کنید.`
+        : "جهت دریافت روی آن کلیک کنید.");
     const baseOptions = {
       body,
       tag,
       renotify: true,
       requireInteraction: true,
       silent: false,
-      vibrate: [300, 120, 300, 120, 300],
+      vibrate: [220, 90, 220, 90, 280],
       icon: notificationAsset("/icons/icon-192x192.png"),
       badge: notificationAsset("/icons/icon-96x96.png"),
-      data,
+      data: {
+        ...data,
+        userName,
+        phoneNumber,
+      },
     };
 
     event.waitUntil(
@@ -104,7 +119,7 @@ self.addEventListener("push", (event) => {
         for (const client of windowClients) {
           client.postMessage({
             type: "web-push-message",
-            payload: { title, body, data },
+            payload: { title, body, data: baseOptions.data },
           });
         }
       })(),

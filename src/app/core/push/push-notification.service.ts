@@ -8,8 +8,8 @@ import {
   WebPushMessagePayload,
 } from "./notification.service";
 import {
-  LEAD_ALERT_PUSH_BODY,
-  LEAD_ALERT_PUSH_TITLE,
+  buildRealtimeLeadNotificationBody,
+  buildRealtimeLeadNotificationTitle,
 } from "../lead/lead-alert-copy";
 
 export interface ConsultantPushMessageDetail {
@@ -355,14 +355,24 @@ export class PushNotificationService {
   }
 
   private titleForData(data?: Record<string, string>): string {
-    if (data?.["type"] === "RealtimeLead") return LEAD_ALERT_PUSH_TITLE;
+    if (data?.["type"] === "RealtimeLead") {
+      return buildRealtimeLeadNotificationTitle({
+        userName: data["userName"] ?? data["UserName"],
+        phoneNumber: data["phoneNumber"] ?? data["PhoneNumber"],
+        isReminder: data["isReminder"] === "true",
+      });
+    }
     if (data?.["type"] === "test_push") return "تست نوتیفیکیشن";
     return "اعلان جدید";
   }
 
   private bodyForData(data?: Record<string, string>): string {
     if (data?.["type"] === "RealtimeLead") {
-      return LEAD_ALERT_PUSH_BODY;
+      return buildRealtimeLeadNotificationBody({
+        userName: data["userName"] ?? data["UserName"],
+        phoneNumber: data["phoneNumber"] ?? data["PhoneNumber"],
+        isReminder: data["isReminder"] === "true",
+      });
     }
     if (data?.["type"] === "test_push") {
       return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";

@@ -9,10 +9,17 @@ import {
 import { NotificationService } from "../push/notification.service";
 import { playRealtimeLeadAlertSound } from "../push/lead-alert-sound";
 import { ToastService } from "../toast/toast.service";
+import {
+  RealtimeLeadNotificationDetails,
+  buildRealtimeLeadNotificationBody,
+  buildRealtimeLeadNotificationTitle,
+} from "./lead-alert-copy";
 import { RealtimeLeadPickupService } from "./realtime-lead-pickup.service";
 
 export interface RealtimeLeadAlert {
   leadId: number;
+  userName?: string | null;
+  phoneNumber?: string | null;
   isSubmitting: boolean;
   receivedAt: Date;
 }
@@ -23,7 +30,13 @@ type ServiceWorkerMessage =
   | { type: "RealtimeLeadPickup"; leadId: number }
   | { type: "RealtimeLeadOpen"; leadId: number };
 
+interface IncomingLeadDetails extends RealtimeLeadNotificationDetails {
+  title?: string;
+  body?: string;
+}
+
 const DISMISSED_LEAD_COOLDOWN_MS = 10_000;
+const REMINDER_INTERVAL_MS = 10_000;
 
 @Injectable({ providedIn: "root" })
 export class RealtimeLeadAlertService implements OnDestroy {
@@ -35,7 +48,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
     ReturnType<typeof setTimeout>
   >();
   private readonly processingLeadIds = new Set<number>();
-  private readonly limitNotifiedDates = new Set<string>();
   private initialized = false;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private pollingProfileId: number | null = null;
@@ -52,7 +64,15 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (detail?.data?.["type"] !== "RealtimeLead" || !Number.isFinite(leadId)) {
       return;
     }
-    void this.notifyIncomingLead(leadId);
+
+    void this.notifyIncomingLead(leadId, {
+      userName: detail?.data?.["userName"] ?? detail?.data?.["UserName"],
+      phoneNumber:
+        detail?.data?.["phoneNumber"] ?? detail?.data?.["PhoneNumber"],
+      isReminder: detail?.data?.["isReminder"] === "true",
+      title: detail?.title,
+      body: detail?.body,
+    });
   };
 
   readonly alerts$ = this.alertsSubject.asObservable();
@@ -187,7 +207,24 @@ export class RealtimeLeadAlertService implements OnDestroy {
       );
       if (!response.canReceive) return;
 
-      const lead = response.leads?.find((item) => {
+      const leads = response.leads ?? [];
+      const now = Date.now();
+
+      for (const [leadId, alert] of this.activeAlerts) {
+        if (now - alert.receivedAt.getTime() < REMINDER_INTERVAL_MS) continue;
+        if (this.handledLeadIds.has(leadId)) continue;
+        if (!leads.some((item) => this.readBroadcastLeadId(item) === leadId)) {
+          continue;
+        }
+
+        await this.notifyIncomingLead(leadId, {
+          userName: alert.userName,
+          phoneNumber: alert.phoneNumber,
+          isReminder: true,
+        });
+      }
+
+      const lead = leads.find((item) => {
         const itemLeadId = this.readBroadcastLeadId(item);
         return (
           itemLeadId &&
@@ -201,7 +238,10 @@ export class RealtimeLeadAlertService implements OnDestroy {
       const leadId = this.readBroadcastLeadId(lead);
       if (!leadId) return;
 
-      await this.notifyIncomingLead(leadId);
+      await this.notifyIncomingLead(leadId, {
+        userName: lead.userName ?? lead.UserName,
+        phoneNumber: lead.phoneNumber ?? lead.PhoneNumber,
+      });
     } catch {
       // Polling is a fallback; ignore transient API errors.
     } finally {
@@ -242,13 +282,11 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
   }
 
-  private async notifyIncomingLead(leadId: number): Promise<void> {
-    if (
-      !leadId ||
-      this.handledLeadIds.has(leadId) ||
-      this.activeAlerts.has(leadId) ||
-      this.processingLeadIds.has(leadId)
-    ) {
+  private async notifyIncomingLead(
+    leadId: number,
+    details: IncomingLeadDetails = {},
+  ): Promise<void> {
+    if (!leadId || this.handledLeadIds.has(leadId) || this.processingLeadIds.has(leadId)) {
       return;
     }
 
@@ -266,22 +304,55 @@ export class RealtimeLeadAlertService implements OnDestroy {
         return;
       }
 
-      if (this.handledLeadIds.has(leadId) || this.activeAlerts.has(leadId)) {
-        return;
-      }
+      const notificationDetails: RealtimeLeadNotificationDetails = {
+        userName: details.userName,
+        phoneNumber: details.phoneNumber,
+        isReminder: details.isReminder,
+      };
+      const title =
+        details.title?.trim() ||
+        buildRealtimeLeadNotificationTitle(notificationDetails);
+      const body =
+        details.body?.trim() ||
+        buildRealtimeLeadNotificationBody(notificationDetails);
 
-      this.activeAlerts.set(leadId, {
-        leadId,
-        isSubmitting: false,
-        receivedAt: new Date(),
-      });
+      const existingAlert = this.activeAlerts.get(leadId);
+      if (existingAlert) {
+        existingAlert.userName =
+          notificationDetails.userName ?? existingAlert.userName;
+        existingAlert.phoneNumber =
+          notificationDetails.phoneNumber ?? existingAlert.phoneNumber;
+        existingAlert.receivedAt = new Date();
+      } else {
+        this.activeAlerts.set(leadId, {
+          leadId,
+          userName: notificationDetails.userName,
+          phoneNumber: notificationDetails.phoneNumber,
+          isSubmitting: false,
+          receivedAt: new Date(),
+        });
+      }
 
       playRealtimeLeadAlertSound();
       this.emitAlerts();
 
       if (this.isAppInForeground()) {
         void this.notifications.closeRealtimeLeadNotification(leadId);
+        return;
       }
+
+      await this.notifications.showLocalNotification(title, body, {
+        tag: `realtime-lead-${leadId}`,
+        requireInteraction: true,
+        vibrate: [220, 90, 220, 90, 280],
+        data: {
+          type: "RealtimeLead",
+          leadId: String(leadId),
+          userName: notificationDetails.userName ?? "",
+          phoneNumber: notificationDetails.phoneNumber ?? "",
+          isReminder: notificationDetails.isReminder ? "true" : "false",
+        },
+      });
     } finally {
       this.processingLeadIds.delete(leadId);
     }
@@ -340,4 +411,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
     const profileId = user?.consultantProfileId ?? user?.profileId ?? 0;
     return Number.isFinite(profileId) && profileId > 0 ? profileId : 0;
   }
+
+  private readonly limitNotifiedDates = new Set<string>();
 }
