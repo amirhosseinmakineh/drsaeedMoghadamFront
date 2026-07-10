@@ -10,6 +10,7 @@ import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { finalize } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
+import { LogoutService } from "../../core/auth/logout.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
@@ -666,6 +667,7 @@ export class SecretaryDashboardComponent implements OnInit {
 
   constructor(
     private auth: AuthService,
+    private logoutService: LogoutService,
     private router: Router,
     private secretaryApi: SecretaryDashboardService,
     private pushNotifications: PushNotificationService,
@@ -783,8 +785,7 @@ export class SecretaryDashboardComponent implements OnInit {
   }
 
   logout(): void {
-    this.pushNotifications.resetRegisteredTokenCache();
-    this.auth.logout();
+    this.logoutService.logout();
     this.router.navigateByUrl("/");
   }
 

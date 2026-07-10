@@ -333,6 +333,9 @@ export class PushNotificationService {
   }
 
   private handleForegroundMessage(payload: WebPushMessagePayload): void {
+    const user = this.auth.user();
+    if (!user || user.role !== "consultant") return;
+
     const pushType = payload.data?.["type"];
     if (
       pushType &&
