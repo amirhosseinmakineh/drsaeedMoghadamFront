@@ -10,10 +10,6 @@ import { NotificationService } from "../push/notification.service";
 import { playRealtimeLeadAlertSound } from "../push/lead-alert-sound";
 import { ToastService } from "../toast/toast.service";
 import { RealtimeLeadPickupService } from "./realtime-lead-pickup.service";
-import {
-  LEAD_ALERT_PUSH_BODY,
-  LEAD_ALERT_PUSH_TITLE,
-} from "./lead-alert-copy";
 
 export interface RealtimeLeadAlert {
   leadId: number;
@@ -22,7 +18,6 @@ export interface RealtimeLeadAlert {
 }
 
 type ServiceWorkerMessage =
-  | { type: "RealtimeLead"; leadId: number; title?: string; body?: string }
   | { type: "RealtimeLeadTaken"; leadId: number }
   | { type: "RealtimeLeadPickup"; leadId: number }
   | { type: "RealtimeLeadOpen"; leadId: number };
@@ -35,13 +30,29 @@ export class RealtimeLeadAlertService implements OnDestroy {
   private readonly activeAlerts = new Map<number, RealtimeLeadAlert>();
   private readonly suppressedLeadIds = new Set<number>();
   private readonly dismissedAtByLeadId = new Map<number, number>();
-  private readonly lastNotifiedAtByLeadId = new Map<number, number>();
   private readonly processingLeadIds = new Set<number>();
   private readonly limitNotifiedDates = new Set<string>();
   private initialized = false;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private pollingProfileId: number | null = null;
   private pollingInFlight = false;
+  private readonly onPushMessage = (event: Event): void => {
+    if (this.auth.user()?.role !== "consultant") return;
+
+    const detail = (
+      event as CustomEvent<{
+        title?: string;
+        body?: string;
+        data?: Record<string, string>;
+      }>
+    ).detail;
+    const leadId = Number(detail?.data?.["leadId"]);
+    if (detail?.data?.["type"] !== "RealtimeLead" || !Number.isFinite(leadId)) {
+      return;
+    }
+
+    void this.notifyIncomingLead(leadId);
+  };
 
   readonly alerts$ = this.alertsSubject.asObservable();
 
@@ -64,10 +75,12 @@ export class RealtimeLeadAlertService implements OnDestroy {
         void this.handleServiceWorkerMessage(event.data);
       },
     );
+    window.addEventListener("consultant-push-message", this.onPushMessage);
   }
 
   ngOnDestroy(): void {
     this.stopPolling();
+    window.removeEventListener("consultant-push-message", this.onPushMessage);
     this.alertsSubject.complete();
   }
 
@@ -94,7 +107,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.activeAlerts.clear();
     this.suppressedLeadIds.clear();
     this.dismissedAtByLeadId.clear();
-    this.lastNotifiedAtByLeadId.clear();
     this.processingLeadIds.clear();
     this.emitAlerts();
   }
@@ -201,13 +213,9 @@ export class RealtimeLeadAlertService implements OnDestroy {
     message: ServiceWorkerMessage | undefined,
   ): Promise<void> {
     if (!message?.type) return;
-
     if (this.auth.user()?.role !== "consultant") return;
 
     switch (message.type) {
-      case "RealtimeLead":
-        await this.notifyIncomingLead(message.leadId);
-        break;
       case "RealtimeLeadTaken":
         this.suppressLead(message.leadId);
         break;
@@ -228,31 +236,27 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
   }
 
-  private shouldSkipLeadNotification(leadId: number, now = Date.now()): boolean {
-    if (!leadId || this.suppressedLeadIds.has(leadId)) return true;
-    if (this.activeAlerts.has(leadId)) return true;
-    if (this.processingLeadIds.has(leadId)) return true;
+  private tryClaimLeadNotification(leadId: number): boolean {
+    if (!leadId || this.suppressedLeadIds.has(leadId)) return false;
+    if (this.activeAlerts.has(leadId)) return false;
+    if (this.processingLeadIds.has(leadId)) return false;
 
+    const now = Date.now();
     const dismissedAt = this.dismissedAtByLeadId.get(leadId);
     if (
       dismissedAt &&
       now - dismissedAt < RealtimeLeadAlertService.REDISPATCH_COOLDOWN_MS
     ) {
-      return true;
+      return false;
     }
 
-    const lastNotifiedAt = this.lastNotifiedAtByLeadId.get(leadId) ?? 0;
-    if (now - lastNotifiedAt < RealtimeLeadAlertService.REDISPATCH_COOLDOWN_MS) {
-      return true;
-    }
-
-    return false;
+    this.processingLeadIds.add(leadId);
+    return true;
   }
 
   private async notifyIncomingLead(leadId: number): Promise<void> {
-    if (this.shouldSkipLeadNotification(leadId)) return;
+    if (!this.tryClaimLeadNotification(leadId)) return;
 
-    this.processingLeadIds.add(leadId);
     try {
       const profileId = this.getProfileId();
       if (!profileId) return;
@@ -266,37 +270,21 @@ export class RealtimeLeadAlertService implements OnDestroy {
         return;
       }
 
-      if (this.shouldSkipLeadNotification(leadId)) return;
+      if (
+        this.suppressedLeadIds.has(leadId) ||
+        this.activeAlerts.has(leadId)
+      ) {
+        return;
+      }
 
-      const now = Date.now();
       this.activeAlerts.set(leadId, {
         leadId,
         isSubmitting: false,
         receivedAt: new Date(),
       });
-      this.lastNotifiedAtByLeadId.set(leadId, now);
       this.dismissedAtByLeadId.delete(leadId);
 
       playRealtimeLeadAlertSound();
-
-      if (
-        typeof document !== "undefined" &&
-        document.visibilityState === "hidden"
-      ) {
-        void this.notifications.showLocalNotification(
-          LEAD_ALERT_PUSH_TITLE,
-          LEAD_ALERT_PUSH_BODY,
-          {
-            tag: `realtime-lead-${leadId}`,
-            requireInteraction: true,
-            data: {
-              type: "RealtimeLead",
-              leadId: String(leadId),
-            },
-          },
-        );
-      }
-
       this.emitAlerts();
     } finally {
       this.processingLeadIds.delete(leadId);
