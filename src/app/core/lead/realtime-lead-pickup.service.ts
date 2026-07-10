@@ -72,17 +72,19 @@ export class RealtimeLeadPickupService {
         },
       )
       .pipe(
-        map((response) => {
-          const data =
-            response.data ?? (response as { Data?: PickupLeadData }).Data;
-          return {
-            status: "success" as const,
-            message: response.message ?? "لید با موفقیت برداشته شد",
-            leadAssignmentId: data?.leadAssignmentId,
-            consultantProfileId: data?.consultantProfileId,
-            callDeadlineAt: data?.callDeadlineAt,
-          };
-        }),
+        map((response) => ({
+          status: "success" as const,
+          message: response.message ?? "لید با موفقیت برداشته شد",
+          leadAssignmentId:
+            response.data?.leadAssignmentId ??
+            (response as { Data?: PickupLeadData }).Data?.leadAssignmentId,
+          consultantProfileId:
+            response.data?.consultantProfileId ??
+            (response as { Data?: PickupLeadData }).Data?.consultantProfileId,
+          callDeadlineAt:
+            response.data?.callDeadlineAt ??
+            (response as { Data?: PickupLeadData }).Data?.callDeadlineAt,
+        })),
         catchError((error: HttpErrorResponse) => of(this.mapPickupError(error))),
       );
   }
