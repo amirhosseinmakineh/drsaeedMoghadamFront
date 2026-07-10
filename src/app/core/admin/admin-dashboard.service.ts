@@ -109,6 +109,49 @@ export interface ConsultantFilters {
   pageSize: number;
 }
 
+export interface AdminConsultantProfile {
+  profileId: number;
+  ProfileId?: number;
+  userId: string;
+  UserId?: string;
+  firstName: string;
+  FirstName?: string;
+  lastName: string;
+  LastName?: string;
+  phoneNumber: string;
+  PhoneNumber?: string;
+  userIsActive: boolean;
+  UserIsActive?: boolean;
+  userIsCompleteProfile: boolean;
+  UserIsCompleteProfile?: boolean;
+  nationalCode: string;
+  NationalCode?: string;
+  address: string;
+  Address?: string;
+  isAvailable: boolean;
+  IsAvailable?: boolean;
+  isOnline: boolean;
+  IsOnline?: boolean;
+  isCompleteProfile: boolean;
+  IsCompleteProfile?: boolean;
+  workStartTime?: string | null;
+  WorkStartTime?: string | null;
+  workEndTime?: string | null;
+  WorkEndTime?: string | null;
+  notes?: string | null;
+  Notes?: string | null;
+  lastOnlineAt?: string | null;
+  LastOnlineAt?: string | null;
+  lastOfflineAt?: string | null;
+  LastOfflineAt?: string | null;
+  limitNumber?: number | null;
+  LimitNumber?: number | null;
+  effectiveDailyLimit: number;
+  EffectiveDailyLimit?: number;
+  todayPickupCount: number;
+  TodayPickupCount?: number;
+}
+
 export interface AttendanceItem {
   id: number;
   attendanceDate: string;
@@ -535,6 +578,83 @@ export class AdminDashboardService {
         leadsAssignmentItemsResponse: profile?.leadsAssignmentItemsResponse,
       };
     });
+  }
+
+  getConsultantProfile(profileId: number): Observable<AdminConsultantProfile> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/admin/consultants/${profileId}`, {
+        headers: this.authHeaders(),
+      })
+      .pipe(
+        map((response) => this.normalizeConsultantProfile(response)),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت پروفایل مشاور انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  updateConsultantLimit(
+    profileId: number,
+    limitNumber: number | null,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .patch<ApiCommandResponse>(
+        `${this.apiBaseUrl}/admin/consultants/${profileId}/limit`,
+        { limitNumber },
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("ذخیره محدودیت دریافت شماره انجام نشد"));
+  }
+
+  private normalizeConsultantProfile(response: unknown): AdminConsultantProfile {
+    const source = this.unwrapResponseData(response);
+    const record = this.isRecord(source) ? source : {};
+
+    return {
+      profileId:
+        this.readNumber(record, "profileId", "ProfileId") ?? 0,
+      userId: String(this.readValue(record, "userId", "UserId") ?? ""),
+      firstName: String(this.readValue(record, "firstName", "FirstName") ?? ""),
+      lastName: String(this.readValue(record, "lastName", "LastName") ?? ""),
+      phoneNumber: String(
+        this.readValue(record, "phoneNumber", "PhoneNumber") ?? "",
+      ),
+      userIsActive:
+        this.readBoolean(record, "userIsActive", "UserIsActive") ?? false,
+      userIsCompleteProfile:
+        this.readBoolean(
+          record,
+          "userIsCompleteProfile",
+          "UserIsCompleteProfile",
+        ) ?? false,
+      nationalCode: String(
+        this.readValue(record, "nationalCode", "NationalCode") ?? "",
+      ),
+      address: String(this.readValue(record, "address", "Address") ?? ""),
+      isAvailable:
+        this.readBoolean(record, "isAvailable", "IsAvailable") ?? false,
+      isOnline: this.readBoolean(record, "isOnline", "IsOnline") ?? false,
+      isCompleteProfile:
+        this.readBoolean(record, "isCompleteProfile", "IsCompleteProfile") ??
+        false,
+      workStartTime: this.readString(
+        record,
+        "workStartTime",
+        "WorkStartTime",
+      ),
+      workEndTime: this.readString(record, "workEndTime", "WorkEndTime"),
+      notes: this.readString(record, "notes", "Notes"),
+      lastOnlineAt: this.readString(record, "lastOnlineAt", "LastOnlineAt"),
+      lastOfflineAt: this.readString(record, "lastOfflineAt", "LastOfflineAt"),
+      limitNumber: this.readNumber(record, "limitNumber", "LimitNumber"),
+      effectiveDailyLimit:
+        this.readNumber(record, "effectiveDailyLimit", "EffectiveDailyLimit") ??
+        10,
+      todayPickupCount:
+        this.readNumber(record, "todayPickupCount", "TodayPickupCount") ?? 0,
+    };
   }
 
   getAttendance(
