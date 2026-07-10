@@ -272,12 +272,15 @@ export class NotificationService {
     const notifications = await registration.getNotifications({ tag });
     notifications.forEach((notification) => notification.close());
 
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: "CloseRealtimeLeadNotification",
-        leadId,
-      });
-    }
+    await this.postMessageToWebPushWorker({
+      type: "CloseRealtimeLeadNotification",
+      leadId,
+    });
+  }
+
+  async postMessageToWebPushWorker(message: unknown): Promise<void> {
+    const registration = await this.getWebPushRegistration();
+    registration?.active?.postMessage(message);
   }
 
   private async subscribeWithVapidKey(
