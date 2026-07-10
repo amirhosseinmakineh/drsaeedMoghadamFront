@@ -7,6 +7,10 @@ import {
   NotificationService,
   WebPushMessagePayload,
 } from "./notification.service";
+import {
+  LEAD_ALERT_PUSH_BODY,
+  LEAD_ALERT_PUSH_TITLE,
+} from "../lead/lead-alert-copy";
 import { playRealtimeLeadAlertSound } from "./lead-alert-sound";
 
 export interface ConsultantPushMessageDetail {
@@ -356,14 +360,14 @@ export class PushNotificationService {
   }
 
   private titleForData(data?: Record<string, string>): string {
-    if (data?.["type"] === "RealtimeLead") return "لید جدید!";
+    if (data?.["type"] === "RealtimeLead") return LEAD_ALERT_PUSH_TITLE;
     if (data?.["type"] === "test_push") return "تست نوتیفیکیشن";
     return "اعلان جدید";
   }
 
   private bodyForData(data?: Record<string, string>): string {
     if (data?.["type"] === "RealtimeLead") {
-      return "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!";
+      return LEAD_ALERT_PUSH_BODY;
     }
     if (data?.["type"] === "test_push") {
       return "اگر این پیام را می‌بینید، Web Push روی PWA شما فعال است.";

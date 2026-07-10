@@ -13,8 +13,6 @@ import { RealtimeLeadPickupService } from "./realtime-lead-pickup.service";
 
 export interface RealtimeLeadAlert {
   leadId: number;
-  title: string;
-  body: string;
   isSubmitting: boolean;
   receivedAt: Date;
 }
@@ -47,7 +45,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (detail?.data?.["type"] !== "RealtimeLead" || !Number.isFinite(leadId)) {
       return;
     }
-    void this.notifyIncomingLead(leadId, detail.title, detail.body);
+    void this.notifyIncomingLead(leadId);
   };
 
   readonly alerts$ = this.alertsSubject.asObservable();
@@ -181,11 +179,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
       for (const lead of response.leads ?? []) {
         const leadId = this.readBroadcastLeadId(lead);
         if (!leadId) continue;
-        await this.notifyIncomingLead(
-          leadId,
-          "لید جدید!",
-          "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!",
-        );
+        await this.notifyIncomingLead(leadId);
       }
     } catch {
       // Polling is a fallback; ignore transient API errors.
@@ -208,11 +202,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
     switch (message.type) {
       case "RealtimeLead":
-        await this.notifyIncomingLead(
-          message.leadId,
-          message.title,
-          message.body,
-        );
+        await this.notifyIncomingLead(message.leadId);
         break;
       case "RealtimeLeadTaken":
         this.dismissLead(message.leadId);
@@ -234,11 +224,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
   }
 
-  private async notifyIncomingLead(
-    leadId: number,
-    title?: string,
-    body?: string,
-  ): Promise<void> {
+  private async notifyIncomingLead(leadId: number): Promise<void> {
     if (!leadId || this.handledLeadIds.has(leadId) || this.activeAlerts.has(leadId)) {
       return;
     }
@@ -257,10 +243,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
     this.activeAlerts.set(leadId, {
       leadId,
-      title: title?.trim() || "لید جدید!",
-      body:
-        body?.trim() ||
-        "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!",
       isSubmitting: false,
       receivedAt: new Date(),
     });

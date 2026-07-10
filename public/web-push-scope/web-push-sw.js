@@ -60,9 +60,8 @@ self.addEventListener("push", (event) => {
   if (type === "RealtimeLead") {
     const leadId = data.leadId;
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
-    const title = payload.title || "لید جدید!";
-    const body =
-      payload.body || "یک لید لحظه‌ای آماده دریافت است. سریع برداریدش!";
+    const title = payload.title || "لید جدیدی دارید";
+    const body = payload.body || "جهت دریافت روی آن کلیک کنید.";
     const baseOptions = {
       body,
       tag,
@@ -92,7 +91,7 @@ self.addEventListener("push", (event) => {
           await self.registration.showNotification(title, {
             ...baseOptions,
             actions: [
-              { action: "pickup", title: "برداریدش!" },
+              { action: "pickup", title: "روی آن کلیک کنید." },
               { action: "dismiss", title: "بستن" },
             ],
           });
