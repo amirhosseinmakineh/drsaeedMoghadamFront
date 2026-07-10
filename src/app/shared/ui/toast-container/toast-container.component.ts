@@ -6,7 +6,7 @@ import {
   ToastService,
 } from "../../../core/toast/toast.service";
 
-const TOAST_AUTO_DISMISS_MS = 2000;
+const DEFAULT_TOAST_AUTO_DISMISS_MS = 2000;
 
 @Component({
   selector: "app-toast-container",
@@ -20,9 +20,23 @@ const TOAST_AUTO_DISMISS_MS = 2000;
           [class.success]="toast.type === 'success'"
           [class.error]="toast.type === 'error'"
           [class.info]="toast.type === 'info'"
+          [class.has-action]="toast.action"
           role="status"
         >
-          <p class="toast-message">{{ toast.message }}</p>
+          <div class="toast-content">
+            <p class="toast-message">
+              {{ toast.message }}
+              @if (toast.action) {
+                <button
+                  class="toast-action"
+                  type="button"
+                  (click)="runAction(toast)"
+                >
+                  {{ toast.action.label }}
+                </button>
+              }
+            </p>
+          </div>
           <button
             class="toast-dismiss"
             type="button"
@@ -45,7 +59,7 @@ const TOAST_AUTO_DISMISS_MS = 2000;
         z-index: 12000;
         display: grid;
         gap: 10px;
-        width: min(420px, calc(100vw - 24px));
+        width: min(460px, calc(100vw - 24px));
         transform: translateX(-50%);
         pointer-events: none;
       }
@@ -64,10 +78,46 @@ const TOAST_AUTO_DISMISS_MS = 2000;
         line-height: 1.6;
         pointer-events: auto;
       }
-      .toast-message {
+      .toast.has-action {
+        padding: 14px 12px 14px 16px;
+        border-color: color-mix(in srgb, var(--brand) 42%, var(--line));
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--brand) 10%, var(--surface)),
+          color-mix(in srgb, var(--brand-2) 8%, var(--surface))
+        );
+      }
+      .toast-content {
         flex: 1;
+        min-width: 0;
+      }
+      .toast-message {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         margin: 0;
         text-align: center;
+      }
+      .toast-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        color: #1b1712;
+        font: inherit;
+        font-weight: 950;
+        line-height: 1.4;
+        cursor: pointer;
+        box-shadow: 0 12px 28px color-mix(in srgb, var(--brand) 22%, transparent);
+      }
+      .toast-action:hover {
+        filter: brightness(1.03);
       }
       .toast-dismiss {
         flex: 0 0 auto;
@@ -107,6 +157,14 @@ const TOAST_AUTO_DISMISS_MS = 2000;
         background: color-mix(in srgb, var(--brand) 10%, var(--surface));
         color: var(--text);
       }
+      .toast.info.has-action {
+        border-color: color-mix(in srgb, var(--brand) 42%, var(--line));
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--brand) 10%, var(--surface)),
+          color-mix(in srgb, var(--brand-2) 8%, var(--surface))
+        );
+      }
     `,
   ],
 })
@@ -120,10 +178,13 @@ export class ToastContainerComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscription = this.toastService.messages$.subscribe((toast) => {
       this.toasts = [...this.toasts, toast];
-      const timer = setTimeout(
-        () => this.dismiss(toast.id),
-        TOAST_AUTO_DISMISS_MS,
-      );
+      const autoDismissMs =
+        toast.autoDismissMs === undefined
+          ? DEFAULT_TOAST_AUTO_DISMISS_MS
+          : toast.autoDismissMs;
+      if (autoDismissMs === null) return;
+
+      const timer = setTimeout(() => this.dismiss(toast.id), autoDismissMs);
       this.timers.set(toast.id, timer);
     });
   }
@@ -132,6 +193,11 @@ export class ToastContainerComponent implements OnInit, OnDestroy {
     this.subscription?.unsubscribe();
     for (const timer of this.timers.values()) clearTimeout(timer);
     this.timers.clear();
+  }
+
+  runAction(toast: ToastMessage): void {
+    toast.action?.handler();
+    this.dismiss(toast.id);
   }
 
   dismiss(id: number): void {
