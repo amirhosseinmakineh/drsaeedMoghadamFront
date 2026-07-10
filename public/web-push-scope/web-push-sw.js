@@ -1,19 +1,10 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-10-lead-background-push";
+const SW_VERSION = "2026-07-10-lead-always-os-push";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
-let leadAlertPageForeground = false;
 
 function notificationAsset(path) {
   return new URL(path, self.location.origin).href;
-}
-
-function shouldSuppressOsNotification(windowClients) {
-  if (windowClients.some((client) => client.focused)) {
-    return true;
-  }
-
-  return leadAlertPageForeground && windowClients.length > 0;
 }
 
 async function showRealtimeLeadNotification(title, body, baseOptions) {
@@ -108,9 +99,7 @@ self.addEventListener("push", (event) => {
           includeUncontrolled: true,
         });
 
-        if (!shouldSuppressOsNotification(windowClients)) {
-          await showRealtimeLeadNotification(title, body, baseOptions);
-        }
+        await showRealtimeLeadNotification(title, body, baseOptions);
 
         for (const client of windowClients) {
           client.postMessage({
@@ -233,11 +222,6 @@ self.addEventListener("notificationclick", (event) => {
 
 self.addEventListener("message", (event) => {
   const data = event.data ?? {};
-
-  if (data.type === "SetLeadAlertForeground") {
-    leadAlertPageForeground = Boolean(data.isForeground);
-    return;
-  }
 
   if (data.type === "CloseRealtimeLeadNotification" && data.leadId) {
     event.waitUntil(closeRealtimeLeadNotifications(data.leadId));

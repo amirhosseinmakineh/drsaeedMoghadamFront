@@ -40,7 +40,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private pollingProfileId: number | null = null;
   private pollingInFlight = false;
-  private unbindForegroundStateReporting: (() => void) | null = null;
   private readonly onPushMessage = (event: Event): void => {
     const detail = (
       event as CustomEvent<{
@@ -78,13 +77,10 @@ export class RealtimeLeadAlertService implements OnDestroy {
       },
     );
     window.addEventListener("consultant-push-message", this.onPushMessage);
-    this.bindForegroundStateReporting();
   }
 
   ngOnDestroy(): void {
     this.stopPolling();
-    this.unbindForegroundStateReporting?.();
-    this.unbindForegroundStateReporting = null;
     for (const timer of this.dismissedLeadCooldownTimers.values()) {
       clearTimeout(timer);
     }
@@ -282,6 +278,10 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
       playRealtimeLeadAlertSound();
       this.emitAlerts();
+
+      if (this.isAppInForeground()) {
+        void this.notifications.closeRealtimeLeadNotification(leadId);
+      }
     } finally {
       this.processingLeadIds.delete(leadId);
     }
@@ -322,43 +322,13 @@ export class RealtimeLeadAlertService implements OnDestroy {
     );
   }
 
-  private bindForegroundStateReporting(): void {
-    if (typeof window === "undefined" || typeof document === "undefined") {
-      return;
-    }
+  private isAppInForeground(): boolean {
+    if (typeof document === "undefined") return false;
 
-    const reportForegroundState = (isForeground: boolean): void => {
-      void this.notifications.postMessageToWebPushWorker({
-        type: "SetLeadAlertForeground",
-        isForeground,
-      });
-    };
-
-    const reportCurrentForegroundState = (): void => {
-      const isForeground =
-        document.visibilityState === "visible" &&
-        (typeof document.hasFocus !== "function" || document.hasFocus());
-      reportForegroundState(isForeground);
-    };
-
-    const onVisibilityChange = (): void => reportCurrentForegroundState();
-    const onFocus = (): void => reportForegroundState(true);
-    const onBlur = (): void => reportForegroundState(false);
-    const onPageHide = (): void => reportForegroundState(false);
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("focus", onFocus);
-    window.addEventListener("blur", onBlur);
-    window.addEventListener("pagehide", onPageHide);
-    reportCurrentForegroundState();
-
-    this.unbindForegroundStateReporting = () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("focus", onFocus);
-      window.removeEventListener("blur", onBlur);
-      window.removeEventListener("pagehide", onPageHide);
-      reportForegroundState(false);
-    };
+    return (
+      document.visibilityState === "visible" &&
+      (typeof document.hasFocus !== "function" || document.hasFocus())
+    );
   }
 
   private emitAlerts(): void {
