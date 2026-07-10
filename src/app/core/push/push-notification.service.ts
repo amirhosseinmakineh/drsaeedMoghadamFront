@@ -11,7 +11,6 @@ import {
   LEAD_ALERT_PUSH_BODY,
   LEAD_ALERT_PUSH_TITLE,
 } from "../lead/lead-alert-copy";
-import { playRealtimeLeadAlertSound } from "./lead-alert-sound";
 
 export interface ConsultantPushMessageDetail {
   title: string;
@@ -349,10 +348,6 @@ export class PushNotificationService {
       body,
       data: payload.data,
     };
-
-    if (pushType === "RealtimeLead") {
-      playRealtimeLeadAlertSound();
-    }
 
     window.dispatchEvent(
       new CustomEvent("consultant-push-message", { detail }),
