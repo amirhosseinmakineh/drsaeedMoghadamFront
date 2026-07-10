@@ -26,6 +26,7 @@ export interface PushSyncResult {
 
 @Injectable({ providedIn: "root" })
 export class PushNotificationService {
+  private static instanceCount = 0;
   private lastRegisteredKey: string | null = null;
   private tokenSyncPromise: Promise<PushSyncResult> | null = null;
   private backendRegistrationReady = false;
@@ -36,6 +37,13 @@ export class PushNotificationService {
     private router: Router,
     private notifications: NotificationService,
   ) {
+    PushNotificationService.instanceCount += 1;
+    console.log(
+      "[LeadDiag] PushNotificationService constructor",
+      PushNotificationService.instanceCount,
+      new Date(),
+    );
+
     if (typeof window !== "undefined") {
       window.addEventListener("focus", () => {
         const user = this.auth.user();
@@ -372,6 +380,11 @@ export class PushNotificationService {
     };
 
     if (pushType === "RealtimeLead") {
+      console.log(
+        "Lead notification received",
+        { source: "foreground-web-push", payload },
+        new Date(),
+      );
       playRealtimeLeadAlertSound();
     }
 
