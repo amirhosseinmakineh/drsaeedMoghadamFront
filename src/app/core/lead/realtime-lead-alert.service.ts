@@ -29,6 +29,7 @@ type ServiceWorkerMessage =
 
 @Injectable({ providedIn: "root" })
 export class RealtimeLeadAlertService implements OnDestroy {
+  private static instanceCount = 0;
   private static readonly REDISPATCH_COOLDOWN_MS = 10_000;
 
   private readonly alertsSubject = new Subject<readonly RealtimeLeadAlert[]>();
@@ -55,7 +56,12 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (detail?.data?.["type"] !== "RealtimeLead" || !Number.isFinite(leadId)) {
       return;
     }
-    void this.notifyIncomingLead(leadId);
+    console.log(
+      "Lead notification received",
+      { source: "consultant-push-message", leadId, detail },
+      new Date(),
+    );
+    void this.notifyIncomingLead(leadId, "consultant-push-message");
   };
 
   readonly alerts$ = this.alertsSubject.asObservable();
@@ -67,12 +73,20 @@ export class RealtimeLeadAlertService implements OnDestroy {
     private readonly notifications: NotificationService,
     private readonly toast: ToastService,
     private readonly router: Router,
-  ) {}
+  ) {
+    RealtimeLeadAlertService.instanceCount += 1;
+    console.log(
+      "[LeadDiag] RealtimeLeadAlertService constructor",
+      RealtimeLeadAlertService.instanceCount,
+      new Date(),
+    );
+  }
 
   initialize(): void {
     if (this.initialized || typeof window === "undefined") return;
 
     this.initialized = true;
+    console.log("[LeadDiag] RealtimeLeadAlertService.initialize listeners registered", new Date());
     navigator.serviceWorker?.addEventListener(
       "message",
       (event: MessageEvent<ServiceWorkerMessage>) => {
@@ -199,7 +213,12 @@ export class RealtimeLeadAlertService implements OnDestroy {
       for (const lead of response.leads ?? []) {
         const leadId = this.readBroadcastLeadId(lead);
         if (!leadId) continue;
-        await this.notifyIncomingLead(leadId);
+        console.log(
+          "Lead notification received",
+          { source: "poll-broadcast", leadId, lead },
+          new Date(),
+        );
+        await this.notifyIncomingLead(leadId, "poll-broadcast");
       }
     } catch (error) {
       console.warn("Broadcast realtime lead polling failed", error);
@@ -222,7 +241,12 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
     switch (message.type) {
       case "RealtimeLead":
-        await this.notifyIncomingLead(message.leadId);
+        console.log(
+          "Lead notification received",
+          { source: "service-worker:RealtimeLead", leadId: message.leadId, message },
+          new Date(),
+        );
+        await this.notifyIncomingLead(message.leadId, "service-worker:RealtimeLead");
         break;
       case "RealtimeLeadTaken":
         this.suppressLead(message.leadId);
@@ -244,7 +268,16 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
   }
 
-  private async notifyIncomingLead(leadId: number): Promise<void> {
+  private async notifyIncomingLead(
+    leadId: number,
+    source = "unknown",
+  ): Promise<void> {
+    console.log(
+      "Lead notification received",
+      { source, leadId, phase: "notifyIncomingLead-enter" },
+      new Date(),
+    );
+
     if (!leadId || this.suppressedLeadIds.has(leadId)) return;
 
     const now = Date.now();
