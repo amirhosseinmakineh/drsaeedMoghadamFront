@@ -12,6 +12,7 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
 import { Subscription, finalize, firstValueFrom, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
+import { LogoutService } from "../../core/auth/logout.service";
 import {
   CompletePatientProfileRequest,
   ConsultantDashboardService,
@@ -2586,6 +2587,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: AuthService,
+    private logoutService: LogoutService,
     private router: Router,
     private route: ActivatedRoute,
     private consultantApi: ConsultantDashboardService,
@@ -4441,8 +4443,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.pushNotifications.resetRegisteredTokenCache();
-    this.auth.logout();
+    this.logoutService.logout();
     this.router.navigateByUrl("/");
   }
 

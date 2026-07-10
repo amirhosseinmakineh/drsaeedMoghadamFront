@@ -34,6 +34,8 @@ export class RealtimeLeadAlertService implements OnDestroy {
   private pollingProfileId: number | null = null;
   private pollingInFlight = false;
   private readonly onPushMessage = (event: Event): void => {
+    if (this.auth.user()?.role !== "consultant") return;
+
     const detail = (
       event as CustomEvent<{
         title?: string;
@@ -94,6 +96,13 @@ export class RealtimeLeadAlertService implements OnDestroy {
       this.pollTimer = null;
     }
     this.pollingProfileId = null;
+  }
+
+  teardownOnLogout(): void {
+    this.stopPolling();
+    this.activeAlerts.clear();
+    this.handledLeadIds.clear();
+    this.emitAlerts();
   }
 
   async tryPickupLead(leadId: number): Promise<void> {
