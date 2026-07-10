@@ -17,12 +17,15 @@ export interface PickupLeadResponse {
   leadAssignmentId?: number;
   consultantProfileId?: number;
   callDeadlineAt?: string;
+  isConsultantOnline?: boolean;
 }
 
 interface PickupLeadData {
   leadAssignmentId?: number;
   consultantProfileId?: number;
   callDeadlineAt?: string;
+  isConsultantOnline?: boolean;
+  IsConsultantOnline?: boolean;
 }
 
 interface CanPickupData {
@@ -72,19 +75,18 @@ export class RealtimeLeadPickupService {
         },
       )
       .pipe(
-        map((response) => ({
-          status: "success" as const,
-          message: response.message ?? "لید با موفقیت برداشته شد",
-          leadAssignmentId:
-            response.data?.leadAssignmentId ??
-            (response as { Data?: PickupLeadData }).Data?.leadAssignmentId,
-          consultantProfileId:
-            response.data?.consultantProfileId ??
-            (response as { Data?: PickupLeadData }).Data?.consultantProfileId,
-          callDeadlineAt:
-            response.data?.callDeadlineAt ??
-            (response as { Data?: PickupLeadData }).Data?.callDeadlineAt,
-        })),
+        map((response) => {
+          const data =
+            response.data ?? (response as { Data?: PickupLeadData }).Data;
+          return {
+            status: "success" as const,
+            message: response.message ?? "لید با موفقیت برداشته شد",
+            leadAssignmentId: data?.leadAssignmentId,
+            consultantProfileId: data?.consultantProfileId,
+            callDeadlineAt: data?.callDeadlineAt,
+            isConsultantOnline: this.readConsultantOnline(data),
+          };
+        }),
         catchError((error: HttpErrorResponse) => of(this.mapPickupError(error))),
       );
   }
@@ -107,6 +109,17 @@ export class RealtimeLeadPickupService {
     }
 
     return { status: "error", message };
+  }
+
+  private readConsultantOnline(data: PickupLeadData | undefined): boolean {
+    if (!data) return false;
+    if (typeof data.isConsultantOnline === "boolean") {
+      return data.isConsultantOnline;
+    }
+    if (typeof data.IsConsultantOnline === "boolean") {
+      return data.IsConsultantOnline;
+    }
+    return false;
   }
 
   private authHeaders(): HttpHeaders {

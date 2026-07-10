@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from "@angular/core";
 import { Router } from "@angular/router";
-import { Subject, firstValueFrom } from "rxjs";
+import { Subject, catchError, firstValueFrom, of } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import {
   BroadcastRealtimeLeadItem,
@@ -127,6 +127,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (result.status === "success") {
       this.toast.success(result.message);
       this.dismissLead(leadId);
+      await this.setConsultantOfflineAfterPickup(profileId);
       this.notifyLeadPickedUp(leadId);
       await this.router.navigate(["/dashboard/consultant"], {
         queryParams: {
@@ -255,9 +256,27 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (typeof window === "undefined") return;
     window.dispatchEvent(
       new CustomEvent("consultant-lead-picked-up", {
-        detail: { leadId },
+        detail: { leadId, isOnline: false },
       }),
     );
+  }
+
+  private async setConsultantOfflineAfterPickup(profileId: number): Promise<void> {
+    this.stopPolling();
+
+    try {
+      await firstValueFrom(
+        this.consultantApi
+          .setOnlineStatus({
+            profileId,
+            isOnline: false,
+            isOffline: true,
+          })
+          .pipe(catchError(() => of(null))),
+      );
+    } catch {
+      // Pickup already marks the consultant offline on the backend.
+    }
   }
 
   private showDailyLimitNotificationOnce(message?: string): void {
