@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter, Subscription } from "rxjs";
 import { AuthDialogComponent } from "./auth/auth-dialog.component";
 import { AuthService, AuthUser } from "./core/auth/auth.service";
+import { LogoutService } from "./core/auth/logout.service";
 import { PushNotificationService } from "./core/push/push-notification.service";
 import { RealtimeLeadAlertComponent } from "./shared/ui/realtime-lead-alert/realtime-lead-alert.component";
 import { LanguageCode, NAV_ITEMS, pickText } from "./models/clinic.model";
@@ -293,6 +294,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     public auth: AuthService,
+    private logoutService: LogoutService,
     private pushNotifications: PushNotificationService,
     private cdr: ChangeDetectorRef,
   ) {}
@@ -323,8 +325,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.pushNotifications.resetRegisteredTokenCache();
-    this.auth.logout();
+    this.logoutService.logout();
     this.mobileAccountOpen.set(false);
     if (this.isDashboardRoute()) {
       this.router.navigateByUrl("/");

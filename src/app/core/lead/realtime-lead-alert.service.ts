@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from "@angular/core";
 import { Router } from "@angular/router";
-import { Subject, firstValueFrom } from "rxjs";
+import { Subject, catchError, firstValueFrom, of } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import {
   BroadcastRealtimeLeadItem,
@@ -18,22 +18,29 @@ export interface RealtimeLeadAlert {
 }
 
 type ServiceWorkerMessage =
-  | { type: "RealtimeLead"; leadId: number; title?: string; body?: string }
   | { type: "RealtimeLeadTaken"; leadId: number }
   | { type: "RealtimeLeadPickup"; leadId: number }
   | { type: "RealtimeLeadOpen"; leadId: number };
 
 @Injectable({ providedIn: "root" })
 export class RealtimeLeadAlertService implements OnDestroy {
+  private static readonly REDISPATCH_COOLDOWN_MS = 10_000;
+  private static readonly FALLBACK_POLL_INTERVAL_MS = 10_000;
+
   private readonly alertsSubject = new Subject<readonly RealtimeLeadAlert[]>();
   private readonly activeAlerts = new Map<number, RealtimeLeadAlert>();
-  private readonly handledLeadIds = new Set<number>();
+  private readonly suppressedLeadIds = new Set<number>();
+  private readonly dismissedAtByLeadId = new Map<number, number>();
+  private readonly processingLeadIds = new Set<number>();
   private readonly limitNotifiedDates = new Set<string>();
   private initialized = false;
+  private pushPrimaryMode = false;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private pollingProfileId: number | null = null;
   private pollingInFlight = false;
   private readonly onPushMessage = (event: Event): void => {
+    if (this.auth.user()?.role !== "consultant") return;
+
     const detail = (
       event as CustomEvent<{
         title?: string;
@@ -45,6 +52,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (detail?.data?.["type"] !== "RealtimeLead" || !Number.isFinite(leadId)) {
       return;
     }
+
     void this.notifyIncomingLead(leadId);
   };
 
@@ -78,14 +86,23 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.alertsSubject.complete();
   }
 
+  setPushPrimaryMode(enabled: boolean): void {
+    this.pushPrimaryMode = enabled;
+    if (enabled) {
+      this.stopPolling();
+    }
+  }
+
   startPolling(profileId: number): void {
+    if (this.pushPrimaryMode) return;
+
     this.pollingProfileId = profileId;
     if (this.pollTimer) return;
 
     void this.pollBroadcastLeads();
     this.pollTimer = setInterval(() => {
       void this.pollBroadcastLeads();
-    }, 5000);
+    }, RealtimeLeadAlertService.FALLBACK_POLL_INTERVAL_MS);
   }
 
   stopPolling(): void {
@@ -94,6 +111,16 @@ export class RealtimeLeadAlertService implements OnDestroy {
       this.pollTimer = null;
     }
     this.pollingProfileId = null;
+  }
+
+  teardownOnLogout(): void {
+    this.stopPolling();
+    this.pushPrimaryMode = false;
+    this.activeAlerts.clear();
+    this.suppressedLeadIds.clear();
+    this.dismissedAtByLeadId.clear();
+    this.processingLeadIds.clear();
+    this.emitAlerts();
   }
 
   async tryPickupLead(leadId: number): Promise<void> {
@@ -126,7 +153,8 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
     if (result.status === "success") {
       this.toast.success(result.message);
-      this.dismissLead(leadId);
+      this.suppressLead(leadId);
+      await this.setConsultantOfflineAfterPickup(profileId);
       this.notifyLeadPickedUp(leadId);
       await this.router.navigate(["/dashboard/consultant"], {
         queryParams: {
@@ -140,13 +168,13 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
     if (result.status === "dailyLimitReached") {
       this.showDailyLimitNotificationOnce(result.message);
-      this.dismissLead(leadId);
+      this.suppressLead(leadId);
       return;
     }
 
     if (result.status === "alreadyTaken") {
       this.toast.info(result.message || "این لید قبلاً برداشته شده است.");
-      this.dismissLead(leadId);
+      this.suppressLead(leadId);
       return;
     }
 
@@ -159,13 +187,13 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
   dismissLead(leadId: number): void {
     this.activeAlerts.delete(leadId);
-    this.handledLeadIds.add(leadId);
+    this.dismissedAtByLeadId.set(leadId, Date.now());
     void this.notifications.closeRealtimeLeadNotification(leadId);
     this.emitAlerts();
   }
 
   private async pollBroadcastLeads(): Promise<void> {
-    if (this.pollingInFlight) return;
+    if (this.pushPrimaryMode || this.pollingInFlight) return;
     const profileId = this.pollingProfileId;
     if (!profileId || this.auth.user()?.role !== "consultant") return;
 
@@ -181,8 +209,8 @@ export class RealtimeLeadAlertService implements OnDestroy {
         if (!leadId) continue;
         await this.notifyIncomingLead(leadId);
       }
-    } catch {
-      // Polling is a fallback; ignore transient API errors.
+    } catch (error) {
+      console.warn("Broadcast realtime lead polling failed", error);
     } finally {
       this.pollingInFlight = false;
     }
@@ -197,15 +225,11 @@ export class RealtimeLeadAlertService implements OnDestroy {
     message: ServiceWorkerMessage | undefined,
   ): Promise<void> {
     if (!message?.type) return;
-
     if (this.auth.user()?.role !== "consultant") return;
 
     switch (message.type) {
-      case "RealtimeLead":
-        await this.notifyIncomingLead(message.leadId);
-        break;
       case "RealtimeLeadTaken":
-        this.dismissLead(message.leadId);
+        this.suppressLead(message.leadId);
         break;
       case "RealtimeLeadPickup":
         await this.tryPickupLead(message.leadId);
@@ -224,40 +248,91 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
   }
 
+  private tryClaimLeadNotification(leadId: number): boolean {
+    if (!leadId || this.suppressedLeadIds.has(leadId)) return false;
+    if (this.activeAlerts.has(leadId)) return false;
+    if (this.processingLeadIds.has(leadId)) return false;
+
+    const now = Date.now();
+    const dismissedAt = this.dismissedAtByLeadId.get(leadId);
+    if (
+      dismissedAt &&
+      now - dismissedAt < RealtimeLeadAlertService.REDISPATCH_COOLDOWN_MS
+    ) {
+      return false;
+    }
+
+    this.processingLeadIds.add(leadId);
+    return true;
+  }
+
   private async notifyIncomingLead(leadId: number): Promise<void> {
-    if (!leadId || this.handledLeadIds.has(leadId) || this.activeAlerts.has(leadId)) {
-      return;
+    if (!this.tryClaimLeadNotification(leadId)) return;
+
+    try {
+      const profileId = this.getProfileId();
+      if (!profileId) return;
+
+      const canPickup = await firstValueFrom(
+        this.pickupService.canPickupLead(profileId),
+      );
+      if (!canPickup) {
+        this.showDailyLimitNotificationOnce();
+        void this.notifications.closeRealtimeLeadNotification(leadId);
+        return;
+      }
+
+      if (
+        this.suppressedLeadIds.has(leadId) ||
+        this.activeAlerts.has(leadId)
+      ) {
+        return;
+      }
+
+      this.activeAlerts.set(leadId, {
+        leadId,
+        isSubmitting: false,
+        receivedAt: new Date(),
+      });
+      this.dismissedAtByLeadId.delete(leadId);
+
+      playRealtimeLeadAlertSound();
+      this.emitAlerts();
+    } finally {
+      this.processingLeadIds.delete(leadId);
     }
+  }
 
-    const profileId = this.getProfileId();
-    if (!profileId) return;
-
-    const canPickup = await firstValueFrom(
-      this.pickupService.canPickupLead(profileId),
-    );
-    if (!canPickup) {
-      this.showDailyLimitNotificationOnce();
-      void this.notifications.closeRealtimeLeadNotification(leadId);
-      return;
-    }
-
-    this.activeAlerts.set(leadId, {
-      leadId,
-      isSubmitting: false,
-      receivedAt: new Date(),
-    });
-
-    playRealtimeLeadAlertSound();
-    this.emitAlerts();
+  private suppressLead(leadId: number): void {
+    this.suppressedLeadIds.add(leadId);
+    this.dismissLead(leadId);
   }
 
   private notifyLeadPickedUp(leadId: number): void {
     if (typeof window === "undefined") return;
     window.dispatchEvent(
       new CustomEvent("consultant-lead-picked-up", {
-        detail: { leadId },
+        detail: { leadId, isOnline: false },
       }),
     );
+  }
+
+  private async setConsultantOfflineAfterPickup(profileId: number): Promise<void> {
+    this.stopPolling();
+
+    try {
+      await firstValueFrom(
+        this.consultantApi
+          .setOnlineStatus({
+            profileId,
+            isOnline: false,
+            isOffline: true,
+          })
+          .pipe(catchError(() => of(null))),
+      );
+    } catch {
+      // Ignore transient offline API errors; dashboard refresh will reconcile status.
+    }
   }
 
   private showDailyLimitNotificationOnce(message?: string): void {

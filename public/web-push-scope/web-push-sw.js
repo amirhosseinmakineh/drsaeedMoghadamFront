@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-09-realtime-push";
+const SW_VERSION = "2026-07-10-option1-push-primary";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 
 function parsePushPayload(event) {
@@ -61,11 +61,12 @@ self.addEventListener("push", (event) => {
     const leadId = data.leadId;
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
     const title = payload.title || "لید جدیدی دارید";
-    const body = payload.body || "جهت دریافت روی آن کلیک کنید.";
+    const body =
+      payload.body || "برای باز کردن داشبورد کلیک کنید یا «برداریدش» را بزنید.";
     const baseOptions = {
       body,
       tag,
-      renotify: true,
+      renotify: false,
       requireInteraction: true,
       silent: false,
       vibrate: [300, 120, 300, 120, 300],
@@ -76,22 +77,35 @@ self.addEventListener("push", (event) => {
 
     event.waitUntil(
       (async () => {
-        await notifyClients({
-          type: "RealtimeLead",
-          leadId: Number(leadId),
-          title,
-          body,
+        const windowClients = await clients.matchAll({
+          type: "window",
+          includeUncontrolled: true,
         });
-        await notifyClients({
-          type: "web-push-message",
-          payload: { title, body, data },
-        });
+
+        for (const client of windowClients) {
+          client.postMessage({
+            type: "web-push-message",
+            payload: { title, body, data },
+          });
+        }
+
+        const hasVisibleClient = windowClients.some(
+          (client) => client.visibilityState === "visible",
+        );
+        if (hasVisibleClient) {
+          return;
+        }
+
+        const existing = await self.registration.getNotifications({ tag });
+        if (existing.length > 0) {
+          return;
+        }
 
         try {
           await self.registration.showNotification(title, {
             ...baseOptions,
             actions: [
-              { action: "pickup", title: "روی آن کلیک کنید." },
+              { action: "pickup", title: "برداریدش!" },
               { action: "dismiss", title: "بستن" },
             ],
           });
@@ -171,6 +185,9 @@ self.addEventListener("notificationclick", (event) => {
 
   if (type === "RealtimeLead") {
     const leadId = Number(data.leadId);
+    if (action === "dismiss") {
+      return;
+    }
     const message =
       action === "pickup"
         ? { type: "RealtimeLeadPickup", leadId }

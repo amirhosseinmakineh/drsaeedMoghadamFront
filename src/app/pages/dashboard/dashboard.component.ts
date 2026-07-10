@@ -18,6 +18,7 @@ import {
   UserFilters,
 } from "../../core/admin/admin-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
+import { LogoutService } from "../../core/auth/logout.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { AdminReservationsTableComponent } from "../admin-dashboard/admin-reservations-table.component";
@@ -1398,6 +1399,7 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private auth: AuthService,
+    private logoutService: LogoutService,
     private router: Router,
     private adminApi: AdminDashboardService,
     private pushNotifications: PushNotificationService,
@@ -1504,8 +1506,7 @@ export class DashboardComponent implements OnInit {
   }
 
   logout(): void {
-    this.pushNotifications.resetRegisteredTokenCache();
-    this.auth.logout();
+    this.logoutService.logout();
     this.router.navigateByUrl("/");
   }
 

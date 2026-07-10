@@ -11,7 +11,6 @@ import {
   LEAD_ALERT_PUSH_BODY,
   LEAD_ALERT_PUSH_TITLE,
 } from "../lead/lead-alert-copy";
-import { playRealtimeLeadAlertSound } from "./lead-alert-sound";
 
 export interface ConsultantPushMessageDetail {
   title: string;
@@ -112,40 +111,58 @@ export class PushNotificationService {
     subscriptionJson: string,
     profileId: number | null,
   ): Promise<PushSyncResult> {
+    const errors: string[] = [];
+
+    if (profileId) {
+      try {
+        await firstValueFrom(
+          this.consultantApi.registerPushToken({
+            profileId,
+            deviceToken: subscriptionJson,
+          }),
+        );
+        return { ok: true, message: "subscription روی سرور ثبت شد." };
+      } catch (error) {
+        console.warn("Consultant RegisterPushToken failed", error);
+        errors.push(
+          this.extractErrorMessage(
+            error,
+            "ثبت subscription از مسیر مشاور انجام نشد.",
+          ),
+        );
+      }
+    }
+
     if (this.auth.user()?.userId) {
       try {
         await firstValueFrom(this.auth.registerPushToken(subscriptionJson));
         return { ok: true, message: "subscription روی سرور ثبت شد." };
       } catch (error) {
         console.warn("Auth RegisterPushToken failed", error);
+        errors.push(
+          this.extractErrorMessage(
+            error,
+            "ثبت subscription از مسیر کاربر انجام نشد.",
+          ),
+        );
       }
     }
 
     if (!profileId) {
       return {
         ok: false,
-        message: "شناسه پروفایل مشاور برای ثبت subscription یافت نشد.",
+        message:
+          errors[0] ??
+          "شناسه پروفایل مشاور برای ثبت subscription یافت نشد.",
       };
     }
 
-    try {
-      await firstValueFrom(
-        this.consultantApi.registerPushToken({
-          profileId,
-          deviceToken: subscriptionJson,
-        }),
-      );
-      return { ok: true, message: "subscription روی سرور ثبت شد." };
-    } catch (error) {
-      console.warn("Consultant RegisterPushToken failed", error);
-      return {
-        ok: false,
-        message: this.extractErrorMessage(
-          error,
-          "ثبت subscription روی سرور انجام نشد.",
-        ),
-      };
-    }
+    return {
+      ok: false,
+      message:
+        errors.join(" ") ||
+        "ثبت subscription روی سرور انجام نشد.",
+    };
   }
 
   resetRegisteredTokenCache(): void {
@@ -333,6 +350,9 @@ export class PushNotificationService {
   }
 
   private handleForegroundMessage(payload: WebPushMessagePayload): void {
+    const user = this.auth.user();
+    if (!user || user.role !== "consultant") return;
+
     const pushType = payload.data?.["type"];
     if (
       pushType &&
@@ -349,10 +369,6 @@ export class PushNotificationService {
       body,
       data: payload.data,
     };
-
-    if (pushType === "RealtimeLead") {
-      playRealtimeLeadAlertSound();
-    }
 
     window.dispatchEvent(
       new CustomEvent("consultant-push-message", { detail }),
