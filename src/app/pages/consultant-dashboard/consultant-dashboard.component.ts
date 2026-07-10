@@ -2564,8 +2564,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   };
 
   private readonly leadPickedUpListener = (event: Event): void => {
-    const leadId = (event as CustomEvent<{ leadId?: number }>).detail?.leadId;
+    const detail = (event as CustomEvent<{ leadId?: number; isOnline?: boolean }>)
+      .detail;
+    const leadId = detail?.leadId;
     if (!leadId || !this.isProfileReady()) return;
+
+    if (detail?.isOnline === false) {
+      this.isOnline = false;
+      this.syncRealtimeLeadPolling();
+      this.configurePollTimer();
+    }
 
     this.activeSection = "leads";
     this.leadTypeFilter = LEAD_TYPE.RealTime;
@@ -3498,6 +3506,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         : { attendanceProbabilityPercent }),
       ...(secondaryPhone ? { secondaryPhoneNumber: secondaryPhone } : {}),
     };
+    const shouldGoOnlineAfterReport =
+      this.leadType(lead) === LEAD_TYPE.RealTime;
 
     this.consultantApi
       .submitLeadCallReport(payload)
@@ -3508,15 +3518,27 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         }),
       )
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           this.suppressLeadCardActionsUntil = Date.now() + 600;
           setTimeout(() => {
             this.closeReportDialog({ releaseReportLock: false });
           }, 0);
-          this.showFeedback("گزارش ثبت شد", "success");
           this.markViewDirty();
+
+          if (shouldGoOnlineAfterReport) {
+            this.setConsultantOnlineAfterReport(profileId, () => {
+              this.refreshDashboardAfterReport(leadAssignmentId, () => {
+                if (this.activeSection === "patients") {
+                  this.loadPatientLeads();
+                }
+              });
+            });
+            return;
+          }
+
+          this.showFeedback("گزارش ثبت شد", "success");
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
@@ -4784,6 +4806,40 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
     this.realtimeLeadAlerts.startPolling(profileId);
+  }
+
+  private setConsultantOnlineAfterReport(
+    profileId: number,
+    afterComplete?: () => void,
+  ): void {
+    if (!this.isConsultantWorkingHours()) {
+      this.showFeedback("گزارش ثبت شد", "success");
+      afterComplete?.();
+      return;
+    }
+
+    this.consultantApi
+      .setOnlineStatus({ profileId, isOnline: true, isOffline: false })
+      .subscribe({
+        next: () => {
+          this.isOnline = true;
+          this.syncRealtimeLeadPolling();
+          this.configurePollTimer();
+          this.showFeedback(
+            "گزارش ثبت شد. شما دوباره آنلاین شدید و آماده دریافت لید هستید.",
+            "success",
+          );
+          afterComplete?.();
+        },
+        error: (error) => {
+          this.showFeedback("گزارش ثبت شد", "success");
+          this.showFeedback(
+            this.errorMessage(error, "آنلاین شدن خودکار انجام نشد"),
+            "error",
+          );
+          afterComplete?.();
+        },
+      });
   }
 
   private showLeadNotification(
