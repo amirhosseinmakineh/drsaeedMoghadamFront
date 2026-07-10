@@ -43,8 +43,7 @@ import {
 } from "../../core/lead/lead-enums";
 import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
 
-const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
-const REALTIME_CALL_WINDOW_MINUTES = 20;
+const REALTIME_CALL_WINDOW_MS = 3 * 60 * 1000;
 
 const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
   1: "تماس برقرار شد",
@@ -3025,6 +3024,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.requireProfileId();
     if (!profileId) return;
 
+    const environmentIssue = this.notifications.getEnvironmentIssue();
+    if (environmentIssue) {
+      this.showFeedback(environmentIssue, "error");
+      return;
+    }
+
     this.enablePushSaving = true;
     this.clearFeedback();
 
@@ -3410,7 +3415,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportDialogMode = "create";
     this.reportingLeadIds.add(leadAssignmentId);
     this.selectedLead = lead;
-    this.reportForm = this.emptyLeadReportForm(leadAssignmentId);
+    this.reportForm = this.emptyLeadReportForm(leadAssignmentId, lead);
     this.reportDialogOpen = true;
     this.markViewDirty();
   }
@@ -3656,9 +3661,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private emptyLeadReportForm(leadAssignmentId?: number): LeadReportForm {
+  private emptyLeadReportForm(
+    leadAssignmentId?: number,
+    lead?: ConsultantLead,
+  ): LeadReportForm {
+    const isRealtimeWithoutCall =
+      lead &&
+      this.leadType(lead) === LEAD_TYPE.RealTime &&
+      !this.hasCallBeenInitiated(lead);
+
     return {
-      callResult: 1,
+      callResult: isRealtimeWithoutCall ? 4 : 1,
       reportDescription: "",
       patientCity: "",
       patientRegion: "",
@@ -4189,6 +4202,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     )
       return false;
     if (this.leadType(lead) !== LEAD_TYPE.RealTime) return false;
+    if (this.leadState(lead) !== LEAD_STATE.Assigned) return false;
     return (
       (lead.requiresThreeMinuteCall ?? lead.RequiresThreeMinuteCall ?? true) ===
       true
@@ -4543,7 +4557,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.leadPageNumber = normalizedPageNumber;
           }
           this.hydrateRealtimeTimers();
-          this.openReportForDueRealtimeLeads();
+          this.expireDueRealtimeLeads();
           this.scrollToHighlightedLead();
         },
         error: (error) => {
@@ -4670,7 +4684,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (!this.hasActiveRealtimeTimers()) return;
           this.ngZone.run(() => {
             this.currentTime = Date.now();
-            this.openReportForDueRealtimeLeads();
+            this.expireDueRealtimeLeads();
             this.markViewDirty();
           });
         }, 1000);
@@ -4725,8 +4739,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       (lead) =>
         this.leadType(lead) === LEAD_TYPE.RealTime &&
         !this.isLeadReportSubmitted(lead) &&
-        (this.isRealtimeTimedLead(lead) ||
-          this.shouldPromptRealtimeReport(lead)),
+        this.isRealtimeTimedLead(lead),
     );
   }
 
@@ -4737,6 +4750,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.leads.forEach((lead) => {
       if (this.leadType(lead) !== LEAD_TYPE.RealTime) return;
+      if (this.leadState(lead) !== LEAD_STATE.Assigned) return;
       if (
         (lead.requiresThreeMinuteCall ?? lead.RequiresThreeMinuteCall ?? true) !==
         true
@@ -4751,6 +4765,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
       activeLeadIds.add(leadAssignmentId);
       const key = String(leadAssignmentId);
+      const serverDeadline = this.parseLeadDeadline(lead);
+
+      if (serverDeadline !== null) {
+        const impliedStart = serverDeadline - REALTIME_CALL_WINDOW_MS;
+        if (this.timerStarts[key] !== impliedStart) {
+          this.timerStarts[key] = impliedStart;
+          changed = true;
+        }
+        return;
+      }
 
       if (
         !this.timerStarts[key] ||
@@ -4960,38 +4984,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private isConsultantWorkingHours(date: Date = new Date()): boolean {
     return isConsultantWorkingHours(date);
-  }
-
-  private openReportForDueRealtimeLeads(): void {
-    if (this.reportDialogOpen) return;
-
-    for (const lead of this.leads) {
-      const leadAssignmentId = this.leadId(lead);
-      if (!leadAssignmentId || !this.shouldPromptRealtimeReport(lead)) continue;
-      if (this.timerExpiredReportPromptedLeadIds.has(leadAssignmentId)) continue;
-
-      this.timerExpiredReportPromptedLeadIds.add(leadAssignmentId);
-      this.stopRealtimeTimer(leadAssignmentId);
-      this.openReportDialog(lead);
-      this.showFeedback(
-        "مهلت تماس تمام شد. لطفاً گزارش تماس را ثبت کنید.",
-        "info",
-      );
-      return;
-    }
-  }
-
-  private shouldPromptRealtimeReport(lead: ConsultantLead): boolean {
-    const leadAssignmentId = this.leadId(lead);
-    if (!leadAssignmentId) return false;
-    if (this.leadType(lead) !== LEAD_TYPE.RealTime) return false;
-    if (!this.isActiveRealtimeLead(lead)) return false;
-    if (this.isLeadReportSubmitted(lead)) return false;
-    if (this.hasCallBeenInitiated(lead)) return false;
-    if (this.reportingLeadIds.has(leadAssignmentId)) return false;
-    if (this.leadState(lead) === LEAD_STATE.Expired) return false;
-
-    return this.leadRemainingMs(lead) <= 0;
   }
 
   private expireDueRealtimeLeads(): void {
@@ -5259,6 +5251,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private leadDeadlineMs(lead: ConsultantLead): number {
+    const serverDeadline = this.parseLeadDeadline(lead);
+    if (serverDeadline !== null) return serverDeadline;
+
     const now = Date.now();
     const leadAssignmentId = this.leadId(lead);
     const startedAt = leadAssignmentId

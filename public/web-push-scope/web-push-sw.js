@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-09-realtime-push";
+const SW_VERSION = "2026-07-10-realtime-pickup-actions";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 
 function parsePushPayload(event) {
@@ -61,7 +61,8 @@ self.addEventListener("push", (event) => {
     const leadId = data.leadId;
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
     const title = payload.title || "لید جدیدی دارید";
-    const body = payload.body || "جهت دریافت روی آن کلیک کنید.";
+    const body =
+      payload.body || "برای باز کردن داشبورد کلیک کنید یا «برداریدش» را بزنید.";
     const baseOptions = {
       body,
       tag,
@@ -91,7 +92,7 @@ self.addEventListener("push", (event) => {
           await self.registration.showNotification(title, {
             ...baseOptions,
             actions: [
-              { action: "pickup", title: "روی آن کلیک کنید." },
+              { action: "pickup", title: "برداریدش!" },
               { action: "dismiss", title: "بستن" },
             ],
           });
@@ -171,6 +172,9 @@ self.addEventListener("notificationclick", (event) => {
 
   if (type === "RealtimeLead") {
     const leadId = Number(data.leadId);
+    if (action === "dismiss") {
+      return;
+    }
     const message =
       action === "pickup"
         ? { type: "RealtimeLeadPickup", leadId }
