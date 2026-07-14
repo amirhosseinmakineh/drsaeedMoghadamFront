@@ -300,14 +300,6 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
           </div>
           <div class="two-col">
             <label
-              >کد ملی<input
-                [(ngModel)]="profileForm.nationalCode"
-                [ngModelOptions]="ngModelBlurOptions"
-                name="resPatientNationalCode"
-                maxlength="10"
-                inputmode="numeric"
-            /></label>
-            <label
               >تاریخ تولد<input
                 [(ngModel)]="profileForm.birthDate"
                 [ngModelOptions]="ngModelBlurOptions"
@@ -952,7 +944,6 @@ export class SecretaryReservationsComponent
       avatarImageName: null,
       gender: Number(this.profileForm.gender),
       birthDate: new Date(this.profileForm.birthDate).toISOString(),
-      nationalCode: this.profileForm.nationalCode.trim(),
       address: this.profileForm.address.trim(),
       emergencyPhoneNumber:
         this.profileForm.emergencyPhoneNumber.trim() || null,
@@ -990,8 +981,6 @@ export class SecretaryReservationsComponent
       return "شماره موبایل بیمار معتبر نیست";
     if (this.profileForm.passwordHash.length < 6)
       return "رمز عبور باید حداقل ۶ کاراکتر باشد";
-    if (!/^\d{10}$/.test(this.profileForm.nationalCode.trim()))
-      return "کد ملی بیمار باید ۱۰ رقم باشد";
     if (!this.profileForm.address.trim()) return "آدرس بیمار الزامی است";
     if (!this.profileForm.birthDate) return "تاریخ تولد بیمار الزامی است";
     return null;
@@ -1127,7 +1116,6 @@ export class SecretaryReservationsComponent
       avatarImageName: null,
       gender: 1,
       birthDate: "1995-01-01",
-      nationalCode: "",
       address: "",
       emergencyPhoneNumber: "",
       insuranceName: "",

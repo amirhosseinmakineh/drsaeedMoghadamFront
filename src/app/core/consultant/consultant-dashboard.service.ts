@@ -158,7 +158,6 @@ export interface SubmitLeadCallReportRequest {
   reportDescription: string;
   patientCity: string;
   patientRegion: string;
-  businessName?: string;
   attendanceProbabilityPercent?: number;
   secondaryPhoneNumber?: string | null;
 }
@@ -197,7 +196,6 @@ export interface UpdateLeadCallReportRequest {
   reportDescription: string;
   patientCity: string;
   patientRegion: string;
-  businessName?: string;
   attendanceProbabilityPercent?: number;
   secondaryPhoneNumber?: string | null;
 }
@@ -296,7 +294,6 @@ export interface CompletePatientProfileRequest {
   avatarImageName?: string | null;
   gender: number;
   birthDate: string;
-  nationalCode: string;
   address: string;
   emergencyPhoneNumber?: string | null;
   insuranceName?: string | null;
@@ -322,7 +319,6 @@ export interface AddPatientLeadRequest {
   phoneNumber: string;
   patientCity?: string;
   patientRegion?: string;
-  businessName?: string;
   secondaryPhoneNumber?: string;
   reportDescription?: string;
 }
