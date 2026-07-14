@@ -1,7 +1,8 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-10-lead-reminder-os-push";
+const SW_VERSION = "2026-07-14-multi-device-loud-lead-push";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
+const REALTIME_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 500, 120, 500];
 
 function notificationAsset(path) {
   return new URL(path, self.location.origin).href;
@@ -97,7 +98,7 @@ self.addEventListener("push", (event) => {
       renotify: true,
       requireInteraction: true,
       silent: false,
-      vibrate: [220, 90, 220, 90, 280],
+      vibrate: REALTIME_LEAD_VIBRATE_PATTERN,
       icon: notificationAsset("/icons/icon-192x192.png"),
       badge: notificationAsset("/icons/icon-96x96.png"),
       data: {
@@ -136,7 +137,7 @@ self.addEventListener("push", (event) => {
       badge: notificationAsset("/icons/icon-96x96.png"),
       tag: notificationTag(data),
       renotify: true,
-      vibrate: [200, 100, 200],
+      vibrate: REALTIME_LEAD_VIBRATE_PATTERN,
       requireInteraction: false,
       silent: false,
     };

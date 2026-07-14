@@ -22,7 +22,10 @@ import {
   SubmitLeadCallReportRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
-import { playRealtimeLeadAlertSound } from "../../core/push/lead-alert-sound";
+import {
+  playRealtimeLeadAlertSound,
+  primeRealtimeLeadAlertAudio,
+} from "../../core/push/lead-alert-sound";
 import { NotificationService } from "../../core/push/notification.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
@@ -3015,6 +3018,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.requireProfileId();
     if (!profileId) return;
 
+    primeRealtimeLeadAlertAudio();
     this.enablePushSaving = true;
     this.clearFeedback();
 

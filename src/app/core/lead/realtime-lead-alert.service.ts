@@ -7,7 +7,11 @@ import {
   ConsultantDashboardService,
 } from "../consultant/consultant-dashboard.service";
 import { NotificationService } from "../push/notification.service";
-import { playRealtimeLeadAlertSound } from "../push/lead-alert-sound";
+import {
+  playRealtimeLeadAlertSound,
+  primeRealtimeLeadAlertAudio,
+} from "../push/lead-alert-sound";
+import { REALTIME_LEAD_VIBRATE_PATTERN } from "../push/lead-alert.constants";
 import { ToastService } from "../toast/toast.service";
 import {
   RealtimeLeadNotificationDetails,
@@ -344,7 +348,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
       await this.notifications.showLocalNotification(title, body, {
         tag: `realtime-lead-${leadId}`,
         requireInteraction: true,
-        vibrate: [220, 90, 220, 90, 280],
+        vibrate: [...REALTIME_LEAD_VIBRATE_PATTERN],
         data: {
           type: "RealtimeLead",
           leadId: String(leadId),

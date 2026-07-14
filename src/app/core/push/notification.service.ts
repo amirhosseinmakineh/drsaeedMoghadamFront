@@ -35,6 +35,7 @@ export class NotificationService {
   private resolvedVapidPublicKey: string | null = null;
   private pushManagerAvailable: boolean | null = null;
   private readonly tokenRefreshListeners = new Set<(token: string) => void>();
+  private readonly subscriptionLostListeners = new Set<() => void>();
   private readonly foregroundListeners = new Set<
     (payload: WebPushMessagePayload) => void
   >();
@@ -43,9 +44,7 @@ export class NotificationService {
     if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker.addEventListener("message", (event) => {
         if (event.data?.type === "web-push-subscription-lost") {
-          this.swRegistration = null;
-          this.lastKnownSubscription = null;
-          this.pushManagerAvailable = null;
+          this.handleSubscriptionLost();
           return;
         }
 
@@ -249,6 +248,18 @@ export class NotificationService {
     return () => this.tokenRefreshListeners.delete(listener);
   }
 
+  onSubscriptionLost(listener: () => void): () => void {
+    this.subscriptionLostListeners.add(listener);
+    return () => this.subscriptionLostListeners.delete(listener);
+  }
+
+  async refreshPushSubscription(): Promise<string | null> {
+    this.swRegistration = null;
+    this.lastKnownSubscription = null;
+    this.pushManagerAvailable = null;
+    return this.getSubscriptionJson();
+  }
+
   onForegroundMessage(
     listener: (payload: WebPushMessagePayload) => void,
   ): () => void {
@@ -443,5 +454,15 @@ export class NotificationService {
 
   private canUseNotifications(): boolean {
     return canAttemptPushNotifications();
+  }
+
+  private handleSubscriptionLost(): void {
+    this.swRegistration = null;
+    this.lastKnownSubscription = null;
+    this.pushManagerAvailable = null;
+
+    for (const listener of this.subscriptionLostListeners) {
+      listener();
+    }
   }
 }
