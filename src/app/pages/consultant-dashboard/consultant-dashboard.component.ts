@@ -66,7 +66,6 @@ interface LeadReportForm {
   reportDescription: string;
   patientCity: string;
   patientRegion: string;
-  businessName: string;
   attendanceProbabilityPercent: number | null | "";
   secondaryPhoneNumber: string;
 }
@@ -88,7 +87,6 @@ interface PatientProfileForm {
   phoneNumber: string;
   password: string;
   gender: number;
-  nationalCode: string;
   address: string;
 }
 
@@ -97,7 +95,6 @@ interface AddPatientLeadForm {
   phoneNumber: string;
   patientCity: string;
   patientRegion: string;
-  businessName: string;
   secondaryPhoneNumber: string;
   reportDescription: string;
 }
@@ -1075,6 +1072,7 @@ interface ConsultantDashboardLink {
       <app-base-dialog
         [open]="reportDialogOpen"
         [showFooter]="false"
+        [closable]="isReportDialogClosable() && !reportSaving"
         [title]="
           selectedLead
             ? (reportDialogMode === 'edit' ? 'ویرایش گزارش ' : 'ثبت گزارش برای ') +
@@ -1140,15 +1138,6 @@ interface ConsultantDashboardLink {
             </label>
           </div>
           <label>
-            نام مطب یا کلینیک
-            <input
-              [(ngModel)]="reportForm.businessName"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="leadReportBusinessName"
-              maxlength="120"
-            />
-          </label>
-          <label>
             درصد احتمال حضور
             <input
               [(ngModel)]="reportForm.attendanceProbabilityPercent"
@@ -1170,13 +1159,15 @@ interface ConsultantDashboardLink {
             />
           </label>
           <div class="dialog-actions">
-            <button
-              class="secondary-action"
-              type="button"
-              (click)="closeReportDialog()"
-            >
-              انصراف
-            </button>
+            @if (isReportDialogClosable()) {
+              <button
+                class="secondary-action"
+                type="button"
+                (click)="closeReportDialog()"
+              >
+                انصراف
+              </button>
+            }
             <button
               class="primary-action"
               type="submit"
@@ -1375,27 +1366,15 @@ interface ConsultantDashboardLink {
               </select>
             </label>
 
-            <div class="two-col">
-              <label>
-                کد ملی
-                <input
-                  [(ngModel)]="patientProfileForm.nationalCode"
-                  [ngModelOptions]="ngModelBlurOptions"
-                  name="patientNationalCode"
-                  inputmode="numeric"
-                  maxlength="10"
-                />
-              </label>
-              <label>
-                آدرس
-                <input
-                  [(ngModel)]="patientProfileForm.address"
-                  [ngModelOptions]="ngModelBlurOptions"
-                  name="patientAddress"
-                  maxlength="500"
-                />
-              </label>
-            </div>
+            <label>
+              آدرس
+              <input
+                [(ngModel)]="patientProfileForm.address"
+                [ngModelOptions]="ngModelBlurOptions"
+                name="patientAddress"
+                maxlength="500"
+              />
+            </label>
           </section>
 
           <div class="dialog-actions">
@@ -1466,15 +1445,6 @@ interface ConsultantDashboardLink {
               />
             </label>
           </div>
-          <label>
-            نام مطب یا کلینیک
-            <input
-              [(ngModel)]="addPatientLeadForm.businessName"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="addPatientBusinessName"
-              maxlength="120"
-            />
-          </label>
           <label>
             شماره تماس دوم
             <input
@@ -3355,9 +3325,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         ...(this.addPatientLeadForm.patientRegion.trim()
           ? { patientRegion: this.addPatientLeadForm.patientRegion.trim() }
           : {}),
-        ...(this.addPatientLeadForm.businessName.trim()
-          ? { businessName: this.addPatientLeadForm.businessName.trim() }
-          : {}),
         ...(secondaryPhone ? { secondaryPhoneNumber: secondaryPhone } : {}),
         ...(this.addPatientLeadForm.reportDescription.trim()
           ? { reportDescription: this.addPatientLeadForm.reportDescription.trim() }
@@ -3417,6 +3384,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   closeReportDialog(options: { releaseReportLock?: boolean } = {}): void {
+    if (!this.isReportDialogClosable() && (options.releaseReportLock ?? true)) return;
+
     const releaseReportLock = options.releaseReportLock ?? true;
     const leadAssignmentId = this.selectedLead
       ? this.leadId(this.selectedLead)
@@ -3438,6 +3407,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.reportingLeadIds.delete(leadAssignmentId);
       this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
     }
+  }
+
+  isReportDialogClosable(): boolean {
+    return this.reportDialogMode === "edit";
   }
 
   submitLeadReport(): void {
@@ -3490,9 +3463,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ),
       patientCity: this.reportForm.patientCity.trim(),
       patientRegion: this.reportForm.patientRegion.trim(),
-      ...(this.reportForm.businessName.trim()
-        ? { businessName: this.reportForm.businessName.trim() }
-        : {}),
       ...(attendanceProbabilityPercent === null
         ? {}
         : { attendanceProbabilityPercent }),
@@ -3580,9 +3550,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ),
       patientCity: this.reportForm.patientCity.trim(),
       patientRegion: this.reportForm.patientRegion.trim(),
-      ...(this.reportForm.businessName.trim()
-        ? { businessName: this.reportForm.businessName.trim() }
-        : {}),
       ...(attendanceProbabilityPercent === null
         ? {}
         : { attendanceProbabilityPercent }),
@@ -3638,7 +3605,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       reportDescription: "",
       patientCity: "",
       patientRegion: "",
-      businessName: "",
       attendanceProbabilityPercent: null,
       secondaryPhoneNumber: leadAssignmentId
         ? this.reservationSecondaryPhoneForLead(leadAssignmentId)
@@ -3660,7 +3626,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       patientCity: lead.patientCity?.trim() || lead.PatientCity?.trim() || "",
       patientRegion:
         lead.patientRegion?.trim() || lead.PatientRegion?.trim() || "",
-      businessName: lead.businessName?.trim() || lead.BusinessName?.trim() || "",
       attendanceProbabilityPercent: attendanceProbability,
       secondaryPhoneNumber:
         lead.secondaryPhoneNumber?.trim() ||
@@ -4340,8 +4305,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       lead.PatientCity,
       lead.patientRegion,
       lead.PatientRegion,
-      lead.businessName,
-      lead.BusinessName,
     ]
       .filter(Boolean)
       .join(" ")
@@ -5261,8 +5224,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return "شهر بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
     if (this.reportForm.patientRegion.trim().length > 80)
       return "منطقه بیمار نباید بیشتر از ۸۰ کاراکتر باشد";
-    if (this.reportForm.businessName.trim().length > 120)
-      return "نام مطب یا کلینیک نباید بیشتر از ۱۲۰ کاراکتر باشد";
 
     const secondaryPhone = this.reportForm.secondaryPhoneNumber.trim();
     if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone))
@@ -5371,8 +5332,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return "رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد";
     if (![1, 2].includes(Number(this.patientProfileForm.gender)))
       return "جنسیت بیمار معتبر نیست";
-    if (!/^\d{10}$/.test(this.patientProfileForm.nationalCode.trim()))
-      return "کد ملی بیمار باید ۱۰ رقم باشد";
     if (!this.patientProfileForm.address.trim())
       return "آدرس بیمار الزامی است";
     return null;
@@ -5390,7 +5349,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       avatarImageName: this.defaultPatientAvatarImageName(),
       gender: Number(this.patientProfileForm.gender),
       birthDate: new Date(2000, 0, 1).toISOString(),
-      nationalCode: this.patientProfileForm.nationalCode.trim(),
       address: this.patientProfileForm.address.trim(),
     };
   }
@@ -5402,7 +5360,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       phoneNumber: "",
       password: "",
       gender: 1,
-      nationalCode: "",
       address: "",
     };
   }
@@ -5413,7 +5370,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       phoneNumber: "",
       patientCity: "",
       patientRegion: "",
-      businessName: "",
       secondaryPhoneNumber: "",
       reportDescription: "",
     };
