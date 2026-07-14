@@ -9,7 +9,8 @@ import {
 import { Subscription } from "rxjs";
 import {
   LEAD_ALERT_ACTION_LABEL,
-  LEAD_ALERT_MESSAGE,
+  buildRealtimeLeadNotificationBody,
+  buildRealtimeLeadNotificationTitle,
 } from "../../../core/lead/lead-alert-copy";
 import {
   RealtimeLeadAlert,
@@ -35,17 +36,8 @@ import {
             </span>
 
             <p class="lead-alert-card__message">
-              {{ leadAlertMessage }}
-              @if (alert.userName || alert.phoneNumber) {
-                <span class="lead-alert-card__details">
-                  @if (alert.userName) {
-                    <span>{{ alert.userName }}</span>
-                  }
-                  @if (alert.phoneNumber) {
-                    <span dir="ltr">{{ alert.phoneNumber }}</span>
-                  }
-                </span>
-              }
+              <span class="lead-alert-card__title">{{ alertTitle(alert) }}</span>
+              <span class="lead-alert-card__body">{{ alertBody(alert) }}</span>
               <button
                 type="button"
                 class="lead-alert-card__action"
@@ -117,10 +109,10 @@ import {
       .lead-alert-card__message {
         display: flex;
         flex: 1;
-        flex-wrap: wrap;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
         min-width: 0;
         margin: 2px 0 0;
         font-weight: 900;
@@ -128,12 +120,12 @@ import {
         text-align: center;
       }
 
-      .lead-alert-card__details {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-        width: 100%;
+      .lead-alert-card__title {
+        font-size: 1rem;
+        font-weight: 950;
+      }
+
+      .lead-alert-card__body {
         font-size: 0.92rem;
         font-weight: 800;
         color: color-mix(in srgb, var(--text) 88%, var(--brand));
@@ -191,7 +183,6 @@ import {
   ],
 })
 export class RealtimeLeadAlertComponent implements OnInit, OnDestroy {
-  readonly leadAlertMessage = LEAD_ALERT_MESSAGE;
   readonly leadAlertActionLabel = LEAD_ALERT_ACTION_LABEL;
 
   alerts: readonly RealtimeLeadAlert[] = [];
@@ -212,6 +203,20 @@ export class RealtimeLeadAlertComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription?.unsubscribe();
+  }
+
+  alertTitle(alert: RealtimeLeadAlert): string {
+    return buildRealtimeLeadNotificationTitle({
+      userName: alert.userName,
+      phoneNumber: alert.phoneNumber,
+    });
+  }
+
+  alertBody(alert: RealtimeLeadAlert): string {
+    return buildRealtimeLeadNotificationBody({
+      userName: alert.userName,
+      phoneNumber: alert.phoneNumber,
+    });
   }
 
   pickup(leadId: number): void {

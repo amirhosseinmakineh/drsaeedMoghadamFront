@@ -14,6 +14,8 @@ import {
 import {
   buildRealtimeLeadNotificationBody,
   buildRealtimeLeadNotificationTitle,
+  resolveRealtimeLeadNotificationBody,
+  resolveRealtimeLeadNotificationTitle,
 } from "../lead/lead-alert-copy";
 
 export interface ConsultantPushMessageDetail {
@@ -420,8 +422,30 @@ export class PushNotificationService {
       return;
     }
 
-    const title = payload.title || this.titleForData(payload.data);
-    const body = payload.body || this.bodyForData(payload.data);
+    const title =
+      pushType === "RealtimeLead"
+        ? resolveRealtimeLeadNotificationTitle(
+            {
+              userName: payload.data?.["userName"] ?? payload.data?.["UserName"],
+              phoneNumber:
+                payload.data?.["phoneNumber"] ?? payload.data?.["PhoneNumber"],
+              isReminder: payload.data?.["isReminder"] === "true",
+            },
+            payload.title,
+          )
+        : payload.title || this.titleForData(payload.data);
+    const body =
+      pushType === "RealtimeLead"
+        ? resolveRealtimeLeadNotificationBody(
+            {
+              userName: payload.data?.["userName"] ?? payload.data?.["UserName"],
+              phoneNumber:
+                payload.data?.["phoneNumber"] ?? payload.data?.["PhoneNumber"],
+              isReminder: payload.data?.["isReminder"] === "true",
+            },
+            payload.body,
+          )
+        : payload.body || this.bodyForData(payload.data);
     const detail: ConsultantPushMessageDetail = {
       title,
       body,

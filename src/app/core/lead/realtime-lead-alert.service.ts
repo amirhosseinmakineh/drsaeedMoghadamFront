@@ -15,8 +15,9 @@ import { REALTIME_LEAD_VIBRATE_PATTERN } from "../push/lead-alert.constants";
 import { ToastService } from "../toast/toast.service";
 import {
   RealtimeLeadNotificationDetails,
-  buildRealtimeLeadNotificationBody,
-  buildRealtimeLeadNotificationTitle,
+  normalizeLeadField,
+  resolveRealtimeLeadNotificationBody,
+  resolveRealtimeLeadNotificationTitle,
 } from "./lead-alert-copy";
 import { RealtimeLeadPickupService } from "./realtime-lead-pickup.service";
 
@@ -308,17 +309,24 @@ export class RealtimeLeadAlertService implements OnDestroy {
         return;
       }
 
+      const enrichedDetails = await this.enrichIncomingLeadDetails(
+        leadId,
+        details,
+        profileId,
+      );
       const notificationDetails: RealtimeLeadNotificationDetails = {
-        userName: details.userName,
-        phoneNumber: details.phoneNumber,
-        isReminder: details.isReminder,
+        userName: enrichedDetails.userName,
+        phoneNumber: enrichedDetails.phoneNumber,
+        isReminder: enrichedDetails.isReminder,
       };
-      const title =
-        details.title?.trim() ||
-        buildRealtimeLeadNotificationTitle(notificationDetails);
-      const body =
-        details.body?.trim() ||
-        buildRealtimeLeadNotificationBody(notificationDetails);
+      const title = resolveRealtimeLeadNotificationTitle(
+        notificationDetails,
+        enrichedDetails.title,
+      );
+      const body = resolveRealtimeLeadNotificationBody(
+        notificationDetails,
+        enrichedDetails.body,
+      );
 
       const existingAlert = this.activeAlerts.get(leadId);
       if (existingAlert) {
@@ -359,6 +367,40 @@ export class RealtimeLeadAlertService implements OnDestroy {
       });
     } finally {
       this.processingLeadIds.delete(leadId);
+    }
+  }
+
+  private async enrichIncomingLeadDetails(
+    leadId: number,
+    details: IncomingLeadDetails,
+    profileId: number,
+  ): Promise<IncomingLeadDetails> {
+    const userName = normalizeLeadField(details.userName);
+    const phoneNumber = normalizeLeadField(details.phoneNumber);
+    if (userName && phoneNumber) return details;
+
+    try {
+      const response = await firstValueFrom(
+        this.consultantApi.getBroadcastRealtimeLeads(profileId),
+      );
+      const lead = (response.leads ?? []).find(
+        (item) => this.readBroadcastLeadId(item) === leadId,
+      );
+      if (!lead) return details;
+
+      return {
+        ...details,
+        userName:
+          userName ||
+          normalizeLeadField(lead.userName ?? lead.UserName) ||
+          details.userName,
+        phoneNumber:
+          phoneNumber ||
+          normalizeLeadField(lead.phoneNumber ?? lead.PhoneNumber) ||
+          details.phoneNumber,
+      };
+    } catch {
+      return details;
     }
   }
 

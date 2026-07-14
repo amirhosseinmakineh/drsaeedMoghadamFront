@@ -25,6 +25,26 @@ export function buildRealtimeLeadNotificationBody(
   return `شماره تماس: ${phone} — جهت دریافت روی اعلان کلیک کنید.`;
 }
 
-function normalizeLeadField(value?: string | null): string {
+export function resolveRealtimeLeadNotificationTitle(
+  details?: RealtimeLeadNotificationDetails,
+  fallbackTitle?: string | null,
+): string {
+  const built = buildRealtimeLeadNotificationTitle(details);
+  if (built !== LEAD_ALERT_PUSH_TITLE) return built;
+  const fallback = normalizeLeadField(fallbackTitle);
+  return fallback || built;
+}
+
+export function resolveRealtimeLeadNotificationBody(
+  details?: RealtimeLeadNotificationDetails,
+  fallbackBody?: string | null,
+): string {
+  const built = buildRealtimeLeadNotificationBody(details);
+  if (built !== LEAD_ALERT_PUSH_BODY) return built;
+  const fallback = normalizeLeadField(fallbackBody);
+  return fallback || built;
+}
+
+export function normalizeLeadField(value?: string | null): string {
   return typeof value === "string" ? value.trim() : "";
 }
