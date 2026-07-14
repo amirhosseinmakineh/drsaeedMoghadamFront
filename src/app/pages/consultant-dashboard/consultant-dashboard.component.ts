@@ -3054,6 +3054,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.performSetOnlineStatus(profileId, false, { silent: true });
   }
 
+  private setConsultantOnlineAfterReport(profileId: number): void {
+    if (!profileId) return;
+    this.performSetOnlineStatus(profileId, true, { silent: true });
+  }
+
   private restoreOnlineAfterRequiredAction(
     options: {
       notifyWhenBlocked?: boolean;
@@ -3682,12 +3687,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const shouldOpenReservation =
             data?.shouldOpenReservationPage === true &&
             this.isSuccessfulCallResult(callResult);
-          if (!shouldOpenReservation) {
-            this.restoreOnlineAfterRequiredAction({
-              notifyWhenBlocked: false,
-              ignoreCanGoOnlineCheck: true,
-            });
-          }
+          this.setConsultantOnlineAfterReport(profileId);
           if (shouldOpenReservation) {
             const updatedLead =
               this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
@@ -3703,12 +3703,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
 
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
-            if (!shouldOpenReservation) {
-              this.restoreOnlineAfterRequiredAction({
-                notifyWhenBlocked: false,
-                ignoreCanGoOnlineCheck: true,
-              });
-            }
+            this.setConsultantOnlineAfterReport(profileId);
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
             }
@@ -5298,8 +5293,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     secondaryPhoneNumber = "",
   ): void {
     if (Date.now() < this.suppressLeadCardActionsUntil) return;
-
-    this.setConsultantOfflineQuiet();
 
     const leadAssignmentId = this.leadId(lead);
     const minimumReservationAt = this.minimumReservationDateTime();
