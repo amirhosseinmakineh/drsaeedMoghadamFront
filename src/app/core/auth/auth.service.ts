@@ -9,6 +9,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   role: AuthRole;
+  roles: AuthRole[];
   roleName: string;
   token: string;
   userId?: string;
@@ -56,6 +57,8 @@ type TokenResponseData =
       jwt?: string;
       userId?: string;
       role?: string;
+      roles?: string[];
+      Roles?: string[];
       firstName?: string;
       lastName?: string;
       profileId?: number | string;
@@ -72,6 +75,12 @@ interface StoredSession {
 export class AuthService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
   private readonly sessionStorageKey = "clinic-auth-session";
+  private readonly dashboardRolePriority: AuthRole[] = [
+    "admin",
+    "consultant",
+    "secretary",
+    "patient",
+  ];
   private readonly currentUser = signal<AuthUser | null>(this.readSession());
 
   readonly user = this.currentUser.asReadonly();
@@ -170,6 +179,15 @@ export class AuthService {
           }
 
           const decodedUser = this.userFromToken(token, response.data);
+          const apiRoles = this.extractRolesFromResponseData(response.data).map(
+            (role) => this.normalizeRole(role),
+          );
+          if (apiRoles.length) {
+            const sortedRoles = this.sortDashboardRoles(apiRoles);
+            decodedUser.roles = sortedRoles;
+            decodedUser.role = sortedRoles[0];
+            decodedUser.roleName = this.roleNameFromAuthRole(sortedRoles[0]);
+          }
           this.saveSession(decodedUser);
           return decodedUser;
         }),
@@ -224,30 +242,80 @@ export class AuthService {
     });
   }
 
-  isRoleProfileComplete(user: AuthUser | null = this.currentUser()): boolean {
+  isRoleProfileComplete(
+    user: AuthUser | null = this.currentUser(),
+    role?: AuthRole,
+  ): boolean {
     if (!user) return false;
 
-    if (user.role === "consultant") {
+    const checkRole = role ?? user.role;
+
+    if (checkRole === "consultant") {
       const profileId = user.consultantProfileId ?? user.profileId;
       return Boolean(profileId) && user.isCompleteProfile === true;
     }
 
-    if (user.role === "secretary") {
+    if (checkRole === "secretary") {
       return Boolean(user.userId) && user.isCompleteProfile === true;
     }
 
     return true;
   }
 
-  dashboardUrl(user: AuthUser | null = this.currentUser()): string {
+  hasRole(role: AuthRole, user: AuthUser | null = this.currentUser()): boolean {
+    return user?.roles?.includes(role) ?? false;
+  }
+
+  selectableDashboardRoles(
+    user: AuthUser | null = this.currentUser(),
+  ): AuthRole[] {
+    if (!user?.roles?.length) return [];
+
+    const uniqueRoles = [
+      ...new Set(
+        user.roles.filter((role) => this.dashboardRolePriority.includes(role)),
+      ),
+    ];
+
+    return uniqueRoles.sort(
+      (left, right) =>
+        this.dashboardRolePriority.indexOf(left) -
+        this.dashboardRolePriority.indexOf(right),
+    );
+  }
+
+  needsRoleSelection(user: AuthUser | null = this.currentUser()): boolean {
+    return this.selectableDashboardRoles(user).length > 1;
+  }
+
+  setActiveRole(role: AuthRole): void {
+    const user = this.currentUser();
+    if (!user || !this.hasRole(role, user)) return;
+
+    this.saveSession({
+      ...user,
+      role,
+      roleName: this.roleNameFromAuthRole(role),
+    });
+  }
+
+  dashboardUrl(
+    user: AuthUser | null = this.currentUser(),
+    role?: AuthRole,
+  ): string {
     if (!user) return "/";
 
-    const base = `/dashboard/${user.role}`;
-    if (!this.isRoleProfileComplete(user) && user.role === "consultant") {
+    const activeRole = role ?? user.role;
+    const base = `/dashboard/${activeRole}`;
+    if (!this.isRoleProfileComplete(user, activeRole) && activeRole === "consultant") {
       return `${base}?section=profile`;
     }
 
     return base;
+  }
+
+  roleSelectionUrl(): string {
+    return "/select-dashboard";
   }
 
   authToken(): string | null {
@@ -306,6 +374,7 @@ export class AuthService {
       ]) ??
       data.role ??
       "Patient";
+    const roles = this.extractAllRoles(claims, data);
 
     return {
       token,
@@ -377,8 +446,66 @@ export class AuthService {
           "ProfileComplete",
         ]) ?? this.dataBoolean(data, "isCompleteProfile"),
       roleName,
-      role: this.normalizeRole(roleName),
+      role: roles[0] ?? this.normalizeRole(roleName),
+      roles,
     };
+  }
+
+  private extractAllRoles(
+    claims: Record<string, unknown>,
+    data: Record<string, unknown>,
+  ): AuthRole[] {
+    const rawRoles = [
+      ...this.claimValues(claims, [
+        "role",
+        "Role",
+        "roles",
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+      ]),
+      ...this.extractRolesFromResponseData(data),
+    ];
+
+    const normalized = rawRoles
+      .map((role) => this.normalizeRole(role))
+      .filter((role, index, roles) => roles.indexOf(role) === index);
+
+    return this.sortDashboardRoles(normalized);
+  }
+
+  private extractRolesFromResponseData(
+    responseData: TokenResponseData | Record<string, unknown> | null,
+  ): string[] {
+    if (!responseData || typeof responseData !== "object") return [];
+
+    const data = responseData as Record<string, unknown>;
+    const roles = data["roles"] ?? data["Roles"];
+    if (!Array.isArray(roles)) return [];
+
+    return roles
+      .filter((role): role is string => typeof role === "string" && !!role.trim())
+      .map((role) => role.trim());
+  }
+
+  private sortDashboardRoles(roles: AuthRole[]): AuthRole[] {
+    if (!roles.length) return ["patient"];
+
+    return [...roles].sort(
+      (left, right) =>
+        this.dashboardRolePriority.indexOf(left) -
+        this.dashboardRolePriority.indexOf(right),
+    );
+  }
+
+  private roleNameFromAuthRole(role: AuthRole): string {
+    const roleNames: Record<AuthRole, string> = {
+      admin: "Admin",
+      consultant: "Consultant",
+      secretary: "Secretary",
+      patient: "Patient",
+    };
+
+    return roleNames[role];
   }
 
   private normalizeRole(role: string): AuthRole {
@@ -389,6 +516,10 @@ export class AuthService {
     if (["consultant", "advisor", "مشاور"].includes(normalized))
       return "consultant";
     if (["secretary", "منشی"].includes(normalized)) return "secretary";
+    if (
+      ["patient", "normaluser", "user", "بیمار", "کاربر"].includes(normalized)
+    )
+      return "patient";
     return "patient";
   }
 
@@ -429,6 +560,29 @@ export class AuthService {
     }
 
     return undefined;
+  }
+
+  private claimValues(
+    claims: Record<string, unknown>,
+    keys: string[],
+  ): string[] {
+    const values: string[] = [];
+
+    for (const key of keys) {
+      const value = claims[key];
+      if (typeof value === "string" && value.trim()) {
+        values.push(value.trim());
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (typeof item === "string" && item.trim()) values.push(item.trim());
+        }
+      }
+    }
+
+    return values;
   }
 
   private claimNumber(
@@ -628,6 +782,13 @@ export class AuthService {
           tokenUser.consultantProfileId ?? session.user.consultantProfileId,
         isCompleteProfile,
         roleName: tokenUser.roleName || session.user.roleName,
+        roles: this.sortDashboardRoles(
+          [
+            ...(tokenUser.roles ?? []),
+            ...(session.user.roles ?? []),
+            session.user.role ?? tokenUser.role,
+          ].filter((role): role is AuthRole => Boolean(role)),
+        ),
         role: this.hasJwtRoleClaim(session.token)
           ? tokenUser.role
           : (session.user.role ?? tokenUser.role),

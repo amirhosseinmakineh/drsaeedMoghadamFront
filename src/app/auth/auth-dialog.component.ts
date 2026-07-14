@@ -445,8 +445,19 @@ export class AuthDialogComponent {
             } else {
               void this.pushNotifications.syncForCurrentProfile();
             }
-            if (user.role === "consultant" || user.role === "secretary") {
-              this.router.navigateByUrl(this.auth.dashboardUrl(user));
+
+            if (this.auth.needsRoleSelection(user)) {
+              void this.router.navigateByUrl(this.auth.roleSelectionUrl());
+              return;
+            }
+
+            const dashboardRoles = this.auth.selectableDashboardRoles(user);
+            if (
+              dashboardRoles.includes("consultant") ||
+              dashboardRoles.includes("secretary") ||
+              dashboardRoles.includes("admin")
+            ) {
+              void this.router.navigateByUrl(this.auth.dashboardUrl(user));
             }
           },
           error: (error) =>
