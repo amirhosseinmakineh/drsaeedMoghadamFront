@@ -2993,9 +2993,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.performSetOnlineStatus(profileId, isOnline);
   }
 
-  private performSetOnlineStatus(profileId: number, isOnline: boolean): void {
+  private performSetOnlineStatus(
+    profileId: number,
+    isOnline: boolean,
+    options: { silent?: boolean } = {},
+  ): void {
     this.onlineSaving = true;
-    this.clearFeedback();
+    if (!options.silent) this.clearFeedback();
 
     this.consultantApi
       .setOnlineStatus({ profileId, isOnline, isOffline: !isOnline })
@@ -3013,11 +3017,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           );
           if (status.isOnline === null) this.isOnline = isOnline;
           if (isOnline && status.isAvailable === null) this.isAvailable = true;
-          this.showFeedback(
-            response.message ||
-              (isOnline ? "شما آنلاین شدید" : "شما آفلاین شدید"),
-            "success",
-          );
+          if (!options.silent) {
+            this.showFeedback(
+              response.message ||
+                (isOnline ? "شما آنلاین شدید" : "شما آفلاین شدید"),
+              "success",
+            );
+          }
           if (isOnline) {
             void this.ensureLeadPushRegistration(true);
           } else {
@@ -3026,15 +3032,53 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           void this.pushNotifications.syncForCurrentProfile(profileId);
           this.syncRealtimeLeadPolling();
           this.configurePollTimer();
-          this.refreshDashboard();
+          if (!options.silent) {
+            this.refreshDashboard();
+          }
         },
         error: (error) => {
-          this.showFeedback(
-            this.errorMessage(error, "تغییر وضعیت آنلاین انجام نشد"),
-            "error",
-          );
+          if (!options.silent) {
+            this.showFeedback(
+              this.errorMessage(error, "تغییر وضعیت آنلاین انجام نشد"),
+              "error",
+            );
+          }
         },
       });
+  }
+
+  private setConsultantOfflineQuiet(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId || !this.isOnline) return;
+    this.performSetOnlineStatus(profileId, false, { silent: true });
+  }
+
+  private restoreOnlineAfterRequiredAction(
+    options: { notifyWhenBlocked?: boolean } = {},
+  ): void {
+    const profileId = this.currentProfileId();
+    if (!profileId || this.isOnline || !this.isAvailable) return;
+
+    if (this.onlineStatusBlockReason) {
+      if (options.notifyWhenBlocked) {
+        this.showFeedback(this.onlineStatusBlockReason, "info");
+      }
+      return;
+    }
+
+    if (!this.isConsultantWorkingHours()) return;
+
+    if (this.dashboardStatusLoaded && !this.canGoOnlineFromStatus) {
+      if (options.notifyWhenBlocked) {
+        this.showFeedback(
+          "در حال حاضر امکان آنلاین شدن وجود ندارد. لطفاً چند لحظه بعد دوباره تلاش کنید.",
+          "info",
+        );
+      }
+      return;
+    }
+
+    this.performSetOnlineStatus(profileId, true, { silent: true });
   }
 
   sendTestPushNotification(): void {
@@ -3641,7 +3685,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
 
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
-            this.restoreConsultantOnlineAfterReport(profileId, data, lead);
+            if (!shouldOpenReservation) {
+              this.restoreOnlineAfterRequiredAction({
+                notifyWhenBlocked: false,
+              });
+            }
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
             }
@@ -3867,6 +3915,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationDialogOpen = false;
     this.reservationSaving = false;
     this.selectedReservationLead = null;
+    if (!this.patientProfileDialogOpen) {
+      this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: false });
+    }
   }
 
   setReservationDate(date: Date): void {
@@ -4019,6 +4070,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
           if (shouldOpenPatientProfile && reservation) {
             this.openPatientProfileDialog(reservation);
+          } else {
+            this.restoreOnlineAfterRequiredAction({
+              notifyWhenBlocked: false,
+            });
           }
         },
         error: (error) =>
@@ -4076,6 +4131,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
               "ثبت‌نام بیمار و تشکیل پرونده رزرو با موفقیت انجام شد",
             "success",
           );
+          this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: true });
           this.loadReservations();
         },
         error: (error) =>
@@ -5215,6 +5271,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   ): void {
     if (Date.now() < this.suppressLeadCardActionsUntil) return;
 
+    this.setConsultantOfflineQuiet();
+
     const leadAssignmentId = this.leadId(lead);
     const minimumReservationAt = this.minimumReservationDateTime();
     const reservationSecondaryPhone =
@@ -5424,50 +5482,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.phoneRevealedLeadIds.delete(leadAssignmentId);
     this.stopRealtimeTimer(leadAssignmentId);
     this.writeJson(this.phoneRevealedStorageKey(), [...this.phoneRevealedLeadIds]);
-  }
-
-  private restoreConsultantOnlineAfterReport(
-    profileId: number,
-    data:
-      | {
-          isConsultantOnline?: boolean;
-        }
-      | undefined,
-    lead: ConsultantLead,
-  ): void {
-    const isRealtimeLead = this.leadType(lead) === LEAD_TYPE.RealTime;
-    const shouldRestoreOnline =
-      data?.isConsultantOnline === true ||
-      (isRealtimeLead && data?.isConsultantOnline !== false);
-
-    if (!shouldRestoreOnline) return;
-
-    if (data?.isConsultantOnline === true) {
-      this.isOnline = true;
-      this.syncRealtimeLeadPolling();
-      this.configurePollTimer();
-      this.markViewDirty();
-      return;
-    }
-
-    if (this.isOnline) return;
-
-    if (this.canGoOnline()) {
-      this.performSetOnlineStatus(profileId, true);
-      return;
-    }
-
-    this.loadDashboardStatus(() => {
-      if (this.isOnline) {
-        this.syncRealtimeLeadPolling();
-        this.configurePollTimer();
-        this.markViewDirty();
-        return;
-      }
-      if (this.canGoOnline()) {
-        this.performSetOnlineStatus(profileId, true);
-      }
-    });
   }
 
   private isActiveRealtimeLead(lead: ConsultantLead): boolean {
