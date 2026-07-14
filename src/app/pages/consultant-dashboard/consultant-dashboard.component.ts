@@ -105,6 +105,8 @@ interface AddPatientLeadForm {
 interface ConsultantStatusUpdate {
   isAvailable: boolean | null;
   isOnline: boolean | null;
+  canGoOnline: boolean | null;
+  onlineStatusBlockReason: string | null | undefined;
 }
 
 type ConsultantDashboardSection =
@@ -2612,6 +2614,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadId = (event as CustomEvent<{ leadId?: number }>).detail?.leadId;
     if (!leadId || !this.isProfileReady()) return;
 
+    this.resetRealtimeLeadTimer(leadId);
     this.activeSection = "leads";
     this.leadTypeFilter = LEAD_TYPE.RealTime;
     this.highlightedLeadAssignmentId = leadId;
@@ -2962,13 +2965,24 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     if (isOnline && !this.canGoOnline()) {
-      const message =
-        this.onlineStatusBlockReason ||
-        "ابتدا حضور خود را ثبت کنید";
-      this.showFeedback(message, "error");
+      this.loadDashboardStatus(() => {
+        if (!this.canGoOnline()) {
+          const message =
+            this.onlineStatusBlockReason ||
+            "ابتدا حضور خود را ثبت کنید";
+          this.showFeedback(message, "error");
+          this.markViewDirty();
+          return;
+        }
+        this.performSetOnlineStatus(profileId, isOnline);
+      });
       return;
     }
 
+    this.performSetOnlineStatus(profileId, isOnline);
+  }
+
+  private performSetOnlineStatus(profileId: number, isOnline: boolean): void {
     this.onlineSaving = true;
     this.clearFeedback();
 
@@ -3556,14 +3570,60 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
+          const data = response.data;
+          const nextState =
+            data?.leadAssignmentState ?? LEAD_STATE.Contacted;
+          const callResult =
+            data?.callResult ?? Number(this.reportForm.callResult);
+          const reportSubmittedAt =
+            data?.reportSubmittedAt ?? new Date().toISOString();
+
+          this.markLeadReported(leadAssignmentId, nextState, true);
+          this.updateLeadInCollections(leadAssignmentId, {
+            callResult,
+            CallResult: callResult,
+            reportDescription: payload.reportDescription,
+            ReportDescription: payload.reportDescription,
+            patientCity: payload.patientCity,
+            PatientCity: payload.patientCity,
+            patientRegion: payload.patientRegion,
+            PatientRegion: payload.patientRegion,
+            isReportSubmitted: true,
+            IsReportSubmitted: true,
+            reportSubmittedAt,
+            ReportSubmittedAt: reportSubmittedAt,
+            leadAssignmentState: nextState,
+            LeadAssignmentState: nextState,
+          });
+          this.releaseLeadReportSession(leadAssignmentId);
+          this.applyConsultantStatusFrom(response, data);
+
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           this.suppressLeadCardActionsUntil = Date.now() + 600;
           setTimeout(() => {
-            this.closeReportDialog({ releaseReportLock: false });
+            this.closeReportDialog({ releaseReportLock: true });
           }, 0);
           this.showFeedback("گزارش ثبت شد", "success");
           this.markViewDirty();
+
+          const shouldOpenReservation =
+            data?.shouldOpenReservationPage === true &&
+            this.isSuccessfulCallResult(callResult);
+          if (shouldOpenReservation) {
+            const updatedLead =
+              this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
+              lead;
+            setTimeout(
+              () =>
+                this.openReservationDialog(
+                  updatedLead,
+                  secondaryPhone || undefined,
+                ),
+              0,
+            );
+          }
+
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
@@ -3662,7 +3722,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             LeadAssignmentState:
               response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
           });
-          this.closeReportDialog({ releaseReportLock: false });
+          this.releaseLeadReportSession(leadAssignmentId);
+          this.applyConsultantStatusFrom(response, response.data);
+          this.closeReportDialog({ releaseReportLock: true });
           this.showFeedback("گزارش ویرایش شد", "success");
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
@@ -4393,10 +4455,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private syncReportedLeadIdsFromLeads(leads: ConsultantLead[]): void {
     leads.forEach((lead) => {
       const leadAssignmentId = this.leadId(lead);
-      if (!leadAssignmentId || !this.leadHasSubmittedReportFromBackend(lead)) {
+      if (!leadAssignmentId) return;
+
+      if (this.leadHasSubmittedReportFromBackend(lead)) {
+        this.reportedLeadIds.add(leadAssignmentId);
+        this.reportingLeadIds.delete(leadAssignmentId);
+        this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
         return;
       }
-      this.reportedLeadIds.add(leadAssignmentId);
+
+      if (this.reportedLeadIds.has(leadAssignmentId)) {
+        this.reportedLeadIds.delete(leadAssignmentId);
+      }
     });
   }
 
@@ -4771,6 +4841,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ) {
         return;
       }
+      if (this.isLeadReportSubmitted(lead)) return;
 
       const leadAssignmentId = this.leadId(lead);
       if (!leadAssignmentId || this.stoppedTimerLeadIds.has(leadAssignmentId)) {
@@ -4780,11 +4851,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       activeLeadIds.add(leadAssignmentId);
       const key = String(leadAssignmentId);
 
-      if (
-        !this.timerStarts[key] ||
-        this.timerStarts[key] + REALTIME_CALL_WINDOW_MS <= now
-      ) {
-        this.timerStarts[key] = now;
+      if (!this.timerStarts[key]) {
+        const backendDeadline = this.parseLeadDeadline(lead);
+        if (backendDeadline !== null && backendDeadline > now) {
+          this.timerStarts[key] = backendDeadline - REALTIME_CALL_WINDOW_MS;
+        } else {
+          this.timerStarts[key] = now;
+        }
         changed = true;
       }
     });
@@ -4984,6 +5057,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.hasCallBeenInitiated(lead)) return false;
     if (this.reportingLeadIds.has(leadAssignmentId)) return false;
     if (this.leadState(lead) === LEAD_STATE.Expired) return false;
+
+    const localStart = this.timerStarts[String(leadAssignmentId)];
+    if (localStart && Date.now() - localStart < 3000) return false;
 
     return this.leadRemainingMs(lead) <= 0;
   }
@@ -5255,10 +5331,38 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private leadDeadlineMs(lead: ConsultantLead): number {
     const now = Date.now();
     const leadAssignmentId = this.leadId(lead);
-    const startedAt = leadAssignmentId
-      ? (this.timerStarts[String(leadAssignmentId)] ?? now)
-      : now;
+    const localStart = leadAssignmentId
+      ? this.timerStarts[String(leadAssignmentId)]
+      : undefined;
+    const localDeadline =
+      localStart !== undefined ? localStart + REALTIME_CALL_WINDOW_MS : null;
+    const backendDeadline = this.parseLeadDeadline(lead);
+
+    if (localDeadline !== null && backendDeadline !== null) {
+      return Math.max(localDeadline, backendDeadline);
+    }
+    if (backendDeadline !== null) return backendDeadline;
+
+    const startedAt = localStart ?? now;
     return startedAt + REALTIME_CALL_WINDOW_MS;
+  }
+
+  private resetRealtimeLeadTimer(leadAssignmentId: number): void {
+    this.timerStarts[String(leadAssignmentId)] = Date.now();
+    this.stoppedTimerLeadIds.delete(leadAssignmentId);
+    this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
+    this.writeJson(this.timerStorageKey(), this.timerStarts);
+    this.writeJson(
+      this.stoppedTimerStorageKey(),
+      [...this.stoppedTimerLeadIds],
+    );
+  }
+
+  private releaseLeadReportSession(leadAssignmentId: number): void {
+    this.reportingLeadIds.delete(leadAssignmentId);
+    this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
+    this.reportedLeadIds.add(leadAssignmentId);
+    this.stopRealtimeTimer(leadAssignmentId);
   }
 
   private parseLeadDeadline(lead: ConsultantLead): number | null {
@@ -5570,6 +5674,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const update: ConsultantStatusUpdate = {
       isAvailable: null,
       isOnline: null,
+      canGoOnline: null,
+      onlineStatusBlockReason: undefined,
     };
 
     sources.forEach((source) =>
@@ -5578,6 +5684,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     if (update.isAvailable !== null) this.isAvailable = update.isAvailable;
     if (update.isOnline !== null) this.isOnline = update.isOnline;
+    if (update.canGoOnline !== null) {
+      this.canGoOnlineFromStatus = update.canGoOnline;
+      this.dashboardStatusLoaded = true;
+      if (update.canGoOnline) {
+        this.onlineStatusBlockReason = null;
+      }
+    }
+    if (update.onlineStatusBlockReason !== undefined) {
+      this.onlineStatusBlockReason = update.onlineStatusBlockReason;
+    }
 
     return update;
   }
@@ -5602,6 +5718,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       "consultantIsOnline",
       "isConsultantOnline",
     );
+    update.canGoOnline ??= this.readBoolean(source, "canGoOnline", "CanGoOnline");
+
+    if (update.onlineStatusBlockReason === undefined) {
+      const blockReason = this.readString(
+        source,
+        "onlineStatusBlockReason",
+        "blockReason",
+        "BlockReason",
+      );
+      if (blockReason !== null) {
+        update.onlineStatusBlockReason = blockReason.trim() || null;
+      }
+    }
 
     if (update.isOnline === null) {
       const isOffline = this.readBoolean(
@@ -5638,6 +5767,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         const normalized = value.trim().toLowerCase();
         if (["true", "1", "yes"].includes(normalized)) return true;
         if (["false", "0", "no"].includes(normalized)) return false;
+      }
+    }
+
+    return null;
+  }
+
+  private readString(source: unknown, ...keys: string[]): string | null {
+    if (!this.isRecord(source)) return null;
+
+    for (const key of keys) {
+      const value = this.readValue(source, key);
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed || null;
       }
     }
 
