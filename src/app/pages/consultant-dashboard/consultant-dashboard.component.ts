@@ -703,11 +703,7 @@ interface ConsultantDashboardLink {
                           <a
                             class="call-action"
                             [class.disabled]="isLeadPhoneDisabled(lead)"
-                            [attr.href]="
-                              isLeadPhoneDisabled(lead)
-                                ? null
-                                : 'tel:' + leadPhone(lead)
-                            "
+                            [attr.href]="leadPhoneHref(lead)"
                             [attr.aria-label]="'تماس با ' + leadName(lead)"
                             (click)="handleCallClick($event, lead)"
                           >
@@ -715,8 +711,8 @@ interface ConsultantDashboardLink {
                               ><app-fa-icon name="phone"></app-fa-icon
                             ></span>
                             <span>
-                              <small>تماس با لید</small>
-                              <b>{{ leadPhone(lead) }}</b>
+                              <small>{{ leadPhoneActionLabel(lead) }}</small>
+                              <b>{{ leadPhoneDisplay(lead) }}</b>
                             </span>
                           </a>
                           <button
@@ -2549,6 +2545,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private leadStatusRefreshRequestId = 0;
   private timerStarts: Record<string, number> = {};
   private readonly stoppedTimerLeadIds = new Set<number>();
+  private readonly phoneRevealedLeadIds = new Set<number>();
   private leadRequestId = 0;
   private reservationRequestId = 0;
   private visibleLeadLoadingRequestId = 0;
@@ -2673,6 +2670,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       [],
     )) {
       this.stoppedTimerLeadIds.add(leadAssignmentId);
+    }
+    this.phoneRevealedLeadIds.clear();
+    for (const leadAssignmentId of this.readJson<number[]>(
+      this.phoneRevealedStorageKey(),
+      [],
+    )) {
+      this.phoneRevealedLeadIds.add(leadAssignmentId);
     }
     this.realtimeLeadAlerts.initialize();
     void this.syncPushRegistrationState();
@@ -4083,13 +4087,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   handleCallClick(event: MouseEvent, lead: ConsultantLead): void {
+    const leadAssignmentId = this.leadId(lead);
+    if (
+      leadAssignmentId &&
+      this.leadType(lead) === LEAD_TYPE.RealTime &&
+      this.isActiveRealtimeLead(lead) &&
+      !this.isLeadReportSubmitted(lead) &&
+      !this.isLeadPhoneRevealed(lead)
+    ) {
+      event.preventDefault();
+      this.revealLeadPhone(lead);
+      return;
+    }
+
     if (this.isLeadPhoneDisabled(lead) || this.leadPhone(lead) === "-") {
       event.preventDefault();
       this.showFeedback("شماره این لید در حال حاضر فعال نیست", "error");
       return;
     }
 
-    const leadAssignmentId = this.leadId(lead);
     if (
       leadAssignmentId &&
       this.leadType(lead) === LEAD_TYPE.RealTime &&
@@ -4216,6 +4232,72 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  leadPhoneDisplay(lead: ConsultantLead): string {
+    if (this.shouldMaskLeadPhone(lead)) {
+      return "برای دیدن شماره ضربه بزنید";
+    }
+
+    return this.leadPhone(lead);
+  }
+
+  leadPhoneActionLabel(lead: ConsultantLead): string {
+    return this.shouldMaskLeadPhone(lead) ? "نمایش شماره لید" : "تماس با لید";
+  }
+
+  leadPhoneHref(lead: ConsultantLead): string | null {
+    if (this.isLeadPhoneDisabled(lead) || this.shouldMaskLeadPhone(lead)) {
+      return null;
+    }
+
+    const phone = this.leadPhone(lead);
+    return phone === "-" ? null : `tel:${phone}`;
+  }
+
+  isLeadPhoneRevealed(lead: ConsultantLead): boolean {
+    const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId) return true;
+    if (this.leadType(lead) !== LEAD_TYPE.RealTime) return true;
+    if (!this.isActiveRealtimeLead(lead) || this.isLeadReportSubmitted(lead)) {
+      return true;
+    }
+    if (this.hasCallBeenInitiated(lead)) return true;
+
+    return this.phoneRevealedLeadIds.has(leadAssignmentId);
+  }
+
+  private shouldMaskLeadPhone(lead: ConsultantLead): boolean {
+    return (
+      this.leadPhone(lead) !== "-" && !this.isLeadPhoneRevealed(lead)
+    );
+  }
+
+  private revealLeadPhone(lead: ConsultantLead): void {
+    const leadAssignmentId = this.leadId(lead);
+    if (
+      !leadAssignmentId ||
+      this.leadType(lead) !== LEAD_TYPE.RealTime ||
+      !this.isActiveRealtimeLead(lead) ||
+      this.isLeadReportSubmitted(lead) ||
+      this.isLeadPhoneRevealed(lead) ||
+      this.leadPhone(lead) === "-"
+    ) {
+      return;
+    }
+
+    this.phoneRevealedLeadIds.add(leadAssignmentId);
+    this.timerStarts[String(leadAssignmentId)] = Date.now();
+    this.stoppedTimerLeadIds.delete(leadAssignmentId);
+    this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
+    this.writeJson(this.phoneRevealedStorageKey(), [...this.phoneRevealedLeadIds]);
+    this.writeJson(this.timerStorageKey(), this.timerStarts);
+    this.writeJson(
+      this.stoppedTimerStorageKey(),
+      [...this.stoppedTimerLeadIds],
+    );
+    this.currentTime = Date.now();
+    this.markViewDirty();
+  }
+
   leadState(lead: ConsultantLead): number | null {
     return resolveLeadAssignmentState(
       lead.leadAssignmentState ??
@@ -4251,6 +4333,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadDisplayStatus(lead: ConsultantLead): string {
     if (this.isLeadInReportProgress(lead)) return "در حال ثبت گزارش";
     if (this.isLeadExpired(lead)) return "منقضی شده";
+    if (this.shouldMaskLeadPhone(lead)) return "در انتظار نمایش شماره";
     if (this.isRealtimeTimedLead(lead)) return "در انتظار تماس";
     return this.stateLabel(this.leadState(lead));
   }
@@ -4282,6 +4365,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     )
       return false;
     if (this.leadType(lead) !== LEAD_TYPE.RealTime) return false;
+    if (!this.isLeadPhoneRevealed(lead)) return false;
     return (
       (lead.requiresThreeMinuteCall ?? lead.RequiresThreeMinuteCall ?? true) ===
       true
@@ -4364,6 +4448,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.isLeadInReportProgress(lead)) return true;
     if (this.leadPhone(lead) === "-") return true;
     if (this.expiringLeadIds.has(this.leadId(lead) ?? -1)) return true;
+    if (this.shouldMaskLeadPhone(lead)) return false;
     if (
       this.leadType(lead) === LEAD_TYPE.RealTime &&
       this.isActiveRealtimeLead(lead) &&
@@ -4496,8 +4581,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       const leadAssignmentId = this.leadId(lead);
       if (!leadAssignmentId || !this.hasCallBeenInitiated(lead)) return;
       this.stoppedTimerLeadIds.add(leadAssignmentId);
+      this.phoneRevealedLeadIds.add(leadAssignmentId);
     });
     this.writeJson(this.stoppedTimerStorageKey(), [...this.stoppedTimerLeadIds]);
+    this.writeJson(this.phoneRevealedStorageKey(), [...this.phoneRevealedLeadIds]);
   }
 
   private syncReservedLeadIdsFromReservations(
@@ -4654,7 +4741,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.leadPageNumber = normalizedPageNumber;
           }
           this.hydrateRealtimeTimers();
-          this.openReportForDueRealtimeLeads();
+          this.expireDueRealtimeLeads();
           this.scrollToHighlightedLead();
         },
         error: (error) => {
@@ -4781,7 +4868,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (!this.hasActiveRealtimeTimers()) return;
           this.ngZone.run(() => {
             this.currentTime = Date.now();
-            this.openReportForDueRealtimeLeads();
+            this.expireDueRealtimeLeads();
             this.markViewDirty();
           });
         }, 1000);
@@ -4836,8 +4923,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       (lead) =>
         this.leadType(lead) === LEAD_TYPE.RealTime &&
         !this.isLeadReportSubmitted(lead) &&
-        (this.isRealtimeTimedLead(lead) ||
-          this.shouldPromptRealtimeReport(lead)),
+        this.isRealtimeTimedLead(lead),
     );
   }
 
@@ -4860,17 +4946,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       if (!leadAssignmentId || this.stoppedTimerLeadIds.has(leadAssignmentId)) {
         return;
       }
+      if (!this.isLeadPhoneRevealed(lead)) return;
 
       activeLeadIds.add(leadAssignmentId);
       const key = String(leadAssignmentId);
 
       if (!this.timerStarts[key]) {
-        const backendDeadline = this.parseLeadDeadline(lead);
-        if (backendDeadline !== null && backendDeadline > now) {
-          this.timerStarts[key] = backendDeadline - REALTIME_CALL_WINDOW_MS;
-        } else {
-          this.timerStarts[key] = now;
-        }
+        this.timerStarts[key] = now;
         changed = true;
       }
     });
@@ -5040,41 +5122,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private isConsultantWorkingHours(date: Date = new Date()): boolean {
     return isConsultantWorkingHours(date);
-  }
-
-  private openReportForDueRealtimeLeads(): void {
-    if (this.reportDialogOpen) return;
-
-    for (const lead of this.leads) {
-      const leadAssignmentId = this.leadId(lead);
-      if (!leadAssignmentId || !this.shouldPromptRealtimeReport(lead)) continue;
-      if (this.timerExpiredReportPromptedLeadIds.has(leadAssignmentId)) continue;
-
-      this.timerExpiredReportPromptedLeadIds.add(leadAssignmentId);
-      this.stopRealtimeTimer(leadAssignmentId);
-      this.openReportDialog(lead);
-      this.showFeedback(
-        "مهلت تماس تمام شد. لطفاً گزارش تماس را ثبت کنید.",
-        "info",
-      );
-      return;
-    }
-  }
-
-  private shouldPromptRealtimeReport(lead: ConsultantLead): boolean {
-    const leadAssignmentId = this.leadId(lead);
-    if (!leadAssignmentId) return false;
-    if (this.leadType(lead) !== LEAD_TYPE.RealTime) return false;
-    if (!this.isActiveRealtimeLead(lead)) return false;
-    if (this.isLeadReportSubmitted(lead)) return false;
-    if (this.hasCallBeenInitiated(lead)) return false;
-    if (this.reportingLeadIds.has(leadAssignmentId)) return false;
-    if (this.leadState(lead) === LEAD_STATE.Expired) return false;
-
-    const localStart = this.timerStarts[String(leadAssignmentId)];
-    if (localStart && Date.now() - localStart < 3000) return false;
-
-    return this.leadRemainingMs(lead) <= 0;
   }
 
   private expireDueRealtimeLeads(): void {
@@ -5342,40 +5389,28 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private leadDeadlineMs(lead: ConsultantLead): number {
-    const now = Date.now();
     const leadAssignmentId = this.leadId(lead);
     const localStart = leadAssignmentId
       ? this.timerStarts[String(leadAssignmentId)]
       : undefined;
-    const localDeadline =
-      localStart !== undefined ? localStart + REALTIME_CALL_WINDOW_MS : null;
-    const backendDeadline = this.parseLeadDeadline(lead);
 
-    if (localDeadline !== null && backendDeadline !== null) {
-      return Math.max(localDeadline, backendDeadline);
+    if (localStart !== undefined) {
+      return localStart + REALTIME_CALL_WINDOW_MS;
     }
-    if (backendDeadline !== null) return backendDeadline;
 
-    const startedAt = localStart ?? now;
-    return startedAt + REALTIME_CALL_WINDOW_MS;
+    return Date.now() + REALTIME_CALL_WINDOW_MS;
   }
 
   private resetRealtimeLeadTimer(
     leadAssignmentId: number,
-    callDeadlineAt?: string | null,
+    _callDeadlineAt?: string | null,
   ): void {
-    const backendDeadline = callDeadlineAt
-      ? new Date(callDeadlineAt).getTime()
-      : null;
-    if (backendDeadline !== null && Number.isFinite(backendDeadline)) {
-      this.timerStarts[String(leadAssignmentId)] =
-        backendDeadline - REALTIME_CALL_WINDOW_MS;
-    } else {
-      this.timerStarts[String(leadAssignmentId)] = Date.now();
-    }
+    delete this.timerStarts[String(leadAssignmentId)];
+    this.phoneRevealedLeadIds.delete(leadAssignmentId);
     this.stoppedTimerLeadIds.delete(leadAssignmentId);
     this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
     this.writeJson(this.timerStorageKey(), this.timerStarts);
+    this.writeJson(this.phoneRevealedStorageKey(), [...this.phoneRevealedLeadIds]);
     this.writeJson(
       this.stoppedTimerStorageKey(),
       [...this.stoppedTimerLeadIds],
@@ -5386,7 +5421,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportingLeadIds.delete(leadAssignmentId);
     this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
     this.reportedLeadIds.add(leadAssignmentId);
+    this.phoneRevealedLeadIds.delete(leadAssignmentId);
     this.stopRealtimeTimer(leadAssignmentId);
+    this.writeJson(this.phoneRevealedStorageKey(), [...this.phoneRevealedLeadIds]);
   }
 
   private restoreConsultantOnlineAfterReport(
@@ -5431,14 +5468,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         this.performSetOnlineStatus(profileId, true);
       }
     });
-  }
-
-  private parseLeadDeadline(lead: ConsultantLead): number | null {
-    const deadline = lead.callDeadlineAt ?? lead.CallDeadlineAt;
-    if (!deadline) return null;
-
-    const parsedDeadline = new Date(deadline).getTime();
-    return Number.isFinite(parsedDeadline) ? parsedDeadline : null;
   }
 
   private isActiveRealtimeLead(lead: ConsultantLead): boolean {
@@ -5707,6 +5736,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private stoppedTimerStorageKey(): string {
     return `consultant-lead-timers-stopped:${this.userKey()}`;
+  }
+
+  private phoneRevealedStorageKey(): string {
+    return `consultant-lead-phone-revealed:${this.userKey()}`;
   }
 
   private userKey(): string {
