@@ -1,0 +1,17 @@
+* [33m04a070c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Restyle consultant new-lead alerts to match project theme (#123)
+*   [33m6c1cc17[m Merge pull request #122 from amirhosseinmakineh/cursor/admin-consultant-profile-72b7
+[32m|[m[33m\[m  
+[32m|[m * [33m5ee9a2b[m[33m ([m[1;31morigin/cursor/admin-consultant-profile-72b7[m[33m)[m Add admin consultant profile section and mobile sidebar
+[32m|[m[32m/[m  
+*   [33m94df684[m Merge pull request #121 from amirhosseinmakineh/cursor/remove-score-offline-leads-6236
+[34m|[m[35m\[m  
+[34m|[m * [33m177ec35[m[33m ([m[1;31morigin/cursor/remove-score-offline-leads-6236[m[33m)[m Remove score system and offline lead workflow from frontend
+* [35m|[m [33m8ef77eb[m Merge pull request #120 from amirhosseinmakineh/cursor/fix-realtime-lead-notifications-6236
+[36m|[m[35m\[m[35m|[m 
+[36m|[m * [33mdf709fe[m[33m ([m[1;31morigin/cursor/fix-realtime-lead-notifications-6236[m[33m)[m Make lead notifications reliable without depending only on push
+* [1;31m|[m   [33m768344b[m Merge branch 'main' of https://github.com/amirhosseinmakineh/drsaeedMoghadamFront
+[1;32m|[m[1;33m\[m [1;31m\[m  
+[1;32m|[m * [1;31m|[m [33mf8f5d58[m Merge pull request #119 from amirhosseinmakineh/cursor/fix-realtime-lead-notifications-6236
+[1;32m|[m [1;34m|[m[1;31m\[m[1;31m|[m 
+[1;32m|[m [1;34m|[m * [33m603d168[m Fix realtime and offline lead push notifications
+[1;32m|[m [1;34m|[m[1;34m/[m  
