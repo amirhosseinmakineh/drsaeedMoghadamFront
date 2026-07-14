@@ -3682,7 +3682,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const shouldOpenReservation =
             data?.shouldOpenReservationPage === true &&
             this.isSuccessfulCallResult(callResult);
-          this.setConsultantOfflineQuiet();
+          if (!shouldOpenReservation) {
+            this.restoreOnlineAfterRequiredAction({
+              notifyWhenBlocked: false,
+              ignoreCanGoOnlineCheck: true,
+            });
+          }
           if (shouldOpenReservation) {
             const updatedLead =
               this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
@@ -3698,7 +3703,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
 
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
-            this.setConsultantOfflineQuiet();
+            if (!shouldOpenReservation) {
+              this.restoreOnlineAfterRequiredAction({
+                notifyWhenBlocked: false,
+                ignoreCanGoOnlineCheck: true,
+              });
+            }
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
             }
