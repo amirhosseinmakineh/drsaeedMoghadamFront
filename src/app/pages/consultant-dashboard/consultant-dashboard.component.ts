@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { Subscription, finalize, firstValueFrom, switchMap } from "rxjs";
+import { Subscription, catchError, finalize, firstValueFrom, map, of, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
   CompletePatientProfileRequest,
@@ -3016,7 +3016,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             response,
             response.data,
           );
-          if (status.isOnline === null) this.isOnline = isOnline;
+          if (isOnline) {
+            this.isOnline = true;
+          } else if (status.isOnline === null) {
+            this.isOnline = false;
+          }
           if (isOnline && status.isAvailable === null) this.isAvailable = true;
           if (!options.silent) {
             this.showFeedback(
@@ -3054,9 +3058,32 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.performSetOnlineStatus(profileId, false, { silent: true });
   }
 
-  private setConsultantOnlineAfterReport(profileId: number): void {
-    if (!profileId) return;
-    this.performSetOnlineStatus(profileId, true, { silent: true });
+  private forceConsultantOnlineAfterReportSubmit(
+    profileId: number,
+    attempt = 0,
+  ): void {
+    this.consultantApi
+      .setOnlineStatus({ profileId, isOnline: true, isOffline: false })
+      .subscribe({
+        next: () => {
+          this.isOnline = true;
+          this.onlineStatusBlockReason = null;
+          void this.ensureLeadPushRegistration(true);
+          void this.pushNotifications.syncForCurrentProfile(profileId);
+          this.syncRealtimeLeadPolling();
+          this.configurePollTimer();
+          this.markViewDirty();
+        },
+        error: () => {
+          if (attempt < 2) {
+            setTimeout(
+              () =>
+                this.forceConsultantOnlineAfterReportSubmit(profileId, attempt + 1),
+              800,
+            );
+          }
+        },
+      });
   }
 
   private restoreOnlineAfterRequiredAction(
@@ -3643,13 +3670,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.consultantApi
       .submitLeadCallReport(payload)
       .pipe(
+        switchMap((response) =>
+          this.consultantApi
+            .setOnlineStatus({ profileId, isOnline: true, isOffline: false })
+            .pipe(
+              map((onlineResponse) => ({ reportResponse: response, onlineResponse })),
+              catchError(() => of({ reportResponse: response, onlineResponse: null })),
+            ),
+        ),
         finalize(() => {
           this.reportSaving = false;
           this.markViewDirty();
         }),
       )
       .subscribe({
-        next: (response) => {
+        next: ({ reportResponse: response, onlineResponse }) => {
           const data = response.data;
           const nextState =
             data?.leadAssignmentState ?? LEAD_STATE.Contacted;
@@ -3677,6 +3712,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           });
           this.releaseLeadReportSession(leadAssignmentId);
           this.applyConsultantStatusFrom(response, data);
+          if (onlineResponse) {
+            this.isOnline = true;
+            this.onlineStatusBlockReason = null;
+            void this.ensureLeadPushRegistration(true);
+            void this.pushNotifications.syncForCurrentProfile(profileId);
+            this.syncRealtimeLeadPolling();
+            this.configurePollTimer();
+          } else {
+            this.forceConsultantOnlineAfterReportSubmit(profileId);
+          }
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           this.suppressLeadCardActionsUntil = Date.now() + 600;
@@ -3687,7 +3732,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const shouldOpenReservation =
             data?.shouldOpenReservationPage === true &&
             this.isSuccessfulCallResult(callResult);
-          this.setConsultantOnlineAfterReport(profileId);
           if (shouldOpenReservation) {
             const updatedLead =
               this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
@@ -3703,7 +3747,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
 
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
-            this.setConsultantOnlineAfterReport(profileId);
+            this.forceConsultantOnlineAfterReportSubmit(profileId);
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
             }
