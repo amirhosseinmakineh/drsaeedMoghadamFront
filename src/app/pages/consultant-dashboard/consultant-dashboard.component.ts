@@ -2495,6 +2495,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reportSaving = false;
   selectedLead: ConsultantLead | null = null;
   reportForm: LeadReportForm = this.emptyLeadReportForm();
+  private reportEditOriginalSecondaryPhone: string | null = null;
 
   reservationDialogOpen = false;
   reservationSaving = false;
@@ -3054,7 +3055,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private restoreOnlineAfterRequiredAction(
-    options: { notifyWhenBlocked?: boolean } = {},
+    options: {
+      notifyWhenBlocked?: boolean;
+      ignoreCanGoOnlineCheck?: boolean;
+    } = {},
   ): void {
     const profileId = this.currentProfileId();
     if (!profileId || this.isOnline || !this.isAvailable) return;
@@ -3068,7 +3072,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     if (!this.isConsultantWorkingHours()) return;
 
-    if (this.dashboardStatusLoaded && !this.canGoOnlineFromStatus) {
+    if (
+      !options.ignoreCanGoOnlineCheck &&
+      this.dashboardStatusLoaded &&
+      !this.canGoOnlineFromStatus
+    ) {
       if (options.notifyWhenBlocked) {
         this.showFeedback(
           "در حال حاضر امکان آنلاین شدن وجود ندارد. لطفاً چند لحظه بعد دوباره تلاش کنید.",
@@ -3513,6 +3521,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportDialogMode = "create";
     this.reportingLeadIds.add(leadAssignmentId);
     this.selectedLead = lead;
+    this.reportEditOriginalSecondaryPhone = null;
     this.reportForm = this.emptyLeadReportForm(leadAssignmentId);
     this.reportDialogOpen = true;
     this.markViewDirty();
@@ -3525,6 +3534,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportDialogMode = "edit";
     this.selectedLead = lead;
     this.reportForm = this.leadReportFormFromLead(lead);
+    this.reportEditOriginalSecondaryPhone =
+      this.reportForm.secondaryPhoneNumber.trim() || null;
     this.reportDialogOpen = true;
     this.markViewDirty();
   }
@@ -3552,6 +3563,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportDialogMode = "create";
     this.reportSaving = false;
     this.selectedLead = null;
+    this.reportEditOriginalSecondaryPhone = null;
 
     if (
       releaseReportLock &&
@@ -3670,6 +3682,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const shouldOpenReservation =
             data?.shouldOpenReservationPage === true &&
             this.isSuccessfulCallResult(callResult);
+          if (!shouldOpenReservation) {
+            this.restoreOnlineAfterRequiredAction({
+              notifyWhenBlocked: false,
+              ignoreCanGoOnlineCheck: true,
+            });
+          }
           if (shouldOpenReservation) {
             const updatedLead =
               this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
@@ -3688,6 +3706,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             if (!shouldOpenReservation) {
               this.restoreOnlineAfterRequiredAction({
                 notifyWhenBlocked: false,
+                ignoreCanGoOnlineCheck: true,
               });
             }
             if (this.activeSection === "patients") {
@@ -3743,6 +3762,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const originalSecondaryPhone = this.reportEditOriginalSecondaryPhone ?? "";
+    const secondaryPhoneChanged = secondaryPhone !== originalSecondaryPhone;
+
     const payload = {
       leadAssignmentId,
       consultantProfileId: profileId,
@@ -3755,7 +3777,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ...(attendanceProbabilityPercent === null
         ? {}
         : { attendanceProbabilityPercent }),
-      ...(secondaryPhone ? { secondaryPhoneNumber: secondaryPhone } : {}),
+      ...(secondaryPhoneChanged && secondaryPhone
+        ? { secondaryPhoneNumber: secondaryPhone }
+        : {}),
     };
 
     this.consultantApi
@@ -3791,6 +3815,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.applyConsultantStatusFrom(response, response.data);
           this.closeReportDialog({ releaseReportLock: true });
           this.showFeedback("گزارش ویرایش شد", "success");
+          this.restoreOnlineAfterRequiredAction({
+            notifyWhenBlocked: false,
+            ignoreCanGoOnlineCheck: true,
+          });
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
           }
