@@ -307,7 +307,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isDashboardRoute(): boolean {
     const url = this.router.url.split("?")[0];
-    return url.startsWith("/dashboard");
+    return url.startsWith("/dashboard") || url.startsWith("/select-dashboard");
   }
 
   displayName(user: AuthUser): string {
@@ -319,6 +319,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   dashboardUrl(): string {
+    if (this.auth.needsRoleSelection()) {
+      return this.auth.roleSelectionUrl();
+    }
+
     return this.auth.dashboardUrl();
   }
 

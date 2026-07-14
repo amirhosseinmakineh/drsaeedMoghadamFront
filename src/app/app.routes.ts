@@ -34,6 +34,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "select-dashboard",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./pages/select-dashboard/select-dashboard.component").then(
+        (m) => m.SelectDashboardComponent,
+      ),
+  },
+  {
     path: "dashboard",
     canActivate: [authGuard],
     loadComponent: () =>

@@ -143,6 +143,15 @@ interface ConsultantDashboardLink {
     <section class="dashboard-layout consultant-mode">
       <header class="dashboard-mobile-header">
         <div class="mobile-header-info">
+          <button
+            class="mobile-menu-btn"
+            type="button"
+            (click)="toggleMobileSidebar()"
+            [attr.aria-expanded]="mobileSidebarOpen"
+            aria-label="باز و بسته کردن منو"
+          >
+            <app-fa-icon name="dashboard"></app-fa-icon>
+          </button>
           <span class="mobile-avatar"
             ><app-fa-icon name="doctor"></app-fa-icon
           ></span>
@@ -162,7 +171,19 @@ interface ConsultantDashboardLink {
         </button>
       </header>
 
-      <aside class="dashboard-sidebar mobile-app-nav">
+      @if (mobileSidebarOpen) {
+        <button
+          class="mobile-sidebar-backdrop"
+          type="button"
+          aria-label="بستن منو"
+          (click)="closeMobileSidebar()"
+        ></button>
+      }
+
+      <aside
+        class="dashboard-sidebar"
+        [class.mobile-sidebar-open]="mobileSidebarOpen"
+      >
         <a class="dashboard-brand" routerLink="/">
           <span class="brand-mark"
             ><app-fa-icon name="tooth"></app-fa-icon
@@ -193,6 +214,14 @@ interface ConsultantDashboardLink {
             <span>{{ item.label }}</span>
           </button>
         </nav>
+
+        <button
+          class="mobile-sidebar-close"
+          type="button"
+          (click)="closeMobileSidebar()"
+        >
+          بستن منو
+        </button>
 
         <button
           class="secondary-btn logout-btn"
@@ -2194,6 +2223,11 @@ interface ConsultantDashboardLink {
       .dashboard-mobile-header {
         display: none;
       }
+      .mobile-sidebar-backdrop,
+      .mobile-sidebar-close,
+      .mobile-menu-btn {
+        display: none;
+      }
       @media (max-width: 980px) {
         .dashboard-layout {
           grid-template-columns: 1fr;
@@ -2276,50 +2310,87 @@ interface ConsultantDashboardLink {
         }
         .dashboard-layout.consultant-mode {
           width: 100%;
-          padding: 10px 10px calc(108px + env(safe-area-inset-bottom, 0px));
+          padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px));
+        }
+        .mobile-sidebar-backdrop {
+          display: block;
+          position: fixed;
+          inset: 0;
+          z-index: 95;
+          border: 0;
+          background: rgba(20, 16, 12, 0.42);
+        }
+        .mobile-menu-btn {
+          display: inline-grid;
+          place-items: center;
+          width: 42px;
+          height: 42px;
+          border: 1px solid var(--line);
+          border-radius: 16px;
+          background: var(--surface-muted);
+          color: var(--brand);
+          flex-shrink: 0;
         }
         .dashboard-layout.consultant-mode .dashboard-sidebar {
           position: fixed;
-          z-index: 80;
-          inset-inline: 10px;
-          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-          top: auto;
-          min-height: 0;
-          padding: 8px;
-          border-radius: 28px;
-          background: var(--surface);
-          box-shadow: 0 8px 22px rgba(93, 64, 32, 0.08);
-          contain: layout paint;
+          z-index: 100;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: min(300px, 86vw);
+          margin: 0;
+          padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+          border-radius: 0 28px 28px 0;
+          border-inline-start: 0;
+          transform: translateX(-105%);
+          transition: transform 0.28s ease;
+          overflow-y: auto;
+          box-shadow: 12px 0 32px rgba(93, 64, 32, 0.16);
+        }
+        .dashboard-layout.consultant-mode .dashboard-sidebar.mobile-sidebar-open {
+          transform: translateX(0);
         }
         .consultant-mode .dashboard-brand,
-        .consultant-mode .dashboard-user-card,
+        .consultant-mode .dashboard-user-card {
+          display: grid;
+        }
         .consultant-mode .logout-btn {
           display: none;
         }
+        .mobile-sidebar-close {
+          display: block;
+          width: 100%;
+          border: 1px solid var(--line);
+          border-radius: 18px;
+          padding: 10px 12px;
+          background: var(--surface-muted);
+          font: inherit;
+          font-weight: 950;
+        }
         .consultant-mode .dashboard-nav {
-          grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-          gap: 6px;
+          grid-template-columns: 1fr;
+          gap: 8px;
         }
         .consultant-mode .dashboard-nav button {
-          display: grid;
-          place-items: center;
-          gap: 3px;
-          min-height: 54px;
-          padding: 6px 4px;
-          border-radius: 18px;
-          text-align: center;
-          font-size: 0.68rem;
-          line-height: 1.2;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-height: 48px;
+          padding: 10px 12px;
+          border-radius: 16px;
+          text-align: start;
+          font-size: 0.9rem;
+          line-height: 1.4;
         }
         .consultant-mode .dashboard-nav button span {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+          display: block;
+          overflow: visible;
+          -webkit-line-clamp: unset;
         }
         .consultant-mode .dashboard-nav app-fa-icon {
           color: var(--brand);
-          font-size: 1.1rem;
+          font-size: 1rem;
+          flex-shrink: 0;
         }
         .dashboard-content {
           padding-top: 10px;
@@ -2378,6 +2449,7 @@ interface ConsultantDashboardLink {
 export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   readonly user = this.auth.user;
   activeSection: ConsultantDashboardSection = "overview";
+  mobileSidebarOpen = false;
 
   readonly dashboardLinks: ConsultantDashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
@@ -2718,6 +2790,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.activeSection = section;
+    this.closeMobileSidebar();
     this.markViewDirty();
 
     if (section === "leads") {
@@ -4420,6 +4493,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(date);
+  }
+
+  toggleMobileSidebar(): void {
+    this.mobileSidebarOpen = !this.mobileSidebarOpen;
+    this.markViewDirty();
+  }
+
+  closeMobileSidebar(): void {
+    if (!this.mobileSidebarOpen) return;
+    this.mobileSidebarOpen = false;
+    this.markViewDirty();
   }
 
   logout(): void {

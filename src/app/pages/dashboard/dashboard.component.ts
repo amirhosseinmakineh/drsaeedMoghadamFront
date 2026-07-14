@@ -99,17 +99,15 @@ interface UserFormModel {
     >
       <header class="dashboard-mobile-header">
         <div class="mobile-header-info">
-          @if (isAdmin()) {
-            <button
-              class="mobile-menu-btn"
-              type="button"
-              (click)="toggleMobileSidebar()"
-              [attr.aria-expanded]="mobileSidebarOpen"
-              aria-label="باز و بسته کردن منو"
-            >
-              <app-fa-icon name="dashboard"></app-fa-icon>
-            </button>
-          }
+          <button
+            class="mobile-menu-btn"
+            type="button"
+            (click)="toggleMobileSidebar()"
+            [attr.aria-expanded]="mobileSidebarOpen"
+            aria-label="باز و بسته کردن منو"
+          >
+            <app-fa-icon name="dashboard"></app-fa-icon>
+          </button>
           <span class="mobile-avatar"
             ><app-fa-icon name="user"></app-fa-icon
           ></span>
@@ -129,7 +127,7 @@ interface UserFormModel {
         </button>
       </header>
 
-      @if (isAdmin() && mobileSidebarOpen) {
+      @if (mobileSidebarOpen) {
         <button
           class="mobile-sidebar-backdrop"
           type="button"
@@ -140,8 +138,7 @@ interface UserFormModel {
 
       <aside
         class="dashboard-sidebar"
-        [class.mobile-app-nav]="isAdmin()"
-        [class.mobile-sidebar-open]="isAdmin() && mobileSidebarOpen"
+        [class.mobile-sidebar-open]="mobileSidebarOpen"
       >
         <a class="dashboard-brand" routerLink="/">
           <span class="brand-mark"
@@ -171,15 +168,13 @@ interface UserFormModel {
           </button>
         </nav>
 
-        @if (isAdmin()) {
-          <button
-            class="mobile-sidebar-close"
-            type="button"
-            (click)="closeMobileSidebar()"
-          >
-            بستن منو
-          </button>
-        }
+        <button
+          class="mobile-sidebar-close"
+          type="button"
+          (click)="closeMobileSidebar()"
+        >
+          بستن منو
+        </button>
 
         <button
           class="secondary-btn logout-btn"
@@ -1121,7 +1116,8 @@ interface UserFormModel {
           font-weight: 950;
           font-size: 0.82rem;
         }
-        .dashboard-layout.admin-mode {
+        .dashboard-layout.admin-mode,
+        .dashboard-layout.patient-mode {
           width: 100%;
           padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px));
         }
@@ -1144,7 +1140,8 @@ interface UserFormModel {
           color: var(--brand);
           flex-shrink: 0;
         }
-        .dashboard-layout.admin-mode .dashboard-sidebar {
+        .dashboard-layout.admin-mode .dashboard-sidebar,
+        .dashboard-layout.patient-mode .dashboard-sidebar {
           position: fixed;
           z-index: 100;
           top: 0;
@@ -1160,14 +1157,18 @@ interface UserFormModel {
           overflow-y: auto;
           box-shadow: 12px 0 32px rgba(93, 64, 32, 0.16);
         }
-        .dashboard-layout.admin-mode .dashboard-sidebar.mobile-sidebar-open {
+        .dashboard-layout.admin-mode .dashboard-sidebar.mobile-sidebar-open,
+        .dashboard-layout.patient-mode .dashboard-sidebar.mobile-sidebar-open {
           transform: translateX(0);
         }
         .admin-mode .dashboard-brand,
-        .admin-mode .dashboard-user-card {
+        .admin-mode .dashboard-user-card,
+        .patient-mode .dashboard-brand,
+        .patient-mode .dashboard-user-card {
           display: grid;
         }
-        .admin-mode .logout-btn {
+        .admin-mode .logout-btn,
+        .patient-mode .logout-btn {
           display: none;
         }
         .mobile-sidebar-close {
@@ -1180,11 +1181,13 @@ interface UserFormModel {
           font: inherit;
           font-weight: 950;
         }
-        .admin-mode .dashboard-nav {
+        .admin-mode .dashboard-nav,
+        .patient-mode .dashboard-nav {
           grid-template-columns: 1fr;
           gap: 8px;
         }
-        .admin-mode .dashboard-nav button {
+        .admin-mode .dashboard-nav button,
+        .patient-mode .dashboard-nav button {
           display: flex;
           align-items: center;
           gap: 10px;
@@ -1195,12 +1198,14 @@ interface UserFormModel {
           font-size: 0.9rem;
           line-height: 1.4;
         }
-        .admin-mode .dashboard-nav button span {
+        .admin-mode .dashboard-nav button span,
+        .patient-mode .dashboard-nav button span {
           display: block;
           overflow: visible;
           -webkit-line-clamp: unset;
         }
-        .admin-mode .dashboard-nav app-fa-icon {
+        .admin-mode .dashboard-nav app-fa-icon,
+        .patient-mode .dashboard-nav app-fa-icon {
           color: var(--brand);
           font-size: 1rem;
           flex-shrink: 0;
@@ -1234,9 +1239,6 @@ interface UserFormModel {
         }
         .panel-heading {
           display: grid;
-        }
-        .patient-mode .dashboard-sidebar {
-          display: none;
         }
       }
     `,

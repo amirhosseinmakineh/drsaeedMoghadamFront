@@ -18,7 +18,11 @@ export const roleGuard = (allowedRoles: AuthRole[]): CanActivateFn => {
     const user = auth.user();
 
     if (!user) return router.parseUrl("/");
-    if (allowedRoles.includes(user.role)) return true;
+    if (allowedRoles.some((role) => auth.hasRole(role, user))) return true;
+
+    if (auth.needsRoleSelection(user)) {
+      return router.parseUrl(auth.roleSelectionUrl());
+    }
 
     return router.parseUrl(auth.dashboardUrl(user));
   };

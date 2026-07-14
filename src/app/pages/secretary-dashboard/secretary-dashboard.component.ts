@@ -50,6 +50,15 @@ interface SecretaryDashboardLink {
     <section class="dashboard-layout secretary-mode">
       <header class="dashboard-mobile-header">
         <div class="mobile-header-info">
+          <button
+            class="mobile-menu-btn"
+            type="button"
+            (click)="toggleMobileSidebar()"
+            [attr.aria-expanded]="mobileSidebarOpen"
+            aria-label="باز و بسته کردن منو"
+          >
+            <app-fa-icon name="dashboard"></app-fa-icon>
+          </button>
           <span class="mobile-avatar"
             ><app-fa-icon name="calendar"></app-fa-icon
           ></span>
@@ -69,7 +78,19 @@ interface SecretaryDashboardLink {
         </button>
       </header>
 
-      <aside class="dashboard-sidebar mobile-app-nav">
+      @if (mobileSidebarOpen) {
+        <button
+          class="mobile-sidebar-backdrop"
+          type="button"
+          aria-label="بستن منو"
+          (click)="closeMobileSidebar()"
+        ></button>
+      }
+
+      <aside
+        class="dashboard-sidebar"
+        [class.mobile-sidebar-open]="mobileSidebarOpen"
+      >
         <a class="dashboard-brand" routerLink="/">
           <span class="brand-mark"
             ><app-fa-icon name="tooth"></app-fa-icon
@@ -100,6 +121,14 @@ interface SecretaryDashboardLink {
             <span>{{ item.label }}</span>
           </button>
         </nav>
+
+        <button
+          class="mobile-sidebar-close"
+          type="button"
+          (click)="closeMobileSidebar()"
+        >
+          بستن منو
+        </button>
 
         <button
           class="secondary-btn logout-btn"
@@ -523,27 +552,39 @@ interface SecretaryDashboardLink {
       .dashboard-mobile-header {
         display: none;
       }
-      @media (max-width: 960px) {
+      .mobile-sidebar-backdrop,
+      .mobile-sidebar-close,
+      .mobile-menu-btn {
+        display: none;
+      }
+      @media (max-width: 980px) {
         .dashboard-layout {
           grid-template-columns: 1fr;
           width: min(100% - 24px, 760px);
           padding-top: 14px;
         }
+      }
+      @media (max-width: 760px) {
         .dashboard-mobile-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 12px;
+          position: sticky;
+          top: 0;
+          z-index: 90;
+          margin-bottom: 10px;
           padding: 10px 12px;
           border: 1px solid var(--line);
-          border-radius: 24px;
+          border-radius: 22px;
           background: var(--surface);
-          box-shadow: var(--shadow);
+          box-shadow: 0 8px 22px rgba(93, 64, 32, 0.08);
         }
         .mobile-header-info {
           display: flex;
           align-items: center;
           gap: 10px;
+          min-width: 0;
         }
         .mobile-avatar {
           display: grid;
@@ -553,14 +594,20 @@ interface SecretaryDashboardLink {
           border-radius: 16px;
           background: color-mix(in srgb, var(--brand) 18%, transparent);
           color: var(--brand);
+          flex-shrink: 0;
         }
-        .mobile-header-info strong,
+        .mobile-header-info strong {
+          display: block;
+          font-size: 0.95rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         .mobile-header-info small {
           display: block;
-        }
-        .mobile-header-info small {
           color: var(--muted);
           font-weight: 900;
+          font-size: 0.78rem;
         }
         .mobile-logout-btn {
           display: inline-flex;
@@ -578,40 +625,87 @@ interface SecretaryDashboardLink {
         }
         .dashboard-layout.secretary-mode {
           width: 100%;
-          padding: 10px 10px calc(108px + env(safe-area-inset-bottom, 0px));
+          padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px));
+        }
+        .mobile-sidebar-backdrop {
+          display: block;
+          position: fixed;
+          inset: 0;
+          z-index: 95;
+          border: 0;
+          background: rgba(20, 16, 12, 0.42);
+        }
+        .mobile-menu-btn {
+          display: inline-grid;
+          place-items: center;
+          width: 42px;
+          height: 42px;
+          border: 1px solid var(--line);
+          border-radius: 16px;
+          background: var(--surface-muted);
+          color: var(--brand);
+          flex-shrink: 0;
         }
         .dashboard-layout.secretary-mode .dashboard-sidebar {
           position: fixed;
-          z-index: 80;
-          inset-inline: 10px;
-          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-          top: auto;
-          min-height: 0;
-          padding: 8px;
-          border-radius: 28px;
-          background: var(--surface);
-          box-shadow: 0 8px 22px rgba(93, 64, 32, 0.08);
-          contain: layout paint;
+          z-index: 100;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: min(300px, 86vw);
+          margin: 0;
+          padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+          border-radius: 0 28px 28px 0;
+          border-inline-start: 0;
+          transform: translateX(-105%);
+          transition: transform 0.28s ease;
+          overflow-y: auto;
+          box-shadow: 12px 0 32px rgba(93, 64, 32, 0.16);
+        }
+        .dashboard-layout.secretary-mode .dashboard-sidebar.mobile-sidebar-open {
+          transform: translateX(0);
         }
         .secretary-mode .dashboard-brand,
-        .secretary-mode .dashboard-user-card,
+        .secretary-mode .dashboard-user-card {
+          display: grid;
+        }
         .secretary-mode .logout-btn {
           display: none;
         }
-        .secretary-mode .dashboard-nav button {
-          display: grid;
-          place-items: center;
-          gap: 3px;
-          min-height: 54px;
-          padding: 6px 4px;
+        .mobile-sidebar-close {
+          display: block;
+          width: 100%;
+          border: 1px solid var(--line);
           border-radius: 18px;
-          text-align: center;
-          font-size: 0.68rem;
-          line-height: 1.2;
+          padding: 10px 12px;
+          background: var(--surface-muted);
+          font: inherit;
+          font-weight: 950;
+        }
+        .secretary-mode .dashboard-nav {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+        .secretary-mode .dashboard-nav button {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-height: 48px;
+          padding: 10px 12px;
+          border-radius: 16px;
+          text-align: start;
+          font-size: 0.9rem;
+          line-height: 1.4;
+        }
+        .secretary-mode .dashboard-nav button span {
+          display: block;
+          overflow: visible;
+          -webkit-line-clamp: unset;
         }
         .secretary-mode .dashboard-nav app-fa-icon {
           color: var(--brand);
-          font-size: 1.1rem;
+          font-size: 1rem;
+          flex-shrink: 0;
         }
         .dashboard-content {
           padding-top: 10px;
@@ -631,6 +725,7 @@ interface SecretaryDashboardLink {
 export class SecretaryDashboardComponent implements OnInit {
   readonly user = this.auth.user;
   activeSection: SecretaryDashboardSection = "overview";
+  mobileSidebarOpen = false;
 
   readonly dashboardLinks: SecretaryDashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
@@ -712,6 +807,18 @@ export class SecretaryDashboardComponent implements OnInit {
     }
 
     this.activeSection = section;
+    this.closeMobileSidebar();
+    this.markDirty();
+  }
+
+  toggleMobileSidebar(): void {
+    this.mobileSidebarOpen = !this.mobileSidebarOpen;
+    this.markDirty();
+  }
+
+  closeMobileSidebar(): void {
+    if (!this.mobileSidebarOpen) return;
+    this.mobileSidebarOpen = false;
     this.markDirty();
   }
 
