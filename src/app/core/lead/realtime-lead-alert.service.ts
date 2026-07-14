@@ -162,7 +162,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (result.status === "success") {
       this.toast.success(result.message);
       this.dismissLead(leadId);
-      this.notifyLeadPickedUp(leadId);
+      this.notifyLeadPickedUp(leadId, result.callDeadlineAt);
       await this.router.navigate(["/dashboard/consultant"], {
         queryParams: {
           section: "leads",
@@ -362,11 +362,14 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
   }
 
-  private notifyLeadPickedUp(leadId: number): void {
+  private notifyLeadPickedUp(
+    leadId: number,
+    callDeadlineAt?: string | null,
+  ): void {
     if (typeof window === "undefined") return;
     window.dispatchEvent(
       new CustomEvent("consultant-lead-picked-up", {
-        detail: { leadId },
+        detail: { leadId, callDeadlineAt },
       }),
     );
   }

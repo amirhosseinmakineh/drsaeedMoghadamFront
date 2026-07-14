@@ -2611,10 +2611,17 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   };
 
   private readonly leadPickedUpListener = (event: Event): void => {
-    const leadId = (event as CustomEvent<{ leadId?: number }>).detail?.leadId;
+    const detail = (event as CustomEvent<{
+      leadId?: number;
+      callDeadlineAt?: string | null;
+    }>).detail;
+    const leadId = detail?.leadId;
     if (!leadId || !this.isProfileReady()) return;
 
-    this.resetRealtimeLeadTimer(leadId);
+    this.isOnline = false;
+    this.realtimeLeadAlerts.stopPolling();
+    this.configurePollTimer();
+    this.resetRealtimeLeadTimer(leadId, detail?.callDeadlineAt);
     this.activeSection = "leads";
     this.leadTypeFilter = LEAD_TYPE.RealTime;
     this.highlightedLeadAssignmentId = leadId;
@@ -3474,8 +3481,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.markViewDirty();
   }
 
-  closeReportDialog(options: { releaseReportLock?: boolean } = {}): void {
-    if (!this.isReportDialogClosable() && (options.releaseReportLock ?? true)) return;
+  closeReportDialog(
+    options: { releaseReportLock?: boolean; force?: boolean } = {},
+  ): void {
+    if (
+      !options.force &&
+      !this.isReportDialogClosable() &&
+      (options.releaseReportLock ?? true)
+    ) {
+      return;
+    }
 
     const releaseReportLock = options.releaseReportLock ?? true;
     const leadAssignmentId = this.selectedLead
@@ -3597,13 +3612,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           });
           this.releaseLeadReportSession(leadAssignmentId);
           this.applyConsultantStatusFrom(response, data);
-
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           this.suppressLeadCardActionsUntil = Date.now() + 600;
-          setTimeout(() => {
-            this.closeReportDialog({ releaseReportLock: true });
-          }, 0);
+          this.closeReportDialog({ releaseReportLock: true, force: true });
           this.showFeedback("گزارش ثبت شد", "success");
           this.markViewDirty();
 
@@ -3625,6 +3637,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
 
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
+            this.restoreConsultantOnlineAfterReport(profileId, data, lead);
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
             }
@@ -5347,8 +5360,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return startedAt + REALTIME_CALL_WINDOW_MS;
   }
 
-  private resetRealtimeLeadTimer(leadAssignmentId: number): void {
-    this.timerStarts[String(leadAssignmentId)] = Date.now();
+  private resetRealtimeLeadTimer(
+    leadAssignmentId: number,
+    callDeadlineAt?: string | null,
+  ): void {
+    const backendDeadline = callDeadlineAt
+      ? new Date(callDeadlineAt).getTime()
+      : null;
+    if (backendDeadline !== null && Number.isFinite(backendDeadline)) {
+      this.timerStarts[String(leadAssignmentId)] =
+        backendDeadline - REALTIME_CALL_WINDOW_MS;
+    } else {
+      this.timerStarts[String(leadAssignmentId)] = Date.now();
+    }
     this.stoppedTimerLeadIds.delete(leadAssignmentId);
     this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
     this.writeJson(this.timerStorageKey(), this.timerStarts);
@@ -5363,6 +5387,50 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
     this.reportedLeadIds.add(leadAssignmentId);
     this.stopRealtimeTimer(leadAssignmentId);
+  }
+
+  private restoreConsultantOnlineAfterReport(
+    profileId: number,
+    data:
+      | {
+          isConsultantOnline?: boolean;
+        }
+      | undefined,
+    lead: ConsultantLead,
+  ): void {
+    const isRealtimeLead = this.leadType(lead) === LEAD_TYPE.RealTime;
+    const shouldRestoreOnline =
+      data?.isConsultantOnline === true ||
+      (isRealtimeLead && data?.isConsultantOnline !== false);
+
+    if (!shouldRestoreOnline) return;
+
+    if (data?.isConsultantOnline === true) {
+      this.isOnline = true;
+      this.syncRealtimeLeadPolling();
+      this.configurePollTimer();
+      this.markViewDirty();
+      return;
+    }
+
+    if (this.isOnline) return;
+
+    if (this.canGoOnline()) {
+      this.performSetOnlineStatus(profileId, true);
+      return;
+    }
+
+    this.loadDashboardStatus(() => {
+      if (this.isOnline) {
+        this.syncRealtimeLeadPolling();
+        this.configurePollTimer();
+        this.markViewDirty();
+        return;
+      }
+      if (this.canGoOnline()) {
+        this.performSetOnlineStatus(profileId, true);
+      }
+    });
   }
 
   private parseLeadDeadline(lead: ConsultantLead): number | null {
