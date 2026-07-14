@@ -1,60 +1,118 @@
+import { REALTIME_LEAD_VIBRATE_PATTERN } from "./lead-alert.constants";
+
+let audioContext: AudioContext | null = null;
+
+/** Call after a user gesture so iOS/Android allow loud alert audio later. */
+export function primeRealtimeLeadAlertAudio(): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const context = getOrCreateAudioContext();
+    if (!context) return;
+
+    if (context.state === "suspended") {
+      void context.resume();
+    }
+  } catch {
+    // Audio priming is optional.
+  }
+}
+
 export function playRealtimeLeadAlertSound(): void {
   if (typeof window === "undefined") return;
 
-  playGentleLeadChime();
+  playAttentionChime();
   vibrateRealtimeLeadAlert();
 }
 
-function playGentleLeadChime(): void {
-  try {
-    const AudioContextCtor =
-      window.AudioContext ||
-      (window as Window & { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (!AudioContextCtor) return;
+function getOrCreateAudioContext(): AudioContext | null {
+  const AudioContextCtor =
+    window.AudioContext ||
+    (window as Window & { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+  if (!AudioContextCtor) return null;
 
-    const context = new AudioContextCtor();
+  if (!audioContext || audioContext.state === "closed") {
+    audioContext = new AudioContextCtor();
+  }
+
+  return audioContext;
+}
+
+function playAttentionChime(): void {
+  try {
+    const context = getOrCreateAudioContext();
+    if (!context) return;
+
+    if (context.state === "suspended") {
+      void context.resume();
+    }
+
     const masterGain = context.createGain();
-    masterGain.gain.value = 0.0001;
+    masterGain.gain.value = 0.72;
     masterGain.connect(context.destination);
 
-    const notes = [
-      { frequency: 784, start: 0, duration: 0.22, peak: 0.34 },
-      { frequency: 988, start: 0.18, duration: 0.28, peak: 0.3 },
-      { frequency: 1175, start: 0.42, duration: 0.34, peak: 0.24 },
+    const melody = [
+      { frequency: 659.25, start: 0, duration: 0.42 },
+      { frequency: 783.99, start: 0.14, duration: 0.42 },
+      { frequency: 987.77, start: 0.28, duration: 0.46 },
+      { frequency: 1318.51, start: 0.44, duration: 0.62 },
+      { frequency: 987.77, start: 0.72, duration: 0.38 },
+      { frequency: 1318.51, start: 0.86, duration: 0.58 },
     ];
 
-    notes.forEach(({ frequency, start, duration, peak }) => {
-      const oscillator = context.createOscillator();
-      const noteGain = context.createGain();
-      const startAt = context.currentTime + start;
-      const endAt = startAt + duration;
-
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(frequency, startAt);
-      oscillator.connect(noteGain);
-      noteGain.connect(masterGain);
-
-      noteGain.gain.setValueAtTime(0.0001, startAt);
-      noteGain.gain.exponentialRampToValueAtTime(peak, startAt + 0.03);
-      noteGain.gain.exponentialRampToValueAtTime(0.0001, endAt);
-
-      oscillator.start(startAt);
-      oscillator.stop(endAt + 0.02);
+    melody.forEach(({ frequency, start, duration }) => {
+      playChimeNote(context, masterGain, frequency, start, duration);
     });
 
-    masterGain.gain.exponentialRampToValueAtTime(0.22, context.currentTime + 0.02);
-    masterGain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.95);
-
-    window.setTimeout(() => void context.close(), 1100);
+    window.setTimeout(() => {
+      if (audioContext === context && context.state !== "closed") {
+        void context.close();
+        audioContext = null;
+      }
+    }, 1600);
   } catch {
     // Audio is optional.
   }
+}
+
+function playChimeNote(
+  context: AudioContext,
+  destination: GainNode,
+  frequency: number,
+  startOffset: number,
+  duration: number,
+): void {
+  const startTime = context.currentTime + startOffset;
+  const noteGain = context.createGain();
+  noteGain.connect(destination);
+
+  noteGain.gain.setValueAtTime(0.0001, startTime);
+  noteGain.gain.exponentialRampToValueAtTime(0.58, startTime + 0.01);
+  noteGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+  const fundamental = context.createOscillator();
+  fundamental.type = "square";
+  fundamental.frequency.value = frequency;
+  fundamental.connect(noteGain);
+
+  const harmonic = context.createOscillator();
+  harmonic.type = "sawtooth";
+  harmonic.frequency.value = frequency * 1.5;
+  const harmonicGain = context.createGain();
+  harmonicGain.gain.value = 0.22;
+  harmonic.connect(harmonicGain);
+  harmonicGain.connect(noteGain);
+
+  fundamental.start(startTime);
+  harmonic.start(startTime);
+  fundamental.stop(startTime + duration + 0.04);
+  harmonic.stop(startTime + duration + 0.04);
 }
 
 function vibrateRealtimeLeadAlert(): void {
   const navigatorWithVibration = navigator as Navigator & {
     vibrate?: (pattern: number | number[]) => boolean;
   };
-  navigatorWithVibration.vibrate?.([220, 90, 220, 90, 280]);
+  navigatorWithVibration.vibrate?.([...REALTIME_LEAD_VIBRATE_PATTERN]);
 }

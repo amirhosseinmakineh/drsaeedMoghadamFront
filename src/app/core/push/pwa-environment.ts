@@ -101,6 +101,13 @@ export function getPushEnvironmentWarning(): string | null {
     );
   }
 
+  if (!isMobileDevice() && !isStandalonePwa()) {
+    return (
+      "روی لپ‌تاپ/دسکتاپ، نوتیف سیستم‌عامل بعد از فعال‌سازی و اجازه Notification کار می‌کند. " +
+      "هر مرورگر (Chrome، Edge، Firefox) subscription جداگانه ثبت می‌کند؛ روی هر دستگاه یک‌بار «فعال‌سازی نوتیفیکیشن» را بزنید."
+    );
+  }
+
   return null;
 }
 

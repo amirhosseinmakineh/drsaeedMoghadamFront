@@ -8,6 +8,10 @@ import {
   WebPushMessagePayload,
 } from "./notification.service";
 import {
+  PUSH_BACKEND_SYNC_INTERVAL_MS,
+  PUSH_SUBSCRIPTION_HEALTH_CHECK_MS,
+} from "./lead-alert.constants";
+import {
   buildRealtimeLeadNotificationBody,
   buildRealtimeLeadNotificationTitle,
 } from "../lead/lead-alert-copy";
@@ -26,8 +30,10 @@ export interface PushSyncResult {
 @Injectable({ providedIn: "root" })
 export class PushNotificationService {
   private lastRegisteredKey: string | null = null;
+  private lastBackendSyncAt = 0;
   private tokenSyncPromise: Promise<PushSyncResult> | null = null;
   private backendRegistrationReady = false;
+  private subscriptionHealthTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private consultantApi: ConsultantDashboardService,
@@ -37,19 +43,28 @@ export class PushNotificationService {
   ) {
     if (typeof window !== "undefined") {
       window.addEventListener("focus", () => {
-        const user = this.auth.user();
-        if (user?.role === "consultant") {
-          void this.syncPushRegistrationIfReady();
-          return;
+        void this.handleClientActivation();
+      });
+      window.addEventListener("online", () => {
+        void this.handleClientActivation();
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          void this.handleClientActivation();
         }
-        void this.syncForCurrentProfile();
       });
       this.notifications.onTokenRefresh(() => {
+        this.lastBackendSyncAt = 0;
         void this.syncForCurrentProfile();
+      });
+      this.notifications.onSubscriptionLost(() => {
+        this.resetRegisteredTokenCache();
+        void this.recoverPushSubscription();
       });
       this.notifications.onForegroundMessage((payload) =>
         this.handleForegroundMessage(payload),
       );
+      this.startSubscriptionHealthCheck();
     }
   }
 
@@ -89,7 +104,12 @@ export class PushNotificationService {
       profileId ?? user.consultantProfileId ?? user.profileId ?? null;
     const registrationKey = `${user.userId ?? resolvedProfileId ?? user.phoneNumber ?? "user"}:${subscriptionJson}`;
 
-    if (this.lastRegisteredKey === registrationKey && this.backendRegistrationReady) {
+    const recentlySynced =
+      this.lastRegisteredKey === registrationKey &&
+      this.backendRegistrationReady &&
+      Date.now() - this.lastBackendSyncAt < PUSH_BACKEND_SYNC_INTERVAL_MS;
+
+    if (recentlySynced) {
       return { ok: true, message: "subscription قبلاً روی سرور ثبت شده است." };
     }
 
@@ -100,6 +120,7 @@ export class PushNotificationService {
     this.backendRegistrationReady = registered.ok;
     if (registered.ok) {
       this.lastRegisteredKey = registrationKey;
+      this.lastBackendSyncAt = Date.now();
     } else {
       this.lastRegisteredKey = null;
     }
@@ -149,7 +170,40 @@ export class PushNotificationService {
 
   resetRegisteredTokenCache(): void {
     this.lastRegisteredKey = null;
+    this.lastBackendSyncAt = 0;
     this.backendRegistrationReady = false;
+  }
+
+  async recoverPushSubscription(): Promise<PushSyncResult> {
+    const user = this.auth.user();
+    if (!user || !this.auth.authToken()) {
+      return { ok: false, message: "برای بازیابی نوتیفیکیشن ابتدا وارد حساب شوید." };
+    }
+
+    if (user.role !== "consultant") {
+      return { ok: false, message: "بازیابی Web Push فقط برای مشاور لازم است." };
+    }
+
+    const environmentIssue = this.notifications.getEnvironmentIssue();
+    if (environmentIssue) {
+      return { ok: false, message: environmentIssue };
+    }
+
+    if (this.notifications.getPermissionStatus() !== "granted") {
+      return {
+        ok: false,
+        message: "اجازه نوتیفیکیشن داده نشده است. دوباره فعال‌سازی را بزنید.",
+      };
+    }
+
+    const profileId = user.consultantProfileId ?? user.profileId ?? null;
+    const refreshed = await this.notifications.refreshPushSubscription();
+    if (!refreshed) {
+      return this.enablePushForCurrentProfile(profileId);
+    }
+
+    this.resetRegisteredTokenCache();
+    return this.syncForCurrentProfile(profileId);
   }
 
   async getCurrentPushSubscription(): Promise<string | null> {
@@ -187,6 +241,7 @@ export class PushNotificationService {
     if (registered.ok) {
       const user = this.auth.user();
       this.lastRegisteredKey = `${user?.userId ?? resolvedProfileId ?? "user"}:${result.subscriptionJson}`;
+      this.lastBackendSyncAt = Date.now();
       return { ok: true, message: "نوتیفیکیشن فعال و روی سرور ثبت شد." };
     }
 
@@ -311,6 +366,30 @@ export class PushNotificationService {
     }
 
     return this.syncForCurrentProfile(resolvedProfileId);
+  }
+
+  private async handleClientActivation(): Promise<void> {
+    const user = this.auth.user();
+    if (!user || !this.auth.authToken()) return;
+
+    if (user.role === "consultant") {
+      await this.syncPushRegistrationIfReady();
+      return;
+    }
+
+    await this.syncForCurrentProfile();
+  }
+
+  private startSubscriptionHealthCheck(): void {
+    if (this.subscriptionHealthTimer) return;
+
+    this.subscriptionHealthTimer = setInterval(() => {
+      const user = this.auth.user();
+      if (!user || user.role !== "consultant" || !this.auth.authToken()) return;
+      if (document.visibilityState !== "visible") return;
+
+      void this.syncPushRegistrationIfReady();
+    }, PUSH_SUBSCRIPTION_HEALTH_CHECK_MS);
   }
 
   private extractErrorMessage(error: unknown, fallback: string): string {
