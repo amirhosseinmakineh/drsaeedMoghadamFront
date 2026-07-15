@@ -90,7 +90,6 @@ interface PatientProfileForm {
   phoneNumber: string;
   password: string;
   gender: number;
-  address: string;
 }
 
 interface AddPatientLeadForm {
@@ -1415,16 +1414,6 @@ interface ConsultantDashboardLink {
                 <option [ngValue]="2">زن</option>
               </select>
             </label>
-
-            <label>
-              آدرس
-              <input
-                [(ngModel)]="patientProfileForm.address"
-                [ngModelOptions]="ngModelBlurOptions"
-                name="patientAddress"
-                maxlength="500"
-              />
-            </label>
           </section>
 
           <div class="dialog-actions">
@@ -2726,6 +2715,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.refreshDashboard();
       this.startTimers();
       this.syncRealtimeLeadPolling();
+      this.syncSectionQueryParam(this.activeSection);
     } else {
       this.activeSection = "profile";
     }
@@ -2879,10 +2869,37 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   setSection(section: ConsultantDashboardSection): void {
-    if (section === "profile" && this.isProfileReady()) {
-      this.activeSection = "overview";
-      this.markViewDirty();
+    const resolvedSection = this.resolveSection(section);
+    if (resolvedSection === this.activeSection) {
+      this.syncSectionQueryParam(resolvedSection);
       return;
+    }
+
+    this.activeSection = resolvedSection;
+    this.syncSectionQueryParam(resolvedSection);
+    this.closeMobileSidebar();
+    this.markViewDirty();
+
+    if (resolvedSection === "leads") {
+      this.loadLeads();
+    } else if (resolvedSection === "report-edits") {
+      this.loadReportEditLeads();
+    } else if (resolvedSection === "patients") {
+      this.loadPatientLeads();
+    } else if (
+      resolvedSection === "reservations" &&
+      !this.reservations.length &&
+      !this.reservationsLoading
+    ) {
+      this.loadReservations();
+    }
+  }
+
+  private resolveSection(
+    section: ConsultantDashboardSection,
+  ): ConsultantDashboardSection {
+    if (section === "profile" && this.isProfileReady()) {
+      return "overview";
     }
 
     if (
@@ -2893,23 +2910,45 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         section === "reservations") &&
       !this.isProfileReady()
     ) {
-      this.activeSection = "profile";
-      this.markViewDirty();
-      return;
+      return "profile";
     }
 
-    this.activeSection = section;
+    return section;
+  }
+
+  private syncSectionQueryParam(section: ConsultantDashboardSection): void {
+    const querySection =
+      section === "overview" || section === "profile" ? null : section;
+    const currentSection = this.route.snapshot.queryParamMap.get("section");
+
+    if ((currentSection ?? null) === querySection) return;
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { section: querySection },
+      queryParamsHandling: "merge",
+      replaceUrl: false,
+    });
+  }
+
+  private activateSectionFromRoute(
+    section: ConsultantDashboardSection,
+  ): void {
+    const resolvedSection = this.resolveSection(section);
+    if (resolvedSection === this.activeSection) return;
+
+    this.activeSection = resolvedSection;
     this.closeMobileSidebar();
     this.markViewDirty();
 
-    if (section === "leads") {
+    if (resolvedSection === "leads") {
       this.loadLeads();
-    } else if (section === "report-edits") {
+    } else if (resolvedSection === "report-edits") {
       this.loadReportEditLeads();
-    } else if (section === "patients") {
+    } else if (resolvedSection === "patients") {
       this.loadPatientLeads();
     } else if (
-      section === "reservations" &&
+      resolvedSection === "reservations" &&
       !this.reservations.length &&
       !this.reservationsLoading
     ) {
@@ -3433,15 +3472,30 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private applyLeadRouteParams(params: ParamMap): void {
-    if (params.get("section") === "profile" && !this.isProfileReady()) {
+    if (!this.isProfileReady()) {
       this.activeSection = "profile";
       return;
     }
 
-    if (params.get("section") !== "leads" && !params.get("type")) return;
-    if (!this.isProfileReady()) return;
+    const section = params.get("section") as ConsultantDashboardSection | null;
+    if (
+      section &&
+      [
+        "overview",
+        "profile",
+        "leads",
+        "report-edits",
+        "patients",
+        "reservations",
+      ].includes(section)
+    ) {
+      this.activateSectionFromRoute(section);
+    } else if (params.get("type")) {
+      this.activateSectionFromRoute("leads");
+    }
 
-    this.activeSection = "leads";
+    if (params.get("section") !== "leads" && !params.get("type")) return;
+
     const type = params.get("type");
     if (type === "realtime") {
       this.leadTypeFilter = LEAD_TYPE.RealTime;
@@ -3797,17 +3851,23 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ...(secondaryPhone ? { secondaryPhoneNumber: secondaryPhone } : {}),
     };
 
+    const wasOffline = !this.isOnline;
+
     this.consultantApi
       .submitLeadCallReport(payload)
       .pipe(
-        switchMap((response) =>
-          this.consultantApi
+        switchMap((response) => {
+          if (wasOffline) {
+            return of({ reportResponse: response, onlineResponse: null });
+          }
+
+          return this.consultantApi
             .setOnlineStatus({ profileId, isOnline: true, isOffline: false })
             .pipe(
               map((onlineResponse) => ({ reportResponse: response, onlineResponse })),
               catchError(() => of({ reportResponse: response, onlineResponse: null })),
-            ),
-        ),
+            );
+        }),
         finalize(() => {
           this.reportSaving = false;
           this.markViewDirty();
@@ -3842,15 +3902,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           });
           this.releaseLeadReportSession(leadAssignmentId);
           this.applyConsultantStatusFrom(response, data);
-          if (onlineResponse) {
-            this.isOnline = true;
-            this.onlineStatusBlockReason = null;
-            void this.ensureLeadPushRegistration(true);
-            void this.pushNotifications.syncForCurrentProfile(profileId);
+          if (!wasOffline) {
+            if (onlineResponse) {
+              this.isOnline = true;
+              this.onlineStatusBlockReason = null;
+              void this.ensureLeadPushRegistration(true);
+              void this.pushNotifications.syncForCurrentProfile(profileId);
+              this.syncRealtimeLeadPolling();
+              this.configurePollTimer();
+            } else {
+              this.forceConsultantOnlineAfterReportSubmit(profileId);
+            }
+          } else {
+            this.isOnline = false;
             this.syncRealtimeLeadPolling();
             this.configurePollTimer();
-          } else {
-            this.forceConsultantOnlineAfterReportSubmit(profileId);
           }
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
@@ -3871,13 +3937,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
                 this.openReservationDialog(
                   updatedLead,
                   secondaryPhone || undefined,
+                  { skipActionSuppress: true },
                 ),
-              0,
+              650,
             );
           }
 
           this.refreshDashboardAfterReport(leadAssignmentId, () => {
-            this.forceConsultantOnlineAfterReportSubmit(profileId);
+            if (!wasOffline) {
+              this.forceConsultantOnlineAfterReportSubmit(profileId);
+            }
             if (this.activeSection === "patients") {
               this.loadPatientLeads();
             }
@@ -3984,10 +4053,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.applyConsultantStatusFrom(response, response.data);
           this.closeReportDialog({ releaseReportLock: true });
           this.showFeedback("گزارش ویرایش شد", "success");
-          this.restoreOnlineAfterRequiredAction({
-            notifyWhenBlocked: false,
-            ignoreCanGoOnlineCheck: true,
-          });
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
           }
@@ -5165,6 +5230,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.ngZone.runOutsideAngular(() => {
       this.pollId = setInterval(() => {
         if (!this.isProfileReady() || this.destroyed) return;
+        if (this.reportDialogOpen || this.reservationDialogOpen) return;
         this.ngZone.run(() => {
           this.loadLeads(true);
         });
@@ -5466,8 +5532,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   openReservationDialog(
     lead: ConsultantLead,
     secondaryPhoneNumber = "",
+    options: { skipActionSuppress?: boolean } = {},
   ): void {
-    if (Date.now() < this.suppressLeadCardActionsUntil) return;
+    if (
+      !options.skipActionSuppress &&
+      Date.now() < this.suppressLeadCardActionsUntil
+    ) {
+      return;
+    }
 
     const leadAssignmentId = this.leadId(lead);
     const minimumReservationAt = this.minimumReservationDateTime();
@@ -5831,8 +5903,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return "رمز عبور نباید بیشتر از ۱۰۰ کاراکتر باشد";
     if (![1, 2].includes(Number(this.patientProfileForm.gender)))
       return "جنسیت بیمار معتبر نیست";
-    if (!this.patientProfileForm.address.trim())
-      return "آدرس بیمار الزامی است";
     return null;
   }
 
@@ -5848,7 +5918,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       avatarImageName: this.defaultPatientAvatarImageName(),
       gender: Number(this.patientProfileForm.gender),
       birthDate: new Date(2000, 0, 1).toISOString(),
-      address: this.patientProfileForm.address.trim(),
     };
   }
 
@@ -5859,7 +5928,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       phoneNumber: "",
       password: "",
       gender: 1,
-      address: "",
     };
   }
 
