@@ -117,13 +117,50 @@ export function isReservationDueForConsultantConfirmation(
     reservation.isDueForConsultantConfirmation ??
     reservation.IsDueForConsultantConfirmation;
   if (explicit === true) return true;
-  if (explicit === false) return false;
 
   const raw = reservation.reservationAt ?? reservation.ReservationAt ?? "";
   if (!raw) return false;
 
   const reservationTime = new Date(raw).getTime();
   return Number.isFinite(reservationTime) && reservationTime <= nowMs;
+}
+
+export function isAwaitingConsultantAttendanceConfirmation(
+  reservation: {
+    isCanceled?: boolean | null;
+    IsCanceled?: boolean | null;
+    attendanceConfirmationStatus?: number | null;
+    AttendanceConfirmationStatus?: number | null;
+  },
+): boolean {
+  const isCanceled =
+    (reservation.isCanceled ?? reservation.IsCanceled) === true;
+  const status = readAttendanceStatus(
+    reservation,
+    "attendanceConfirmationStatus",
+    "AttendanceConfirmationStatus",
+  );
+
+  return canConsultantConfirmAttendance(status, isCanceled);
+}
+
+export function isPendingConsultantConfirmationNotYetDue(
+  reservation: {
+    reservationAt?: string | null;
+    ReservationAt?: string | null;
+    isDueForConsultantConfirmation?: boolean | null;
+    IsDueForConsultantConfirmation?: boolean | null;
+    isCanceled?: boolean | null;
+    IsCanceled?: boolean | null;
+    attendanceConfirmationStatus?: number | null;
+    AttendanceConfirmationStatus?: number | null;
+  },
+  nowMs: number = Date.now(),
+): boolean {
+  return (
+    isAwaitingConsultantAttendanceConfirmation(reservation) &&
+    !isReservationDueForConsultantConfirmation(reservation, nowMs)
+  );
 }
 
 export function canConsultantConfirmDueReservation(
