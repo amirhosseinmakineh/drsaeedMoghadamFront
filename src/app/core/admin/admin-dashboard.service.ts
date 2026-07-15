@@ -350,6 +350,7 @@ export interface SecretaryReservation {
 
 export interface SecretaryReservationFilters {
   consultantProfileId?: number | null;
+  date?: string;
   from?: string;
   to?: string;
   searchText?: string;
