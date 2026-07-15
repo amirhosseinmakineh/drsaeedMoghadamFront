@@ -24,6 +24,7 @@ import {
   downloadBlob,
   reportFileName,
 } from "../../utils/file-download.util";
+import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
   TableColumn,
   TableComponent,
@@ -36,13 +37,16 @@ type ReservationView = "reservations" | "attendanceConfirmations";
 @Component({
   selector: "app-admin-reservations-table",
   standalone: true,
-  imports: [CommonModule, FormsModule, TableComponent],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent, TableComponent],
   template: `
     <section class="admin-panel">
       <header class="panel-heading">
         <div>
           <span>{{ view === "attendanceConfirmations" ? "تایید حضور" : "رزروها" }}</span>
           <h2>{{ title }}</h2>
+          @if (filterByDate && selectedDatePersian) {
+            <p>بیماران روز: {{ selectedDatePersian }}</p>
+          }
         </div>
         <button
           class="secondary-action compact"
@@ -69,6 +73,28 @@ type ReservationView = "reservations" | "attendanceConfirmations";
         >
           تایید حضور مشاوران
         </button>
+      </div>
+
+      <div class="calendar-block">
+        <div class="calendar-toolbar">
+          <label class="checkbox-field">
+            <input
+              type="checkbox"
+              [(ngModel)]="filterByDate"
+              name="filterByDate"
+              (change)="onFilterByDateToggle()"
+            />
+            نمایش بر اساس روز انتخاب‌شده
+          </label>
+        </div>
+        @if (filterByDate) {
+          <app-base-datepicker
+            [label]="datePickerLabel"
+            [selectedDate]="selectedDate"
+            [allowToday]="true"
+            (dateChange)="onDateChange($event)"
+          ></app-base-datepicker>
+        }
       </div>
 
       <div class="export-bar">
@@ -174,6 +200,12 @@ type ReservationView = "reservations" | "attendanceConfirmations";
         margin: 0;
         font-size: 1.35rem;
       }
+      .panel-heading p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-weight: 800;
+        font-size: 0.92rem;
+      }
       .view-switch {
         display: flex;
         flex-wrap: wrap;
@@ -190,6 +222,20 @@ type ReservationView = "reservations" | "attendanceConfirmations";
         background: color-mix(in srgb, var(--brand) 14%, var(--surface));
         border-color: color-mix(in srgb, var(--brand) 30%, var(--line));
         color: var(--brand);
+      }
+      .calendar-block {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+        border: 1px dashed var(--line);
+        border-radius: 24px;
+        background: color-mix(in srgb, var(--surface-muted) 55%, var(--surface));
+      }
+      .calendar-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
       }
       .export-bar {
         display: flex;
@@ -238,8 +284,12 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   @Input() title = "مدیریت رزروها و تایید حضور";
 
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
+  readonly datePickerLabel = { fa: "انتخاب روز", en: "Select day" };
 
   view: ReservationView = "reservations";
+  selectedDate = new Date();
+  selectedDatePersian = "";
+  filterByDate = true;
   items: SecretaryReservation[] = [];
   loading = false;
   exportingReservations = false;
@@ -305,6 +355,8 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.syncProfileFilter();
+    this.syncDateFilter();
+    this.syncSelectedDatePersian();
     this.load();
   }
 
@@ -322,7 +374,23 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
     this.load();
   }
 
+  onDateChange(date: Date): void {
+    this.selectedDate = date;
+    this.syncDateFilter();
+    this.syncSelectedDatePersian();
+    this.filters.pageNumber = 1;
+    this.load();
+  }
+
+  onFilterByDateToggle(): void {
+    this.syncDateFilter();
+    this.filters.pageNumber = 1;
+    this.load();
+  }
+
   applyFilters(): void {
+    this.syncDateFilter();
+    this.syncSelectedDatePersian();
     this.filters.pageNumber = 1;
     this.load();
   }
@@ -367,9 +435,7 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   exportReservations(): void {
     this.exportingReservations = true;
     this.adminApi
-      .exportReservationsReport({
-        consultantProfileId: this.filters.consultantProfileId ?? undefined,
-      })
+      .exportReservationsReport(this.exportFilters())
       .pipe(
         finalize(() => {
           this.exportingReservations = false;
@@ -388,9 +454,7 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   exportAttendanceConfirmations(): void {
     this.exportingAttendance = true;
     this.adminApi
-      .exportConsultantAttendanceConfirmationsReport({
-        consultantProfileId: this.filters.consultantProfileId ?? undefined,
-      })
+      .exportConsultantAttendanceConfirmationsReport(this.exportFilters())
       .pipe(
         finalize(() => {
           this.exportingAttendance = false;
@@ -413,6 +477,12 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   }
 
   emptyText(): string {
+    if (this.filterByDate && this.selectedDatePersian) {
+      return this.view === "attendanceConfirmations"
+        ? `تایید حضوری برای ${this.selectedDatePersian} وجود ندارد.`
+        : `رزروی برای ${this.selectedDatePersian} وجود ندارد.`;
+    }
+
     return this.view === "attendanceConfirmations"
       ? "تایید حضوری برای نمایش وجود ندارد."
       : "رزروی برای نمایش وجود ندارد.";
@@ -423,8 +493,55 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
       this.mode === "consultant" && this.profileId ? this.profileId : null;
   }
 
-  private reservationId(row: SecretaryReservation): number {
-    return Number(row.id ?? row.Id ?? 0);
+  private syncDateFilter(): void {
+    if (this.filterByDate) {
+      this.filters.date = this.toDateString(this.selectedDate);
+      delete this.filters.from;
+      delete this.filters.to;
+      return;
+    }
+
+    delete this.filters.date;
+    delete this.filters.from;
+    delete this.filters.to;
+  }
+
+  private exportFilters(): {
+    from?: string;
+    to?: string;
+    consultantProfileId?: number;
+  } {
+    const consultantProfileId = this.filters.consultantProfileId ?? undefined;
+    if (!this.filterByDate) {
+      return { consultantProfileId };
+    }
+
+    const date = this.toDateString(this.selectedDate);
+    return {
+      consultantProfileId,
+      from: date,
+      to: date,
+    };
+  }
+
+  private syncSelectedDatePersian(): void {
+    if (!this.filterByDate) {
+      this.selectedDatePersian = "";
+      return;
+    }
+
+    this.selectedDatePersian = this.selectedDate.toLocaleDateString("fa-IR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+
+  private toDateString(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   private patientName(row: SecretaryReservation): string {
