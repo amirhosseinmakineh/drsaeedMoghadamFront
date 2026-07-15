@@ -1,7 +1,7 @@
-export const LEAD_ALERT_MESSAGE = "لید جدیدی دارید. جهت دریافت";
-export const LEAD_ALERT_ACTION_LABEL = "روی آن کلیک کنید.";
-export const LEAD_ALERT_PUSH_TITLE = "لید جدیدی دارید";
-export const LEAD_ALERT_PUSH_BODY = "جهت دریافت روی آن کلیک کنید.";
+export const LEAD_ALERT_MESSAGE = "شماره جدید دارید";
+export const LEAD_ALERT_ACTION_LABEL = "ببین";
+export const LEAD_ALERT_PUSH_TITLE = "شماره جدید دارید";
+export const LEAD_ALERT_PUSH_BODY = "";
 
 export interface RealtimeLeadNotificationDetails {
   userName?: string | null;
@@ -10,39 +10,29 @@ export interface RealtimeLeadNotificationDetails {
 }
 
 export function buildRealtimeLeadNotificationTitle(
-  details?: RealtimeLeadNotificationDetails,
+  _details?: RealtimeLeadNotificationDetails,
 ): string {
-  const name = normalizeLeadField(details?.userName);
-  if (!name) return LEAD_ALERT_PUSH_TITLE;
-  return details?.isReminder ? `یادآوری لید: ${name}` : `لید جدید: ${name}`;
+  return LEAD_ALERT_PUSH_TITLE;
 }
 
 export function buildRealtimeLeadNotificationBody(
-  details?: RealtimeLeadNotificationDetails,
+  _details?: RealtimeLeadNotificationDetails,
 ): string {
-  const phone = normalizeLeadField(details?.phoneNumber);
-  if (!phone) return LEAD_ALERT_PUSH_BODY;
-  return `شماره تماس: ${phone} — جهت دریافت روی اعلان کلیک کنید.`;
+  return LEAD_ALERT_PUSH_BODY;
 }
 
 export function resolveRealtimeLeadNotificationTitle(
-  details?: RealtimeLeadNotificationDetails,
-  fallbackTitle?: string | null,
+  _details?: RealtimeLeadNotificationDetails,
+  _fallbackTitle?: string | null,
 ): string {
-  const built = buildRealtimeLeadNotificationTitle(details);
-  if (built !== LEAD_ALERT_PUSH_TITLE) return built;
-  const fallback = normalizeLeadField(fallbackTitle);
-  return fallback || built;
+  return LEAD_ALERT_PUSH_TITLE;
 }
 
 export function resolveRealtimeLeadNotificationBody(
-  details?: RealtimeLeadNotificationDetails,
-  fallbackBody?: string | null,
+  _details?: RealtimeLeadNotificationDetails,
+  _fallbackBody?: string | null,
 ): string {
-  const built = buildRealtimeLeadNotificationBody(details);
-  if (built !== LEAD_ALERT_PUSH_BODY) return built;
-  const fallback = normalizeLeadField(fallbackBody);
-  return fallback || built;
+  return LEAD_ALERT_PUSH_BODY;
 }
 
 export function normalizeLeadField(value?: string | null): string {

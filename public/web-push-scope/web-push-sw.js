@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-14-lead-notification-details";
+const SW_VERSION = "2026-07-15-generic-lead-notification";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 const REALTIME_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 500, 120, 500];
 
@@ -13,7 +13,7 @@ async function showRealtimeLeadNotification(title, body, baseOptions) {
     await self.registration.showNotification(title, {
       ...baseOptions,
       actions: [
-        { action: "pickup", title: "روی آن کلیک کنید." },
+        { action: "pickup", title: "ببین" },
         { action: "dismiss", title: "بستن" },
       ],
     });
@@ -81,15 +81,8 @@ self.addEventListener("push", (event) => {
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
     const userName = (data.userName || data.UserName || "").trim();
     const phoneNumber = (data.phoneNumber || data.PhoneNumber || "").trim();
-    const isReminder = data.isReminder === "true";
-    const builtTitle = userName
-      ? `${isReminder ? "یادآوری لید" : "لید جدید"}: ${userName}`
-      : "لید جدیدی دارید";
-    const builtBody = phoneNumber
-      ? `شماره تماس: ${phoneNumber} — جهت دریافت روی اعلان کلیک کنید.`
-      : "جهت دریافت روی آن کلیک کنید.";
-    const title = builtTitle !== "لید جدیدی دارید" ? builtTitle : payload.title || builtTitle;
-    const body = builtBody !== "جهت دریافت روی آن کلیک کنید." ? builtBody : payload.body || builtBody;
+    const title = "شماره جدید دارید";
+    const body = "";
     const baseOptions = {
       body,
       tag,
