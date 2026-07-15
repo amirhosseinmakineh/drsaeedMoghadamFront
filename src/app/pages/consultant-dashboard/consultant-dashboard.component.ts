@@ -715,14 +715,24 @@ interface ConsultantDashboardLink {
                               <b>{{ leadPhoneDisplay(lead) }}</b>
                             </span>
                           </a>
-                          <button
-                            class="secondary-action compact"
-                            type="button"
-                            [disabled]="isReportDisabled(lead)"
-                            (click)="openReportDialog(lead)"
-                          >
-                            ثبت گزارش
-                          </button>
+                          @if (isLeadReportEditable(lead)) {
+                            <button
+                              class="secondary-action compact"
+                              type="button"
+                              (click)="openEditReportDialog(lead)"
+                            >
+                              ویرایش گزارش
+                            </button>
+                          } @else {
+                            <button
+                              class="secondary-action compact"
+                              type="button"
+                              [disabled]="isReportDisabled(lead)"
+                              (click)="openReportDialog(lead)"
+                            >
+                              ثبت گزارش
+                            </button>
+                          }
                           <button
                             class="secondary-action compact"
                             type="button"
@@ -860,14 +870,24 @@ interface ConsultantDashboardLink {
                             <b>{{ leadPhone(lead) }}</b>
                           </span>
                         </a>
-                        <button
-                          class="secondary-action compact"
-                          type="button"
-                          [disabled]="isReportDisabled(lead)"
-                          (click)="openReportDialog(lead)"
-                        >
-                          ثبت گزارش
-                        </button>
+                        @if (isLeadReportEditable(lead)) {
+                          <button
+                            class="secondary-action compact"
+                            type="button"
+                            (click)="openEditReportDialog(lead)"
+                          >
+                            ویرایش گزارش
+                          </button>
+                        } @else {
+                          <button
+                            class="secondary-action compact"
+                            type="button"
+                            [disabled]="isReportDisabled(lead)"
+                            (click)="openReportDialog(lead)"
+                          >
+                            ثبت گزارش
+                          </button>
+                        }
                         <button
                           class="secondary-action compact"
                           type="button"
@@ -4527,6 +4547,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isLeadReportEditable(lead: ConsultantLead): boolean {
+    if (!this.leadId(lead)) return false;
     return this.isLeadReportSubmitted(lead);
   }
 
@@ -4646,6 +4667,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       state === LEAD_STATE.Contacted ||
       state === LEAD_STATE.Pending ||
       state === LEAD_STATE.Converted ||
+      state === LEAD_STATE.Expired ||
       state === LEAD_STATE.Rejected
     );
   }
@@ -4889,7 +4911,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportEditLoadSubscription = this.consultantApi
       .getLeads({
         profileId,
-        hasSubmittedReport: true,
         ...(this.reportEditStateFilter !== null
           ? { leadAssignmentState: this.reportEditStateFilter }
           : {}),

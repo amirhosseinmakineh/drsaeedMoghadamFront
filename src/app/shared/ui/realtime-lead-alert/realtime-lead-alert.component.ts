@@ -9,8 +9,7 @@ import {
 import { Subscription } from "rxjs";
 import {
   LEAD_ALERT_ACTION_LABEL,
-  buildRealtimeLeadNotificationBody,
-  buildRealtimeLeadNotificationTitle,
+  LEAD_ALERT_PUSH_TITLE,
 } from "../../../core/lead/lead-alert-copy";
 import {
   RealtimeLeadAlert,
@@ -36,8 +35,7 @@ import {
             </span>
 
             <p class="lead-alert-card__message">
-              <span class="lead-alert-card__title">{{ alertTitle(alert) }}</span>
-              <span class="lead-alert-card__body">{{ alertBody(alert) }}</span>
+              <span class="lead-alert-card__title">{{ leadAlertTitle }}</span>
               <button
                 type="button"
                 class="lead-alert-card__action"
@@ -184,6 +182,7 @@ import {
 })
 export class RealtimeLeadAlertComponent implements OnInit, OnDestroy {
   readonly leadAlertActionLabel = LEAD_ALERT_ACTION_LABEL;
+  readonly leadAlertTitle = LEAD_ALERT_PUSH_TITLE;
 
   alerts: readonly RealtimeLeadAlert[] = [];
   private subscription: Subscription | null = null;
@@ -203,20 +202,6 @@ export class RealtimeLeadAlertComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription?.unsubscribe();
-  }
-
-  alertTitle(alert: RealtimeLeadAlert): string {
-    return buildRealtimeLeadNotificationTitle({
-      userName: alert.userName,
-      phoneNumber: alert.phoneNumber,
-    });
-  }
-
-  alertBody(alert: RealtimeLeadAlert): string {
-    return buildRealtimeLeadNotificationBody({
-      userName: alert.userName,
-      phoneNumber: alert.phoneNumber,
-    });
   }
 
   pickup(leadId: number): void {
