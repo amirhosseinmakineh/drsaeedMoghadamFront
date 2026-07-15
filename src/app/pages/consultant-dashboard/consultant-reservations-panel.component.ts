@@ -22,6 +22,8 @@ import {
   attendanceScoreLabel,
   attendanceStatusPresentation,
   canConsultantConfirmDueReservation,
+  isAwaitingConsultantAttendanceConfirmation,
+  isPendingConsultantConfirmationNotYetDue,
   isSecretaryReviewCompleted,
   readAttendanceStatus,
 } from "../../core/reservation/reservation-attendance";
@@ -138,33 +140,46 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
                 }
               </dl>
 
+              @if (isPendingNotYetDue(reservation)) {
+                <p class="pending-hint">
+                  پس از رسیدن زمان رزرو، دکمه‌های تایید حضور فعال می‌شوند.
+                </p>
+              }
+
               @if (canConfirm(reservation)) {
-                <label>
-                  یادداشت (اختیاری)
-                  <textarea
-                    [(ngModel)]="notes[reservationId(reservation) || 0]"
-                    [ngModelOptions]="ngModelBlurOptions"
-                    [name]="'note' + reservationId(reservation)"
-                    rows="2"
-                  ></textarea>
-                </label>
-                <div class="dialog-actions">
-                  <button
-                    class="primary-action compact"
-                    type="button"
-                    [disabled]="savingId === reservationId(reservation)"
-                    (click)="confirm(reservation, true)"
-                  >
-                    بیمار آمد
-                  </button>
-                  <button
-                    class="secondary-action compact danger"
-                    type="button"
-                    [disabled]="savingId === reservationId(reservation)"
-                    (click)="confirm(reservation, false)"
-                  >
-                    بیمار نیامد
-                  </button>
+                <div class="confirmation-box">
+                  <strong>تایید حضور بیمار</strong>
+                  <p>
+                    لطفاً مشخص کنید بیمار در زمان رزرو حاضر شد یا خیر. پس از
+                    تایید، رزرو برای بررسی منشی ارسال می‌شود.
+                  </p>
+                  <label>
+                    یادداشت (اختیاری)
+                    <textarea
+                      [(ngModel)]="notes[reservationId(reservation) || 0]"
+                      [ngModelOptions]="ngModelBlurOptions"
+                      [name]="'note' + reservationId(reservation)"
+                      rows="2"
+                    ></textarea>
+                  </label>
+                  <div class="dialog-actions">
+                    <button
+                      class="primary-action compact"
+                      type="button"
+                      [disabled]="savingId === reservationId(reservation)"
+                      (click)="confirm(reservation, true)"
+                    >
+                      تایید حضور بیمار
+                    </button>
+                    <button
+                      class="secondary-action compact danger"
+                      type="button"
+                      [disabled]="savingId === reservationId(reservation)"
+                      (click)="confirm(reservation, false)"
+                    >
+                      تایید عدم حضور
+                    </button>
+                  </div>
                 </div>
               }
             </article>
@@ -410,6 +425,33 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
         background: color-mix(in srgb, var(--danger) 12%, var(--surface));
         color: #991b1b;
       }
+      .pending-hint {
+        margin: 0;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: color-mix(in srgb, #f59e0b 12%, var(--surface));
+        color: #92400e;
+        font-weight: 900;
+        font-size: 0.9rem;
+      }
+      .confirmation-box {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line));
+        border-radius: 18px;
+        background: color-mix(in srgb, var(--brand) 8%, var(--surface));
+      }
+      .confirmation-box strong {
+        font-size: 0.95rem;
+      }
+      .confirmation-box p {
+        margin: 0;
+        color: var(--muted);
+        font-weight: 850;
+        font-size: 0.88rem;
+        line-height: 1.7;
+      }
       .dialog-actions {
         display: flex;
         gap: 10px;
@@ -613,8 +655,8 @@ export class ConsultantReservationsPanelComponent
           this.showFeedback(
             response.message ||
               (patientAttended
-                ? "حضور بیمار ثبت شد"
-                : "عدم حضور بیمار ثبت شد"),
+                ? "حضور بیمار ثبت شد و برای بررسی منشی ارسال شد"
+                : "عدم حضور بیمار ثبت شد و برای بررسی منشی ارسال شد"),
             "success",
           );
           this.load();
@@ -700,8 +742,15 @@ export class ConsultantReservationsPanelComponent
   }
 
   canConfirm(reservation: ConsultantReservation): boolean {
-    if (this.activeTab !== "pending") return false;
+    if (this.activeTab === "pending") {
+      return isAwaitingConsultantAttendanceConfirmation(reservation);
+    }
+
     return canConsultantConfirmDueReservation(reservation);
+  }
+
+  isPendingNotYetDue(reservation: ConsultantReservation): boolean {
+    return isPendingConsultantConfirmationNotYetDue(reservation);
   }
 
   isCompletedTab(reservation: ConsultantReservation): boolean {
