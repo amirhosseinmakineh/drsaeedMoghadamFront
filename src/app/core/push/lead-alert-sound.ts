@@ -49,7 +49,7 @@ function playAttentionChime(): void {
     }
 
     const masterGain = context.createGain();
-    masterGain.gain.value = 0.72;
+    masterGain.gain.value = 1;
     masterGain.connect(context.destination);
 
     const melody = [
@@ -70,7 +70,7 @@ function playAttentionChime(): void {
         void context.close();
         audioContext = null;
       }
-    }, 1600);
+    }, 2800);
   } catch {
     // Audio is optional.
   }
@@ -88,7 +88,7 @@ function playChimeNote(
   noteGain.connect(destination);
 
   noteGain.gain.setValueAtTime(0.0001, startTime);
-  noteGain.gain.exponentialRampToValueAtTime(0.58, startTime + 0.01);
+  noteGain.gain.exponentialRampToValueAtTime(0.9, startTime + 0.01);
   noteGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
   const fundamental = context.createOscillator();
@@ -100,7 +100,7 @@ function playChimeNote(
   harmonic.type = "sawtooth";
   harmonic.frequency.value = frequency * 1.5;
   const harmonicGain = context.createGain();
-  harmonicGain.gain.value = 0.22;
+  harmonicGain.gain.value = 0.38;
   harmonic.connect(harmonicGain);
   harmonicGain.connect(noteGain);
 

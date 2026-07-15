@@ -307,14 +307,6 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
                 type="date"
             /></label>
           </div>
-          <label
-            >آدرس<textarea
-              [(ngModel)]="profileForm.address"
-              [ngModelOptions]="ngModelBlurOptions"
-              name="resPatientAddress"
-              rows="3"
-            ></textarea>
-          </label>
           <div class="two-col">
             <label
               >جنسیت<select
@@ -944,7 +936,6 @@ export class SecretaryReservationsComponent
       avatarImageName: null,
       gender: Number(this.profileForm.gender),
       birthDate: new Date(this.profileForm.birthDate).toISOString(),
-      address: this.profileForm.address.trim(),
       emergencyPhoneNumber:
         this.profileForm.emergencyPhoneNumber.trim() || null,
       insuranceName: this.profileForm.insuranceName.trim() || null,
@@ -981,7 +972,6 @@ export class SecretaryReservationsComponent
       return "شماره موبایل بیمار معتبر نیست";
     if (this.profileForm.passwordHash.length < 6)
       return "رمز عبور باید حداقل ۶ کاراکتر باشد";
-    if (!this.profileForm.address.trim()) return "آدرس بیمار الزامی است";
     if (!this.profileForm.birthDate) return "تاریخ تولد بیمار الزامی است";
     return null;
   }
@@ -1116,7 +1106,6 @@ export class SecretaryReservationsComponent
       avatarImageName: null,
       gender: 1,
       birthDate: "1995-01-01",
-      address: "",
       emergencyPhoneNumber: "",
       insuranceName: "",
       notes: "",

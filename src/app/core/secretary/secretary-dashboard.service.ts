@@ -104,7 +104,6 @@ export interface CompletePatientProfileRequest {
   avatarImageName?: string | null;
   gender: number;
   birthDate: string;
-  address: string;
   emergencyPhoneNumber?: string | null;
   insuranceName?: string | null;
   notes?: string | null;
