@@ -1,0 +1,7 @@
+<section>
+  <h2>{{ title }}</h2>
+  <p *ngIf="description">{{ description }}</p>
+  <button *ngIf="actionLabel" type="button" (click)="actionClick.emit()">
+    {{ actionLabel }}
+  </button>
+</section>

@@ -22,43 +22,7 @@ import {
   selector: "app-admin-attendance-table",
   standalone: true,
   imports: [CommonModule, TableComponent],
-  template: `
-    <section class="admin-panel">
-      <header class="panel-heading">
-        <div>
-          <span>حضور و غیاب</span>
-          <h2>{{ title }}</h2>
-        </div>
-        <button
-          class="secondary-action compact"
-          type="button"
-          [disabled]="loading"
-          (click)="load()"
-        >
-          بروزرسانی
-        </button>
-      </header>
-
-      @if (feedback) {
-        <p class="feedback error">{{ feedback }}</p>
-      }
-
-      <app-base-table
-        [columns]="columns"
-        [data]="items"
-        [showAdd]="false"
-        [showEdit]="false"
-        [showDelete]="false"
-        [loading]="loading"
-        [currentPage]="pageNumber"
-        [pageSize]="pageSize"
-        [totalCount]="totalCount"
-        [totalPages]="totalPages"
-        emptyText="رکورد حضوری برای این مشاور ثبت نشده است"
-        (pageChange)="changePage($event)"
-      ></app-base-table>
-    </section>
-  `,
+  templateUrl: "./admin-attendance-table.component.html",
   styles: [
     `
       .admin-panel {

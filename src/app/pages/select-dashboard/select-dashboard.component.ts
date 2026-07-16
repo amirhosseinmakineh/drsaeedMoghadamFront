@@ -20,40 +20,7 @@ interface DashboardOption {
   standalone: true,
   imports: [CommonModule, FaIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <section class="select-dashboard-page">
-      <div class="select-dashboard-card">
-        <span class="select-badge">انتخاب داشبورد</span>
-        <h1>به کدام داشبورد می‌خواهید وارد شوید؟</h1>
-        <p>
-          حساب شما چند نقش دارد. یکی از داشبوردهای زیر را انتخاب کنید.
-        </p>
-
-        <div class="dashboard-options">
-          @for (option of dashboardOptions(); track option.role) {
-            <button
-              class="dashboard-option"
-              type="button"
-              (click)="selectDashboard(option.role)"
-            >
-              <span class="option-icon">
-                <app-fa-icon [name]="option.icon"></app-fa-icon>
-              </span>
-              <span class="option-copy">
-                <strong>{{ option.title }}</strong>
-                <small>{{ option.description }}</small>
-              </span>
-              <span class="option-arrow" aria-hidden="true">←</span>
-            </button>
-          }
-        </div>
-
-        <button class="logout-link" type="button" (click)="logout()">
-          خروج از حساب کاربری
-        </button>
-      </div>
-    </section>
-  `,
+  templateUrl: "./select-dashboard.component.html",
   styles: [
     `
       .select-dashboard-page {

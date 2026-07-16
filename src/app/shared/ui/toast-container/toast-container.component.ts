@@ -12,44 +12,7 @@ const DEFAULT_TOAST_AUTO_DISMISS_MS = 2000;
   selector: "app-toast-container",
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="toast-stack" aria-live="polite" aria-atomic="false">
-      @for (toast of toasts; track toast.id) {
-        <div
-          class="toast"
-          [class.success]="toast.type === 'success'"
-          [class.error]="toast.type === 'error'"
-          [class.info]="toast.type === 'info'"
-          [class.has-action]="toast.action"
-          role="status"
-        >
-          <div class="toast-content">
-            <p class="toast-message">
-              {{ toast.message }}
-              @if (toast.action) {
-                <button
-                  class="toast-action"
-                  type="button"
-                  (click)="runAction(toast)"
-                >
-                  {{ toast.action.label }}
-                </button>
-              }
-            </p>
-          </div>
-          <button
-            class="toast-dismiss"
-            type="button"
-            aria-label="بستن اعلان"
-            title="بستن"
-            (click)="dismiss(toast.id)"
-          >
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: "./toast-container.component.html",
   styles: [
     `
       .toast-stack {

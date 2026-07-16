@@ -1,0 +1,161 @@
+<app-base-dialog
+  [open]="open"
+  [language]="language"
+  [showFooter]="false"
+  [title]="dialogTitle()[language]"
+  [subtitle]="dialogSubtitle()[language]"
+  (closed)="closed.emit()"
+>
+  @if (mode() !== "forgot") {
+    <div class="tabs">
+      <button
+        type="button"
+        [class.active]="mode() === 'login'"
+        [disabled]="loading()"
+        (click)="switchMode('login')"
+      >
+        {{ copy.login[language] }}
+      </button>
+      <button
+        type="button"
+        [class.active]="mode() === 'register'"
+        [disabled]="loading()"
+        (click)="switchMode('register')"
+      >
+        {{ copy.register[language] }}
+      </button>
+    </div>
+  }
+
+  @if (feedback(); as currentFeedback) {
+    <p
+      class="feedback"
+      [class.error]="currentFeedback.type === 'error'"
+      [class.success]="currentFeedback.type === 'success'"
+    >
+      {{ currentFeedback.message }}
+    </p>
+  }
+
+  <form class="auth-form" (ngSubmit)="submit()">
+    @if (mode() === "register") {
+      <div class="two-col">
+        <label>
+          {{ copy.firstName[language] }}
+          <input
+            [(ngModel)]="form.firstName"
+            [ngModelOptions]="ngModelBlurOptions"
+            name="authFirstName"
+            autocomplete="given-name"
+            maxlength="100"
+          />
+        </label>
+        <label>
+          {{ copy.lastName[language] }}
+          <input
+            [(ngModel)]="form.lastName"
+            [ngModelOptions]="ngModelBlurOptions"
+            name="authLastName"
+            autocomplete="family-name"
+            maxlength="100"
+          />
+        </label>
+      </div>
+    }
+
+    <label>
+      {{ copy.phone[language] }}
+      <input
+        [(ngModel)]="form.phone"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="authPhone"
+        inputmode="tel"
+        autocomplete="tel"
+        placeholder="09123456789"
+      />
+    </label>
+
+    <label>
+      {{
+        mode() === "forgot"
+          ? copy.newPassword[language]
+          : copy.password[language]
+      }}
+      <input
+        [(ngModel)]="form.password"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="authPassword"
+        type="password"
+        minlength="8"
+        maxlength="100"
+        [autocomplete]="
+          mode() === 'login'
+            ? 'current-password'
+            : 'new-password'
+        "
+      />
+    </label>
+
+    @if (mode() === "forgot") {
+      <label>
+        {{ copy.confirmPassword[language] }}
+        <input
+          [(ngModel)]="form.confirmPassword"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="authConfirmPassword"
+          type="password"
+          minlength="8"
+          maxlength="100"
+          autocomplete="new-password"
+        />
+      </label>
+    }
+
+    @if (mode() === "register") {
+      <div class="two-col">
+        <label>
+          {{ copy.gender[language] }}
+          <select
+            [(ngModel)]="form.gender"
+            [ngModelOptions]="ngModelBlurOptions"
+            name="authGender"
+          >
+            <option [ngValue]="1">{{ copy.male[language] }}</option>
+            <option [ngValue]="2">{{ copy.female[language] }}</option>
+          </select>
+        </label>
+      </div>
+    }
+
+    @if (mode() === "login") {
+      <button
+        class="link-button"
+        type="button"
+        [disabled]="loading()"
+        (click)="switchMode('forgot')"
+      >
+        {{ copy.forgotPassword[language] }}
+      </button>
+    }
+
+    <button class="primary full" type="submit" [disabled]="loading()">
+      <app-fa-icon name="user"></app-fa-icon>
+      {{
+        loading()
+          ? copy.loading[language]
+          : submitLabel()[language]
+      }}
+    </button>
+
+    @if (mode() === "forgot") {
+      <button
+        class="link-button centered"
+        type="button"
+        [disabled]="loading()"
+        (click)="switchMode('login')"
+      >
+        {{ copy.backToLogin[language] }}
+      </button>
+    }
+  </form>
+</app-base-dialog>

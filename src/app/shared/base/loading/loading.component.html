@@ -1,0 +1,4 @@
+<section>
+  <div *ngIf="loading" role="status" aria-live="polite">{{ label }}</div>
+  <ng-content *ngIf="!loading"></ng-content>
+</section>

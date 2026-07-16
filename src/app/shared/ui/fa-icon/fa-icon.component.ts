@@ -59,11 +59,7 @@ const iconPaths: Record<string, string> = {
 @Component({
   selector: "app-fa-icon",
   standalone: true,
-  template: `
-    <svg class="fa-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path [attr.d]="iconPath"></path>
-    </svg>
-  `,
+  templateUrl: "./fa-icon.component.html",
   styles: [
     `
       .fa-icon {

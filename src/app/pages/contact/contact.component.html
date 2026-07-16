@@ -1,0 +1,126 @@
+<section class="page-section contact-hero">
+  <div class="section-heading">
+    <h1>
+      {{
+        language() === "fa"
+          ? "برای مشاوره انسانی، شماره خود را بگذارید یا مستقیم تماس بگیرید"
+          : "For human guidance, leave your number or call directly"
+      }}
+    </h1>
+    <p>
+      {{
+        language() === "fa"
+          ? "برای راهنمایی درباره کامپوزیت ونیر، لمینت سرامیکی یا بلیچینگ دندان، شماره خود را ثبت کنید تا مسیر مناسب مراجعه با شما هماهنگ شود."
+          : "For guidance on composite veneers, porcelain veneers or dental bleaching, leave your number so the suitable visit path can be coordinated."
+      }}
+    </p>
+  </div>
+  <div class="contact-actions">
+    <a class="primary-btn" href="#contact-request"
+      ><app-fa-icon name="phone"></app-fa-icon
+      >{{ language() === "fa" ? "ثبت درخواست تماس" : "Request a call" }}</a
+    >
+    <button class="secondary-btn" type="button" (click)="openAuth()">
+      <app-fa-icon name="user"></app-fa-icon
+      >{{ language() === "fa" ? "ورود / عضویت" : "Sign in / Join" }}
+    </button>
+  </div>
+</section>
+
+<section class="page-section contact-layout">
+  <aside class="info-panel">
+    <article *ngFor="let item of infoItems">
+      <span class="icon-bubble"
+        ><app-fa-icon [name]="item.icon"></app-fa-icon
+      ></span>
+      <div>
+        <h3>{{ item.title[language()] }}</h3>
+        <p>{{ item.text[language()] }}</p>
+      </div>
+    </article>
+    <div class="map-card">
+      <app-fa-icon name="location"></app-fa-icon>
+      <strong>{{
+        language() === "fa" ? "هماهنگی مسیر مراجعه" : "Visit coordination"
+      }}</strong>
+      <span>{{
+        language() === "fa"
+          ? "پس از ثبت درخواست، اطلاعات لازم برای مراجعه و راهنمای مسیر توسط کلینیک اعلام می‌شود."
+          : "After submitting a request, the clinic shares visit details and directions."
+      }}</span>
+    </div>
+  </aside>
+
+  <form id="contact-request" class="contact-form" (ngSubmit)="submit()">
+    <h2>
+      {{
+        language() === "fa"
+          ? "فرم درخواست تماس مشاور"
+          : "Consultant call request form"
+      }}
+    </h2>
+    <label>
+      {{ language() === "fa" ? "نام و نام خانوادگی" : "Full name" }}
+      <input
+        [(ngModel)]="form.fullName"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="contactFullName"
+        required
+        autocomplete="name"
+      />
+    </label>
+    <label>
+      {{ language() === "fa" ? "شماره موبایل" : "Mobile number" }}
+      <input
+        [(ngModel)]="form.phone"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="contactPhone"
+        required
+        inputmode="tel"
+        autocomplete="tel"
+      />
+    </label>
+    <label>
+      {{ language() === "fa" ? "درمان مورد نظر" : "Service of interest" }}
+      <select
+        [(ngModel)]="form.serviceId"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="contactService"
+      >
+        <option *ngFor="let service of services" [value]="service.id">
+          {{ pickText(service.title, language()) }}
+        </option>
+      </select>
+    </label>
+    <app-base-datepicker
+      [language]="language()"
+      [selectedDate]="form.preferredDate"
+      (dateChange)="form.preferredDate = $event"
+    ></app-base-datepicker>
+    <label>
+      {{ language() === "fa" ? "پیام کوتاه" : "Short message" }}
+      <textarea
+        [(ngModel)]="form.message"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="contactMessage"
+        rows="4"
+      ></textarea>
+    </label>
+    <button class="primary-btn" type="submit">
+      <app-fa-icon name="phone"></app-fa-icon
+      >{{
+        language() === "fa" ? "ثبت درخواست تماس" : "Submit call request"
+      }}
+    </button>
+    <p *ngIf="feedback()" class="success-message" [class.error]="feedbackType() === 'error'">
+      {{ feedback() }}
+    </p>
+    <p *ngIf="sent()" class="success-message">
+      {{
+        language() === "fa"
+          ? "درخواست شما ثبت شد. مشاور کلینیک برای راهنمایی با شما تماس می‌گیرد."
+          : "Your request has been recorded. A clinic consultant will call you for guidance."
+      }}
+    </p>
+  </form>
+</section>
