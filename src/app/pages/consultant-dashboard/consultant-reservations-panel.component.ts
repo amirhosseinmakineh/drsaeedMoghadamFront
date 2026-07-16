@@ -17,8 +17,10 @@ import {
   ConsultantDashboardService,
   ConsultantReservation,
   ConfirmAttendanceRequest,
+  UpdateReservationRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import {
+  AttendanceConfirmationStatus,
   attendanceScoreLabel,
   attendanceStatusPresentation,
   canConsultantConfirmDueReservation,
@@ -30,13 +32,15 @@ import {
 import { ToastService } from "../../core/toast/toast.service";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
+import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
+import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 
 export type ConsultantReservationTab = "pending" | "all" | "completed";
 
 @Component({
   selector: "app-consultant-reservations-panel",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BaseDialogComponent, BaseDatepickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./consultant-reservations-panel.component.html",
   styles: [
@@ -286,6 +290,25 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
         gap: 10px;
         flex-wrap: wrap;
       }
+      .edit-dialog-form {
+        display: grid;
+        gap: 12px;
+      }
+      .edit-dialog-form input,
+      .edit-dialog-form textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 11px 12px;
+        background: var(--surface-muted);
+        color: var(--text);
+        font: inherit;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
       .pagination {
         display: flex;
         align-items: center;
@@ -340,6 +363,23 @@ export class ConsultantReservationsPanelComponent
   pageSize = 20;
   totalPages = 1;
   pendingCount = 0;
+  editDialogOpen = false;
+  editSaving = false;
+  editingReservation: ConsultantReservation | null = null;
+  editForm = {
+    reservationDate: null as Date | null,
+    reservationTime: "",
+    patientCity: "",
+    patientRegion: "",
+    attendanceProbabilityPercent: 80,
+    attendancePrediction: "",
+    secondaryPhoneNumber: "",
+    description: "",
+  };
+  readonly reservationDatePickerLabel = {
+    fa: "تاریخ رزرو",
+    en: "Reservation date",
+  };
 
   private loadRequestId = 0;
   private pollId: ReturnType<typeof setInterval> | null = null;
@@ -627,6 +667,122 @@ export class ConsultantReservationsPanelComponent
           timeStyle: "short",
         }).format(date)
       : value;
+  }
+
+  canEdit(reservation: ConsultantReservation): boolean {
+    const status = readAttendanceStatus(
+      reservation,
+      "attendanceConfirmationStatus",
+      "AttendanceConfirmationStatus",
+    );
+    return (
+      status !== AttendanceConfirmationStatus.SecretaryApproved &&
+      status !== AttendanceConfirmationStatus.SecretaryRejected &&
+      !(reservation.isCanceled ?? reservation.IsCanceled)
+    );
+  }
+
+  openEditDialog(reservation: ConsultantReservation): void {
+    const reservationAt = this.reservationAt(reservation);
+    const date = reservationAt ? new Date(reservationAt) : new Date();
+    this.editingReservation = reservation;
+    this.editForm = {
+      reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
+      reservationTime: this.toTimeValue(date),
+      patientCity: this.patientCity(reservation) === "شهر ثبت نشده"
+        ? ""
+        : this.patientCity(reservation),
+      patientRegion: reservation.patientRegion || reservation.PatientRegion || "",
+      attendanceProbabilityPercent: Number(this.probability(reservation)) || 80,
+      attendancePrediction:
+        reservation.attendancePrediction ||
+        reservation.AttendancePrediction ||
+        "بیمار گفت در تاریخ و ساعت رزرو شده در مطب حاضر می‌شود.",
+      secondaryPhoneNumber:
+        reservation.secondaryPhoneNumber ||
+        reservation.SecondaryPhoneNumber ||
+        "",
+      description: reservation.description || reservation.Description || "",
+    };
+    this.editDialogOpen = true;
+    this.markDirty();
+  }
+
+  closeEditDialog(): void {
+    this.editDialogOpen = false;
+    this.editSaving = false;
+    this.editingReservation = null;
+    this.markDirty();
+  }
+
+  setEditReservationDate(date: Date): void {
+    this.editForm.reservationDate = date;
+  }
+
+  submitEdit(): void {
+    const reservationId = this.editingReservation
+      ? this.reservationId(this.editingReservation)
+      : null;
+    if (!this.profileId || !reservationId) return;
+
+    const reservationAt = this.combineDateAndTime(
+      this.editForm.reservationDate,
+      this.editForm.reservationTime,
+    );
+    if (!reservationAt) {
+      this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
+      return;
+    }
+
+    const payload: UpdateReservationRequest = {
+      reservationId,
+      consultantProfileId: this.profileId,
+      reservationAt: reservationAt.toISOString(),
+      patientCity: this.editForm.patientCity.trim(),
+      patientRegion: this.editForm.patientRegion.trim(),
+      attendanceProbabilityPercent: this.editForm.attendanceProbabilityPercent,
+      attendancePrediction: this.editForm.attendancePrediction.trim(),
+      secondaryPhoneNumber: this.editForm.secondaryPhoneNumber.trim() || null,
+      description: this.editForm.description.trim() || null,
+    };
+
+    this.editSaving = true;
+    this.consultantApi
+      .updateReservation(payload)
+      .pipe(finalize(() => (this.editSaving = false)))
+      .subscribe({
+        next: (response) => {
+          this.showFeedback(response.message || "رزرو با موفقیت ویرایش شد", "success");
+          this.closeEditDialog();
+          this.load();
+        },
+        error: (error) =>
+          this.showFeedback(this.errorMessage(error), "error"),
+      });
+  }
+
+  minimumReservationDate(): Date {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  private combineDateAndTime(date: Date | null, time: string): Date | null {
+    if (!date || !time) return null;
+    const [hours, minutes] = time.split(":").map((part) => Number(part));
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+    return new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      hours,
+      minutes,
+      0,
+      0,
+    );
+  }
+
+  private toTimeValue(date: Date): string {
+    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   }
 
   private startPolling(): void {

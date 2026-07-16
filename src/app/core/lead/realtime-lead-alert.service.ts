@@ -41,7 +41,7 @@ interface IncomingLeadDetails extends RealtimeLeadNotificationDetails {
 }
 
 const DISMISSED_LEAD_COOLDOWN_MS = 10_000;
-const REMINDER_INTERVAL_MS = 10_000;
+const REMINDER_INTERVAL_MS = 6_000;
 
 @Injectable({ providedIn: "root" })
 export class RealtimeLeadAlertService implements OnDestroy {

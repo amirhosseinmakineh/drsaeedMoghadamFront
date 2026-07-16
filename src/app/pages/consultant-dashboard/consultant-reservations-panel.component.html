@@ -99,12 +99,6 @@
             }
           </dl>
 
-          @if (isPendingNotYetDue(reservation)) {
-            <p class="pending-hint">
-              پس از رسیدن زمان رزرو، دکمه‌های تایید حضور فعال می‌شوند.
-            </p>
-          }
-
           @if (canConfirm(reservation)) {
             <div class="confirmation-box">
               <strong>تایید حضور بیمار</strong>
@@ -141,6 +135,24 @@
               </div>
             </div>
           }
+
+          @if (isPendingNotYetDue(reservation)) {
+            <p class="pending-hint">
+              پس از رسیدن زمان رزرو، دکمه‌های تایید حضور فعال می‌شوند.
+            </p>
+          }
+
+          @if (canEdit(reservation)) {
+            <div class="dialog-actions">
+              <button
+                class="secondary-action compact"
+                type="button"
+                (click)="openEditDialog(reservation)"
+              >
+                ویرایش رزرو
+              </button>
+            </div>
+          }
         </article>
       }
     </div>
@@ -168,3 +180,105 @@
     }
   }
 </section>
+
+<app-base-dialog
+  [open]="editDialogOpen"
+  [showFooter]="false"
+  title="ویرایش رزرو"
+  [closable]="!editSaving"
+  (closed)="closeEditDialog()"
+>
+  <form class="edit-dialog-form" (ngSubmit)="submitEdit()">
+    <label>
+      تاریخ رزرو
+      <app-base-datepicker
+        [label]="reservationDatePickerLabel"
+        [selectedDate]="editForm.reservationDate ?? undefined"
+        [minDate]="minimumReservationDate()"
+        [allowToday]="true"
+        (dateChange)="setEditReservationDate($event)"
+      ></app-base-datepicker>
+    </label>
+    <label>
+      ساعت رزرو
+      <input
+        [(ngModel)]="editForm.reservationTime"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="editReservationTime"
+        type="time"
+      />
+    </label>
+    <div class="two-col">
+      <label>
+        شهر بیمار
+        <input
+          [(ngModel)]="editForm.patientCity"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="editPatientCity"
+          maxlength="80"
+        />
+      </label>
+      <label>
+        منطقه بیمار
+        <input
+          [(ngModel)]="editForm.patientRegion"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="editPatientRegion"
+          maxlength="80"
+        />
+      </label>
+    </div>
+    <label>
+      درصد احتمال حضور
+      <input
+        [(ngModel)]="editForm.attendanceProbabilityPercent"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="editAttendanceProbability"
+        type="number"
+        min="0"
+        max="100"
+      />
+    </label>
+    <label>
+      پیش‌بینی حضور
+      <textarea
+        [(ngModel)]="editForm.attendancePrediction"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="editAttendancePrediction"
+        rows="2"
+      ></textarea>
+    </label>
+    <label>
+      شماره تماس دوم
+      <input
+        [(ngModel)]="editForm.secondaryPhoneNumber"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="editSecondaryPhone"
+        inputmode="tel"
+        maxlength="11"
+      />
+    </label>
+    <label>
+      توضیحات
+      <textarea
+        [(ngModel)]="editForm.description"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="editDescription"
+        rows="2"
+      ></textarea>
+    </label>
+    <div class="dialog-actions">
+      <button
+        class="secondary-action compact"
+        type="button"
+        [disabled]="editSaving"
+        (click)="closeEditDialog()"
+      >
+        انصراف
+      </button>
+      <button class="primary-action compact" type="submit" [disabled]="editSaving">
+        {{ editSaving ? "در حال ذخیره..." : "ذخیره ویرایش" }}
+      </button>
+    </div>
+  </form>
+</app-base-dialog>

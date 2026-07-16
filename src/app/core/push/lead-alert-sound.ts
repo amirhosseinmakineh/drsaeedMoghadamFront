@@ -1,11 +1,11 @@
 import { REALTIME_LEAD_VIBRATE_PATTERN } from "./lead-alert.constants";
 
-const CHIME_LOOP_INTERVAL_MS = 2500;
+const REMINDER_SOUND_INTERVAL_MS = 6000;
 const CHIME_ONE_SHOT_CLOSE_MS = 2800;
 
 let audioContext: AudioContext | null = null;
-let loopingLeadIds = new Set<number>();
-let loopInterval: ReturnType<typeof setInterval> | null = null;
+const loopingLeadIds = new Set<number>();
+const leadSoundTimers = new Map<number, ReturnType<typeof setInterval>>();
 let closeContextTimer: ReturnType<typeof setTimeout> | null = null;
 let activeOscillators: OscillatorNode[] = [];
 
@@ -33,47 +33,46 @@ export function playRealtimeLeadAlertSound(): void {
   vibrateRealtimeLeadAlert();
 }
 
-/** Keep alerting until this lead is picked up by someone. */
+/** Remind every 6 seconds until this lead is picked up by someone. */
 export function startRealtimeLeadAlertSoundLoop(leadId: number): void {
   if (typeof window === "undefined" || !leadId) return;
+  if (leadSoundTimers.has(leadId)) return;
 
-  const wasEmpty = loopingLeadIds.size === 0;
+  const playReminder = (): void => {
+    if (!loopingLeadIds.has(leadId)) return;
+    playAttentionChime({ closeContextAfterPlayback: false });
+    vibrateRealtimeLeadAlert();
+  };
+
   loopingLeadIds.add(leadId);
-  if (!wasEmpty) return;
-
-  playAttentionChime({ closeContextAfterPlayback: false });
-  vibrateRealtimeLeadAlert();
-  ensureLoopInterval();
+  playReminder();
+  leadSoundTimers.set(
+    leadId,
+    window.setInterval(playReminder, REMINDER_SOUND_INTERVAL_MS),
+  );
 }
 
 export function stopRealtimeLeadAlertSoundLoop(leadId: number): void {
   if (!leadId) return;
 
   loopingLeadIds.delete(leadId);
+
+  const timer = leadSoundTimers.get(leadId);
+  if (timer) {
+    clearInterval(timer);
+    leadSoundTimers.delete(leadId);
+  }
+
   if (loopingLeadIds.size === 0) {
     stopSoundLoop();
   }
 }
 
-function ensureLoopInterval(): void {
-  if (loopInterval) return;
-
-  loopInterval = window.setInterval(() => {
-    if (loopingLeadIds.size === 0) {
-      stopSoundLoop();
-      return;
-    }
-
-    playAttentionChime({ closeContextAfterPlayback: false });
-    vibrateRealtimeLeadAlert();
-  }, CHIME_LOOP_INTERVAL_MS);
-}
-
 function stopSoundLoop(): void {
-  if (loopInterval) {
-    clearInterval(loopInterval);
-    loopInterval = null;
+  for (const timer of leadSoundTimers.values()) {
+    clearInterval(timer);
   }
+  leadSoundTimers.clear();
 
   if (closeContextTimer) {
     clearTimeout(closeContextTimer);

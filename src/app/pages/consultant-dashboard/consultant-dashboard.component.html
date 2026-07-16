@@ -139,6 +139,10 @@
             <span><app-fa-icon name="doctor"></app-fa-icon></span>
             <strong>بیماران من</strong>
           </button>
+          <button type="button" (click)="setSection('patient-profiles')">
+            <span><app-fa-icon name="clipboard"></app-fa-icon></span>
+            <strong>پرونده‌های بیمار</strong>
+          </button>
           @if (isProfileReady()) {
             <button type="button" (click)="setSection('reservations')">
               <span><app-fa-icon name="calendar"></app-fa-icon></span>
@@ -475,6 +479,37 @@
 
             <form class="lead-filters" (ngSubmit)="applyLeadFilters()">
               <label>
+                از تاریخ
+                <app-base-datepicker
+                  [(ngModel)]="leadFromDate"
+                  [ngModelOptions]="ngModelBlurOptions"
+                  name="consultantLeadFromDate"
+                  [label]="{ fa: 'از تاریخ', en: 'From date' }"
+                ></app-base-datepicker>
+              </label>
+              <label>
+                تا تاریخ
+                <app-base-datepicker
+                  [(ngModel)]="leadToDate"
+                  [ngModelOptions]="ngModelBlurOptions"
+                  name="consultantLeadToDate"
+                  [label]="{ fa: 'تا تاریخ', en: 'To date' }"
+                ></app-base-datepicker>
+              </label>
+              <label>
+                نوع فعالیت
+                <select
+                  [(ngModel)]="leadActivityFilter"
+                  [ngModelOptions]="ngModelBlurOptions"
+                  name="consultantLeadActivity"
+                >
+                  <option [ngValue]="null">همه فعالیت‌ها</option>
+                  <option [ngValue]="1">زنگ زده</option>
+                  <option [ngValue]="2">گزارش زده</option>
+                  <option [ngValue]="3">رزرو زده</option>
+                </select>
+              </label>
+              <label>
                 وضعیت
                 <select
                   [(ngModel)]="leadStateFilter"
@@ -779,6 +814,128 @@
                   patientLeadsLoading
                 "
                 (click)="changePatientPage(patientPageNumber + 1)"
+              >
+                بعدی
+              </button>
+            </nav>
+          }
+        </section>
+      }
+
+      @if (activeSection === "patient-profiles" && isProfileReady()) {
+        <section class="lead-panel">
+          <header class="panel-heading">
+            <div>
+              <span>پرونده‌های بیمار</span>
+              <h2>بیمارانی که برایشان پرونده تشکیل داده‌اید</h2>
+            </div>
+            <button
+              class="secondary-action compact"
+              type="button"
+              [disabled]="patientProfilesLoading"
+              (click)="loadPatientProfiles()"
+            >
+              بروزرسانی
+            </button>
+          </header>
+
+          <form
+            class="lead-filters patient-filters"
+            (ngSubmit)="applyPatientProfileFilters()"
+          >
+            <label>
+              از تاریخ
+              <app-base-datepicker
+                [(ngModel)]="patientProfileFromDate"
+                [ngModelOptions]="ngModelBlurOptions"
+                name="patientProfileFromDate"
+                [label]="{ fa: 'از تاریخ', en: 'From date' }"
+              ></app-base-datepicker>
+            </label>
+            <label>
+              تا تاریخ
+              <app-base-datepicker
+                [(ngModel)]="patientProfileToDate"
+                [ngModelOptions]="ngModelBlurOptions"
+                name="patientProfileToDate"
+                [label]="{ fa: 'تا تاریخ', en: 'To date' }"
+              ></app-base-datepicker>
+            </label>
+            <button
+              class="primary-action compact"
+              type="submit"
+              [disabled]="patientProfilesLoading"
+            >
+              {{ patientProfilesLoading ? "در حال اعمال..." : "اعمال" }}
+            </button>
+          </form>
+
+          @if (patientProfilesLoading) {
+            <div class="loading-state" role="status" aria-live="polite">
+              <span class="loading-spinner" aria-hidden="true"></span>
+              <p class="loading-copy">در حال دریافت پرونده‌ها...</p>
+            </div>
+          } @else if (!patientProfiles.length) {
+            <p class="empty-copy">پرونده‌ای برای نمایش وجود ندارد.</p>
+          } @else {
+            <div class="lead-list">
+              @for (profile of patientProfiles; track profile.patientProfileId || profile.PatientProfileId) {
+                <article class="lead-card">
+                  <header>
+                    <div>
+                      <span>پرونده بیمار</span>
+                      <h3>{{ patientProfileName(profile) }}</h3>
+                    </div>
+                  </header>
+                  <dl class="profile-meta">
+                    <div>
+                      <dt>موبایل</dt>
+                      <dd>{{ patientProfilePhone(profile) }}</dd>
+                    </div>
+                    <div>
+                      <dt>تاریخ تشکیل پرونده</dt>
+                      <dd>{{ formatDateTime(patientProfileCreatedAt(profile)) }}</dd>
+                    </div>
+                    <div>
+                      <dt>زمان رزرو</dt>
+                      <dd>{{ formatDateTime(patientProfileReservationAt(profile)) }}</dd>
+                    </div>
+                    <div>
+                      <dt>شهر</dt>
+                      <dd>{{ profile.patientCity || profile.PatientCity || "-" }}</dd>
+                    </div>
+                    <div>
+                      <dt>منطقه</dt>
+                      <dd>{{ profile.patientRegion || profile.PatientRegion || "-" }}</dd>
+                    </div>
+                    <div>
+                      <dt>بیمه</dt>
+                      <dd>{{ profile.insuranceName || profile.InsuranceName || "-" }}</dd>
+                    </div>
+                  </dl>
+                </article>
+              }
+            </div>
+
+            <nav class="pager" aria-label="صفحه بندی پرونده‌های بیمار">
+              <button
+                type="button"
+                [disabled]="patientProfilePageNumber <= 1 || patientProfilesLoading"
+                (click)="changePatientProfilePage(patientProfilePageNumber - 1)"
+              >
+                قبلی
+              </button>
+              <span
+                >صفحه {{ patientProfilePageNumber }} از
+                {{ patientProfileTotalPages }}</span
+              >
+              <button
+                type="button"
+                [disabled]="
+                  patientProfilePageNumber >= patientProfileTotalPages ||
+                  patientProfilesLoading
+                "
+                (click)="changePatientProfilePage(patientProfilePageNumber + 1)"
               >
                 بعدی
               </button>
