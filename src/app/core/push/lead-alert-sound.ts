@@ -1,6 +1,13 @@
 import { REALTIME_LEAD_VIBRATE_PATTERN } from "./lead-alert.constants";
 
+const CHIME_LOOP_INTERVAL_MS = 2500;
+const CHIME_ONE_SHOT_CLOSE_MS = 2800;
+
 let audioContext: AudioContext | null = null;
+let loopingLeadIds = new Set<number>();
+let loopInterval: ReturnType<typeof setInterval> | null = null;
+let closeContextTimer: ReturnType<typeof setTimeout> | null = null;
+let activeOscillators: OscillatorNode[] = [];
 
 /** Call after a user gesture so iOS/Android allow loud alert audio later. */
 export function primeRealtimeLeadAlertAudio(): void {
@@ -18,11 +25,67 @@ export function primeRealtimeLeadAlertAudio(): void {
   }
 }
 
+/** One-shot alert (e.g. test notifications). */
 export function playRealtimeLeadAlertSound(): void {
   if (typeof window === "undefined") return;
 
-  playAttentionChime();
+  playAttentionChime({ closeContextAfterPlayback: true });
   vibrateRealtimeLeadAlert();
+}
+
+/** Keep alerting until this lead is picked up by someone. */
+export function startRealtimeLeadAlertSoundLoop(leadId: number): void {
+  if (typeof window === "undefined" || !leadId) return;
+
+  const wasEmpty = loopingLeadIds.size === 0;
+  loopingLeadIds.add(leadId);
+  if (!wasEmpty) return;
+
+  playAttentionChime({ closeContextAfterPlayback: false });
+  vibrateRealtimeLeadAlert();
+  ensureLoopInterval();
+}
+
+export function stopRealtimeLeadAlertSoundLoop(leadId: number): void {
+  if (!leadId) return;
+
+  loopingLeadIds.delete(leadId);
+  if (loopingLeadIds.size === 0) {
+    stopSoundLoop();
+  }
+}
+
+function ensureLoopInterval(): void {
+  if (loopInterval) return;
+
+  loopInterval = window.setInterval(() => {
+    if (loopingLeadIds.size === 0) {
+      stopSoundLoop();
+      return;
+    }
+
+    playAttentionChime({ closeContextAfterPlayback: false });
+    vibrateRealtimeLeadAlert();
+  }, CHIME_LOOP_INTERVAL_MS);
+}
+
+function stopSoundLoop(): void {
+  if (loopInterval) {
+    clearInterval(loopInterval);
+    loopInterval = null;
+  }
+
+  if (closeContextTimer) {
+    clearTimeout(closeContextTimer);
+    closeContextTimer = null;
+  }
+
+  stopActiveOscillators();
+
+  if (audioContext && audioContext.state !== "closed") {
+    void audioContext.close();
+    audioContext = null;
+  }
 }
 
 function getOrCreateAudioContext(): AudioContext | null {
@@ -39,7 +102,9 @@ function getOrCreateAudioContext(): AudioContext | null {
   return audioContext;
 }
 
-function playAttentionChime(): void {
+function playAttentionChime(options: {
+  closeContextAfterPlayback: boolean;
+}): void {
   try {
     const context = getOrCreateAudioContext();
     if (!context) return;
@@ -47,6 +112,8 @@ function playAttentionChime(): void {
     if (context.state === "suspended") {
       void context.resume();
     }
+
+    stopActiveOscillators();
 
     const masterGain = context.createGain();
     masterGain.gain.value = 1;
@@ -65,12 +132,22 @@ function playAttentionChime(): void {
       playChimeNote(context, masterGain, frequency, start, duration);
     });
 
-    window.setTimeout(() => {
+    if (!options.closeContextAfterPlayback) return;
+
+    if (closeContextTimer) {
+      clearTimeout(closeContextTimer);
+    }
+
+    closeContextTimer = window.setTimeout(() => {
+      closeContextTimer = null;
+      if (loopingLeadIds.size > 0) return;
+
+      stopActiveOscillators();
       if (audioContext === context && context.state !== "closed") {
         void context.close();
         audioContext = null;
       }
-    }, 2800);
+    }, CHIME_ONE_SHOT_CLOSE_MS);
   } catch {
     // Audio is optional.
   }
@@ -108,6 +185,20 @@ function playChimeNote(
   harmonic.start(startTime);
   fundamental.stop(startTime + duration + 0.04);
   harmonic.stop(startTime + duration + 0.04);
+
+  activeOscillators.push(fundamental, harmonic);
+}
+
+function stopActiveOscillators(): void {
+  for (const oscillator of activeOscillators) {
+    try {
+      oscillator.stop();
+      oscillator.disconnect();
+    } catch {
+      // Already stopped.
+    }
+  }
+  activeOscillators = [];
 }
 
 function vibrateRealtimeLeadAlert(): void {
