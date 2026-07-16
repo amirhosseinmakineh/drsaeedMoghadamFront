@@ -703,6 +703,7 @@ export class ConsultantDashboardService {
         this.readBoolean(
           source,
           "isAvailable",
+          "IsAvailable",
           "available",
           "consultantIsAvailable",
         ) ?? false,
@@ -710,9 +711,11 @@ export class ConsultantDashboardService {
         this.readBoolean(
           source,
           "isOnline",
+          "IsOnline",
           "online",
           "consultantIsOnline",
           "isConsultantOnline",
+          "IsConsultantOnline",
         ) ?? false,
       lastOnlineAt: this.readString(source, "lastOnlineAt") ?? null,
       lastOfflineAt: this.readString(source, "lastOfflineAt") ?? null,
