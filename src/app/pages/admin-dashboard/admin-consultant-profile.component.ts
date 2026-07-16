@@ -197,6 +197,7 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
         justify-content: space-between;
         gap: 12px;
         align-items: start;
+        flex-wrap: wrap;
       }
       .panel-heading span {
         display: inline-flex;
@@ -230,7 +231,7 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
       .profile-grid {
         display: grid;
         gap: 14px;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
       }
       .info-card {
         padding: 14px;
@@ -323,6 +324,11 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
         margin: 0;
         color: #b42318;
         font-weight: 900;
+      }
+      @media (max-width: 980px) {
+        .profile-grid {
+          grid-template-columns: 1fr;
+        }
       }
       @media (max-width: 760px) {
         .profile-grid,

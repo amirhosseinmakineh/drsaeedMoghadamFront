@@ -145,6 +145,8 @@ type LeadTableMode = "system" | "consultant";
         display: flex;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-start;
       }
       .panel-heading span {
         display: inline-flex;
@@ -165,7 +167,7 @@ type LeadTableMode = "system" | "consultant";
       }
       .filter-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 12px;
         align-items: end;
       }
@@ -246,6 +248,11 @@ type LeadTableMode = "system" | "consultant";
       .export-action:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+      }
+      @media (max-width: 980px) {
+        .filter-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
       @media (max-width: 760px) {
         .admin-panel {

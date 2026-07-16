@@ -186,6 +186,8 @@ type ReservationView = "reservations" | "attendanceConfirmations";
         display: flex;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-start;
       }
       .panel-heading span {
         display: inline-flex;
@@ -242,6 +244,11 @@ type ReservationView = "reservations" | "attendanceConfirmations";
         flex-wrap: wrap;
         gap: 10px;
       }
+      .export-action {
+        max-width: 100%;
+        white-space: normal;
+        text-align: center;
+      }
       .export-action,
       .primary-filter,
       .secondary-action.compact {
@@ -273,6 +280,30 @@ type ReservationView = "reservations" | "attendanceConfirmations";
       }
       .feedback {
         margin: 0;
+      }
+      @media (max-width: 980px) {
+        .filter-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .export-action {
+          flex: 1 1 220px;
+        }
+      }
+      @media (max-width: 760px) {
+        .admin-panel {
+          padding: 14px;
+          border-radius: 24px;
+        }
+        .filter-grid {
+          grid-template-columns: 1fr;
+        }
+        .panel-heading {
+          display: grid;
+        }
+        .export-action {
+          width: 100%;
+          flex: 1 1 100%;
+        }
       }
     `,
   ],

@@ -87,6 +87,8 @@ import { ToastService } from "../../core/toast/toast.service";
         display: flex;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-start;
       }
       .panel-heading span {
         display: inline-flex;
@@ -103,7 +105,7 @@ import { ToastService } from "../../core/toast/toast.service";
       }
       .filter-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 12px;
         align-items: end;
       }
@@ -155,6 +157,11 @@ import { ToastService } from "../../core/toast/toast.service";
       .feedback.success {
         background: color-mix(in srgb, var(--success) 14%, var(--surface));
         color: #166534;
+      }
+      @media (max-width: 980px) {
+        .filter-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
       @media (max-width: 760px) {
         .report-panel {
