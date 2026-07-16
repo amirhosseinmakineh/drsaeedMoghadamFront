@@ -3,12 +3,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  OnDestroy,
   OnInit,
   computed,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
-import { finalize } from "rxjs";
+import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
+import { finalize, Subscription } from "rxjs";
 import {
   AdminDashboardService,
   AdminUser,
@@ -71,6 +72,17 @@ interface UserFormModel {
   isActive: boolean;
   roleName: string;
 }
+
+const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
+  "overview",
+  "users",
+  "consultants",
+  "consultantProfile",
+  "leads",
+  "leadReports",
+  "reservations",
+  "presence",
+];
 
 @Component({
   selector: "app-dashboard",
@@ -1244,7 +1256,7 @@ interface UserFormModel {
     `,
   ],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   readonly user = this.auth.user;
   activeSection: DashboardSection = "overview";
 
@@ -1397,10 +1409,12 @@ export class DashboardComponent implements OnInit {
 
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
+  private routeQueryParamsSubscription: Subscription | null = null;
 
   constructor(
     private auth: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private adminApi: AdminDashboardService,
     private pushNotifications: PushNotificationService,
     private toast: ToastService,
@@ -1413,7 +1427,16 @@ export class DashboardComponent implements OnInit {
     if (this.isAdmin()) {
       this.loadUsers();
       this.loadConsultants();
+      this.applySectionRouteParams(this.route.snapshot.queryParamMap);
+      this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
+        (params) => this.applySectionRouteParams(params),
+      );
+      this.syncSectionQueryParam(this.activeSection);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.routeQueryParamsSubscription?.unsubscribe();
   }
 
   get visibleLinks(): DashboardLink[] {
@@ -1485,6 +1508,44 @@ export class DashboardComponent implements OnInit {
   }
 
   setSection(section: DashboardSection): void {
+    if (!this.isAdmin()) {
+      this.activeSection = section;
+      this.markDirty();
+      return;
+    }
+
+    if (section === this.activeSection) {
+      this.syncSectionQueryParam(section);
+      return;
+    }
+
+    this.activeSection = section;
+    this.syncSectionQueryParam(section);
+    this.closeMobileSidebar();
+    this.markDirty();
+
+    if (section === "users" && !this.users.length) this.loadUsers();
+    if (section === "consultants" && !this.consultants.length)
+      this.loadConsultants();
+  }
+
+  private syncSectionQueryParam(section: DashboardSection): void {
+    const querySection = section === "overview" ? null : section;
+    const currentSection = this.route.snapshot.queryParamMap.get("section");
+
+    if ((currentSection ?? null) === querySection) return;
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { section: querySection },
+      queryParamsHandling: "merge",
+      replaceUrl: false,
+    });
+  }
+
+  private activateSectionFromRoute(section: DashboardSection): void {
+    if (section === this.activeSection) return;
+
     this.activeSection = section;
     this.closeMobileSidebar();
     this.markDirty();
@@ -1492,6 +1553,17 @@ export class DashboardComponent implements OnInit {
     if (section === "users" && !this.users.length) this.loadUsers();
     if (section === "consultants" && !this.consultants.length)
       this.loadConsultants();
+  }
+
+  private applySectionRouteParams(params: ParamMap): void {
+    const section = params.get("section") as DashboardSection | null;
+
+    if (section && ADMIN_DASHBOARD_SECTIONS.includes(section)) {
+      this.activateSectionFromRoute(section);
+      return;
+    }
+
+    this.activateSectionFromRoute("overview");
   }
 
   toggleMobileSidebar(): void {
