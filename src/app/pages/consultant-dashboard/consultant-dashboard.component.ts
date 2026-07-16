@@ -48,6 +48,17 @@ import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.se
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
 
+const CALL_RESULT_BY_NAME: Record<string, number> = {
+  contacted: 1,
+  converted: 2,
+  rejected: 3,
+  noanswer: 4,
+  wrongnumber: 5,
+  needfollowup: 6,
+  busy: 7,
+  patienthungup: 8,
+};
+
 const CALL_RESULT_DEFAULT_DESCRIPTIONS: Record<number, string> = {
   1: "تماس برقرار شد",
   2: "تبدیل به بیمار",
@@ -3926,7 +3937,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.markViewDirty();
 
           const shouldOpenReservation =
-            data?.shouldOpenReservationPage === true &&
+            this.readShouldOpenReservationPage(data) &&
             this.isSuccessfulCallResult(callResult);
           if (shouldOpenReservation) {
             const updatedLead =
@@ -4030,14 +4041,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
+          const callResult =
+            response.data?.callResult ?? Number(this.reportForm.callResult);
           this.markLeadReported(
             leadAssignmentId,
             response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
             true,
           );
           this.updateLeadInCollections(leadAssignmentId, {
-            callResult: response.data?.callResult ?? Number(this.reportForm.callResult),
-            CallResult: response.data?.callResult ?? Number(this.reportForm.callResult),
+            callResult,
+            CallResult: callResult,
             reportDescription: payload.reportDescription,
             ReportDescription: payload.reportDescription,
             patientCity: payload.patientCity,
@@ -4055,6 +4068,27 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.showFeedback("گزارش ویرایش شد", "success");
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
+          }
+
+          const shouldOpenReservation =
+            this.readShouldOpenReservationPage(response.data) &&
+            this.isSuccessfulCallResult(callResult);
+          if (shouldOpenReservation) {
+            const updatedLead =
+              this.reportEditLeads.find(
+                (item) => this.leadId(item) === leadAssignmentId,
+              ) ??
+              this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
+              lead;
+            setTimeout(
+              () =>
+                this.openReservationDialog(
+                  updatedLead,
+                  secondaryPhone || undefined,
+                  { skipActionSuppress: true },
+                ),
+              650,
+            );
           }
         },
         error: (error) =>
@@ -4427,11 +4461,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (
       leadAssignmentId &&
       this.leadType(lead) === LEAD_TYPE.RealTime &&
-      !this.stoppedTimerLeadIds.has(leadAssignmentId) &&
       !this.isLeadReportSubmitted(lead)
     ) {
-      this.stopRealtimeTimer(leadAssignmentId);
-      this.recordCallInitiated(leadAssignmentId);
+      if (!this.stoppedTimerLeadIds.has(leadAssignmentId)) {
+        this.stopRealtimeTimer(leadAssignmentId);
+      }
+
+      const initiatedAt = lead.callInitiatedAt ?? lead.CallInitiatedAt;
+      if (!initiatedAt) {
+        this.recordCallInitiated(leadAssignmentId);
+      }
     }
   }
 
@@ -4447,6 +4486,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.stopRealtimeTimer(leadAssignmentId);
+    this.recordCallInitiated(leadAssignmentId);
   }
 
   leadId(lead: ConsultantLead): number | null {
@@ -4684,14 +4724,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return false;
     if (this.leadType(lead) !== LEAD_TYPE.RealTime) return false;
     if (!this.isLeadPhoneRevealed(lead)) return false;
-    return (
-      (lead.requiresThreeMinuteCall ?? lead.RequiresThreeMinuteCall ?? true) ===
-      true
-    );
+    return this.isActiveRealtimeLead(lead);
   }
 
   leadRemainingMs(lead: ConsultantLead): number {
-    if (!this.isRealtimeTimedLead(lead)) return 0;
+    if (!this.isRealtimeTimedLead(lead)) return Number.POSITIVE_INFINITY;
     return Math.max(0, this.leadDeadlineMs(lead) - this.currentTime);
   }
 
@@ -4740,7 +4777,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   leadCallResult(lead: ConsultantLead): number | null {
-    return this.numberOrNull(lead.callResult ?? lead.CallResult ?? null);
+    const raw = lead.callResult ?? lead.CallResult ?? null;
+    if (typeof raw === "string") {
+      const normalized = raw.trim().toLowerCase();
+      if (CALL_RESULT_BY_NAME[normalized] !== undefined) {
+        return CALL_RESULT_BY_NAME[normalized];
+      }
+    }
+
+    return this.numberOrNull(raw);
   }
 
   callResultLabel(lead: ConsultantLead): string {
@@ -4783,10 +4828,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId) return true;
     if (this.isLeadReportSubmitted(lead)) return true;
-    if (state === LEAD_STATE.Expired) return true;
     if (state === LEAD_STATE.Converted || state === LEAD_STATE.Rejected) {
       return true;
     }
+    if (this.hasCallBeenInitiated(lead)) {
+      return false;
+    }
+    if (state === LEAD_STATE.Expired) return true;
     if (
       this.leadType(lead) === LEAD_TYPE.RealTime &&
       this.isActiveRealtimeLead(lead)
@@ -4818,6 +4866,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private isLeadEligibleForReservation(lead: ConsultantLead): boolean {
+    const callResult = this.leadCallResult(lead);
+    if (callResult !== null && this.isSuccessfulCallResult(callResult)) {
+      return true;
+    }
+
     const state = this.leadState(lead);
     return (
       state === LEAD_STATE.Contacted || state === LEAD_STATE.Converted
@@ -5241,9 +5294,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private hasActiveRealtimeTimers(): boolean {
     return this.leads.some(
       (lead) =>
-        this.leadType(lead) === LEAD_TYPE.RealTime &&
+        this.isRealtimeTimedLead(lead) &&
         !this.isLeadReportSubmitted(lead) &&
-        this.isRealtimeTimedLead(lead),
+        this.leadRemainingMs(lead) > 0,
     );
   }
 
@@ -5254,13 +5307,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.leads.forEach((lead) => {
       if (this.leadType(lead) !== LEAD_TYPE.RealTime) return;
-      if (
-        (lead.requiresThreeMinuteCall ?? lead.RequiresThreeMinuteCall ?? true) !==
-        true
-      ) {
+      if (!this.isActiveRealtimeLead(lead) || this.isLeadReportSubmitted(lead)) {
         return;
       }
-      if (this.isLeadReportSubmitted(lead)) return;
 
       const leadAssignmentId = this.leadId(lead);
       if (!leadAssignmentId || this.stoppedTimerLeadIds.has(leadAssignmentId)) {
@@ -5272,7 +5321,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       const key = String(leadAssignmentId);
 
       if (!this.timerStarts[key]) {
-        this.timerStarts[key] = now;
+        const assignedAt =
+          (lead as ConsultantLead & { assignedAt?: string | null; AssignedAt?: string | null })
+            .assignedAt ??
+          (lead as ConsultantLead & { assignedAt?: string | null; AssignedAt?: string | null })
+            .AssignedAt;
+        const assignedAtMs = assignedAt ? new Date(assignedAt).getTime() : NaN;
+        this.timerStarts[key] = Number.isFinite(assignedAtMs) ? assignedAtMs : now;
         changed = true;
       }
     });
@@ -5462,6 +5517,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return false;
     if (this.isLeadReportSubmitted(lead)) return false;
     if (this.hasCallBeenInitiated(lead)) return false;
+    if (this.isLeadPhoneRevealed(lead)) return false;
     if (
       this.currentTime < (this.expirationRetryAfter.get(leadAssignmentId) ?? 0)
     )
@@ -5863,6 +5919,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return callResult === 1 || callResult === 2;
   }
 
+  private readShouldOpenReservationPage(source: unknown): boolean {
+    return (
+      this.readBoolean(
+        source,
+        "shouldOpenReservationPage",
+        "ShouldOpenReservationPage",
+      ) === true
+    );
+  }
+
   validateProfileForm(): string | null {
     const code = this.profileForm.nationalityCode.trim();
     if (!/^\d{10}$/.test(code)) return "کد ملی باید ۱۰ رقم باشد";
@@ -6087,15 +6153,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     update.isAvailable ??= this.readBoolean(
       source,
       "isAvailable",
+      "IsAvailable",
       "available",
       "consultantIsAvailable",
     );
     update.isOnline ??= this.readBoolean(
       source,
       "isOnline",
+      "IsOnline",
       "online",
       "consultantIsOnline",
       "isConsultantOnline",
+      "IsConsultantOnline",
     );
     update.canGoOnline ??= this.readBoolean(source, "canGoOnline", "CanGoOnline");
 
