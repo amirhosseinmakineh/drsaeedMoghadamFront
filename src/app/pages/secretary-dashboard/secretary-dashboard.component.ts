@@ -3,12 +3,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  OnDestroy,
   OnInit,
   computed,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
-import { finalize } from "rxjs";
+import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
+import { finalize, Subscription } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import { ToastService } from "../../core/toast/toast.service";
@@ -34,6 +35,13 @@ interface SecretaryDashboardLink {
   label: string;
   icon: string;
 }
+
+const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
+  "overview",
+  "profile",
+  "reservations",
+  "reviews",
+];
 
 @Component({
   selector: "app-secretary-dashboard",
@@ -722,7 +730,7 @@ interface SecretaryDashboardLink {
     `,
   ],
 })
-export class SecretaryDashboardComponent implements OnInit {
+export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   readonly user = this.auth.user;
   activeSection: SecretaryDashboardSection = "overview";
   mobileSidebarOpen = false;
@@ -758,10 +766,12 @@ export class SecretaryDashboardComponent implements OnInit {
 
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
+  private routeQueryParamsSubscription: Subscription | null = null;
 
   constructor(
     private auth: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private secretaryApi: SecretaryDashboardService,
     private pushNotifications: PushNotificationService,
     private toast: ToastService,
@@ -784,6 +794,16 @@ export class SecretaryDashboardComponent implements OnInit {
     if (!this.isProfileReady()) {
       this.activeSection = "profile";
     }
+
+    this.applySectionRouteParams(this.route.snapshot.queryParamMap);
+    this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
+      (params) => this.applySectionRouteParams(params),
+    );
+    this.syncSectionQueryParam(this.activeSection);
+  }
+
+  ngOnDestroy(): void {
+    this.routeQueryParamsSubscription?.unsubscribe();
   }
 
   isProfileReady(): boolean {
@@ -791,24 +811,78 @@ export class SecretaryDashboardComponent implements OnInit {
   }
 
   setSection(section: SecretaryDashboardSection): void {
-    if (section === "profile" && this.isProfileReady()) {
-      this.activeSection = "overview";
-      this.markDirty();
+    const resolvedSection = this.resolveSection(section);
+    if (resolvedSection === this.activeSection) {
+      this.syncSectionQueryParam(resolvedSection);
       return;
+    }
+
+    this.activeSection = resolvedSection;
+    this.syncSectionQueryParam(resolvedSection);
+    this.closeMobileSidebar();
+    this.markDirty();
+  }
+
+  private resolveSection(
+    section: SecretaryDashboardSection,
+  ): SecretaryDashboardSection {
+    if (section === "profile" && this.isProfileReady()) {
+      return "overview";
     }
 
     if (
-      (section === "reservations" || section === "reviews") &&
+      (section === "overview" ||
+        section === "reservations" ||
+        section === "reviews") &&
       !this.isProfileReady()
     ) {
-      this.activeSection = "profile";
-      this.markDirty();
+      return "profile";
+    }
+
+    return section;
+  }
+
+  private syncSectionQueryParam(section: SecretaryDashboardSection): void {
+    const resolvedSection = this.resolveSection(section);
+    const querySection =
+      resolvedSection === "overview" ||
+      (resolvedSection === "profile" && this.isProfileReady())
+        ? null
+        : resolvedSection;
+    const currentSection = this.route.snapshot.queryParamMap.get("section");
+
+    if ((currentSection ?? null) === querySection) return;
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { section: querySection },
+      queryParamsHandling: "merge",
+      replaceUrl: false,
+    });
+  }
+
+  private activateSectionFromRoute(
+    section: SecretaryDashboardSection,
+  ): void {
+    const resolvedSection = this.resolveSection(section);
+    if (resolvedSection === this.activeSection) return;
+
+    this.activeSection = resolvedSection;
+    this.closeMobileSidebar();
+    this.markDirty();
+  }
+
+  private applySectionRouteParams(params: ParamMap): void {
+    const section = params.get("section") as SecretaryDashboardSection | null;
+
+    if (section && SECRETARY_DASHBOARD_SECTIONS.includes(section)) {
+      this.activateSectionFromRoute(section);
       return;
     }
 
-    this.activeSection = section;
-    this.closeMobileSidebar();
-    this.markDirty();
+    this.activateSectionFromRoute(
+      this.isProfileReady() ? "overview" : "profile",
+    );
   }
 
   toggleMobileSidebar(): void {

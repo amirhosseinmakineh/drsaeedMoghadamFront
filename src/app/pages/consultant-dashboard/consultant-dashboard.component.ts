@@ -2630,6 +2630,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.configurePollTimer();
     this.resetRealtimeLeadTimer(leadId, detail?.callDeadlineAt);
     this.activeSection = "leads";
+    this.syncSectionQueryParam("leads");
     this.leadTypeFilter = LEAD_TYPE.RealTime;
     this.highlightedLeadAssignmentId = leadId;
     this.refreshDashboard();
@@ -3492,6 +3493,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.activateSectionFromRoute(section);
     } else if (params.get("type")) {
       this.activateSectionFromRoute("leads");
+    } else {
+      this.activateSectionFromRoute("overview");
     }
 
     if (params.get("section") !== "leads" && !params.get("type")) return;
