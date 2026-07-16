@@ -26,6 +26,7 @@ import {
   SecretaryDashboardService,
 } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
+import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 
@@ -34,7 +35,7 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
 @Component({
   selector: "app-secretary-reservations",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-reservations.component.html",
   styles: [
@@ -323,6 +324,10 @@ export class SecretaryReservationsComponent
   profileSaving = false;
   selectedProfileReservation: SecretaryReservation | null = null;
   profileForm = this.emptyProfileForm();
+  selectedProfileBirthDate?: Date;
+  readonly birthDatePickerLabel = { fa: "تاریخ تولد", en: "Birth date" };
+  readonly birthDateMinDate = this.createRelativeYearDate(-120);
+  readonly birthDateMaxDate = this.createYesterday();
   loading = false;
   savingId: number | null = null;
   feedback = "";
@@ -585,6 +590,7 @@ export class SecretaryReservationsComponent
       lastName: rest.join(" "),
       phoneNumber: this.patientPhone(item),
     };
+    this.selectedProfileBirthDate = undefined;
     this.profileDialogOpen = true;
   }
 
@@ -593,6 +599,12 @@ export class SecretaryReservationsComponent
     this.profileDialogOpen = false;
     this.selectedProfileReservation = null;
     this.profileForm = this.emptyProfileForm();
+    this.selectedProfileBirthDate = undefined;
+  }
+
+  setProfileBirthDate(date: Date): void {
+    this.selectedProfileBirthDate = date;
+    this.profileForm.birthDate = this.toDateInputValue(date);
   }
 
   submitProfile(): void {
@@ -613,7 +625,7 @@ export class SecretaryReservationsComponent
       passwordHash: this.profileForm.passwordHash,
       avatarImageName: null,
       gender: Number(this.profileForm.gender),
-      birthDate: new Date(this.profileForm.birthDate).toISOString(),
+      birthDate: new Date(`${this.profileForm.birthDate}T00:00:00`).toISOString(),
       emergencyPhoneNumber:
         this.profileForm.emergencyPhoneNumber.trim() || null,
       insuranceName: this.profileForm.insuranceName.trim() || null,
@@ -650,7 +662,12 @@ export class SecretaryReservationsComponent
       return "شماره موبایل بیمار معتبر نیست";
     if (this.profileForm.passwordHash.length < 6)
       return "رمز عبور باید حداقل ۶ کاراکتر باشد";
-    if (!this.profileForm.birthDate) return "تاریخ تولد بیمار الزامی است";
+    if (
+      !this.profileForm.birthDate ||
+      new Date(`${this.profileForm.birthDate}T00:00:00`).getTime() >= Date.now()
+    ) {
+      return "تاریخ تولد بیمار معتبر نیست";
+    }
     return null;
   }
 
@@ -783,11 +800,34 @@ export class SecretaryReservationsComponent
       passwordHash: "123456",
       avatarImageName: null,
       gender: 1,
-      birthDate: "1995-01-01",
+      birthDate: "",
       emergencyPhoneNumber: "",
       insuranceName: "",
       notes: "",
     };
+  }
+
+  private createYesterday(): Date {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return this.startOfDay(date);
+  }
+
+  private createRelativeYearDate(yearOffset: number): Date {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + yearOffset);
+    return this.startOfDay(date);
+  }
+
+  private startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private toDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, "0");
+    const day = `${date.getDate()}`.padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   private showFeedback(message: string, type: "success" | "error"): void {
