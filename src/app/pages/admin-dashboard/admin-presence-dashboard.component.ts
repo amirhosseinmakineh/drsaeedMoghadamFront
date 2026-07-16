@@ -115,6 +115,7 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
         justify-content: space-between;
         gap: 12px;
         align-items: start;
+        flex-wrap: wrap;
       }
       .panel-heading span {
         display: inline-flex;
@@ -188,6 +189,11 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
       .feedback.error {
         background: color-mix(in srgb, var(--danger) 14%, var(--surface));
         color: #991b1b;
+      }
+      @media (max-width: 980px) {
+        .date-filter {
+          grid-template-columns: 1fr auto;
+        }
       }
       @media (max-width: 760px) {
         .presence-panel {

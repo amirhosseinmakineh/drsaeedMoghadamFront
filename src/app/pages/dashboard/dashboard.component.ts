@@ -1049,6 +1049,49 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
       .mobile-menu-btn {
         display: none;
       }
+      .dashboard-layout.admin-mode {
+        width: min(1360px, calc(100% - clamp(20px, 3vw, 40px)));
+        grid-template-columns: clamp(236px, 22vw, 300px) minmax(0, 1fr);
+      }
+      .dashboard-layout.admin-mode .dashboard-content,
+      .dashboard-layout.admin-mode .admin-shell,
+      .dashboard-layout.admin-mode .admin-panel,
+      .dashboard-layout.admin-mode .dashboard-hero {
+        min-width: 0;
+      }
+      .dashboard-layout.admin-mode .panel-heading {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .dashboard-layout.admin-mode .filter-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+      .dashboard-layout.admin-mode .users-filter {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+      .dashboard-layout.admin-mode .admin-overview {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+      }
+      .dashboard-layout.admin-mode .export-action,
+      .dashboard-layout.admin-mode .primary-export {
+        max-width: 100%;
+        white-space: normal;
+        text-align: center;
+      }
+      .dashboard-layout.admin-mode .two-col {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+      @media (max-width: 1200px) {
+        .dashboard-layout.admin-mode {
+          grid-template-columns: clamp(220px, 26vw, 280px) minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 1100px) {
+        .dashboard-layout.admin-mode .filter-grid,
+        .dashboard-layout.admin-mode .users-filter {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
       @media (max-width: 980px) {
         .dashboard-layout {
           grid-template-columns: 1fr;
@@ -1067,6 +1110,9 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
         .filter-grid,
         .users-filter {
           grid-template-columns: 1fr 1fr;
+        }
+        .dashboard-layout.admin-mode {
+          width: min(calc(100% - 24px), 920px);
         }
       }
       @media (max-width: 760px) {
@@ -1152,7 +1198,33 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
           color: var(--brand);
           flex-shrink: 0;
         }
-        .dashboard-layout.admin-mode .dashboard-sidebar,
+        .dashboard-layout.admin-mode .dashboard-sidebar {
+          position: fixed;
+          z-index: 100;
+          top: 0;
+          inset-inline-start: 0;
+          bottom: 0;
+          width: min(300px, 86vw);
+          margin: 0;
+          padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+          border-start-start-radius: 0;
+          border-end-start-radius: 28px;
+          border-end-end-radius: 28px;
+          border-start-end-radius: 0;
+          border-inline-start: 0;
+          transition: transform 0.28s ease;
+          overflow-y: auto;
+          box-shadow: 12px 0 32px rgba(93, 64, 32, 0.16);
+        }
+        [dir="ltr"] .dashboard-layout.admin-mode .dashboard-sidebar {
+          transform: translateX(-105%);
+        }
+        [dir="rtl"] .dashboard-layout.admin-mode .dashboard-sidebar {
+          transform: translateX(105%);
+        }
+        .dashboard-layout.admin-mode .dashboard-sidebar.mobile-sidebar-open {
+          transform: translateX(0);
+        }
         .dashboard-layout.patient-mode .dashboard-sidebar {
           position: fixed;
           z-index: 100;
@@ -1169,7 +1241,6 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
           overflow-y: auto;
           box-shadow: 12px 0 32px rgba(93, 64, 32, 0.16);
         }
-        .dashboard-layout.admin-mode .dashboard-sidebar.mobile-sidebar-open,
         .dashboard-layout.patient-mode .dashboard-sidebar.mobile-sidebar-open {
           transform: translateX(0);
         }
@@ -1245,11 +1316,19 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
         .two-col {
           grid-template-columns: 1fr;
         }
+        .dashboard-layout.admin-mode .filter-grid,
+        .dashboard-layout.admin-mode .users-filter,
+        .dashboard-layout.admin-mode .two-col {
+          grid-template-columns: 1fr;
+        }
         .dialog-actions {
           display: grid;
           grid-template-columns: 1fr 1fr;
         }
         .panel-heading {
+          display: grid;
+        }
+        .dashboard-layout.admin-mode .panel-heading {
           display: grid;
         }
       }

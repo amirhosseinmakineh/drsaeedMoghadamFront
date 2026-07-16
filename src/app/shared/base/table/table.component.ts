@@ -206,6 +206,17 @@ export interface TableActionClick<T = unknown> {
         background: color-mix(in srgb, var(--surface) 88%, transparent);
         min-height: 120px;
       }
+      :host-context(.admin-mode) .table-shell {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      :host-context(.admin-mode) .table-header {
+        flex-wrap: wrap;
+      }
+      :host-context(.admin-mode) th,
+      :host-context(.admin-mode) td {
+        white-space: nowrap;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
@@ -352,6 +363,10 @@ export interface TableActionClick<T = unknown> {
           grid-template-columns: 1fr;
           width: 100%;
         }
+        :host-context(.admin-mode) th,
+        :host-context(.admin-mode) td {
+          white-space: normal;
+        }
         .search-box {
           min-width: 0;
         }
@@ -362,6 +377,9 @@ export interface TableActionClick<T = unknown> {
           overflow: visible;
           border: 0;
           background: transparent;
+        }
+        :host-context(.admin-mode) .table-shell {
+          overflow: visible;
         }
         table,
         thead,

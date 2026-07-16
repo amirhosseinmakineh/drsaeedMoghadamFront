@@ -74,6 +74,8 @@ import {
         display: flex;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-start;
       }
       .panel-heading span {
         display: inline-flex;
