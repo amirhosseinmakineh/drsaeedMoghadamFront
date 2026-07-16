@@ -7,51 +7,7 @@ import { FaIconComponent } from "../../ui/fa-icon/fa-icon.component";
   selector: "app-base-dialog",
   standalone: true,
   imports: [CommonModule, FaIconComponent],
-  template: `
-    <div
-      *ngIf="open"
-      class="dialog-backdrop"
-      [attr.dir]="language === 'fa' ? 'rtl' : 'ltr'"
-      (click)="close()"
-    >
-      <section
-        class="base-dialog"
-        [class.wide]="size === 'wide'"
-        role="dialog"
-        aria-modal="true"
-        [attr.aria-label]="title"
-        (click)="$event.stopPropagation()"
-      >
-        <button
-          *ngIf="closable"
-          class="dialog-close"
-          type="button"
-          (click)="close()"
-          [attr.aria-label]="language === 'fa' ? 'بستن' : 'Close'"
-        >
-          <app-fa-icon name="close"></app-fa-icon>
-        </button>
-        <header *ngIf="title || subtitle">
-          <h2 *ngIf="title">{{ title }}</h2>
-          <p *ngIf="subtitle" class="dialog-subtitle">{{ subtitle }}</p>
-        </header>
-        <main class="dialog-content"><ng-content></ng-content></main>
-        <footer *ngIf="showFooter">
-          <button class="dialog-btn ghost" type="button" (click)="close()">
-            {{ cancelText }}
-          </button>
-          <button
-            class="dialog-btn solid"
-            type="button"
-            [disabled]="confirmDisabled"
-            (click)="confirm()"
-          >
-            {{ confirmText }}
-          </button>
-        </footer>
-      </section>
-    </div>
-  `,
+  templateUrl: "./base-dialog.component.html",
   styles: [
     `
       .dialog-backdrop {

@@ -1,0 +1,42 @@
+@if (alerts.length > 0) {
+  <div class="lead-alert-stack" aria-live="assertive" aria-atomic="false">
+    @for (alert of alerts; track alert.leadId) {
+      <section class="lead-alert-card">
+        <span class="lead-alert-card__icon icon-bubble" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path
+              d="M12 2a7 7 0 0 1 7 7v3.09l1.45 2.9a1 1 0 0 1-.9 1.45H4.45a1 1 0 0 1-.9-1.45L5 12.09V9a7 7 0 0 1 7-7Zm0 20a3 3 0 0 0 2.83-2h-5.66A3 3 0 0 0 12 22Z"
+            />
+          </svg>
+        </span>
+
+        <p class="lead-alert-card__message">
+          <span class="lead-alert-card__title">{{ leadAlertTitle }}</span>
+          <button
+            type="button"
+            class="lead-alert-card__action"
+            [disabled]="alert.isSubmitting"
+            (click)="pickup(alert.leadId)"
+          >
+            {{
+              alert.isSubmitting
+                ? "در حال دریافت..."
+                : leadAlertActionLabel
+            }}
+          </button>
+        </p>
+
+        <button
+          type="button"
+          class="lead-alert-card__dismiss"
+          aria-label="بستن اعلان"
+          title="بستن"
+          [disabled]="alert.isSubmitting"
+          (click)="dismiss(alert.leadId)"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      </section>
+    }
+  </div>
+}

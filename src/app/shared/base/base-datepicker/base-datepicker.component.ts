@@ -22,72 +22,7 @@ import {
   standalone: true,
   imports: [NgFor, NgIf],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <section
-      class="base-datepicker"
-      [attr.dir]="language === 'fa' ? 'rtl' : 'ltr'"
-    >
-      <header>
-        <div>
-          <span>{{ labelText }}</span>
-          <strong>{{ monthLabel }}</strong>
-        </div>
-        <div
-          class="month-nav"
-          [attr.aria-label]="
-            language === 'fa' ? 'تغییر ماه تقویم' : 'Change calendar month'
-          "
-        >
-          <button
-            type="button"
-            (click)="moveMonth(-1)"
-            [disabled]="!canMovePrevious"
-          >
-            {{ language === "fa" ? "ماه قبل" : "Prev" }}
-          </button>
-          <button
-            type="button"
-            (click)="moveMonth(1)"
-            [disabled]="!canMoveNext"
-          >
-            {{ language === "fa" ? "ماه بعد" : "Next" }}
-          </button>
-        </div>
-      </header>
-
-      <div class="week-row" aria-hidden="true">
-        <span *ngFor="let day of weekDays">{{ day }}</span>
-      </div>
-
-      <div class="day-grid">
-        <button
-          *ngFor="let day of days"
-          type="button"
-          [disabled]="day.disabled"
-          [class.active]="day.iso === dateValue"
-          [class.outside]="day.outsideMonth"
-          [attr.aria-label]="day.ariaLabel"
-          (click)="select(day)"
-        >
-          <small>{{ day.weekday }}</small>
-          <b>{{ day.label }}</b>
-        </button>
-      </div>
-
-      <p *ngIf="language === 'fa' && selectedDate" class="calendar-note">
-        {{ "تاریخ انتخاب‌شده: " + selectedDateLabel }}
-      </p>
-
-      <label *ngIf="language !== 'fa'" class="native-date">
-        Pick exact date from device calendar
-        <input
-          type="date"
-          [value]="dateValue"
-          (change)="select($any($event.target).value)"
-        />
-      </label>
-    </section>
-  `,
+  templateUrl: "./base-datepicker.component.html",
   styles: [
     `
       .base-datepicker {

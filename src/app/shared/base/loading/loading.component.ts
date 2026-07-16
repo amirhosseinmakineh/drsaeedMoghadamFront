@@ -5,12 +5,7 @@ import { Component, Input } from "@angular/core";
   selector: "app-loading",
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <section>
-      <div *ngIf="loading" role="status" aria-live="polite">{{ label }}</div>
-      <ng-content *ngIf="!loading"></ng-content>
-    </section>
-  `,
+  templateUrl: "./loading.component.html"
 })
 export class LoadingComponent {
   @Input() loading = false;
