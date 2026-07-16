@@ -71,6 +71,14 @@ export function isConsultantWorkingHours(date: Date = new Date()): boolean {
   return hour >= CONSULTANT_WORK_START_HOUR && hour < CONSULTANT_WORK_END_HOUR;
 }
 
+export function isConsultantOnlineBlockedByTime(date: Date = new Date()): boolean {
+  return date.getHours() >= CONSULTANT_WORK_END_HOUR;
+}
+
+export function canConsultantGoOnline(date: Date = new Date()): boolean {
+  return !isConsultantOnlineBlockedByTime(date);
+}
+
 export const ADMIN_LEAD_STATE_FILTER_OPTIONS: ReadonlyArray<{
   value: number | null;
   label: string;

@@ -37,6 +37,8 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
 import {
   LeadAssignmentState as LEAD_STATE,
   LeadAssignmentType as LEAD_TYPE,
+  canConsultantGoOnline,
+  isConsultantOnlineBlockedByTime,
   isConsultantWorkingHours,
   leadAssignmentStateLabel,
   leadAssignmentTypeLabel,
@@ -2769,10 +2771,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   canGoOnline(): boolean {
-    if (!this.isProfileReady()) return false;
-    if (!this.isConsultantWorkingHours()) return false;
-    if (!this.isAvailable) return false;
-    return true;
+    return canConsultantGoOnline();
   }
 
   private markAttendanceReadyForOnline(): void {
@@ -2782,102 +2781,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.onlineStatusBlockReason = null;
     }
     this.markViewDirty();
-  }
-
-  private validateBeforeGoingOnline(onReady: () => void): void {
-    const profileId = this.currentProfileId();
-    if (!profileId) return;
-
-    let statusLoaded = false;
-    let leadsLoaded = false;
-    const finish = () => {
-      if (!statusLoaded || !leadsLoaded) return;
-      onReady();
-    };
-
-    this.dashboardStatusSubscription?.unsubscribe();
-    this.dashboardStatusSubscription = this.consultantApi
-      .getDashboardStatus(profileId)
-      .pipe(finalize(() => this.markViewDirty()))
-      .subscribe({
-        next: (status) => {
-          this.applyDashboardStatus(status);
-          statusLoaded = true;
-          finish();
-        },
-        error: () => {
-          statusLoaded = true;
-          finish();
-        },
-      });
-
-    this.consultantApi
-      .getLeads({
-        profileId,
-        pageNumber: 1,
-        pageSize: 100,
-      })
-      .pipe(finalize(() => this.markViewDirty()))
-      .subscribe({
-        next: (response) => {
-          this.applyConsultantStatusFrom(response.source, response.raw);
-          const items = (response.items ?? []).filter(
-            (lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient,
-          );
-          this.syncReportedLeadIdsFromLeads(items);
-          this.leads = items;
-          leadsLoaded = true;
-          finish();
-        },
-        error: () => {
-          leadsLoaded = true;
-          finish();
-        },
-      });
-  }
-
-  private resolveOnlineBlockReason(): string | null {
-    if (!this.isAvailable) return "ابتدا حضور خود را ثبت کنید";
-
-    if (!this.isConsultantWorkingHours()) {
-      return "امکان آنلاین شدن فقط بین ساعت ۹ صبح تا ۹ شب وجود دارد";
-    }
-
-    const pendingLead = this.findLeadRequiringReport();
-    if (pendingLead) {
-      return `ابتدا گزارش لید «${this.leadName(pendingLead)}» را ثبت کنید`;
-    }
-
-    if (this.onlineStatusBlockReason) return this.onlineStatusBlockReason;
-
-    if (this.dashboardStatusLoaded && !this.canGoOnlineFromStatus) {
-      return "ابتدا گزارش‌های معوق را تکمیل کنید";
-    }
-
-    return null;
-  }
-
-  private findLeadRequiringReport(): ConsultantLead | null {
-    const sources = [...this.leads, ...this.patientLeads];
-    return sources.find((lead) => this.leadRequiresReportBeforeOnline(lead)) ?? null;
-  }
-
-  private leadRequiresReportBeforeOnline(lead: ConsultantLead): boolean {
-    if (!this.leadId(lead)) return false;
-    if (this.isLeadReportSubmitted(lead)) return false;
-    if (this.isLeadInReportProgress(lead)) return true;
-
-    const state = this.leadState(lead);
-    if (state === LEAD_STATE.Assigned) return true;
-
-    if (
-      this.isRealtimeTimedLead(lead) &&
-      (this.hasCallBeenInitiated(lead) || state === LEAD_STATE.New)
-    ) {
-      return true;
-    }
-
-    return false;
   }
 
   setSection(section: ConsultantDashboardSection): void {
@@ -3151,28 +3054,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.isConsultantWorkingHours()) {
+    if (this.isConsultantOnlineBlockedByTime()) {
       this.showFeedback(
-        "امکان آنلاین شدن فقط بین ساعت ۹ صبح تا ۹ شب وجود دارد",
+        "امکان آنلاین شدن بعد از ساعت ۹ شب وجود ندارد",
         "error",
       );
       return;
     }
 
-    if (!this.isAvailable) {
-      this.showFeedback("ابتدا حضور خود را ثبت کنید", "error");
-      return;
-    }
-
-    this.validateBeforeGoingOnline(() => {
-      const blockReason = this.resolveOnlineBlockReason();
-      if (blockReason) {
-        this.showFeedback(blockReason, "error");
-        this.markViewDirty();
-        return;
-      }
-      this.performSetOnlineStatus(profileId, true);
-    });
+    this.performSetOnlineStatus(profileId, true);
   }
 
   private performSetOnlineStatus(
@@ -3274,25 +3164,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     } = {},
   ): void {
     const profileId = this.currentProfileId();
-    if (!profileId || this.isOnline || !this.isAvailable) return;
+    if (!profileId || this.isOnline) return;
 
-    if (this.onlineStatusBlockReason) {
-      if (options.notifyWhenBlocked) {
-        this.showFeedback(this.onlineStatusBlockReason, "info");
-      }
-      return;
-    }
-
-    if (!this.isConsultantWorkingHours()) return;
-
-    if (
-      !options.ignoreCanGoOnlineCheck &&
-      this.dashboardStatusLoaded &&
-      !this.canGoOnlineFromStatus
-    ) {
+    if (this.isConsultantOnlineBlockedByTime()) {
       if (options.notifyWhenBlocked) {
         this.showFeedback(
-          "در حال حاضر امکان آنلاین شدن وجود ندارد. لطفاً چند لحظه بعد دوباره تلاش کنید.",
+          "امکان آنلاین شدن بعد از ساعت ۹ شب وجود ندارد",
           "info",
         );
       }
@@ -5500,6 +5377,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private isConsultantWorkingHours(date: Date = new Date()): boolean {
     return isConsultantWorkingHours(date);
+  }
+
+  private isConsultantOnlineBlockedByTime(date: Date = new Date()): boolean {
+    return isConsultantOnlineBlockedByTime(date);
   }
 
   private expireDueRealtimeLeads(): void {
