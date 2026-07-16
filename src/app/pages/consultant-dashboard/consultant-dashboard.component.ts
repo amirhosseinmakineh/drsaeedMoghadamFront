@@ -4657,7 +4657,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   leadCallResult(lead: ConsultantLead): number | null {
-    const raw = lead.callResult ?? lead.CallResult ?? null;
+    const raw: unknown = lead.callResult ?? lead.CallResult ?? null;
     if (typeof raw === "string") {
       const normalized = raw.trim().toLowerCase();
       if (CALL_RESULT_BY_NAME[normalized] !== undefined) {
