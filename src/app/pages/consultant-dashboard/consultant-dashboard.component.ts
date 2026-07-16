@@ -17,6 +17,7 @@ import {
   ConsultantDashboardService,
   ConsultantDashboardStatus,
   ConsultantLead,
+  ConsultantPatientProfile,
   ConsultantReservation,
   CreateReservationRequest,
   SubmitLeadCallReportRequest,
@@ -127,6 +128,7 @@ type ConsultantDashboardSection =
   | "leads"
   | "report-edits"
   | "patients"
+  | "patient-profiles"
   | "reservations";
 
 type ReportDialogMode = "create" | "edit";
@@ -1062,6 +1064,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     { id: "leads", label: "لیدها", icon: "clipboard" },
     { id: "report-edits", label: "ویرایش گزارش", icon: "edit" },
     { id: "patients", label: "بیماران", icon: "doctor" },
+    { id: "patient-profiles", label: "پرونده‌ها", icon: "clipboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
   ];
 
@@ -1100,6 +1103,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadsLoading = false;
   leadStateFilter: number | null = null;
   leadTypeFilter: number | null = null;
+  leadActivityFilter: number | null = null;
+  leadFromDate: Date | null = null;
+  leadToDate: Date | null = null;
   leadPageNumber = 1;
   leadPageSize = 10;
   leadTotalPages = 1;
@@ -1126,6 +1132,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   patientTotalPages = 1;
   patientTotalCount = 0;
   private patientLeadRequestId = 0;
+
+  patientProfiles: ConsultantPatientProfile[] = [];
+  patientProfilesLoading = false;
+  patientProfileFromDate: Date | null = null;
+  patientProfileToDate: Date | null = null;
+  patientProfilePageNumber = 1;
+  patientProfilePageSize = 10;
+  patientProfileTotalPages = 1;
+  patientProfileTotalCount = 0;
+  private patientProfileRequestId = 0;
 
   reportDialogOpen = false;
   reportDialogMode: ReportDialogMode = "create";
@@ -1416,6 +1432,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.loadReportEditLeads();
     } else if (resolvedSection === "patients") {
       this.loadPatientLeads();
+    } else if (resolvedSection === "patient-profiles") {
+      this.loadPatientProfiles();
     } else if (
       resolvedSection === "reservations" &&
       !this.reservations.length &&
@@ -1437,6 +1455,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         section === "leads" ||
         section === "report-edits" ||
         section === "patients" ||
+        section === "patient-profiles" ||
         section === "reservations") &&
       !this.isProfileReady()
     ) {
@@ -1477,6 +1496,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.loadReportEditLeads();
     } else if (resolvedSection === "patients") {
       this.loadPatientLeads();
+    } else if (resolvedSection === "patient-profiles") {
+      this.loadPatientProfiles();
     } else if (
       resolvedSection === "reservations" &&
       !this.reservations.length &&
@@ -1990,6 +2011,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         "leads",
         "report-edits",
         "patients",
+        "patient-profiles",
         "reservations",
       ].includes(section)
     ) {
@@ -2143,6 +2165,99 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             "error",
           ),
       });
+  }
+
+  applyPatientProfileFilters(): void {
+    this.patientProfilePageNumber = 1;
+    this.loadPatientProfiles();
+  }
+
+  changePatientProfilePage(page: number): void {
+    this.patientProfilePageNumber = Math.min(
+      Math.max(1, page),
+      Math.max(1, this.patientProfileTotalPages),
+    );
+    this.loadPatientProfiles();
+  }
+
+  loadPatientProfiles(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    const requestId = ++this.patientProfileRequestId;
+    this.patientProfilesLoading = true;
+    this.clearFeedback();
+
+    this.consultantApi
+      .getConsultantPatientProfiles({
+        consultantProfileId: profileId,
+        from: this.formatFilterDate(this.patientProfileFromDate),
+        to: this.formatFilterDate(this.patientProfileToDate),
+        pageNumber: this.patientProfilePageNumber,
+        pageSize: this.patientProfilePageSize,
+      })
+      .pipe(
+        finalize(() => {
+          if (requestId === this.patientProfileRequestId) {
+            this.patientProfilesLoading = false;
+          }
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this.patientProfileRequestId) return;
+          this.patientProfiles = response.items ?? [];
+          this.patientProfileTotalCount =
+            response.totalCount ?? this.patientProfiles.length;
+          this.patientProfilePageSize =
+            response.pageSize || this.patientProfilePageSize;
+          this.patientProfileTotalPages = Math.max(
+            1,
+            response.totalPages ||
+              Math.ceil(
+                this.patientProfileTotalCount / this.patientProfilePageSize,
+              ),
+          );
+          this.patientProfilePageNumber = Math.min(
+            Math.max(1, response.pageNumber || this.patientProfilePageNumber),
+            this.patientProfileTotalPages,
+          );
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "دریافت پرونده‌های بیمار انجام نشد"),
+            "error",
+          ),
+      });
+  }
+
+  patientProfileName(profile: ConsultantPatientProfile): string {
+    return profile.patientName?.trim() || profile.PatientName?.trim() || "بدون نام";
+  }
+
+  patientProfilePhone(profile: ConsultantPatientProfile): string {
+    return (
+      profile.patientPhoneNumber?.trim() ||
+      profile.PatientPhoneNumber?.trim() ||
+      "-"
+    );
+  }
+
+  patientProfileCreatedAt(profile: ConsultantPatientProfile): string {
+    return profile.profileCreatedAt || profile.ProfileCreatedAt || "";
+  }
+
+  patientProfileReservationAt(profile: ConsultantPatientProfile): string {
+    return profile.reservationAt || profile.ReservationAt || "";
+  }
+
+  private formatFilterDate(value: Date | null): string | undefined {
+    if (!value) return undefined;
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   openAddPatientLeadDialog(): void {
@@ -3568,6 +3683,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         profileId,
         leadAssignmentState: this.effectiveLeadStateFilter(),
         leadAssignmentType: this.leadTypeFilter,
+        fromDate: this.formatFilterDate(this.leadFromDate),
+        toDate: this.formatFilterDate(this.leadToDate),
+        leadActivityFilter: this.leadActivityFilter,
         pageNumber: this.leadPageNumber,
         pageSize: this.leadPageSize,
       })

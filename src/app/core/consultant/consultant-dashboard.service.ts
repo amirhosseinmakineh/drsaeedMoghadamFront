@@ -147,6 +147,9 @@ export interface LeadFilters {
   leadAssignmentState?: number | null;
   leadAssignmentType?: number | null;
   hasSubmittedReport?: boolean | null;
+  fromDate?: string | null;
+  toDate?: string | null;
+  leadActivityFilter?: number | null;
   pageNumber: number;
   pageSize: number;
 }
@@ -249,6 +252,8 @@ export interface ConsultantReservation {
   SecondaryPhoneNumber?: string | null;
   patientCity?: string | null;
   PatientCity?: string | null;
+  patientRegion?: string | null;
+  PatientRegion?: string | null;
   attendanceProbabilityPercent?: number | null;
   AttendanceProbabilityPercent?: number | null;
   attendancePrediction?: string | null;
@@ -337,6 +342,53 @@ export interface ReservationFilters {
   to?: string;
   includeCanceled?: boolean;
   onlySecretaryReviewed?: boolean;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface UpdateReservationRequest {
+  reservationId: number;
+  consultantProfileId: number;
+  reservationAt: string;
+  patientCity: string;
+  patientRegion: string;
+  attendanceProbabilityPercent: number;
+  attendancePrediction: string;
+  secondaryPhoneNumber?: string | null;
+  description?: string | null;
+}
+
+export interface ConsultantPatientProfile {
+  reservationId?: number;
+  ReservationId?: number;
+  leadAssignmentId?: number;
+  LeadAssignmentId?: number;
+  patientUserId?: string;
+  PatientUserId?: string;
+  patientProfileId?: number;
+  PatientProfileId?: number;
+  patientName?: string;
+  PatientName?: string;
+  patientPhoneNumber?: string;
+  PatientPhoneNumber?: string;
+  patientCity?: string | null;
+  PatientCity?: string | null;
+  patientRegion?: string | null;
+  PatientRegion?: string | null;
+  profileCreatedAt?: string;
+  ProfileCreatedAt?: string;
+  reservationAt?: string;
+  ReservationAt?: string;
+  insuranceName?: string | null;
+  InsuranceName?: string | null;
+  emergencyPhoneNumber?: string | null;
+  EmergencyPhoneNumber?: string | null;
+}
+
+export interface PatientProfileFilters {
+  consultantProfileId: number;
+  from?: string;
+  to?: string;
   pageNumber: number;
   pageSize: number;
 }
@@ -633,6 +685,46 @@ export class ConsultantDashboardService {
         },
       )
       .pipe(this.ensureCommandSucceeded("تشکیل پرونده بیمار انجام نشد"));
+  }
+
+  updateReservation(
+    payload: UpdateReservationRequest,
+  ): Observable<ApiCommandResponse<ConsultantReservation>> {
+    return this.http
+      .put<ApiCommandResponse<ConsultantReservation>>(
+        `${this.apiBaseUrl}/Reservation`,
+        payload,
+        {
+          headers: this.authHeaders(),
+        },
+      )
+      .pipe(this.ensureCommandSucceeded("ویرایش رزرو انجام نشد"));
+  }
+
+  getConsultantPatientProfiles(
+    filters: PatientProfileFilters,
+  ): Observable<PaginatedResponse<ConsultantPatientProfile>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Reservation/ConsultantPatientProfiles`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<ConsultantPatientProfile>(
+            response,
+            filters,
+          ),
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(
+              error,
+              "دریافت پرونده‌های بیمار انجام نشد",
+            ),
+          ),
+        ),
+      );
   }
 
   getReservations(
