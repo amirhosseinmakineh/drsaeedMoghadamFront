@@ -1,7 +1,5 @@
 import { DestroyRef } from "@angular/core";
 
-const SIDEBAR_HISTORY_KEY = "dashboardMobileSidebar";
-
 export interface MobileSidebarHost {
   mobileSidebarOpen: boolean;
 }
@@ -22,8 +20,6 @@ export function bindDashboardMobileSidebar(
   toggleMobileSidebar(): void;
   closeMobileSidebar(): void;
 } {
-  let ignoreNextPopstate = false;
-
   const setOpen = (open: boolean): void => {
     if (host.mobileSidebarOpen === open) return;
 
@@ -37,35 +33,11 @@ export function bindDashboardMobileSidebar(
   };
 
   const closeMobileSidebar = (): void => {
-    if (!host.mobileSidebarOpen) return;
-
-    if (history.state?.[SIDEBAR_HISTORY_KEY]) {
-      ignoreNextPopstate = true;
-      history.back();
-    }
-
     setOpen(false);
   };
 
   const toggleMobileSidebar = (): void => {
-    if (host.mobileSidebarOpen) {
-      closeMobileSidebar();
-      return;
-    }
-
-    setOpen(true);
-    history.pushState({ [SIDEBAR_HISTORY_KEY]: true }, "");
-  };
-
-  const onPopstate = (): void => {
-    if (ignoreNextPopstate) {
-      ignoreNextPopstate = false;
-      return;
-    }
-
-    if (host.mobileSidebarOpen) {
-      setOpen(false);
-    }
+    setOpen(!host.mobileSidebarOpen);
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
@@ -73,10 +45,8 @@ export function bindDashboardMobileSidebar(
     closeMobileSidebar();
   };
 
-  window.addEventListener("popstate", onPopstate);
   window.addEventListener("keydown", onKeydown);
   destroyRef.onDestroy(() => {
-    window.removeEventListener("popstate", onPopstate);
     window.removeEventListener("keydown", onKeydown);
     unlockBodyScroll();
   });
