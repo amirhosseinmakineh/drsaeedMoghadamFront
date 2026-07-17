@@ -186,7 +186,7 @@ export class AdminConsultantProfileComponent implements OnChanges {
   @Input() profileId: number | null = null;
 
   profile: AdminConsultantProfile | null = null;
-  limitInput = "";
+  limitInput: string | number = "";
   loading = false;
   saving = false;
   errorMessage = "";
@@ -262,7 +262,7 @@ export class AdminConsultantProfileComponent implements OnChanges {
     }
     if (this.saving) return;
 
-    const trimmed = this.limitInput.trim();
+    const trimmed = this.normalizeLimitInput(this.limitInput);
     let limitNumber: number | null = null;
 
     if (trimmed) {
@@ -348,6 +348,11 @@ export class AdminConsultantProfileComponent implements OnChanges {
         ? ""
         : String(update.limitNumber);
     this.markDirty();
+  }
+
+  private normalizeLimitInput(value: string | number | null | undefined): string {
+    if (value === null || value === undefined) return "";
+    return String(value).trim();
   }
 
   private errorMessageFrom(error: unknown): string {
