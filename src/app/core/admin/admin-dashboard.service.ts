@@ -567,10 +567,13 @@ export class AdminDashboardService {
           user.consultantIsOnline ??
           user.ConsultantIsOnline ??
           profile?.consultantIsOnline ??
+          profile?.ConsultantIsOnline ??
           null,
         consultantIsAvailable:
           user.consultantIsAvailable ??
           user.ConsultantIsAvailable ??
+          profile?.consultantIsAvailable ??
+          profile?.ConsultantIsAvailable ??
           null,
         lastSeenAt: user.lastSeenAt ?? user.LastSeenAt ?? null,
         attendanceResponse: profile?.attendanceResponse,
