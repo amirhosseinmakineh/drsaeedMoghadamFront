@@ -1103,9 +1103,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadsLoading = false;
   leadStateFilter: number | null = null;
   leadTypeFilter: number | null = null;
-  leadActivityFilter: number | null = null;
   leadFromDate: Date | null = null;
   leadToDate: Date | null = null;
+  readonly leadFromDatePickerLabel = { fa: "از تاریخ", en: "From date" };
+  readonly leadToDatePickerLabel = { fa: "تا تاریخ", en: "To date" };
   leadPageNumber = 1;
   leadPageSize = 10;
   leadTotalPages = 1;
@@ -1991,9 +1992,38 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  setLeadFromDate(date: Date): void {
+    this.leadFromDate = date;
+    this.markViewDirty();
+  }
+
+  setLeadToDate(date: Date): void {
+    this.leadToDate = date;
+    this.markViewDirty();
+  }
+
   applyLeadFilters(): void {
+    const validationError = this.validateLeadDateFilters();
+    if (validationError) {
+      this.showFeedback(validationError, "error");
+      return;
+    }
+
     this.leadPageNumber = 1;
     this.loadLeads();
+  }
+
+  private validateLeadDateFilters(): string | null {
+    if (
+      this.leadFromDate &&
+      this.leadToDate &&
+      this.startOfDay(this.leadFromDate).getTime() >
+        this.startOfDay(this.leadToDate).getTime()
+    ) {
+      return "تاریخ شروع نباید بعد از تاریخ پایان باشد";
+    }
+
+    return null;
   }
 
   private applyLeadRouteParams(params: ParamMap): void {
@@ -3683,9 +3713,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         profileId,
         leadAssignmentState: this.effectiveLeadStateFilter(),
         leadAssignmentType: this.leadTypeFilter,
-        fromDate: this.formatFilterDate(this.leadFromDate),
-        toDate: this.formatFilterDate(this.leadToDate),
-        leadActivityFilter: this.leadActivityFilter,
+        from: this.formatFilterDate(this.leadFromDate),
+        to: this.formatFilterDate(this.leadToDate ?? this.leadFromDate),
         pageNumber: this.leadPageNumber,
         pageSize: this.leadPageSize,
       })

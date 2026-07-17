@@ -481,33 +481,22 @@
               <label>
                 از تاریخ
                 <app-base-datepicker
-                  [(ngModel)]="leadFromDate"
-                  [ngModelOptions]="ngModelBlurOptions"
-                  name="consultantLeadFromDate"
-                  [label]="{ fa: 'از تاریخ', en: 'From date' }"
+                  [label]="leadFromDatePickerLabel"
+                  [selectedDate]="leadFromDate ?? undefined"
+                  [maxDate]="leadToDate ?? undefined"
+                  [allowToday]="true"
+                  (dateChange)="setLeadFromDate($event)"
                 ></app-base-datepicker>
               </label>
               <label>
                 تا تاریخ
                 <app-base-datepicker
-                  [(ngModel)]="leadToDate"
-                  [ngModelOptions]="ngModelBlurOptions"
-                  name="consultantLeadToDate"
-                  [label]="{ fa: 'تا تاریخ', en: 'To date' }"
+                  [label]="leadToDatePickerLabel"
+                  [selectedDate]="leadToDate ?? undefined"
+                  [minDate]="leadFromDate ?? undefined"
+                  [allowToday]="true"
+                  (dateChange)="setLeadToDate($event)"
                 ></app-base-datepicker>
-              </label>
-              <label>
-                نوع فعالیت
-                <select
-                  [(ngModel)]="leadActivityFilter"
-                  [ngModelOptions]="ngModelBlurOptions"
-                  name="consultantLeadActivity"
-                >
-                  <option [ngValue]="null">همه فعالیت‌ها</option>
-                  <option [ngValue]="1">زنگ زده</option>
-                  <option [ngValue]="2">گزارش زده</option>
-                  <option [ngValue]="3">رزرو زده</option>
-                </select>
               </label>
               <label>
                 وضعیت
