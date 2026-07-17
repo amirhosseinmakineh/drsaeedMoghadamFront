@@ -109,6 +109,15 @@ export interface ConsultantFilters {
   pageSize: number;
 }
 
+export interface ConsultantLimitUpdate {
+  limitNumber?: number | null;
+  LimitNumber?: number | null;
+  effectiveDailyLimit: number;
+  EffectiveDailyLimit?: number;
+  todayPickupCount: number;
+  TodayPickupCount?: number;
+}
+
 export interface AdminConsultantProfile {
   profileId: number;
   ProfileId?: number;
@@ -598,14 +607,40 @@ export class AdminDashboardService {
   updateConsultantLimit(
     profileId: number,
     limitNumber: number | null,
-  ): Observable<ApiCommandResponse> {
+  ): Observable<ApiCommandResponse<ConsultantLimitUpdate>> {
     return this.http
-      .patch<ApiCommandResponse>(
+      .patch<ApiCommandResponse<ConsultantLimitUpdate>>(
         `${this.apiBaseUrl}/admin/consultants/${profileId}/limit`,
         { limitNumber },
         { headers: this.authHeaders() },
       )
-      .pipe(this.ensureCommandSucceeded("ذخیره محدودیت دریافت شماره انجام نشد"));
+      .pipe(
+        map((response) => this.normalizeLimitUpdateResponse(response)),
+        this.ensureCommandSucceeded("ذخیره محدودیت دریافت شماره انجام نشد"),
+      );
+  }
+
+  private normalizeLimitUpdateResponse(
+    response: ApiCommandResponse<ConsultantLimitUpdate>,
+  ): ApiCommandResponse<ConsultantLimitUpdate> {
+    const normalized = this.normalizeCommandResponse(
+      response,
+      "ذخیره محدودیت دریافت شماره انجام نشد",
+    );
+    const source = this.unwrapResponseData(normalized);
+    const record = this.isRecord(source) ? source : {};
+
+    return {
+      ...normalized,
+      data: {
+        limitNumber: this.readNumber(record, "limitNumber", "LimitNumber"),
+        effectiveDailyLimit:
+          this.readNumber(record, "effectiveDailyLimit", "EffectiveDailyLimit") ??
+          10,
+        todayPickupCount:
+          this.readNumber(record, "todayPickupCount", "TodayPickupCount") ?? 0,
+      },
+    };
   }
 
   private normalizeConsultantProfile(response: unknown): AdminConsultantProfile {
