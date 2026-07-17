@@ -171,6 +171,7 @@ export class BaseDatepickerComponent implements OnChanges {
   @Input() minDate?: Date | null;
   @Input() maxDate?: Date | null;
   @Input() allowToday = false;
+  @Input() allowPastDates = false;
   @Output() dateChange = new EventEmitter<Date>();
 
   private activeMonthAnchor = new Date();
@@ -275,6 +276,7 @@ export class BaseDatepickerComponent implements OnChanges {
       this.minDate?.getTime() ?? "none",
       this.maxDate?.getTime() ?? "none",
       this.allowToday,
+      this.allowPastDates,
       this.selectedDate?.getTime() ?? "none",
     ].join("|");
 
@@ -343,6 +345,7 @@ export class BaseDatepickerComponent implements OnChanges {
 
   private get minSelectableDate(): Date {
     if (this.minDate) return this.startOfDay(this.minDate);
+    if (this.allowPastDates) return this.startOfDay(new Date(2000, 0, 1));
 
     const today = this.startOfDay(new Date());
     return this.allowToday ? today : this.addDays(today, 1);
