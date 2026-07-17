@@ -12,9 +12,9 @@ import { finalize } from "rxjs";
 import {
   AdminConsultantProfile,
   AdminDashboardService,
+  ConsultantLimitUpdate,
 } from "../../core/admin/admin-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
-import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 
@@ -191,7 +191,7 @@ export class AdminConsultantProfileComponent implements OnChanges {
   saving = false;
   errorMessage = "";
 
-  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
+  private profileRequestId = 0;
   private readonly markDirty: () => void;
 
   constructor(
@@ -208,7 +208,7 @@ export class AdminConsultantProfileComponent implements OnChanges {
     }
   }
 
-  loadProfile(): void {
+  loadProfile(options: { silent?: boolean } = {}): void {
     if (!this.profileId) {
       this.profile = null;
       this.errorMessage = "";
@@ -216,28 +216,33 @@ export class AdminConsultantProfileComponent implements OnChanges {
       return;
     }
 
-    this.loading = true;
-    this.errorMessage = "";
-    this.markDirty();
+    const requestId = ++this.profileRequestId;
+    const silent = options.silent ?? false;
+
+    if (!silent) {
+      this.loading = true;
+      this.errorMessage = "";
+      this.markDirty();
+    }
 
     this.adminApi
       .getConsultantProfile(this.profileId)
       .pipe(
         finalize(() => {
-          this.loading = false;
+          if (requestId !== this.profileRequestId) return;
+          if (!silent) {
+            this.loading = false;
+          }
           this.markDirty();
         }),
       )
       .subscribe({
         next: (profile) => {
-          this.profile = profile;
-          this.limitInput =
-            profile.limitNumber === null || profile.limitNumber === undefined
-              ? ""
-              : String(profile.limitNumber);
-          this.markDirty();
+          if (requestId !== this.profileRequestId) return;
+          this.applyProfile(profile);
         },
         error: (error) => {
+          if (requestId !== this.profileRequestId) return;
           this.profile = null;
           this.errorMessage = this.errorMessageFrom(error);
           this.markDirty();
@@ -247,6 +252,7 @@ export class AdminConsultantProfileComponent implements OnChanges {
 
   resetToDefault(): void {
     this.limitInput = "";
+    this.markDirty();
   }
 
   saveLimit(): void {
@@ -276,9 +282,12 @@ export class AdminConsultantProfileComponent implements OnChanges {
         }),
       )
       .subscribe({
-        next: () => {
+        next: (response) => {
           this.toast.show("محدودیت دریافت شماره ذخیره شد", "success");
-          this.loadProfile();
+          if (response.data) {
+            this.applyLimitUpdate(response.data);
+          }
+          this.loadProfile({ silent: true });
         },
         error: (error) =>
           this.toast.show(this.errorMessageFrom(error), "error"),
@@ -310,6 +319,31 @@ export class AdminConsultantProfileComponent implements OnChanges {
     const parts = value.split(":");
     if (parts.length < 2) return value;
     return `${parts[0]}:${parts[1]}`;
+  }
+
+  private applyProfile(profile: AdminConsultantProfile): void {
+    this.profile = profile;
+    this.limitInput =
+      profile.limitNumber === null || profile.limitNumber === undefined
+        ? ""
+        : String(profile.limitNumber);
+    this.markDirty();
+  }
+
+  private applyLimitUpdate(update: ConsultantLimitUpdate): void {
+    if (!this.profile) return;
+
+    this.profile = {
+      ...this.profile,
+      limitNumber: update.limitNumber ?? null,
+      effectiveDailyLimit: update.effectiveDailyLimit,
+      todayPickupCount: update.todayPickupCount,
+    };
+    this.limitInput =
+      update.limitNumber === null || update.limitNumber === undefined
+        ? ""
+        : String(update.limitNumber);
+    this.markDirty();
   }
 
   private errorMessageFrom(error: unknown): string {
