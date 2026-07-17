@@ -171,6 +171,7 @@ export class BaseDatepickerComponent implements OnChanges {
   @Input() minDate?: Date | null;
   @Input() maxDate?: Date | null;
   @Input() allowToday = false;
+  /** Enables historical/report ranges: past dates selectable, future dates blocked. */
   @Input() allowPastDates = false;
   @Output() dateChange = new EventEmitter<Date>();
 
@@ -219,13 +220,11 @@ export class BaseDatepickerComponent implements OnChanges {
   }
 
   get canMoveNext(): boolean {
-    if (!this.maxDate) return true;
+    const maxDate = this.maxSelectableDate;
+    if (!maxDate) return true;
     return (
       this.monthStart.getTime() <
-      this.findMonthStart(
-        this.maxDate,
-        this.calendarParts(this.maxDate),
-      ).getTime()
+      this.findMonthStart(maxDate, this.calendarParts(maxDate)).getTime()
     );
   }
 
@@ -237,10 +236,13 @@ export class BaseDatepickerComponent implements OnChanges {
     if (changes["selectedDate"] && this.selectedDate) {
       this.activeMonthAnchor = this.selectedDate;
     } else if (
-      (changes["maxDate"] || changes["minDate"]) &&
+      (changes["maxDate"] ||
+        changes["minDate"] ||
+        changes["allowPastDates"]) &&
       this.activeMonthAnchorOutsideSelectableRange()
     ) {
-      this.activeMonthAnchor = this.maxDate ?? this.minSelectableDate;
+      this.activeMonthAnchor =
+        this.maxSelectableDate ?? this.minSelectableDate;
     }
 
     this.rebuildDaysCache();
@@ -284,7 +286,7 @@ export class BaseDatepickerComponent implements OnChanges {
 
     this.daysCacheKey = cacheKey;
     const minDate = this.minSelectableDate;
-    const maxDate = this.maxDate ? this.startOfDay(this.maxDate) : null;
+    const maxDate = this.maxSelectableDate;
     const currentMonth = this.calendarParts(this.activeMonthAnchor);
     const gridStart = this.addDays(
       this.monthStart,
@@ -349,6 +351,13 @@ export class BaseDatepickerComponent implements OnChanges {
 
     const today = this.startOfDay(new Date());
     return this.allowToday ? today : this.addDays(today, 1);
+  }
+
+  private get maxSelectableDate(): Date | null {
+    if (this.maxDate) return this.startOfDay(this.maxDate);
+    if (this.allowPastDates) return this.startOfDay(new Date());
+
+    return null;
   }
 
   private get locale(): string {
@@ -430,11 +439,12 @@ export class BaseDatepickerComponent implements OnChanges {
   private activeMonthAnchorOutsideSelectableRange(): boolean {
     const monthStart = this.monthStart.getTime();
     if (monthStart < this.minMonthStart.getTime()) return true;
-    if (!this.maxDate) return false;
+    const maxDate = this.maxSelectableDate;
+    if (!maxDate) return false;
 
     const maxMonthStart = this.findMonthStart(
-      this.maxDate,
-      this.calendarParts(this.maxDate),
+      maxDate,
+      this.calendarParts(maxDate),
     ).getTime();
     return monthStart > maxMonthStart;
   }
