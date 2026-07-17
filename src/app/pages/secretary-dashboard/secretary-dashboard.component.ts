@@ -3,9 +3,11 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   OnDestroy,
   OnInit,
   computed,
+  inject,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
@@ -15,6 +17,8 @@ import { PushNotificationService } from "../../core/push/push-notification.servi
 import { ToastService } from "../../core/toast/toast.service";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
+import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
+import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-route-history";
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
@@ -313,6 +317,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
       }
       .mobile-sidebar-backdrop,
       .mobile-sidebar-close,
+      .mobile-sidebar-header,
       .mobile-menu-btn {
         display: none;
       }
@@ -409,20 +414,49 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
           position: fixed;
           z-index: 100;
           top: 0;
-          left: 0;
+          inset-inline-start: 0;
           bottom: 0;
           width: min(300px, 86vw);
           margin: 0;
           padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
-          border-radius: 0 28px 28px 0;
+          border-start-start-radius: 0;
+          border-end-start-radius: 28px;
+          border-end-end-radius: 28px;
+          border-start-end-radius: 0;
           border-inline-start: 0;
-          transform: translateX(-105%);
           transition: transform 0.28s ease;
           overflow-y: auto;
           box-shadow: 12px 0 32px rgba(93, 64, 32, 0.16);
         }
+        [dir="ltr"] .dashboard-layout.secretary-mode .dashboard-sidebar {
+          transform: translateX(-105%);
+        }
+        [dir="rtl"] .dashboard-layout.secretary-mode .dashboard-sidebar {
+          transform: translateX(105%);
+        }
         .dashboard-layout.secretary-mode .dashboard-sidebar.mobile-sidebar-open {
           transform: translateX(0);
+        }
+        .mobile-sidebar-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin-bottom: 4px;
+        }
+        .mobile-sidebar-header strong {
+          font-size: 0.92rem;
+        }
+        .mobile-sidebar-close-x {
+          display: inline-grid;
+          place-items: center;
+          width: 40px;
+          height: 40px;
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          background: var(--surface-muted);
+          color: var(--text);
+          flex-shrink: 0;
         }
         .secretary-mode .dashboard-brand,
         .secretary-mode .dashboard-user-card {
@@ -517,7 +551,13 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
 
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
+  private readonly destroyRef = inject(DestroyRef);
   private routeQueryParamsSubscription: Subscription | null = null;
+  private readonly mobileSidebar = bindDashboardMobileSidebar(
+    this,
+    () => this.markDirty(),
+    this.destroyRef,
+  );
 
   constructor(
     private auth: AuthService,
@@ -529,6 +569,12 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
   ) {
     this.markDirty = createCoalescedMarkForCheck(this.cdr, () => false);
+    bindDashboardRouteHistory(
+      this.router,
+      this.route,
+      (params) => this.applySectionRouteParams(params),
+      this.destroyRef,
+    );
   }
 
   get visibleDashboardLinks(): SecretaryDashboardLink[] {
@@ -637,14 +683,11 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   }
 
   toggleMobileSidebar(): void {
-    this.mobileSidebarOpen = !this.mobileSidebarOpen;
-    this.markDirty();
+    this.mobileSidebar.toggleMobileSidebar();
   }
 
   closeMobileSidebar(): void {
-    if (!this.mobileSidebarOpen) return;
-    this.mobileSidebarOpen = false;
-    this.markDirty();
+    this.mobileSidebar.closeMobileSidebar();
   }
 
   submitProfile(): void {
