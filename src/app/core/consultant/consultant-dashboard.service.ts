@@ -147,9 +147,8 @@ export interface LeadFilters {
   leadAssignmentState?: number | null;
   leadAssignmentType?: number | null;
   hasSubmittedReport?: boolean | null;
-  fromDate?: string | null;
-  toDate?: string | null;
-  leadActivityFilter?: number | null;
+  from?: string | null;
+  to?: string | null;
   pageNumber: number;
   pageSize: number;
 }
