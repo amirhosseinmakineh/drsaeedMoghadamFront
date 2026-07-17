@@ -611,7 +611,7 @@ export class AdminDashboardService {
     return this.http
       .patch<ApiCommandResponse<ConsultantLimitUpdate>>(
         `${this.apiBaseUrl}/admin/consultants/${profileId}/limit`,
-        { limitNumber },
+        { limitNumber, LimitNumber: limitNumber },
         { headers: this.authHeaders() },
       )
       .pipe(

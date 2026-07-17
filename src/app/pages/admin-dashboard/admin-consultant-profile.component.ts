@@ -256,7 +256,11 @@ export class AdminConsultantProfileComponent implements OnChanges {
   }
 
   saveLimit(): void {
-    if (!this.profileId || this.saving) return;
+    if (!this.profileId) {
+      this.toast.show("شناسه پروفایل مشاور مشخص نیست", "error");
+      return;
+    }
+    if (this.saving) return;
 
     const trimmed = this.limitInput.trim();
     let limitNumber: number | null = null;
