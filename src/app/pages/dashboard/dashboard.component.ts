@@ -747,6 +747,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.closeMobileSidebar();
     if (this.isAdmin()) {
       this.loadUsers();
       this.loadConsultants();

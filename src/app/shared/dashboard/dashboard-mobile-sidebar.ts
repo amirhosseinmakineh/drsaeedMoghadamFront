@@ -21,8 +21,6 @@ export function bindDashboardMobileSidebar(
   closeMobileSidebar(): void;
 } {
   const setOpen = (open: boolean): void => {
-    if (host.mobileSidebarOpen === open) return;
-
     host.mobileSidebarOpen = open;
     if (open) {
       lockBodyScroll();

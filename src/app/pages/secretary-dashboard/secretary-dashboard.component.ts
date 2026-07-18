@@ -400,6 +400,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.closeMobileSidebar();
     if (!this.isProfileReady()) {
       this.activeSection = "profile";
     }

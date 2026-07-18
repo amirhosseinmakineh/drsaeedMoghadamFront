@@ -1,7 +1,5 @@
 export const DASHBOARD_MOBILE_LAYOUT_STYLES = `
-  .dashboard-mobile-header {
-    display: none;
-  }
+  .dashboard-mobile-header,
   .mobile-sidebar-backdrop,
   .mobile-sidebar-close,
   .mobile-sidebar-header,
@@ -10,12 +8,6 @@ export const DASHBOARD_MOBILE_LAYOUT_STYLES = `
   }
 
   @media (max-width: 980px) {
-    .dashboard-layout {
-      grid-template-columns: 1fr;
-      width: 100%;
-      padding: 10px 10px calc(24px + env(safe-area-inset-bottom, 0px));
-    }
-
     .dashboard-mobile-header {
       display: flex;
       align-items: center;
@@ -101,38 +93,6 @@ export const DASHBOARD_MOBILE_LAYOUT_STYLES = `
       background: rgba(20, 16, 12, 0.42);
     }
 
-    .dashboard-sidebar {
-      position: fixed;
-      z-index: 100;
-      top: 0;
-      inset-inline-start: 0;
-      bottom: 0;
-      width: min(300px, 86vw);
-      margin: 0;
-      padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
-      border-start-start-radius: 0;
-      border-end-start-radius: 28px;
-      border-end-end-radius: 28px;
-      border-start-end-radius: 0;
-      border-inline-start: 0;
-      transition: transform 0.28s ease, visibility 0.28s ease;
-      overflow-y: auto;
-      box-shadow: 12px 0 32px rgba(93, 64, 32, 0.16);
-      transform: translateX(105%);
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    :host-context([dir="ltr"]) .dashboard-sidebar {
-      transform: translateX(-105%);
-    }
-
-    .dashboard-sidebar.mobile-sidebar-open {
-      transform: translateX(0);
-      visibility: visible;
-      pointer-events: auto;
-    }
-
     .mobile-sidebar-header {
       display: flex;
       align-items: center;
@@ -155,10 +115,6 @@ export const DASHBOARD_MOBILE_LAYOUT_STYLES = `
       background: var(--surface-muted);
       color: var(--text);
       flex-shrink: 0;
-    }
-
-    .dashboard-sidebar .logout-btn {
-      display: none;
     }
 
     .mobile-sidebar-close {
