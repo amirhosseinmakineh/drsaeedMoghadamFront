@@ -1051,6 +1051,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private readonly timerExpiredReportPromptedLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
   private feedbackAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingReservationOpenTimer: ReturnType<typeof setTimeout> | null = null;
   private suppressLeadCardActionsUntil = 0;
   private leadStatusRefreshRequestId = 0;
   private timerStarts: Record<string, number> = {};
@@ -1240,6 +1241,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.destroyed = true;
     this.realtimeLeadAlerts.stopPolling();
     if (this.feedbackAutoDismissTimer) clearTimeout(this.feedbackAutoDismissTimer);
+    this.clearPendingReservationDialogOpen();
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
     if (this.autoAbsenceId) clearInterval(this.autoAbsenceId);
@@ -2254,6 +2256,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId || this.isReportDisabled(lead)) return;
 
+    this.clearPendingReservationDialogOpen();
     this.reportDialogMode = "create";
     this.reportingLeadIds.add(leadAssignmentId);
     this.selectedLead = lead;
@@ -2267,6 +2270,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId || !this.isLeadReportEditable(lead)) return;
 
+    this.clearPendingReservationDialogOpen();
     this.reportDialogMode = "edit";
     this.selectedLead = lead;
     this.reportForm = this.leadReportFormFromLead(lead);
@@ -2295,6 +2299,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ? this.leadType(this.selectedLead) === LEAD_TYPE.ConsultantPatient
       : false;
 
+    this.clearPendingReservationDialogOpen();
     this.reportDialogOpen = false;
     this.reportDialogMode = "create";
     this.reportSaving = false;
@@ -2448,14 +2453,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             const updatedLead =
               this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
               lead;
-            setTimeout(
-              () =>
-                this.openReservationDialog(
-                  updatedLead,
-                  secondaryPhone || undefined,
-                  { skipActionSuppress: true },
-                ),
-              650,
+            this.scheduleReservationDialogOpen(
+              updatedLead,
+              secondaryPhone || undefined,
             );
           }
 
@@ -2572,27 +2572,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.showFeedback("گزارش ویرایش شد", "success");
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
-          }
-
-          const shouldOpenReservation =
-            this.readShouldOpenReservationPage(response.data) &&
-            this.isSuccessfulCallResult(callResult);
-          if (shouldOpenReservation) {
-            const updatedLead =
-              this.reportEditLeads.find(
-                (item) => this.leadId(item) === leadAssignmentId,
-              ) ??
-              this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
-              lead;
-            setTimeout(
-              () =>
-                this.openReservationDialog(
-                  updatedLead,
-                  secondaryPhone || undefined,
-                  { skipActionSuppress: true },
-                ),
-              650,
-            );
           }
         },
         error: (error) =>
@@ -4285,6 +4264,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     secondaryPhoneNumber = "",
     options: { skipActionSuppress?: boolean } = {},
   ): void {
+    this.clearPendingReservationDialogOpen();
     if (
       !options.skipActionSuppress &&
       Date.now() < this.suppressLeadCardActionsUntil
@@ -4826,6 +4806,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         "ShouldOpenReservationPage",
       ) === true
     );
+  }
+
+  private clearPendingReservationDialogOpen(): void {
+    if (!this.pendingReservationOpenTimer) return;
+    clearTimeout(this.pendingReservationOpenTimer);
+    this.pendingReservationOpenTimer = null;
+  }
+
+  private scheduleReservationDialogOpen(
+    lead: ConsultantLead,
+    secondaryPhoneNumber = "",
+  ): void {
+    this.clearPendingReservationDialogOpen();
+    this.pendingReservationOpenTimer = setTimeout(() => {
+      this.pendingReservationOpenTimer = null;
+      this.openReservationDialog(lead, secondaryPhoneNumber, {
+        skipActionSuppress: true,
+      });
+    }, 650);
   }
 
   validateProfileForm(): string | null {
