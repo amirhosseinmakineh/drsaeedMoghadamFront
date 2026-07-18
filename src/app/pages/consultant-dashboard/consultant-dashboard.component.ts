@@ -60,6 +60,7 @@ import {
 
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
+const PENDING_REPORT_PATCH_TTL_MS = 60_000;
 
 const CALL_RESULT_BY_NAME: Record<string, number> = {
   contacted: 1,
@@ -1043,6 +1044,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private readonly reportedLeadIds = new Set<number>();
   private readonly reservedLeadIds = new Set<number>();
   private readonly reportingLeadIds = new Set<number>();
+  private readonly pendingReportPatches = new Map<
+    number,
+    { patch: Partial<ConsultantLead>; savedAt: number }
+  >();
   private readonly timerExpiredReportPromptedLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
   private feedbackAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1835,9 +1840,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             const items = (response.items ?? []).filter(
               (lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient,
             );
-            this.leads = items;
-            this.syncReportedLeadIdsFromLeads(this.leads);
-            this.syncReservedLeadIdsFromLeads(this.leads);
+            this.commitLeadsFromApi(items);
             this.leadTotalCount = response.totalCount ?? this.leads.length;
             this.leadTotalPages = Math.max(
               1,
@@ -2397,24 +2400,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             data?.callResult ?? Number(this.reportForm.callResult);
           const reportSubmittedAt =
             data?.reportSubmittedAt ?? new Date().toISOString();
-
-          this.markLeadReported(leadAssignmentId, nextState, true);
-          this.updateLeadInCollections(leadAssignmentId, {
+          const reportPatch = this.buildSubmittedReportPatch(
             callResult,
-            CallResult: callResult,
-            reportDescription: payload.reportDescription,
-            ReportDescription: payload.reportDescription,
-            patientCity: payload.patientCity,
-            PatientCity: payload.patientCity,
-            patientRegion: payload.patientRegion,
-            PatientRegion: payload.patientRegion,
-            isReportSubmitted: true,
-            IsReportSubmitted: true,
+            nextState,
             reportSubmittedAt,
-            ReportSubmittedAt: reportSubmittedAt,
-            leadAssignmentState: nextState,
-            LeadAssignmentState: nextState,
-          });
+            {
+              reportDescription: payload.reportDescription,
+              patientCity: payload.patientCity,
+              patientRegion: payload.patientRegion,
+            },
+          );
+
+          this.rememberPendingReportPatch(leadAssignmentId, reportPatch);
+          this.markLeadReported(leadAssignmentId, nextState, true);
+          this.updateLeadInCollections(leadAssignmentId, reportPatch);
           this.releaseLeadReportSession(leadAssignmentId);
           this.applyConsultantStatusFrom(response, data);
           if (!wasOffline) {
@@ -2547,25 +2546,24 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         next: (response) => {
           const callResult =
             response.data?.callResult ?? Number(this.reportForm.callResult);
-          this.markLeadReported(
-            leadAssignmentId,
-            response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
-            true,
-          );
-          this.updateLeadInCollections(leadAssignmentId, {
+          const nextState =
+            response.data?.leadAssignmentState ?? LEAD_STATE.Contacted;
+          const reportSubmittedAt =
+            response.data?.reportSubmittedAt ?? new Date().toISOString();
+          const reportPatch = this.buildSubmittedReportPatch(
             callResult,
-            CallResult: callResult,
-            reportDescription: payload.reportDescription,
-            ReportDescription: payload.reportDescription,
-            patientCity: payload.patientCity,
-            PatientCity: payload.patientCity,
-            patientRegion: payload.patientRegion,
-            PatientRegion: payload.patientRegion,
-            leadAssignmentState:
-              response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
-            LeadAssignmentState:
-              response.data?.leadAssignmentState ?? LEAD_STATE.Contacted,
-          });
+            nextState,
+            reportSubmittedAt,
+            {
+              reportDescription: payload.reportDescription,
+              patientCity: payload.patientCity,
+              patientRegion: payload.patientRegion,
+            },
+          );
+
+          this.rememberPendingReportPatch(leadAssignmentId, reportPatch);
+          this.markLeadReported(leadAssignmentId, nextState, true);
+          this.updateLeadInCollections(leadAssignmentId, reportPatch);
           this.releaseLeadReportSession(leadAssignmentId);
           this.applyConsultantStatusFrom(response, response.data);
           this.closeReportDialog({ releaseReportLock: true });
@@ -3352,6 +3350,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isLeadExpired(lead: ConsultantLead): boolean {
+    if (this.isLeadReportSubmitted(lead)) return false;
     if (this.leadState(lead) === LEAD_STATE.Expired) return true;
     if (this.hasCallBeenInitiated(lead)) return false;
     return this.isRealtimeTimedLead(lead) && this.leadRemainingMs(lead) <= 0;
@@ -3541,6 +3540,16 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         this.reportedLeadIds.add(leadAssignmentId);
         this.reportingLeadIds.delete(leadAssignmentId);
         this.timerExpiredReportPromptedLeadIds.delete(leadAssignmentId);
+        if (this.leadCallResult(lead) !== null) {
+          this.pendingReportPatches.delete(leadAssignmentId);
+        }
+        return;
+      }
+
+      if (
+        this.reportedLeadIds.has(leadAssignmentId) &&
+        this.pendingReportPatches.has(leadAssignmentId)
+      ) {
         return;
       }
 
@@ -3697,10 +3706,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.applyConsultantStatusFrom(response.source, response.raw);
           const items = (response.items ?? [])
             .filter((lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient);
-          this.leads = items;
-          this.syncReportedLeadIdsFromLeads(this.leads);
-          this.syncReservedLeadIdsFromLeads(this.leads);
-          this.syncCallInitiatedFromLeads(this.leads);
+          this.commitLeadsFromApi(items);
           this.leadTotalCount = response.totalCount ?? this.leads.length;
           this.leadPageSize = response.pageSize || this.leadPageSize;
           this.leadTotalPages = Math.max(
@@ -4419,9 +4425,118 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     return [
       ...collection.slice(0, index),
-      { ...collection[index], ...updatedLead },
+      this.mergeLeadUpdate(collection[index], updatedLead),
       ...collection.slice(index + 1),
     ];
+  }
+
+  private commitLeadsFromApi(items: ConsultantLead[]): void {
+    this.leads = this.applyPendingReportPatches(items);
+    this.syncReportedLeadIdsFromLeads(this.leads);
+    this.syncReservedLeadIdsFromLeads(this.leads);
+    this.syncCallInitiatedFromLeads(this.leads);
+  }
+
+  private rememberPendingReportPatch(
+    leadAssignmentId: number,
+    patch: Partial<ConsultantLead>,
+  ): void {
+    this.pendingReportPatches.set(leadAssignmentId, {
+      patch,
+      savedAt: Date.now(),
+    });
+    this.reportedLeadIds.add(leadAssignmentId);
+    this.reportingLeadIds.delete(leadAssignmentId);
+  }
+
+  private buildSubmittedReportPatch(
+    callResult: number,
+    nextState: number,
+    reportSubmittedAt: string,
+    payload: {
+      reportDescription: string;
+      patientCity: string;
+      patientRegion: string;
+    },
+  ): Partial<ConsultantLead> {
+    return {
+      callResult,
+      CallResult: callResult,
+      reportDescription: payload.reportDescription,
+      ReportDescription: payload.reportDescription,
+      patientCity: payload.patientCity,
+      PatientCity: payload.patientCity,
+      patientRegion: payload.patientRegion,
+      PatientRegion: payload.patientRegion,
+      isReportSubmitted: true,
+      IsReportSubmitted: true,
+      reportSubmittedAt,
+      ReportSubmittedAt: reportSubmittedAt,
+      leadAssignmentState: nextState,
+      LeadAssignmentState: nextState,
+      state: nextState,
+    };
+  }
+
+  private prunePendingReportPatches(): void {
+    const now = Date.now();
+    for (const [leadAssignmentId, entry] of this.pendingReportPatches) {
+      if (now - entry.savedAt > PENDING_REPORT_PATCH_TTL_MS) {
+        this.pendingReportPatches.delete(leadAssignmentId);
+      }
+    }
+  }
+
+  private backendLeadHasReport(lead: ConsultantLead): boolean {
+    if (Boolean(lead.isReportSubmitted ?? lead.IsReportSubmitted)) return true;
+    if (Boolean(lead.reportSubmittedAt ?? lead.ReportSubmittedAt)) return true;
+    return this.leadCallResult(lead) !== null;
+  }
+
+  private applyPendingReportPatches(leads: ConsultantLead[]): ConsultantLead[] {
+    this.prunePendingReportPatches();
+    if (!this.pendingReportPatches.size) return leads;
+
+    return leads.map((lead) => {
+      const leadAssignmentId = this.leadId(lead);
+      if (!leadAssignmentId) return lead;
+
+      const pending = this.pendingReportPatches.get(leadAssignmentId);
+      if (!pending) return lead;
+
+      if (this.backendLeadHasReport(lead) && this.leadCallResult(lead) !== null) {
+        this.pendingReportPatches.delete(leadAssignmentId);
+        return lead;
+      }
+
+      return this.mergeLeadUpdate(lead, pending.patch);
+    });
+  }
+
+  private mergeLeadUpdate(
+    existing: ConsultantLead,
+    incoming: ConsultantLead | Partial<ConsultantLead>,
+  ): ConsultantLead {
+    const merged = { ...existing, ...incoming } as ConsultantLead;
+    const leadAssignmentId = this.leadId(merged);
+    if (!leadAssignmentId) return merged;
+
+    const pending = this.pendingReportPatches.get(leadAssignmentId);
+    if (pending && !this.backendLeadHasReport(incoming as ConsultantLead)) {
+      return { ...merged, ...pending.patch } as ConsultantLead;
+    }
+
+    const incomingCallResult = this.leadCallResult(incoming as ConsultantLead);
+    const existingCallResult = this.leadCallResult(existing);
+    if (incomingCallResult === null && existingCallResult !== null) {
+      return {
+        ...merged,
+        callResult: existingCallResult,
+        CallResult: existingCallResult,
+      };
+    }
+
+    return merged;
   }
 
   private selectedReservationDateTime(): Date | null {
