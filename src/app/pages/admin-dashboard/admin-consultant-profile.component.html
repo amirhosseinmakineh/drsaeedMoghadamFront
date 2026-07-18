@@ -122,16 +122,16 @@
             <dd>{{ profile.todayPickupCount }}</dd>
           </div>
         </dl>
-        <form class="limit-form" novalidate (ngSubmit)="saveLimit()">
+        <div class="limit-form">
           <label>
             سقف روزانه دریافت شماره
             <input
               [(ngModel)]="limitInput"
+              [ngModelOptions]="{ standalone: true }"
               name="limitNumber"
-              type="number"
-              min="0"
-              max="100"
+              type="text"
               inputmode="numeric"
+              autocomplete="off"
               placeholder="پیش‌فرض سیستم"
             />
           </label>
@@ -153,7 +153,7 @@
               {{ saving ? "در حال ذخیره..." : "ذخیره محدودیت" }}
             </button>
           </div>
-        </form>
+        </div>
       </article>
     </div>
   }
