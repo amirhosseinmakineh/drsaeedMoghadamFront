@@ -1169,6 +1169,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.closeMobileSidebar();
     this.profileId = this.currentProfileId();
     this.timerStarts = this.readJson<Record<string, number>>(
       this.timerStorageKey(),
