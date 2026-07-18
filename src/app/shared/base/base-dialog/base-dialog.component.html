@@ -2,7 +2,7 @@
   *ngIf="open"
   class="dialog-backdrop"
   [attr.dir]="language === 'fa' ? 'rtl' : 'ltr'"
-  (click)="close()"
+  (click)="onBackdropClick($event)"
 >
   <section
     class="base-dialog"

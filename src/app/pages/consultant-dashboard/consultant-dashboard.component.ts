@@ -2266,11 +2266,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.markViewDirty();
   }
 
+  handleEditReportClick(event: Event, lead: ConsultantLead): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.openEditReportDialog(lead);
+  }
+
   openEditReportDialog(lead: ConsultantLead): void {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId || !this.isLeadReportEditable(lead)) return;
 
     this.clearPendingReservationDialogOpen();
+    if (this.reservationDialogOpen) {
+      this.closeReservationDialog();
+    }
     this.reportDialogMode = "edit";
     this.selectedLead = lead;
     this.reportForm = this.leadReportFormFromLead(lead);
@@ -2305,6 +2314,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportSaving = false;
     this.selectedLead = null;
     this.reportEditOriginalSecondaryPhone = null;
+    this.suppressLeadCardActionsUntil = Date.now() + 500;
 
     if (
       releaseReportLock &&
