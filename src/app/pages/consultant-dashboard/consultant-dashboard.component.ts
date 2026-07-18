@@ -23,6 +23,7 @@ import {
   ConsultantReservation,
   CreateReservationRequest,
   SubmitLeadCallReportRequest,
+  UpdateReservationRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import {
@@ -52,6 +53,10 @@ import {
   resolveLeadAssignmentType,
 } from "../../core/lead/lead-enums";
 import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
+import {
+  AttendanceConfirmationStatus,
+  readAttendanceStatus,
+} from "../../core/reservation/reservation-attendance";
 
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
@@ -137,6 +142,7 @@ type ConsultantDashboardSection =
   | "reservations";
 
 type ReportDialogMode = "create" | "edit";
+type ReservationDialogMode = "create" | "edit";
 
 interface ConsultantDashboardLink {
   id: ConsultantDashboardSection;
@@ -993,8 +999,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private reportEditOriginalSecondaryPhone: string | null = null;
 
   reservationDialogOpen = false;
+  reservationDialogMode: ReservationDialogMode = "create";
   reservationSaving = false;
   selectedReservationLead: ConsultantLead | null = null;
+  selectedEditReservation: ConsultantReservation | null = null;
+  private editReservationOriginalAt: string | null = null;
   reservationForm: ReservationForm = {
     reservationDate: null,
     reservationTime: "",
@@ -2705,10 +2714,38 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   closeReservationDialog(): void {
     this.reservationDialogOpen = false;
     this.reservationSaving = false;
+    this.reservationDialogMode = "create";
     this.selectedReservationLead = null;
+    this.selectedEditReservation = null;
+    this.editReservationOriginalAt = null;
     if (!this.patientProfileDialogOpen) {
       this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: false });
     }
+  }
+
+  isReservationEditMode(): boolean {
+    return this.reservationDialogMode === "edit";
+  }
+
+  canEditReservation(reservation: ConsultantReservation): boolean {
+    const status = readAttendanceStatus(
+      reservation,
+      "attendanceConfirmationStatus",
+      "AttendanceConfirmationStatus",
+    );
+    return (
+      status !== AttendanceConfirmationStatus.SecretaryApproved &&
+      status !== AttendanceConfirmationStatus.SecretaryRejected &&
+      !(reservation.isCanceled ?? reservation.IsCanceled)
+    );
+  }
+
+  canEditReservationForLead(lead: ConsultantLead): boolean {
+    const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId || !this.leadHasActiveReservation(lead)) return false;
+
+    const reservation = this.reservationForLead(leadAssignmentId);
+    return Boolean(reservation && this.canEditReservation(reservation));
   }
 
   setReservationDate(date: Date): void {
@@ -2792,6 +2829,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   submitReservation(): void {
+    if (this.isReservationEditMode()) {
+      this.submitReservationEdit();
+      return;
+    }
+
     const profileId = this.requireProfileId();
     const lead = this.selectedReservationLead;
     const leadAssignmentId = lead ? this.leadId(lead) : null;
@@ -2870,6 +2912,78 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         error: (error) =>
           this.showFeedback(
             this.errorMessage(error, "ثبت رزرو انجام نشد"),
+            "error",
+          ),
+      });
+  }
+
+  private submitReservationEdit(): void {
+    const profileId = this.requireProfileId();
+    const reservation = this.selectedEditReservation;
+    const reservationId = reservation ? this.reservationId(reservation) : null;
+    if (!profileId) {
+      this.showFeedback("شناسه پروفایل مشاور یافت نشد", "error");
+      return;
+    }
+    if (!reservation || !reservationId) {
+      this.showFeedback("رزرو انتخاب‌شده برای ویرایش یافت نشد", "error");
+      return;
+    }
+
+    const validationError = this.validateReservationForm();
+    if (validationError) {
+      this.showFeedback(validationError, "error");
+      return;
+    }
+
+    const reservationAt = this.selectedReservationDateTime();
+    if (!reservationAt) {
+      this.showFeedback("تاریخ و ساعت رزرو معتبر نیست", "error");
+      return;
+    }
+
+    const payload: UpdateReservationRequest = {
+      reservationId,
+      consultantProfileId: profileId,
+      reservationAt: reservationAt.toISOString(),
+      patientCity: this.reservationForm.patientCity.trim(),
+      patientRegion: this.reservationForm.patientRegion.trim(),
+      attendanceProbabilityPercent:
+        this.reservationForm.attendanceProbabilityPercent,
+      attendancePrediction: this.reservationForm.attendancePrediction.trim(),
+      secondaryPhoneNumber:
+        this.reservationForm.secondaryPhoneNumber.trim() || null,
+      description: this.reservationForm.description.trim() || null,
+    };
+
+    this.reservationSaving = true;
+    this.clearFeedback();
+
+    this.consultantApi
+      .updateReservation(payload)
+      .pipe(
+        finalize(() => {
+          this.reservationSaving = false;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          this.reservationDialogOpen = false;
+          this.reservationDialogMode = "create";
+          this.selectedReservationLead = null;
+          this.selectedEditReservation = null;
+          this.editReservationOriginalAt = null;
+          this.showFeedback(
+            response.message || "رزرو با موفقیت ویرایش شد",
+            "success",
+          );
+          this.loadReservations();
+          this.restoreOnlineAfterRequiredAction({ notifyWhenBlocked: false });
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "ویرایش رزرو انجام نشد"),
             "error",
           ),
       });
@@ -4102,6 +4216,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       (leadAssignmentId
         ? this.reservationSecondaryPhoneForLead(leadAssignmentId)
         : "");
+    this.reservationDialogMode = "create";
+    this.selectedEditReservation = null;
+    this.editReservationOriginalAt = null;
     this.selectedReservationLead = lead;
     this.reservationForm = {
       reservationDate: minimumReservationAt,
@@ -4117,6 +4234,82 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       attendancePrediction: this.defaultAttendancePrediction(),
     };
     this.reservationDialogOpen = true;
+  }
+
+  openEditReservationDialog(lead: ConsultantLead): void {
+    const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId) return;
+
+    const reservation = this.reservationForLead(leadAssignmentId);
+    if (reservation) {
+      this.openEditReservationDialogForReservation(lead, reservation);
+      return;
+    }
+
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    this.consultantApi
+      .getReservations({
+        consultantProfileId: profileId,
+        includeCanceled: false,
+        pageNumber: 1,
+        pageSize: 100,
+      })
+      .subscribe({
+        next: (response) => {
+          this.reservations = response.items ?? [];
+          this.syncReservedLeadIdsFromReservations(this.reservations);
+          const loadedReservation = this.reservationForLead(leadAssignmentId);
+          if (!loadedReservation || !this.canEditReservation(loadedReservation)) {
+            this.showFeedback("رزرو قابل ویرایش برای این لید یافت نشد", "error");
+            return;
+          }
+          this.openEditReservationDialogForReservation(lead, loadedReservation);
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "دریافت اطلاعات رزرو انجام نشد"),
+            "error",
+          ),
+      });
+  }
+
+  private openEditReservationDialogForReservation(
+    lead: ConsultantLead,
+    reservation: ConsultantReservation,
+  ): void {
+    if (!this.canEditReservation(reservation)) return;
+
+    const reservationAt = this.reservationDateTime(reservation);
+    const date = reservationAt ? new Date(reservationAt) : new Date();
+
+    this.reservationDialogMode = "edit";
+    this.selectedReservationLead = lead;
+    this.selectedEditReservation = reservation;
+    this.editReservationOriginalAt = reservationAt || null;
+    this.reservationForm = {
+      reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
+      reservationTime: this.toTimeValue(date),
+      secondaryPhoneNumber:
+        reservation.secondaryPhoneNumber ||
+        reservation.SecondaryPhoneNumber ||
+        "",
+      description: reservation.description || reservation.Description || "",
+      patientCity:
+        this.reservationPatientCity(reservation) === "شهر ثبت نشده"
+          ? ""
+          : this.reservationPatientCity(reservation),
+      patientRegion:
+        reservation.patientRegion || reservation.PatientRegion || "",
+      attendanceProbabilityPercent:
+        Number(this.reservationAttendanceProbability(reservation)) || 80,
+      attendancePrediction:
+        this.reservationAttendancePrediction(reservation) ||
+        this.defaultAttendancePrediction(),
+    };
+    this.reservationDialogOpen = true;
+    this.markViewDirty();
   }
 
   private openPatientProfileDialog(reservation: ConsultantReservation): void {
@@ -4257,6 +4450,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  private isReservationTimeChanged(reservationAt: Date | null): boolean {
+    if (!this.isReservationEditMode() || !this.editReservationOriginalAt) {
+      return true;
+    }
+
+    if (!reservationAt || !Number.isFinite(reservationAt.getTime())) {
+      return true;
+    }
+
+    const original = new Date(this.editReservationOriginalAt);
+    if (!Number.isFinite(original.getTime())) return true;
+
+    return original.getTime() !== reservationAt.getTime();
+  }
+
   private minimumReservationDateTime(): Date {
     const date = new Date(Date.now() + 5 * 60 * 1000);
     date.setSeconds(0, 0);
@@ -4378,10 +4586,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!this.reservationForm.reservationTime) return "ساعت رزرو الزامی است";
 
     const reservationAt = this.selectedReservationDateTime();
+    const reservationTimeChanged = this.isReservationTimeChanged(reservationAt);
     if (
       !reservationAt ||
       !Number.isFinite(reservationAt.getTime()) ||
-      reservationAt.getTime() <= Date.now()
+      (reservationTimeChanged && reservationAt.getTime() <= Date.now())
     )
       return "زمان رزرو باید در آینده باشد";
 

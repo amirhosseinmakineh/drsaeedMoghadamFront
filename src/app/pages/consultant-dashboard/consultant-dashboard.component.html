@@ -636,6 +636,15 @@
                       >
                         رزرو وقت
                       </button>
+                      @if (canEditReservationForLead(lead)) {
+                        <button
+                          class="secondary-action compact"
+                          type="button"
+                          (click)="openEditReservationDialog(lead)"
+                        >
+                          ویرایش رزرو
+                        </button>
+                      }
                     </div>
                   </article>
                 }
@@ -791,6 +800,15 @@
                     >
                       رزرو وقت
                     </button>
+                    @if (canEditReservationForLead(lead)) {
+                      <button
+                        class="secondary-action compact"
+                        type="button"
+                        (click)="openEditReservationDialog(lead)"
+                      >
+                        ویرایش رزرو
+                      </button>
+                    }
                   </div>
                 </article>
               }
@@ -1077,6 +1095,15 @@
                     >
                       رزرو وقت
                     </button>
+                    @if (canEditReservationForLead(lead)) {
+                      <button
+                        class="secondary-action compact"
+                        type="button"
+                        (click)="openEditReservationDialog(lead)"
+                      >
+                        ویرایش رزرو
+                      </button>
+                    }
                   </div>
                 </article>
               }
@@ -1258,9 +1285,13 @@
     [open]="reservationDialogOpen"
     [showFooter]="false"
     [title]="
-      selectedReservationLead
-        ? 'رزرو برای ' + leadName(selectedReservationLead)
-        : 'ثبت رزرو'
+      isReservationEditMode()
+        ? selectedReservationLead
+          ? 'ویرایش رزرو ' + leadName(selectedReservationLead)
+          : 'ویرایش رزرو'
+        : selectedReservationLead
+          ? 'رزرو برای ' + leadName(selectedReservationLead)
+          : 'ثبت رزرو'
     "
     [closable]="!reservationSaving"
     (closed)="closeReservationDialog()"
@@ -1320,6 +1351,16 @@
       </label>
 
       <label>
+        پیش‌بینی حضور
+        <textarea
+          [(ngModel)]="reservationForm.attendancePrediction"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="reservationAttendancePrediction"
+          rows="2"
+        ></textarea>
+      </label>
+
+      <label>
         شماره تماس دوم بیمار
         <input
           [(ngModel)]="reservationForm.secondaryPhoneNumber"
@@ -1352,7 +1393,15 @@
           type="submit"
           [disabled]="reservationSaving"
         >
-          {{ reservationSaving ? "در حال ثبت..." : "ثبت رزرو" }}
+          {{
+            reservationSaving
+              ? isReservationEditMode()
+                ? "در حال ویرایش..."
+                : "در حال ثبت..."
+              : isReservationEditMode()
+                ? "ذخیره ویرایش"
+                : "ثبت رزرو"
+          }}
         </button>
       </div>
     </form>
