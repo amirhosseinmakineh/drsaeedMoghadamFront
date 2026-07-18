@@ -177,6 +177,14 @@ export class BaseDialogComponent {
     this.confirmClick.emit();
   }
 
+  onBackdropClick(event: MouseEvent): void {
+    if (event.target !== event.currentTarget) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.close();
+  }
+
   close(): void {
     if (!this.closable) return;
 
