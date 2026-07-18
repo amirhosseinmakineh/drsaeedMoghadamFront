@@ -1051,6 +1051,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private readonly timerExpiredReportPromptedLeadIds = new Set<number>();
   private readonly expirationRetryAfter = new Map<number, number>();
   private feedbackAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingReservationOpenTimer: ReturnType<typeof setTimeout> | null = null;
   private suppressLeadCardActionsUntil = 0;
   private leadStatusRefreshRequestId = 0;
   private timerStarts: Record<string, number> = {};
@@ -1240,6 +1241,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.destroyed = true;
     this.realtimeLeadAlerts.stopPolling();
     if (this.feedbackAutoDismissTimer) clearTimeout(this.feedbackAutoDismissTimer);
+    this.clearPendingReservationDialogOpen();
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
     if (this.autoAbsenceId) clearInterval(this.autoAbsenceId);
@@ -1300,6 +1302,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.loadLeads();
     } else if (resolvedSection === "report-edits") {
       this.loadReportEditLeads();
+      this.loadActiveReservationsForLeadActions();
     } else if (resolvedSection === "patients") {
       this.loadPatientLeads();
     } else if (resolvedSection === "patient-profiles") {
@@ -1364,6 +1367,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.loadLeads();
     } else if (resolvedSection === "report-edits") {
       this.loadReportEditLeads();
+      this.loadActiveReservationsForLeadActions();
     } else if (resolvedSection === "patients") {
       this.loadPatientLeads();
     } else if (resolvedSection === "patient-profiles") {
@@ -2252,6 +2256,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId || this.isReportDisabled(lead)) return;
 
+    this.clearPendingReservationDialogOpen();
     this.reportDialogMode = "create";
     this.reportingLeadIds.add(leadAssignmentId);
     this.selectedLead = lead;
@@ -2265,6 +2270,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId || !this.isLeadReportEditable(lead)) return;
 
+    this.clearPendingReservationDialogOpen();
     this.reportDialogMode = "edit";
     this.selectedLead = lead;
     this.reportForm = this.leadReportFormFromLead(lead);
@@ -2293,6 +2299,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       ? this.leadType(this.selectedLead) === LEAD_TYPE.ConsultantPatient
       : false;
 
+    this.clearPendingReservationDialogOpen();
     this.reportDialogOpen = false;
     this.reportDialogMode = "create";
     this.reportSaving = false;
@@ -2446,14 +2453,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             const updatedLead =
               this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
               lead;
-            setTimeout(
-              () =>
-                this.openReservationDialog(
-                  updatedLead,
-                  secondaryPhone || undefined,
-                  { skipActionSuppress: true },
-                ),
-              650,
+            this.scheduleReservationDialogOpen(
+              updatedLead,
+              secondaryPhone || undefined,
             );
           }
 
@@ -2570,27 +2572,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.showFeedback("گزارش ویرایش شد", "success");
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
-          }
-
-          const shouldOpenReservation =
-            this.readShouldOpenReservationPage(response.data) &&
-            this.isSuccessfulCallResult(callResult);
-          if (shouldOpenReservation) {
-            const updatedLead =
-              this.reportEditLeads.find(
-                (item) => this.leadId(item) === leadAssignmentId,
-              ) ??
-              this.leads.find((item) => this.leadId(item) === leadAssignmentId) ??
-              lead;
-            setTimeout(
-              () =>
-                this.openReservationDialog(
-                  updatedLead,
-                  secondaryPhone || undefined,
-                  { skipActionSuppress: true },
-                ),
-              650,
-            );
           }
         },
         error: (error) =>
@@ -2743,7 +2724,24 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!leadAssignmentId || !this.leadHasActiveReservation(lead)) return false;
 
     const reservation = this.reservationForLead(leadAssignmentId);
-    return Boolean(reservation && this.canEditReservation(reservation));
+    if (reservation) return this.canEditReservation(reservation);
+
+    return this.readHasActiveReservationFromLead(lead);
+  }
+
+  reservationDisabledReason(lead: ConsultantLead): string | null {
+    if (!this.isReservationDisabled(lead)) return null;
+    if (!this.leadId(lead)) return "شناسه لید نامعتبر است";
+    if (this.isLeadInReportProgress(lead)) return "گزارش در حال ثبت است";
+    if (this.isLeadExpired(lead)) return "مهلت این لید تمام شده است";
+    if (!this.isLeadReportSubmitted(lead)) return "ابتدا گزارش تماس را ثبت کنید";
+    if (!this.isLeadEligibleForReservation(lead)) {
+      return "رزرو فقط بعد از تماس موفق امکان‌پذیر است";
+    }
+    if (this.leadHasActiveReservation(lead)) {
+      return "برای این لید قبلاً رزرو ثبت شده است";
+    }
+    return "امکان رزرو وجود ندارد";
   }
 
   setReservationDate(date: Date): void {
@@ -3466,11 +3464,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   leadHasActiveReservation(lead: ConsultantLead): boolean {
     const leadAssignmentId = this.leadId(lead);
     if (!leadAssignmentId) return false;
-    if (this.reservedLeadIds.has(leadAssignmentId)) return true;
+    if (this.readHasActiveReservationFromLead(lead)) return true;
 
-    return Boolean(
-      lead.hasActiveReservation ?? lead.HasActiveReservation ?? false,
-    );
+    return this.reservedLeadIds.has(leadAssignmentId);
+  }
+
+  private readHasActiveReservationFromLead(lead: ConsultantLead): boolean {
+    return Boolean(lead.hasActiveReservation ?? lead.HasActiveReservation ?? false);
   }
 
   private isLeadEligibleForReservation(lead: ConsultantLead): boolean {
@@ -3562,8 +3562,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private syncReservedLeadIdsFromLeads(leads: ConsultantLead[]): void {
     leads.forEach((lead) => {
       const leadAssignmentId = this.leadId(lead);
-      if (!leadAssignmentId || !this.leadHasActiveReservation(lead)) return;
-      this.reservedLeadIds.add(leadAssignmentId);
+      if (!leadAssignmentId) return;
+
+      if (this.readHasActiveReservationFromLead(lead)) {
+        this.reservedLeadIds.add(leadAssignmentId);
+        return;
+      }
+
+      if (
+        lead.hasActiveReservation === false ||
+        lead.HasActiveReservation === false
+      ) {
+        this.reservedLeadIds.delete(leadAssignmentId);
+      }
     });
   }
 
@@ -3753,6 +3764,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportEditLoadSubscription = this.consultantApi
       .getLeads({
         profileId,
+        hasSubmittedReport: true,
         ...(this.reportEditStateFilter !== null
           ? { leadAssignmentState: this.reportEditStateFilter }
           : {}),
@@ -3773,9 +3785,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (requestId !== this.reportEditRequestId) return;
-          this.reportEditLeads = (response.items ?? []).filter((lead) =>
-            this.isLeadReportEditable(lead),
+          const items = this.applyPendingReportPatches(response.items ?? []).filter(
+            (lead) => this.isLeadReportEditable(lead),
           );
+          this.reportEditLeads = items;
           this.syncReportedLeadIdsFromLeads(this.reportEditLeads);
           this.syncReservedLeadIdsFromLeads(this.reportEditLeads);
           this.syncCallInitiatedFromLeads(this.reportEditLeads);
@@ -3833,6 +3846,49 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (requestId === this.reservationRequestId) this.reservations = [];
         },
       });
+  }
+
+  private loadActiveReservationsForLeadActions(): void {
+    const profileId = this.currentProfileId();
+    if (!profileId) return;
+
+    this.consultantApi
+      .getReservations({
+        consultantProfileId: profileId,
+        includeCanceled: false,
+        pageNumber: 1,
+        pageSize: 100,
+      })
+      .subscribe({
+        next: (response) => {
+          const activeReservations = (response.items ?? []).filter(
+            (reservation) =>
+              (reservation.isCanceled ?? reservation.IsCanceled) !== true,
+          );
+          this.reservations = this.mergeReservationsById(
+            this.reservations,
+            activeReservations,
+          );
+          this.syncReservedLeadIdsFromReservations(activeReservations);
+          this.markViewDirty();
+        },
+      });
+  }
+
+  private mergeReservationsById(
+    current: ConsultantReservation[],
+    incoming: ConsultantReservation[],
+  ): ConsultantReservation[] {
+    const merged = new Map<number, ConsultantReservation>();
+    const add = (reservation: ConsultantReservation) => {
+      const id = this.reservationId(reservation);
+      if (!id) return;
+      merged.set(id, reservation);
+    };
+
+    current.forEach(add);
+    incoming.forEach(add);
+    return [...merged.values()];
   }
 
   private startOfTodayIso(): string {
@@ -4208,6 +4264,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     secondaryPhoneNumber = "",
     options: { skipActionSuppress?: boolean } = {},
   ): void {
+    this.clearPendingReservationDialogOpen();
     if (
       !options.skipActionSuppress &&
       Date.now() < this.suppressLeadCardActionsUntil
@@ -4749,6 +4806,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         "ShouldOpenReservationPage",
       ) === true
     );
+  }
+
+  private clearPendingReservationDialogOpen(): void {
+    if (!this.pendingReservationOpenTimer) return;
+    clearTimeout(this.pendingReservationOpenTimer);
+    this.pendingReservationOpenTimer = null;
+  }
+
+  private scheduleReservationDialogOpen(
+    lead: ConsultantLead,
+    secondaryPhoneNumber = "",
+  ): void {
+    this.clearPendingReservationDialogOpen();
+    this.pendingReservationOpenTimer = setTimeout(() => {
+      this.pendingReservationOpenTimer = null;
+      this.openReservationDialog(lead, secondaryPhoneNumber, {
+        skipActionSuppress: true,
+      });
+    }, 650);
   }
 
   validateProfileForm(): string | null {

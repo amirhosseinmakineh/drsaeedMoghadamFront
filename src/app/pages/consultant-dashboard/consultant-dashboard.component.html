@@ -632,6 +632,7 @@
                         class="secondary-action compact"
                         type="button"
                         [disabled]="isReservationDisabled(lead)"
+                        [attr.title]="reservationDisabledReason(lead) ?? null"
                         (click)="openReservationDialog(lead)"
                       >
                         رزرو وقت
@@ -796,6 +797,7 @@
                       class="secondary-action compact"
                       type="button"
                       [disabled]="isReservationDisabled(lead)"
+                      [attr.title]="reservationDisabledReason(lead) ?? null"
                       (click)="openReservationDialog(lead)"
                     >
                       رزرو وقت
@@ -1091,6 +1093,7 @@
                       class="secondary-action compact"
                       type="button"
                       [disabled]="isReservationDisabled(lead)"
+                      [attr.title]="reservationDisabledReason(lead) ?? null"
                       (click)="openReservationDialog(lead)"
                     >
                       رزرو وقت
