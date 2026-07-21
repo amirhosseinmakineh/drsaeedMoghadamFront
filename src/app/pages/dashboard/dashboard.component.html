@@ -289,6 +289,13 @@
               </button>
             </div>
 
+            @if (consultantsDailySummaryDate) {
+              <p class="daily-summary-copy">
+                رزروهای ثبت‌شده امروز ({{ consultantsDailySummaryDate }}):
+                <strong>{{ consultantsTodayReservationsTotal }}</strong>
+              </p>
+            }
+
             <form class="filter-grid" (ngSubmit)="applyConsultantFilters()">
               <label
                 >نام<input

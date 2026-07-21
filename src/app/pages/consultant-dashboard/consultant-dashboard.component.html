@@ -200,6 +200,10 @@
                   isOnline ? "آنلاین" : "آفلاین"
                 }}</strong>
               </div>
+              <div>
+                <span>رزروهای امروز</span>
+                <strong>{{ todayReservationsCount }}</strong>
+              </div>
             </div>
             @if (shouldShowPushSetupBanner) {
               <div class="push-setup-banner">
@@ -594,6 +598,13 @@
                     }
 
 
+                    @if (leadContactedAt(lead)) {
+                      <p class="lead-meta">
+                        تاریخ تماس:
+                        <strong>{{ formatDateTime(leadContactedAt(lead)) }}</strong>
+                      </p>
+                    }
+
                     <div class="lead-actions">
                       <a
                         class="call-action"
@@ -867,19 +878,20 @@
             <label>
               از تاریخ
               <app-base-datepicker
-                [(ngModel)]="patientProfileFromDate"
-                [ngModelOptions]="ngModelBlurOptions"
-                name="patientProfileFromDate"
                 [label]="{ fa: 'از تاریخ', en: 'From date' }"
+                [selectedDate]="patientProfileFromDate ?? undefined"
+                [allowPastDates]="true"
+                (dateChange)="patientProfileFromDate = $event"
               ></app-base-datepicker>
             </label>
             <label>
               تا تاریخ
               <app-base-datepicker
-                [(ngModel)]="patientProfileToDate"
-                [ngModelOptions]="ngModelBlurOptions"
-                name="patientProfileToDate"
                 [label]="{ fa: 'تا تاریخ', en: 'To date' }"
+                [selectedDate]="patientProfileToDate ?? undefined"
+                [minDate]="patientProfileFromDate ?? undefined"
+                [allowPastDates]="true"
+                (dateChange)="patientProfileToDate = $event"
               ></app-base-datepicker>
             </label>
             <button

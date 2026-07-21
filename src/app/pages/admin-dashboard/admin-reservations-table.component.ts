@@ -30,6 +30,7 @@ import {
   TableComponent,
 } from "../../shared/base/table/table.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
+import { formatIranDateTime } from "../../utils/iran-datetime.util";
 
 type ReservationTableMode = "system" | "consultant";
 type ReservationView = "reservations" | "attendanceConfirmations";
@@ -464,10 +465,7 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   }
 
   private formatDateTime(value: string): string {
-    if (!value) return "-";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString("fa-IR");
+    return formatIranDateTime(value);
   }
 
   private errorMessage(error: unknown, fallback: string): string {

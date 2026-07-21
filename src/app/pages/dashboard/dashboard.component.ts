@@ -16,6 +16,7 @@ import {
   AdminDashboardService,
   AdminUser,
   Consultant,
+  ConsultantDailySummaryItem,
   ConsultantFilters,
   SaveUserRequest,
   UserFilters,
@@ -46,6 +47,11 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
 import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-route-history";
 import { DASHBOARD_MOBILE_LAYOUT_STYLES } from "../../shared/dashboard/dashboard-mobile-layout.styles";
+import {
+  createRelativeYearDateInIran,
+  createYesterdayInIran,
+  formatIranDateTime,
+} from "../../utils/iran-datetime.util";
 
 type DashboardSection =
   | "overview"
@@ -633,8 +639,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   userForm: UserFormModel = this.emptyUserForm();
   selectedUserBirthDate?: Date;
   readonly birthDatePickerLabel = { fa: "تاریخ تولد", en: "Birth date" };
-  readonly birthDateMinDate = this.createRelativeYearDate(-120);
-  readonly birthDateMaxDate = this.createYesterday();
+  readonly birthDateMinDate = createRelativeYearDateInIran(-120);
+  readonly birthDateMaxDate = createYesterdayInIran();
   deleteDialogOpen = false;
   userToDelete: AdminUser | null = null;
 
@@ -648,6 +654,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   feedbackType: "success" | "error" = "success";
   exportingUsers = false;
   exportingConsultants = false;
+  consultantsDailySummaryDate = "";
+  consultantsTodayReservationsTotal = 0;
   private usersLoadRequestId = 0;
   private consultantsLoadRequestId = 0;
 
@@ -703,6 +711,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         row.consultantIsAvailable || row.ConsultantIsAvailable
           ? "success"
           : "danger",
+    },
+    {
+      key: "todayReservationsCount",
+      label: "رزروهای امروز",
+      value: (row) => String(row.todayReservationsCount ?? 0),
+      badge: (row) =>
+        (row.todayReservationsCount ?? 0) > 0 ? "success" : "info",
     },
     {
       key: "lastSeenAt",
@@ -1133,11 +1148,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (requestId !== this.consultantsLoadRequestId) return;
-          this.consultants = (response.items ?? []).map((consultant) =>
-            this.normalizeConsultant(consultant),
-          );
           this.consultantsTotalCount =
-            response.totalCount ?? this.consultants.length;
+            response.totalCount ?? (response.items ?? []).length;
           this.consultantsTotalPages = Math.max(
             1,
             response.totalPages ||
@@ -1145,7 +1157,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 this.consultantsTotalCount / this.consultantFilters.pageSize,
               ),
           );
-          this.markDirty();
+          this.loadConsultantsDailySummary(response.items ?? []);
         },
         error: (error) => {
           if (requestId !== this.consultantsLoadRequestId) return;
@@ -1213,16 +1225,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private formatDateTime(value?: string | null): string {
-    if (!value) return "-";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString("fa-IR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
+    return formatIranDateTime(value);
+  }
+
+  private loadConsultantsDailySummary(consultants: Consultant[]): void {
+    this.adminApi.getConsultantsDailySummary().subscribe({
+      next: (summary) => {
+        const summaryByProfileId = new Map<number, ConsultantDailySummaryItem>(
+          summary.items.map((item) => [
+            item.consultantProfileId ?? item.ConsultantProfileId ?? 0,
+            item,
+          ]),
+        );
+
+        this.consultantsDailySummaryDate = summary.date;
+        this.consultantsTodayReservationsTotal = summary.items.reduce(
+          (total, item) =>
+            total +
+            (item.todayReservationsCount ?? item.TodayReservationsCount ?? 0),
+          0,
+        );
+        this.consultants = consultants.map((consultant) => {
+          const normalized = this.normalizeConsultant(consultant);
+          const profileId = normalized.profileId ?? normalized.ProfileId ?? 0;
+          const stats = summaryByProfileId.get(profileId);
+          return {
+            ...normalized,
+            todayReservationsCount:
+              stats?.todayReservationsCount ??
+              stats?.TodayReservationsCount ??
+              0,
+          };
+        });
+        this.markDirty();
+      },
+      error: () => {
+        this.consultants = consultants.map((consultant) =>
+          this.normalizeConsultant(consultant),
+        );
+        this.markDirty();
+      },
     });
   }
 

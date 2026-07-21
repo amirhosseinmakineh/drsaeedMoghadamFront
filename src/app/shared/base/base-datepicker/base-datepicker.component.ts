@@ -173,6 +173,8 @@ export class BaseDatepickerComponent implements OnChanges {
   @Input() allowToday = false;
   /** Enables historical/report ranges: past dates selectable, future dates blocked. */
   @Input() allowPastDates = false;
+  /** When used with allowPastDates, also allows selecting future dates (calendar filters). */
+  @Input() allowFutureDates: boolean | null = null;
   @Output() dateChange = new EventEmitter<Date>();
 
   private activeMonthAnchor = new Date();
@@ -238,7 +240,8 @@ export class BaseDatepickerComponent implements OnChanges {
     } else if (
       (changes["maxDate"] ||
         changes["minDate"] ||
-        changes["allowPastDates"]) &&
+        changes["allowPastDates"] ||
+        changes["allowFutureDates"]) &&
       this.activeMonthAnchorOutsideSelectableRange()
     ) {
       this.activeMonthAnchor =
@@ -279,6 +282,7 @@ export class BaseDatepickerComponent implements OnChanges {
       this.maxDate?.getTime() ?? "none",
       this.allowToday,
       this.allowPastDates,
+      this.effectiveAllowFutureDates,
       this.selectedDate?.getTime() ?? "none",
     ].join("|");
 
@@ -353,9 +357,16 @@ export class BaseDatepickerComponent implements OnChanges {
     return this.allowToday ? today : this.addDays(today, 1);
   }
 
+  private get effectiveAllowFutureDates(): boolean {
+    if (this.allowFutureDates !== null) return this.allowFutureDates;
+    return !this.allowPastDates;
+  }
+
   private get maxSelectableDate(): Date | null {
     if (this.maxDate) return this.startOfDay(this.maxDate);
-    if (this.allowPastDates) return this.startOfDay(new Date());
+    if (this.allowPastDates && !this.effectiveAllowFutureDates) {
+      return this.startOfDay(new Date());
+    }
 
     return null;
   }

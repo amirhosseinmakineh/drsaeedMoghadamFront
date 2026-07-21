@@ -52,6 +52,7 @@ export interface ConsultantDashboardStatus {
   lastOfflineAt: string | null;
   canGoOnline: boolean;
   onlineStatusBlockReason: string | null;
+  todayReservationsCount: number;
   raw?: unknown;
 }
 
@@ -120,6 +121,8 @@ export interface ConsultantLead {
   ReportSubmittedAt?: string | null;
   contactedAt?: string | null;
   ContactedAt?: string | null;
+  createdAt?: string | null;
+  CreatedAt?: string | null;
   callResult?: number | null;
   CallResult?: number | null;
   reportDescription?: string | null;
@@ -814,6 +817,12 @@ export class ConsultantDashboardService {
       onlineStatusBlockReason:
         this.readString(source, "onlineStatusBlockReason", "blockReason") ??
         null,
+      todayReservationsCount:
+        this.readNumber(
+          source,
+          "todayReservationsCount",
+          "TodayReservationsCount",
+        ) ?? 0,
       raw: response,
     };
   }
