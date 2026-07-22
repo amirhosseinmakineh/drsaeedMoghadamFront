@@ -23,6 +23,7 @@ import { DASHBOARD_MOBILE_LAYOUT_STYLES } from "../../shared/dashboard/dashboard
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
+import { SecretaryScheduleComponent } from "./secretary-schedule.component";
 
 interface SecretaryProfileForm {
   nationalityCode: string;
@@ -32,6 +33,7 @@ interface SecretaryProfileForm {
 type SecretaryDashboardSection =
   | "overview"
   | "profile"
+  | "schedule"
   | "reservations"
   | "reviews";
 
@@ -44,6 +46,7 @@ interface SecretaryDashboardLink {
 const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
   "profile",
+  "schedule",
   "reservations",
   "reviews",
 ];
@@ -57,6 +60,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     RouterLink,
     FaIconComponent,
     SecretaryReservationsComponent,
+    SecretaryScheduleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-dashboard.component.html",
@@ -335,6 +339,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   readonly dashboardLinks: SecretaryDashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "profile", label: "پروفایل", icon: "shield" },
+    { id: "schedule", label: "برنامه‌ریزی", icon: "calendar" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
   ];
@@ -392,7 +397,10 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   get visibleDashboardLinks(): SecretaryDashboardLink[] {
     if (!this.isProfileReady()) {
       return this.dashboardLinks.filter(
-        (item) => item.id !== "reservations" && item.id !== "reviews",
+        (item) =>
+          item.id !== "reservations" &&
+          item.id !== "reviews" &&
+          item.id !== "schedule",
       );
     }
 
@@ -442,6 +450,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
 
     if (
       (section === "overview" ||
+        section === "schedule" ||
         section === "reservations" ||
         section === "reviews") &&
       !this.isProfileReady()

@@ -29,6 +29,13 @@ import { ToastService } from "../../core/toast/toast.service";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
+import {
+  createRelativeYearDateInIran,
+  createYesterdayInIran,
+  formatIranDateTime,
+  nowInIran,
+  toIranDateInputValue,
+} from "../../utils/iran-datetime.util";
 
 export type SecretaryReservationTab = "queue" | "all" | "completed";
 
@@ -326,8 +333,9 @@ export class SecretaryReservationsComponent
   profileForm = this.emptyProfileForm();
   selectedProfileBirthDate?: Date;
   readonly birthDatePickerLabel = { fa: "تاریخ تولد", en: "Birth date" };
-  readonly birthDateMinDate = this.createRelativeYearDate(-120);
-  readonly birthDateMaxDate = this.createYesterday();
+  readonly reservationDatePickerLabel = { fa: "انتخاب روز", en: "Select day" };
+  readonly birthDateMinDate = createRelativeYearDateInIran(-120);
+  readonly birthDateMaxDate = createYesterdayInIran();
   loading = false;
   savingId: number | null = null;
   feedback = "";
@@ -335,6 +343,8 @@ export class SecretaryReservationsComponent
   statusFilter: number | null = null;
   searchText = "";
   includeCanceled = false;
+  filterByDate = false;
+  selectedDate = nowInIran();
   pageNumber = 1;
   pageSize = 20;
   totalPages = 1;
@@ -486,6 +496,9 @@ export class SecretaryReservationsComponent
         includeCanceled: this.includeCanceled,
         attendanceConfirmationStatus: this.statusFilter,
         searchText: this.searchText.trim() || undefined,
+        date: this.filterByDate
+          ? toIranDateInputValue(this.selectedDate)
+          : undefined,
       })
       .pipe(
         finalize(() => {
@@ -755,14 +768,18 @@ export class SecretaryReservationsComponent
   }
 
   formatDate(value: string): string {
-    if (!value) return "-";
-    const date = new Date(value);
-    return Number.isFinite(date.getTime())
-      ? new Intl.DateTimeFormat("fa-IR", {
-          dateStyle: "medium",
-          timeStyle: "short",
-        }).format(date)
-      : value;
+    return formatIranDateTime(value);
+  }
+
+  onReservationDateChange(date: Date): void {
+    this.selectedDate = date;
+    this.pageNumber = 1;
+    this.load();
+  }
+
+  onFilterByDateToggle(): void {
+    this.pageNumber = 1;
+    this.load();
   }
 
   private handleLoadError(requestId: number, error: unknown): void {

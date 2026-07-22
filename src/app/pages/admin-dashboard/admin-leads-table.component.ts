@@ -37,6 +37,7 @@ import {
   resolveLeadAssignmentState,
   resolveLeadAssignmentType,
 } from "../../core/lead/lead-enums";
+import { formatIranDateTime } from "../../utils/iran-datetime.util";
 
 type LeadTableMode = "system" | "consultant";
 
@@ -192,6 +193,8 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   loading = false;
   exporting = false;
   feedback = "";
+  phoneFilter = "";
+  checkedLeadIds = new Set<number>();
   totalCount = 0;
   totalPages = 1;
   filters: LeadFilters = {
@@ -217,6 +220,22 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       key: "phoneNumber",
       label: "موبایل",
       value: (row) => this.leadPhone(row),
+    },
+    {
+      key: "createdAt",
+      label: "تاریخ ایجاد لید",
+      value: (row) => this.formatDateTime(this.leadCreatedAt(row)),
+    },
+    {
+      key: "contactedAt",
+      label: "تاریخ تماس",
+      value: (row) => this.formatDateTime(this.leadContactedAt(row)),
+    },
+    {
+      key: "checked",
+      label: "بررسی",
+      value: (row) => (this.isLeadChecked(row) ? "بررسی شد" : "بررسی نشده"),
+      badge: (row) => (this.isLeadChecked(row) ? "success" : "warn"),
     },
     {
       key: "leadAssignmentState",
@@ -252,6 +271,24 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   applyFilters(): void {
     this.filters.pageNumber = 1;
     this.load();
+  }
+
+  toggleLeadChecked(row: LeadAssignmentItem): void {
+    const id = this.leadId(row);
+    if (!id) return;
+    if (this.checkedLeadIds.has(id)) this.checkedLeadIds.delete(id);
+    else this.checkedLeadIds.add(id);
+    this.cdr.markForCheck();
+  }
+
+  isLeadChecked(row: LeadAssignmentItem): boolean {
+    const id = this.leadId(row);
+    return id ? this.checkedLeadIds.has(id) : false;
+  }
+
+  leadPhoneHref(row: LeadAssignmentItem): string | null {
+    const phone = this.leadPhone(row);
+    return phone && phone !== "-" ? `tel:${phone}` : null;
   }
 
   changePage(page: number): void {
@@ -326,8 +363,15 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       .subscribe({
         next: (response) => {
           if (requestId !== this.loadRequestId) return;
-          this.items = response.items ?? [];
-          this.totalCount = response.totalCount ?? this.items.length;
+          const items = response.items ?? [];
+          this.items = this.phoneFilter.trim()
+            ? items.filter((row) =>
+                this.leadPhone(row).includes(this.phoneFilter.trim()),
+              )
+            : items;
+          this.totalCount = this.phoneFilter.trim()
+            ? this.items.length
+            : (response.totalCount ?? this.items.length);
           this.totalPages = Math.max(
             1,
             response.totalPages ||
@@ -491,5 +535,17 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
 
   private errorMessage(error: unknown, fallback: string): string {
     return error instanceof Error && error.message ? error.message : fallback;
+  }
+
+  private leadCreatedAt(row: LeadAssignmentItem): string {
+    return row.createdAt || row.CreatedAt || "";
+  }
+
+  private leadContactedAt(row: LeadAssignmentItem): string {
+    return row.contactedAt || row.ContactedAt || "";
+  }
+
+  private formatDateTime(value: string): string {
+    return formatIranDateTime(value);
   }
 }

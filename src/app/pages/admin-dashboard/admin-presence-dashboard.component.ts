@@ -138,6 +138,7 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
 export class AdminPresenceDashboardComponent implements OnInit {
   selectedDate = new Date();
   selectedDatePersian = "";
+  phoneFilter = "";
   feedback = "";
 
   overviewItems: UserPresenceOverviewItem[] = [];
@@ -164,6 +165,11 @@ export class AdminPresenceDashboardComponent implements OnInit {
       key: "firstName",
       label: "مشاور",
       value: (row) => this.fullName(row),
+    },
+    {
+      key: "phoneNumber",
+      label: "موبایل",
+      value: (row) => row.phoneNumber || row.PhoneNumber || "-",
     },
     {
       key: "isCurrentlyOnline",
@@ -252,8 +258,14 @@ export class AdminPresenceDashboardComponent implements OnInit {
   }
 
   applyDate(): void {
-    this.overviewFilters = this.createFilters();
-    this.eventsFilters = this.createFilters();
+    this.overviewFilters = {
+      ...this.createFilters(),
+      phoneNumber: this.phoneFilter.trim() || undefined,
+    };
+    this.eventsFilters = {
+      ...this.createFilters(),
+      phoneNumber: this.phoneFilter.trim() || undefined,
+    };
     this.syncSelectedDatePersian();
     this.loadAll();
   }
@@ -283,6 +295,7 @@ export class AdminPresenceDashboardComponent implements OnInit {
       .getUserPresenceOverview({
         ...this.overviewFilters,
         date: this.toDateString(this.selectedDate),
+        phoneNumber: this.phoneFilter.trim() || undefined,
       })
       .pipe(
         finalize(() => {
@@ -326,6 +339,7 @@ export class AdminPresenceDashboardComponent implements OnInit {
       .getUserPresenceEvents({
         ...this.eventsFilters,
         date: this.toDateString(this.selectedDate),
+        phoneNumber: this.phoneFilter.trim() || undefined,
       })
       .pipe(
         finalize(() => {

@@ -19,6 +19,16 @@
 
   <form class="date-filter" (ngSubmit)="applyDate()">
     <label>
+      موبایل مشاور
+      <input
+        [(ngModel)]="phoneFilter"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="presencePhoneFilter"
+        inputmode="numeric"
+        placeholder="09xxxxxxxxx"
+      />
+    </label>
+    <label>
       انتخاب روز
       <app-base-datepicker
         [label]="datePickerLabel"

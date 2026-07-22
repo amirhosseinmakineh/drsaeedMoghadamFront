@@ -60,6 +60,17 @@
       </select>
     </label>
 
+    <label>
+      موبایل
+      <input
+        [(ngModel)]="phoneFilter"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="leadPhoneFilter"
+        inputmode="numeric"
+        placeholder="09xxxxxxxxx"
+      />
+    </label>
+
     <button class="primary-filter" type="submit">اعمال فیلتر</button>
   </form>
 

@@ -41,6 +41,7 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
 import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-route-history";
 import { DASHBOARD_MOBILE_LAYOUT_STYLES } from "../../shared/dashboard/dashboard-mobile-layout.styles";
+import { formatIranDateTime } from "../../utils/iran-datetime.util";
 import {
   LeadAssignmentState as LEAD_STATE,
   LeadAssignmentType as LEAD_TYPE,
@@ -945,6 +946,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   pushRegistrationReady = false;
   canGoOnlineFromStatus = false;
   dashboardStatusLoaded = false;
+  todayReservationsCount = 0;
   onlineStatusBlockReason: string | null = null;
 
   leads: ConsultantLead[] = [];
@@ -3632,12 +3634,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   formatDateTime(value: string): string {
-    const date = new Date(value);
-    if (!Number.isFinite(date.getTime())) return value;
-    return new Intl.DateTimeFormat("fa-IR", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(date);
+    return formatIranDateTime(value);
+  }
+
+  leadContactedAt(lead: ConsultantLead): string {
+    return lead.contactedAt || lead.ContactedAt || "";
   }
 
   toggleMobileSidebar(): void {
@@ -3682,6 +3683,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.isAvailable = status.isAvailable;
     this.isOnline = status.isOnline;
     this.canGoOnlineFromStatus = status.canGoOnline;
+    this.todayReservationsCount = status.todayReservationsCount ?? 0;
     this.dashboardStatusLoaded = true;
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.applyConsultantStatusFrom(status.raw);

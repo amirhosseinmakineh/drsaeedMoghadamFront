@@ -90,6 +90,8 @@ export interface Consultant {
   PhoneNumber?: string;
   profileId: number;
   ProfileId?: number;
+  todayReservationsCount?: number;
+  TodayReservationsCount?: number;
   lastSeenAt?: string | null;
   LastSeenAt?: string | null;
   consultantIsOnline?: boolean | null;
@@ -281,6 +283,30 @@ export interface LeadAssignmentItem {
   User?: LeadPerson | null;
   lead?: LeadPerson | null;
   Lead?: LeadPerson | null;
+  createdAt?: string | null;
+  CreatedAt?: string | null;
+  contactedAt?: string | null;
+  ContactedAt?: string | null;
+  assignedAt?: string | null;
+  AssignedAt?: string | null;
+}
+
+export interface ConsultantDailySummaryItem {
+  consultantProfileId: number;
+  ConsultantProfileId?: number;
+  firstName: string;
+  FirstName?: string;
+  lastName: string;
+  LastName?: string;
+  phoneNumber: string;
+  PhoneNumber?: string;
+  todayReservationsCount: number;
+  TodayReservationsCount?: number;
+}
+
+export interface ConsultantsDailySummaryResponse {
+  date: string;
+  items: ConsultantDailySummaryItem[];
 }
 
 export interface LeadCallReportExportFilters {
@@ -785,6 +811,21 @@ export class AdminDashboardService {
     return this.exportCsvReport("consultants/export");
   }
 
+  getConsultantsDailySummary(): Observable<ConsultantsDailySummaryResponse> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/admin/reports/consultants/daily-summary`, {
+        headers: this.authHeaders(),
+      })
+      .pipe(
+        map((response) => this.normalizeConsultantsDailySummary(response)),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت گزارش روزانه مشاوران انجام نشد"),
+          ),
+        ),
+      );
+  }
+
   exportLeadCallReports(
     filters: LeadCallReportExportFilters,
   ): Observable<Blob> {
@@ -1105,6 +1146,27 @@ export class AdminDashboardService {
     }
 
     return null;
+  }
+
+  private normalizeConsultantsDailySummary(
+    response: unknown,
+  ): ConsultantsDailySummaryResponse {
+    const source = this.unwrapResponseData(response);
+    const items = this.readItems<Record<string, unknown>>(source).map((item) => ({
+      consultantProfileId:
+        this.readNumber(item, "consultantProfileId", "ConsultantProfileId") ?? 0,
+      firstName: String(this.readValue(item, "firstName", "FirstName") ?? ""),
+      lastName: String(this.readValue(item, "lastName", "LastName") ?? ""),
+      phoneNumber: String(this.readValue(item, "phoneNumber", "PhoneNumber") ?? ""),
+      todayReservationsCount:
+        this.readNumber(item, "todayReservationsCount", "TodayReservationsCount") ??
+        0,
+    }));
+
+    return {
+      date: this.readString(source, "date", "Date") ?? "",
+      items,
+    };
   }
 
   private normalizeCommandResponse<T>(
