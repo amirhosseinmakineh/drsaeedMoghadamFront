@@ -23,7 +23,6 @@ import { DASHBOARD_MOBILE_LAYOUT_STYLES } from "../../shared/dashboard/dashboard
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
-import { SecretaryScheduleComponent } from "./secretary-schedule.component";
 
 interface SecretaryProfileForm {
   nationalityCode: string;
@@ -33,7 +32,6 @@ interface SecretaryProfileForm {
 type SecretaryDashboardSection =
   | "overview"
   | "profile"
-  | "schedule"
   | "reservations"
   | "reviews";
 
@@ -46,7 +44,6 @@ interface SecretaryDashboardLink {
 const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
   "profile",
-  "schedule",
   "reservations",
   "reviews",
 ];
@@ -60,7 +57,6 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     RouterLink,
     FaIconComponent,
     SecretaryReservationsComponent,
-    SecretaryScheduleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-dashboard.component.html",
@@ -318,13 +314,52 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
         gap: 12px;
       }
       @media (max-width: 980px) {
+        .dashboard-layout {
+          width: min(100%, calc(100% - 20px));
+          padding: 12px 0 48px;
+          gap: 12px;
+        }
+        .dashboard-sidebar {
+          min-height: auto;
+        }
         .dashboard-hero,
         .profile-lock-card,
         .status-card,
         .locked-panel {
-          border-radius: 24px;
+          padding: 16px;
+          border-radius: 20px;
           background: var(--surface);
           box-shadow: 0 8px 22px rgba(93, 64, 32, 0.06);
+        }
+        .dashboard-hero h2,
+        .profile-lock-card h2,
+        .locked-panel h2 {
+          font-size: 1.2rem;
+        }
+        .secretary-overview {
+          grid-template-columns: 1fr;
+        }
+        .secretary-overview button {
+          width: 100%;
+        }
+        .secretary-shell {
+          gap: 12px;
+        }
+        .logout-btn {
+          display: none;
+        }
+      }
+      @media (max-width: 560px) {
+        .dashboard-layout {
+          width: min(100%, calc(100% - 12px));
+          padding: 8px 0 32px;
+        }
+        .dashboard-hero,
+        .profile-lock-card,
+        .status-card,
+        .locked-panel {
+          padding: 14px;
+          border-radius: 18px;
         }
       }
     `,
@@ -339,7 +374,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   readonly dashboardLinks: SecretaryDashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "profile", label: "پروفایل", icon: "shield" },
-    { id: "schedule", label: "برنامه‌ریزی", icon: "calendar" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
   ];
@@ -397,10 +431,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   get visibleDashboardLinks(): SecretaryDashboardLink[] {
     if (!this.isProfileReady()) {
       return this.dashboardLinks.filter(
-        (item) =>
-          item.id !== "reservations" &&
-          item.id !== "reviews" &&
-          item.id !== "schedule",
+        (item) => item.id !== "reservations" && item.id !== "reviews",
       );
     }
 
@@ -450,7 +481,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
 
     if (
       (section === "overview" ||
-        section === "schedule" ||
         section === "reservations" ||
         section === "reviews") &&
       !this.isProfileReady()

@@ -29,13 +29,6 @@ import { ToastService } from "../../core/toast/toast.service";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
-import {
-  createRelativeYearDateInIran,
-  createYesterdayInIran,
-  formatIranDateTime,
-  nowInIran,
-  toIranDateInputValue,
-} from "../../utils/iran-datetime.util";
 
 export type SecretaryReservationTab = "queue" | "all" | "completed";
 
@@ -59,7 +52,9 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
       .panel-heading {
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
         gap: 12px;
+        flex-wrap: wrap;
       }
       .panel-heading span {
         display: inline-flex;
@@ -97,9 +92,18 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
       }
       .filters {
         display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         align-items: end;
+      }
+      .filter-search {
+        grid-column: 1 / -1;
+      }
+      .filter-submit {
+        justify-self: start;
+      }
+      .filter-checkbox {
+        grid-column: 1 / -1;
       }
       .checkbox-field {
         display: inline-flex;
@@ -304,11 +308,67 @@ export type SecretaryReservationTab = "queue" | "all" | "completed";
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
       }
-      @media (max-width: 760px) {
-        .panel-heading,
-        .filters,
-        .reservation-table header {
+      @media (max-width: 980px) {
+        .secretary-panel {
+          padding: 14px;
+          border-radius: 22px;
+        }
+        .panel-heading h2 {
+          font-size: 1.15rem;
+        }
+        .tab-nav {
           display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .tab-nav button {
+          width: 100%;
+          padding-inline: 8px;
+          font-size: 0.82rem;
+        }
+        .filters {
+          grid-template-columns: 1fr;
+        }
+        .filter-submit {
+          width: 100%;
+          justify-self: stretch;
+        }
+        .filter-submit .secondary-action {
+          width: 100%;
+        }
+        .checkbox-field {
+          width: 100%;
+        }
+        .reservation-table header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .dialog-actions {
+          flex-direction: column;
+        }
+        .dialog-actions .secondary-action,
+        .dialog-actions .primary-action {
+          width: 100%;
+        }
+        .pagination {
+          flex-wrap: wrap;
+        }
+        .inline-dialog-backdrop {
+          padding: 12px;
+          align-items: end;
+        }
+        .inline-dialog {
+          width: 100%;
+          max-height: 88vh;
+          border-radius: 24px 24px 0 0;
+        }
+      }
+      @media (max-width: 560px) {
+        .secretary-panel {
+          padding: 12px;
+          border-radius: 18px;
+        }
+        .tab-nav {
+          grid-template-columns: 1fr;
         }
         dl,
         .two-col {
@@ -333,9 +393,8 @@ export class SecretaryReservationsComponent
   profileForm = this.emptyProfileForm();
   selectedProfileBirthDate?: Date;
   readonly birthDatePickerLabel = { fa: "تاریخ تولد", en: "Birth date" };
-  readonly reservationDatePickerLabel = { fa: "انتخاب روز", en: "Select day" };
-  readonly birthDateMinDate = createRelativeYearDateInIran(-120);
-  readonly birthDateMaxDate = createYesterdayInIran();
+  readonly birthDateMinDate = this.createRelativeYearDate(-120);
+  readonly birthDateMaxDate = this.createYesterday();
   loading = false;
   savingId: number | null = null;
   feedback = "";
@@ -343,8 +402,6 @@ export class SecretaryReservationsComponent
   statusFilter: number | null = null;
   searchText = "";
   includeCanceled = false;
-  filterByDate = false;
-  selectedDate = nowInIran();
   pageNumber = 1;
   pageSize = 20;
   totalPages = 1;
@@ -496,9 +553,6 @@ export class SecretaryReservationsComponent
         includeCanceled: this.includeCanceled,
         attendanceConfirmationStatus: this.statusFilter,
         searchText: this.searchText.trim() || undefined,
-        date: this.filterByDate
-          ? toIranDateInputValue(this.selectedDate)
-          : undefined,
       })
       .pipe(
         finalize(() => {
@@ -768,18 +822,14 @@ export class SecretaryReservationsComponent
   }
 
   formatDate(value: string): string {
-    return formatIranDateTime(value);
-  }
-
-  onReservationDateChange(date: Date): void {
-    this.selectedDate = date;
-    this.pageNumber = 1;
-    this.load();
-  }
-
-  onFilterByDateToggle(): void {
-    this.pageNumber = 1;
-    this.load();
+    if (!value) return "-";
+    const date = new Date(value);
+    return Number.isFinite(date.getTime())
+      ? new Intl.DateTimeFormat("fa-IR", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(date)
+      : value;
   }
 
   private handleLoadError(requestId: number, error: unknown): void {
