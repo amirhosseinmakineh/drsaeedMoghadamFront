@@ -84,7 +84,6 @@ export interface SecretaryReservation {
 
 export interface SecretaryReservationFilters {
   consultantProfileId?: number | null;
-  date?: string;
   from?: string;
   to?: string;
   searchText?: string;
@@ -130,13 +129,6 @@ export interface ReviewAttendanceRequest {
   note: string | null;
 }
 
-export interface SecretaryConsultantOption {
-  profileId: number;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-}
-
 @Injectable({ providedIn: "root" })
 export class SecretaryDashboardService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
@@ -176,40 +168,6 @@ export class SecretaryDashboardService {
         catchError((error) =>
           throwError(() =>
             this.toUserFacingError(error, "دریافت رزروها انجام نشد"),
-          ),
-        ),
-      );
-  }
-
-  getConsultantOptions(): Observable<SecretaryConsultantOption[]> {
-    return this.http
-      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
-        headers: this.authHeaders(),
-        params: this.toParams({ pageNumber: 1, pageSize: 200 }),
-      })
-      .pipe(
-        map((response) => {
-          const source = this.unwrapResponseData(response);
-          const items = this.readItems<Record<string, unknown>>(source);
-          return items
-            .map((item) => ({
-              profileId:
-                this.readNumber(item, "profileId", "ProfileId", "id", "Id") ?? 0,
-              firstName: String(
-                this.readValue(item, "firstName", "FirstName") ?? "",
-              ),
-              lastName: String(
-                this.readValue(item, "lastName", "LastName") ?? "",
-              ),
-              phoneNumber: String(
-                this.readValue(item, "phoneNumber", "PhoneNumber") ?? "",
-              ),
-            }))
-            .filter((item) => item.profileId > 0);
-        }),
-        catchError((error) =>
-          throwError(() =>
-            this.toUserFacingError(error, "دریافت لیست مشاوران انجام نشد"),
           ),
         ),
       );
