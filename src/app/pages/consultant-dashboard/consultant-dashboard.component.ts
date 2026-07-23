@@ -41,7 +41,14 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
 import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-route-history";
 import { DASHBOARD_MOBILE_LAYOUT_STYLES } from "../../shared/dashboard/dashboard-mobile-layout.styles";
-import { formatIranDateTime } from "../../utils/iran-datetime.util";
+import {
+  combineIranDateAndTime,
+  formatIranDateTime,
+  nowInIran,
+  nowInIranMs,
+  toIranDateInputValue,
+  toIranTimeInputValue,
+} from "../../utils/iran-datetime.util";
 import {
   LeadAssignmentState as LEAD_STATE,
   LeadAssignmentType as LEAD_TYPE,
@@ -2157,10 +2164,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   private formatFilterDate(value: Date | null): string | undefined {
     if (!value) return undefined;
-    const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const day = String(value.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return toIranDateInputValue(value);
   }
 
   openAddPatientLeadDialog(): void {
@@ -3904,15 +3908,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private startOfTodayIso(): string {
-    const date = new Date();
-    date.setHours(0, 0, 0, 0);
-    return date.toISOString();
+    return `${toIranDateInputValue(nowInIran())}T00:00:00+03:30`;
   }
 
   private endOfTodayIso(): string {
-    const date = new Date();
-    date.setHours(23, 59, 59, 999);
-    return date.toISOString();
+    return `${toIranDateInputValue(nowInIran())}T23:59:59.999+03:30`;
   }
 
   private startTimers(): void {
@@ -4613,25 +4613,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const time = this.reservationForm.reservationTime;
     if (!date || !time) return null;
 
-    const [hours, minutes] = time.split(":").map(Number);
-    if (
-      !Number.isInteger(hours) ||
-      !Number.isInteger(minutes) ||
-      hours < 0 ||
-      hours > 23 ||
-      minutes < 0 ||
-      minutes > 59
-    ) {
-      return null;
-    }
-
-    return new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      hours,
-      minutes,
-    );
+    return combineIranDateAndTime(date, time);
   }
 
   private isReservationTimeChanged(reservationAt: Date | null): boolean {
@@ -4650,14 +4632,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private minimumReservationDateTime(): Date {
-    const date = new Date(Date.now() + 5 * 60 * 1000);
+    const date = new Date(nowInIranMs() + 5 * 60 * 1000);
     date.setSeconds(0, 0);
     return date;
   }
 
   private toTimeValue(date: Date): string {
-    const pad = (value: number) => String(value).padStart(2, "0");
-    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return toIranTimeInputValue(date);
   }
 
   private leadDeadlineMs(lead: ConsultantLead): number {
@@ -4946,8 +4927,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private toDateInputValue(date: Date): string {
-    const pad = (value: number) => String(value).padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    return toIranDateInputValue(date);
   }
 
   private resolveProfileId(data: unknown): number | null {

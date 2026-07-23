@@ -3,8 +3,8 @@
     <div>
       <span>{{ view === "attendanceConfirmations" ? "تایید حضور" : "رزروها" }}</span>
       <h2>{{ title }}</h2>
-      @if (filterByDate && selectedDatePersian) {
-        <p>بیماران روز: {{ selectedDatePersian }}</p>
+      @if (selectedDatePersian) {
+        <p>رزروهای روز: {{ selectedDatePersian }}</p>
       }
     </div>
     <button
@@ -35,26 +35,12 @@
   </div>
 
   <div class="calendar-block">
-    <div class="calendar-toolbar">
-      <label class="checkbox-field">
-        <input
-          type="checkbox"
-          [(ngModel)]="filterByDate"
-          name="filterByDate"
-          (change)="onFilterByDateToggle()"
-        />
-        نمایش بر اساس روز انتخاب‌شده
-      </label>
-    </div>
-    @if (filterByDate) {
-      <app-base-datepicker
-        [label]="datePickerLabel"
-        [selectedDate]="selectedDate"
-        [allowPastDates]="true"
-        [allowFutureDates]="true"
-        (dateChange)="onDateChange($event)"
-      ></app-base-datepicker>
-    }
+    <app-base-datepicker
+      [label]="datePickerLabel"
+      [selectedDate]="selectedDate"
+      [unrestrictedDates]="true"
+      (dateChange)="onDateChange($event)"
+    ></app-base-datepicker>
   </div>
 
   <div class="export-bar">
@@ -99,14 +85,6 @@
         <option [ngValue]="4">تایید نهایی منشی</option>
         <option [ngValue]="5">رد نهایی منشی</option>
       </select>
-    </label>
-    <label class="checkbox-field">
-      <input
-        type="checkbox"
-        [(ngModel)]="filters.includeCanceled"
-        name="includeCanceled"
-      />
-      نمایش لغوشده‌ها
     </label>
     <button class="primary-filter" type="submit">اعمال فیلتر</button>
   </form>

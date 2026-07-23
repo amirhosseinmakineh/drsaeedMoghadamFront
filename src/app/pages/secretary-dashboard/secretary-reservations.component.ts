@@ -29,6 +29,11 @@ import { ToastService } from "../../core/toast/toast.service";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
+import {
+  createRelativeYearDateInIran,
+  createYesterdayInIran,
+  toIranDateInputValue,
+} from "../../utils/iran-datetime.util";
 
 export type SecretaryReservationTab = "queue" | "all" | "completed";
 
@@ -393,8 +398,8 @@ export class SecretaryReservationsComponent
   profileForm = this.emptyProfileForm();
   selectedProfileBirthDate?: Date;
   readonly birthDatePickerLabel = { fa: "تاریخ تولد", en: "Birth date" };
-  readonly birthDateMinDate = this.createRelativeYearDate(-120);
-  readonly birthDateMaxDate = this.createYesterday();
+  readonly birthDateMinDate = createRelativeYearDateInIran(-120);
+  readonly birthDateMaxDate = createYesterdayInIran();
   loading = false;
   savingId: number | null = null;
   feedback = "";
@@ -671,7 +676,7 @@ export class SecretaryReservationsComponent
 
   setProfileBirthDate(date: Date): void {
     this.selectedProfileBirthDate = date;
-    this.profileForm.birthDate = this.toDateInputValue(date);
+    this.profileForm.birthDate = toIranDateInputValue(date);
   }
 
   submitProfile(): void {
@@ -872,29 +877,6 @@ export class SecretaryReservationsComponent
       insuranceName: "",
       notes: "",
     };
-  }
-
-  private createYesterday(): Date {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    return this.startOfDay(date);
-  }
-
-  private createRelativeYearDate(yearOffset: number): Date {
-    const date = new Date();
-    date.setFullYear(date.getFullYear() + yearOffset);
-    return this.startOfDay(date);
-  }
-
-  private startOfDay(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  private toDateInputValue(date: Date): string {
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, "0");
-    const day = `${date.getDate()}`.padStart(2, "0");
-    return `${year}-${month}-${day}`;
   }
 
   private showFeedback(message: string, type: "success" | "error"): void {

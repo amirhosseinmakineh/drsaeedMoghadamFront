@@ -16,6 +16,11 @@ import {
   pickText,
   text,
 } from "../../../models/clinic.model";
+import {
+  fromIranDateInputValue,
+  nowInIran,
+  toIranDateInputValue,
+} from "../../../utils/iran-datetime.util";
 
 @Component({
   selector: "app-base-datepicker",
@@ -175,6 +180,8 @@ export class BaseDatepickerComponent implements OnChanges {
   @Input() allowPastDates = false;
   /** When used with allowPastDates, also allows selecting future dates (calendar filters). */
   @Input() allowFutureDates: boolean | null = null;
+  /** Report/filter calendars: all past and future dates stay selectable. */
+  @Input() unrestrictedDates = false;
   @Output() dateChange = new EventEmitter<Date>();
 
   private activeMonthAnchor = new Date();
@@ -241,7 +248,8 @@ export class BaseDatepickerComponent implements OnChanges {
       (changes["maxDate"] ||
         changes["minDate"] ||
         changes["allowPastDates"] ||
-        changes["allowFutureDates"]) &&
+        changes["allowFutureDates"] ||
+        changes["unrestrictedDates"]) &&
       this.activeMonthAnchorOutsideSelectableRange()
     ) {
       this.activeMonthAnchor =
@@ -283,6 +291,7 @@ export class BaseDatepickerComponent implements OnChanges {
       this.allowToday,
       this.allowPastDates,
       this.effectiveAllowFutureDates,
+      this.unrestrictedDates,
       this.selectedDate?.getTime() ?? "none",
     ].join("|");
 
@@ -350,10 +359,11 @@ export class BaseDatepickerComponent implements OnChanges {
   }
 
   private get minSelectableDate(): Date {
+    if (this.unrestrictedDates) return this.startOfDay(new Date(2000, 0, 1));
     if (this.minDate) return this.startOfDay(this.minDate);
     if (this.allowPastDates) return this.startOfDay(new Date(2000, 0, 1));
 
-    const today = this.startOfDay(new Date());
+    const today = this.startOfDay(this.referenceToday());
     return this.allowToday ? today : this.addDays(today, 1);
   }
 
@@ -363,9 +373,10 @@ export class BaseDatepickerComponent implements OnChanges {
   }
 
   private get maxSelectableDate(): Date | null {
+    if (this.unrestrictedDates) return null;
     if (this.maxDate) return this.startOfDay(this.maxDate);
     if (this.allowPastDates && !this.effectiveAllowFutureDates) {
-      return this.startOfDay(new Date());
+      return this.startOfDay(this.referenceToday());
     }
 
     return null;
@@ -436,15 +447,27 @@ export class BaseDatepickerComponent implements OnChanges {
   }
 
   private fromIsoDate(value: string): Date {
+    if (this.language === "fa") {
+      return fromIranDateInputValue(value);
+    }
+
     const [year, month, day] = value.split("-").map(Number);
     return new Date(year, month - 1, day);
   }
 
   private toIsoDate(date: Date): string {
+    if (this.language === "fa") {
+      return toIranDateInputValue(date);
+    }
+
     const year = date.getFullYear();
     const month = `${date.getMonth() + 1}`.padStart(2, "0");
     const day = `${date.getDate()}`.padStart(2, "0");
     return `${year}-${month}-${day}`;
+  }
+
+  private referenceToday(): Date {
+    return this.language === "fa" ? nowInIran() : new Date();
   }
 
   private activeMonthAnchorOutsideSelectableRange(): boolean {

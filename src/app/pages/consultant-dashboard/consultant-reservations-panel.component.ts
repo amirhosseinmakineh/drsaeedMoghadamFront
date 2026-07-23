@@ -34,6 +34,13 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import {
+  combineIranDateAndTime,
+  formatIranDateTime,
+  nowInIran,
+  startOfIranDay,
+  toIranTimeInputValue,
+} from "../../utils/iran-datetime.util";
 
 export type ConsultantReservationTab = "pending" | "all" | "completed";
 
@@ -659,14 +666,7 @@ export class ConsultantReservationsPanelComponent
   }
 
   formatDateTime(value: string): string {
-    if (!value) return "-";
-    const date = new Date(value);
-    return Number.isFinite(date.getTime())
-      ? new Intl.DateTimeFormat("fa-IR", {
-          dateStyle: "medium",
-          timeStyle: "short",
-        }).format(date)
-      : value;
+    return formatIranDateTime(value);
   }
 
   canEdit(reservation: ConsultantReservation): boolean {
@@ -688,7 +688,7 @@ export class ConsultantReservationsPanelComponent
     this.editingReservation = reservation;
     this.editForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
-      reservationTime: this.toTimeValue(date),
+      reservationTime: toIranTimeInputValue(date),
       patientCity: this.patientCity(reservation) === "شهر ثبت نشده"
         ? ""
         : this.patientCity(reservation),
@@ -725,7 +725,7 @@ export class ConsultantReservationsPanelComponent
       : null;
     if (!this.profileId || !reservationId) return;
 
-    const reservationAt = this.combineDateAndTime(
+    const reservationAt = combineIranDateAndTime(
       this.editForm.reservationDate,
       this.editForm.reservationTime,
     );
@@ -762,27 +762,7 @@ export class ConsultantReservationsPanelComponent
   }
 
   minimumReservationDate(): Date {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  }
-
-  private combineDateAndTime(date: Date | null, time: string): Date | null {
-    if (!date || !time) return null;
-    const [hours, minutes] = time.split(":").map((part) => Number(part));
-    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
-    return new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      hours,
-      minutes,
-      0,
-      0,
-    );
-  }
-
-  private toTimeValue(date: Date): string {
-    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    return startOfIranDay(nowInIran());
   }
 
   private startPolling(): void {

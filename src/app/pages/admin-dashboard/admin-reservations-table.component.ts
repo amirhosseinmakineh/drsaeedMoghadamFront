@@ -30,7 +30,7 @@ import {
   TableComponent,
 } from "../../shared/base/table/table.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
-import { formatIranDateTime } from "../../utils/iran-datetime.util";
+import { formatIranDateTime, startOfIranDay, toIranDateInputValue } from "../../utils/iran-datetime.util";
 
 type ReservationTableMode = "system" | "consultant";
 type ReservationView = "reservations" | "attendanceConfirmations";
@@ -187,9 +187,8 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   readonly datePickerLabel = { fa: "انتخاب روز", en: "Select day" };
 
   view: ReservationView = "reservations";
-  selectedDate = new Date();
+  selectedDate = startOfIranDay();
   selectedDatePersian = "";
-  filterByDate = true;
   items: SecretaryReservation[] = [];
   loading = false;
   exportingReservations = false;
@@ -201,7 +200,6 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   filters: SecretaryReservationFilters = {
     pageNumber: 1,
     pageSize: 10,
-    includeCanceled: false,
     attendanceConfirmationStatus: null,
   };
 
@@ -278,12 +276,6 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
     this.selectedDate = date;
     this.syncDateFilter();
     this.syncSelectedDatePersian();
-    this.filters.pageNumber = 1;
-    this.load();
-  }
-
-  onFilterByDateToggle(): void {
-    this.syncDateFilter();
     this.filters.pageNumber = 1;
     this.load();
   }
@@ -377,7 +369,7 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   }
 
   emptyText(): string {
-    if (this.filterByDate && this.selectedDatePersian) {
+    if (this.selectedDatePersian) {
       return this.view === "attendanceConfirmations"
         ? `تایید حضوری برای ${this.selectedDatePersian} وجود ندارد.`
         : `رزروی برای ${this.selectedDatePersian} وجود ندارد.`;
@@ -394,16 +386,10 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   }
 
   private syncDateFilter(): void {
-    if (this.filterByDate) {
-      this.filters.date = this.toDateString(this.selectedDate);
-      delete this.filters.from;
-      delete this.filters.to;
-      return;
-    }
-
-    delete this.filters.date;
+    this.filters.date = this.toDateString(this.selectedDate);
     delete this.filters.from;
     delete this.filters.to;
+    delete this.filters.includeCanceled;
   }
 
   private exportFilters(): {
@@ -412,10 +398,6 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
     consultantProfileId?: number;
   } {
     const consultantProfileId = this.filters.consultantProfileId ?? undefined;
-    if (!this.filterByDate) {
-      return { consultantProfileId };
-    }
-
     const date = this.toDateString(this.selectedDate);
     return {
       consultantProfileId,
@@ -425,23 +407,16 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   }
 
   private syncSelectedDatePersian(): void {
-    if (!this.filterByDate) {
-      this.selectedDatePersian = "";
-      return;
-    }
-
     this.selectedDatePersian = this.selectedDate.toLocaleDateString("fa-IR", {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "Asia/Tehran",
     });
   }
 
   private toDateString(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return toIranDateInputValue(date);
   }
 
   private patientName(row: SecretaryReservation): string {
