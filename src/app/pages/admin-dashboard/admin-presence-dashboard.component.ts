@@ -20,6 +20,11 @@ import {
 } from "../../shared/base/table/table.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
+import {
+  formatIranDate,
+  startOfIranDay,
+  toIranDateInputValue,
+} from "../../utils/iran-datetime.util";
 
 @Component({
   selector: "app-admin-presence-dashboard",
@@ -136,7 +141,7 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminPresenceDashboardComponent implements OnInit {
-  selectedDate = new Date();
+  selectedDate = startOfIranDay();
   selectedDatePersian = "";
   phoneFilter = "";
   feedback = "";
@@ -382,18 +387,11 @@ export class AdminPresenceDashboardComponent implements OnInit {
   }
 
   private syncSelectedDatePersian(): void {
-    this.selectedDatePersian = this.selectedDate.toLocaleDateString("fa-IR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    this.selectedDatePersian = formatIranDate(this.selectedDate);
   }
 
   private toDateString(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return toIranDateInputValue(date);
   }
 
   private fullName(

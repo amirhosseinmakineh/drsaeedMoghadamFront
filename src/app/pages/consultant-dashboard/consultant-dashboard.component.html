@@ -500,7 +500,7 @@
                   [label]="leadFromDatePickerLabel"
                   [selectedDate]="leadFromDate ?? undefined"
                   [maxDate]="leadToDate ?? undefined"
-                  [allowPastDates]="true"
+                  [unrestrictedDates]="true"
                   (dateChange)="setLeadFromDate($event)"
                 ></app-base-datepicker>
               </label>
@@ -510,7 +510,7 @@
                   [label]="leadToDatePickerLabel"
                   [selectedDate]="leadToDate ?? undefined"
                   [minDate]="leadFromDate ?? undefined"
-                  [allowPastDates]="true"
+                  [unrestrictedDates]="true"
                   (dateChange)="setLeadToDate($event)"
                 ></app-base-datepicker>
               </label>
@@ -880,7 +880,7 @@
               <app-base-datepicker
                 [label]="{ fa: 'از تاریخ', en: 'From date' }"
                 [selectedDate]="patientProfileFromDate ?? undefined"
-                [allowPastDates]="true"
+                [unrestrictedDates]="true"
                 (dateChange)="patientProfileFromDate = $event"
               ></app-base-datepicker>
             </label>
@@ -890,7 +890,7 @@
                 [label]="{ fa: 'تا تاریخ', en: 'To date' }"
                 [selectedDate]="patientProfileToDate ?? undefined"
                 [minDate]="patientProfileFromDate ?? undefined"
-                [allowPastDates]="true"
+                [unrestrictedDates]="true"
                 (dateChange)="patientProfileToDate = $event"
               ></app-base-datepicker>
             </label>

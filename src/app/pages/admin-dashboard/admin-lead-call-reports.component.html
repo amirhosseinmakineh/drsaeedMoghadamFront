@@ -21,7 +21,7 @@
         [label]="fromDatePickerLabel"
         [selectedDate]="fromDate ?? undefined"
         [maxDate]="toDate ?? undefined"
-        [allowPastDates]="true"
+        [unrestrictedDates]="true"
         (dateChange)="setFromDate($event)"
       ></app-base-datepicker>
     </label>
@@ -31,7 +31,7 @@
         [label]="toDatePickerLabel"
         [selectedDate]="toDate ?? undefined"
         [minDate]="fromDate ?? undefined"
-        [allowPastDates]="true"
+        [unrestrictedDates]="true"
         (dateChange)="setToDate($event)"
       ></app-base-datepicker>
     </label>
