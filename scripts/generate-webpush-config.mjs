@@ -13,7 +13,7 @@ const publicKey =
   process.env.WEBPUSH_VAPID_PUBLIC_KEY?.trim() || DEFAULT_VAPID_PUBLIC_KEY;
 const apiBaseUrl =
   process.env.API_BASE_URL?.trim() ||
-  "https://drsaeedback.drmoghadam.runflare.run/api";
+  "https://api.drsaeedmoghadam.com/api";
 
 const requireConfig =
   process.env.REQUIRE_WEBPUSH_CONFIG === "true" &&
