@@ -155,17 +155,21 @@ export class AdminLeadCallReportsComponent {
     this.markDirty();
   }
 
-  validateFilters(): string | null {
-    if (
-      this.fromDate &&
-      this.toDate &&
-      this.startOfDay(this.fromDate).getTime() >
-        this.startOfDay(this.toDate).getTime()
-    )
-      return "تاریخ شروع نباید بعد از تاریخ پایان باشد";
+validateFilters(): string | null {
+  if (this.fromDate && this.toDate) {
+    const from = new Date(this.fromDate);
+    from.setHours(0, 0, 0, 0);
 
-    return null;
+    const to = new Date(this.toDate);
+    to.setHours(0, 0, 0, 0);
+
+    if (from.getTime() > to.getTime()) {
+      return "تاریخ شروع نباید بعد از تاریخ پایان باشد";
+    }
   }
+
+  return null;
+}
 
   download(): void {
     const validationError = this.validateFilters();

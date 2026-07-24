@@ -725,10 +725,15 @@ export class ConsultantReservationsPanelComponent
       : null;
     if (!this.profileId || !reservationId) return;
 
-    const reservationAt = combineIranDateAndTime(
-      this.editForm.reservationDate,
-      this.editForm.reservationTime,
-    );
+ if (!this.editForm.reservationDate) {
+  this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
+  return;
+}
+
+const reservationAt = combineIranDateAndTime(
+  this.editForm.reservationDate,
+  this.editForm.reservationTime,
+);
     if (!reservationAt) {
       this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
       return;
