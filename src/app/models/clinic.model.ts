@@ -256,122 +256,39 @@ export const STATS: StatItem[] = [
   },
 ];
 
-export const WORK_SAMPLES: WorkSample[] = [
-  {
-    id: "natural-veneer",
-    title: text("نمونه لمینت سرامیکی", "Porcelain veneer sample"),
-    service: text("لمینت دندان", "Dental veneers"),
+const COMPOSITE_WORK_IMAGE_PATHS = [
+  "/works/1.jfif",
+  "/works/cf6cb3f9-2060-4ed4-824b-1356964f843b.jfif",
+  "/works/cfc7f926-c971-4e77-8090-9e56e1f58e54.jfif",
+  "/works/ae25abfa-ad4b-4f68-9958-ce2d365c19cd.jfif",
+  "/works/d8a63b12-e6e2-4189-b51d-0a7efea3851e.jfif",
+  "/works/dcbe76fa-466f-4d61-82c8-03d1b790716b.jfif",
+] as const;
+
+export const WORK_SAMPLES: WorkSample[] = COMPOSITE_WORK_IMAGE_PATHS.map(
+  (src, index) => ({
+    id: `composite-work-${index + 1}`,
+    title: text(
+      `نمونه کامپوزیت شماره ${index + 1}`,
+      `Composite veneer sample ${index + 1}`,
+    ),
+    service: text("کامپوزیت ونیر", "Composite veneers"),
     description: text(
-      "برای اصلاح رنگ و فرم دندان‌های جلو، انتخاب رنگ، تناسب خط لبخند و سلامت بافت لثه قبل از شروع درمان بررسی می‌شود.",
-      "For front-tooth shade and shape correction, color choice, smile-line proportion and gum health are reviewed before treatment starts.",
+      "نمونه‌ای از کامپوزیت ونیر با تمرکز بر هماهنگی فرم، رنگ و خط لبخند.",
+      "A composite veneer sample focused on harmony of shape, shade and smile line.",
     ),
     result: text(
-      "ظاهر روشن‌تر و هماهنگ‌تر با فرم طبیعی دندان‌ها",
-      "A brighter look aligned with natural tooth form",
+      "نتیجه هر فرد پس از معاینه و بررسی شرایط دندان‌ها مشخص می‌شود.",
+      "Each patient's result is determined after examination and assessment of their teeth.",
     ),
     image: {
-      src: "/works/1.jfif",
+      src,
       sizes: PUBLIC_IMAGE_SIZES.portfolio,
       width: 1080,
       height: 1350,
     },
-  },
-  {
-    id: "whitening-shade",
-    title: text("نمونه بلیچینگ دندان", "Dental bleaching sample"),
-    service: text("بلیچینگ دندان", "Dental bleaching"),
-    description: text(
-      "برای روشن‌تر شدن کنترل‌شده رنگ دندان طبیعی، رنگ پایه، حساسیت، سلامت لثه و ترمیم‌های قبلی قبل از بلیچینگ بررسی می‌شود.",
-      "For controlled brightening of natural teeth, baseline shade, sensitivity, gum health and existing restorations are reviewed before bleaching.",
-    ),
-    result: text(
-      "روشن‌تر شدن طبیعی بدون تغییر رنگ ترمیم‌ها یا وعده غیرواقعی",
-      "Natural brightening without changing restorations or making unrealistic promises",
-    ),
-    image: {
-      src: "/works/cf6cb3f9-2060-4ed4-824b-1356964f843b.jfif",
-      sizes: PUBLIC_IMAGE_SIZES.portfolio,
-      width: 1080,
-      height: 1350,
-    },
-  },
-  {
-    id: "composite-shape",
-    title: text("نمونه کامپوزیت دندان", "Dental composite sample"),
-    service: text("کامپوزیت ونیر", "Composite veneer"),
-    description: text(
-      "کامپوزیت برای اصلاح محافظه‌کارانه فرم، فاصله یا شکستگی‌های محدود دندان‌های جلو استفاده می‌شود و مراقبت بعد از آن اهمیت زیادی دارد.",
-      "Composite is used for conservative correction of front-tooth shape, gaps or limited chips, with aftercare playing an important role.",
-    ),
-    result: text(
-      "فرم منظم‌تر بدون تغییر اغراق‌آمیز لبخند",
-      "Cleaner shape without an exaggerated smile change",
-    ),
-    image: {
-      src: "/works/cfc7f926-c971-4e77-8090-9e56e1f58e54.jfif",
-      sizes: PUBLIC_IMAGE_SIZES.portfolio,
-      width: 1080,
-      height: 1350,
-    },
-  },
-  {
-    id: "smile-design-1",
-    title: text("نمونه طراحی لبخند", "Smile design sample"),
-    service: text("طراحی لبخند", "Smile design"),
-    description: text(
-      "نمونه‌ای از نتیجه درمان زیبایی با تمرکز بر هماهنگی فرم، رنگ و خط لبخند.",
-      "An aesthetic treatment sample focused on harmony of shape, shade and smile line.",
-    ),
-    result: text(
-      "لبخندی هماهنگ با فرم طبیعی صورت",
-      "A smile balanced with natural facial features",
-    ),
-    image: {
-      src: "/works/ae25abfa-ad4b-4f68-9958-ce2d365c19cd.jfif",
-      sizes: PUBLIC_IMAGE_SIZES.portfolio,
-      width: 1080,
-      height: 1350,
-    },
-  },
-  {
-    id: "smile-design-2",
-    title: text("نمونه اصلاح فرم دندان", "Tooth-shape correction sample"),
-    service: text("اصلاح فرم", "Shape correction"),
-    description: text(
-      "نمونه‌ای از اصلاح فرم دندان‌ها با حفظ تناسب و ظاهر طبیعی لبخند.",
-      "A tooth-shape correction sample preserving proportion and a natural-looking smile.",
-    ),
-    result: text(
-      "فرم منظم و متناسب دندان‌ها",
-      "More even and proportionate tooth shapes",
-    ),
-    image: {
-      src: "/works/d8a63b12-e6e2-4189-b51d-0a7efea3851e.jfif",
-      sizes: PUBLIC_IMAGE_SIZES.portfolio,
-      width: 1080,
-      height: 1350,
-    },
-  },
-  {
-    id: "smile-design-3",
-    title: text("نمونه درمان زیبایی دندان", "Cosmetic dental treatment sample"),
-    service: text("درمان زیبایی", "Cosmetic treatment"),
-    description: text(
-      "نمونه‌ای دیگر از درمان زیبایی دندان با توجه به رنگ و فرم متناسب دندان‌ها.",
-      "Another cosmetic dental treatment sample with attention to balanced tooth shade and shape.",
-    ),
-    result: text(
-      "ظاهر روشن‌تر و هماهنگ‌تر لبخند",
-      "A brighter, more balanced smile",
-    ),
-    image: {
-      src: "/works/dcbe76fa-466f-4d61-82c8-03d1b790716b.jfif",
-      sizes: PUBLIC_IMAGE_SIZES.portfolio,
-      width: 1080,
-      height: 1350,
-    },
-  },
-];
+  }),
+);
 
 export const DENTAL_SERVICES: DentalService[] = [
   {
