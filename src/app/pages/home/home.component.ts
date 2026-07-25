@@ -12,7 +12,6 @@ import {
   LeadFormModel,
   LanguageCode,
   STATS,
-  TESTIMONIALS,
   WORK_SAMPLES,
   pickText,
 } from "../../models/clinic.model";
@@ -39,7 +38,6 @@ export class HomeComponent {
   language = signal<LanguageCode>("fa");
   activeSlide = signal(0);
   activeWorkSample = signal(0);
-  activeTestimonial = signal(0);
   leadSent = signal(false);
   leadFeedback = signal("");
   leadFeedbackType = signal<"success" | "error">("success");
@@ -49,7 +47,6 @@ export class HomeComponent {
   workSamples = WORK_SAMPLES;
   benefits = BENEFIT_CARDS;
   stats = STATS;
-  testimonials = TESTIMONIALS;
   faqs = GLOBAL_FAQS;
   lead: LeadFormModel = {
     fullName: "",
@@ -86,13 +83,6 @@ export class HomeComponent {
       (this.activeWorkSample() + direction + this.workSamples.length) %
       this.workSamples.length;
     this.activeWorkSample.set(next);
-  }
-
-  nextTestimonial(direction: number): void {
-    const next =
-      (this.activeTestimonial() + direction + this.testimonials.length) %
-      this.testimonials.length;
-    this.activeTestimonial.set(next);
   }
 
   openAuth(): void {
@@ -146,16 +136,79 @@ export class HomeComponent {
 
   private updateSeo(): void {
     const isFa = this.language() === "fa";
-    this.title.setTitle(
-      isFa
-        ? "کلینیک دندان‌پزشکی دکتر سعید مقدم | کامپوزیت، لمینت و بلیچینگ"
-        : "Dr. Saeed Moghaddam Dental Clinic | Composite, veneers and bleaching",
-    );
-    this.meta.updateTag({
-      name: "description",
-      content: isFa
-        ? "کلینیک دندان‌پزشکی دکتر سعید مقدم؛ خدمات زیبایی دندان شامل کامپوزیت ونیر، لمینت سرامیکی، بلیچینگ دندان و درخواست تماس برای راهنمایی اولیه."
-        : "Dr. Saeed Moghaddam Dental Clinic for composite veneers, porcelain veneers, dental bleaching and initial consultant call requests.",
-    });
+    const pageTitle = isFa
+      ? "دندان‌پزشکی زیبایی دکتر سعید مقدم | کامپوزیت، لمینت و بلیچینگ"
+      : "Dr. Saeed Moghaddam Cosmetic Dentistry | Veneers & Whitening";
+    const description = isFa
+      ? "راهنمای تخصصی کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان در کلینیک دکتر سعید مقدم؛ مقایسه درمان‌ها، مراحل، مراقبت، نمونه‌کار و درخواست تماس."
+      : "Evidence-based guidance on composite and porcelain veneers and professional teeth whitening at Dr. Saeed Moghaddam Dental Clinic, with treatment comparison and aftercare.";
+    const canonicalUrl = `${window.location.origin}/`;
+
+    this.title.setTitle(pageTitle);
+    this.meta.updateTag({ name: "description", content: description });
+    this.meta.updateTag({ name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" });
+    this.meta.updateTag({ property: "og:locale", content: isFa ? "fa_IR" : "en_US" });
+    this.meta.updateTag({ property: "og:type", content: "website" });
+    this.meta.updateTag({ property: "og:title", content: pageTitle });
+    this.meta.updateTag({ property: "og:description", content: description });
+    this.meta.updateTag({ property: "og:url", content: canonicalUrl });
+    this.meta.updateTag({ property: "og:image", content: `${window.location.origin}/images/1-960.png` });
+    this.meta.updateTag({ name: "twitter:card", content: "summary_large_image" });
+    this.meta.updateTag({ name: "twitter:title", content: pageTitle });
+    this.meta.updateTag({ name: "twitter:description", content: description });
+    this.setCanonical(canonicalUrl);
+    this.setStructuredData(canonicalUrl, description, isFa);
   }
+  private setCanonical(url: string): void {
+    let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "canonical";
+      document.head.appendChild(link);
+    }
+    link.href = url;
+  }
+
+  private setStructuredData(url: string, description: string, isFa: boolean): void {
+    const data = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": `${url}#website`,
+          url,
+          name: isFa ? "کلینیک دندان‌پزشکی دکتر سعید مقدم" : "Dr. Saeed Moghaddam Dental Clinic",
+          inLanguage: isFa ? "fa-IR" : "en-US",
+        },
+        {
+          "@type": "MedicalWebPage",
+          "@id": `${url}#webpage`,
+          url,
+          name: this.title.getTitle(),
+          description,
+          inLanguage: isFa ? "fa-IR" : "en-US",
+          isPartOf: { "@id": `${url}#website` },
+          about: ["کامپوزیت ونیر", "لمینت سرامیکی", "بلیچینگ دندان"],
+          lastReviewed: "2026-07-25",
+        },
+        {
+          "@type": "Dentist",
+          "@id": `${url}#clinic`,
+          name: isFa ? "کلینیک دندان‌پزشکی دکتر سعید مقدم" : "Dr. Saeed Moghaddam Dental Clinic",
+          url,
+          image: `${window.location.origin}/images/1-960.png`,
+          medicalSpecialty: "Dentistry",
+        },
+      ],
+    };
+    let script = document.querySelector<HTMLScriptElement>("#home-structured-data");
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "home-structured-data";
+      script.type = "application/ld+json";
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(data);
+  }
+
 }

@@ -77,14 +77,6 @@ export interface BenefitCard {
   text: LocalizedText;
 }
 
-export interface Testimonial {
-  id: string;
-  name: LocalizedText;
-  service: LocalizedText;
-  text: LocalizedText;
-  rating: number;
-}
-
 export interface LeadFormModel {
   fullName: string;
   phone: string;
@@ -874,59 +866,6 @@ export const BENEFIT_CARDS: BenefitCard[] = [
       "اگر درباره انتخاب بین کامپوزیت، لمینت یا بلیچینگ سؤال دارید، شماره خود را ثبت می‌کنید تا برای راهنمایی اولیه تماس گرفته شود.",
       "If you have questions about choosing composite, veneers or bleaching, leave your number for an initial guidance call.",
     ),
-  },
-];
-
-export const TESTIMONIALS: Testimonial[] = [
-  {
-    id: "maryam",
-    name: text("مریم ا.", "Maryam A."),
-    service: text("لمینت سرامیکی", "Porcelain veneers"),
-    text: text(
-      "برای لمینت نگران رنگ خیلی سفید بودم. اول عکس دندان‌ها بررسی شد، چند نمونه رنگ دیدم و در نهایت نتیجه طبیعی‌تر از چیزی شد که تصور می‌کردم.",
-      "I was worried veneers would look too white. My photos were reviewed first, I saw shade samples, and the final result looked more natural than I expected.",
-    ),
-    rating: 5,
-  },
-  {
-    id: "reza",
-    name: text("رضا ک.", "Reza K."),
-    service: text("بلیچینگ دندان", "Dental bleaching"),
-    text: text(
-      "برای بلیچینگ نگران حساسیت بودم. قبل از شروع، وضعیت لثه و ترمیم‌ها بررسی شد و توضیح دادند که نتیجه روی دندان طبیعی اثر دارد، نه روی کامپوزیت یا روکش.",
-      "I was worried about bleaching sensitivity. Before starting, my gums and restorations were checked and they explained that results affect natural teeth, not composite or crowns.",
-    ),
-    rating: 5,
-  },
-  {
-    id: "sara",
-    name: text("سارا م.", "Sara M."),
-    service: text("کامپوزیت ونیر", "Composite veneers"),
-    text: text(
-      "برای فاصله و فرم چند دندان مراجعه کردم. قبل از کار توضیح دادند کامپوزیت برای کدام دندان‌ها مناسب است و بعد از درمان هم روش مراقبت را یاد گرفتم.",
-      "I visited for gaps and shape correction on a few teeth. Before treatment, they explained which teeth were suitable for composite and taught me the care routine afterward.",
-    ),
-    rating: 5,
-  },
-  {
-    id: "hamid",
-    name: text("حمید ر.", "Hamid R."),
-    service: text("لمینت سرامیکی", "Porcelain veneers"),
-    text: text(
-      "برای لمینت، اول درباره میزان تراش، رنگ مناسب و مراقبت بعد از نصب صحبت شد. همین شفافیت باعث شد انتظارم از نتیجه واقعی‌تر باشد.",
-      "For veneers, the preparation amount, suitable shade and aftercare were discussed first. That clarity made my expectations more realistic.",
-    ),
-    rating: 5,
-  },
-  {
-    id: "niloofar",
-    name: text("نیلوفر ک.", "Niloofar K."),
-    service: text("کامپوزیت ونیر", "Composite veneers"),
-    text: text(
-      "برای کامپوزیت، درباره رنگ‌پذیری، پولیش دوره‌ای و پرهیز از فشار روی لبه‌ها توضیح کامل گرفتم؛ نتیجه طبیعی بود و مراقبت‌ها را می‌دانستم.",
-      "For composite veneers, staining, periodic polishing and avoiding force on the edges were explained clearly; the result looked natural and I knew the care routine.",
-    ),
-    rating: 5,
   },
 ];
 
