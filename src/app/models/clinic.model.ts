@@ -183,9 +183,6 @@ export const publicClinicImage = (
 
 const image = publicClinicImage;
 
-const portfolioImage = (key: PublicClinicImageKey): ClinicImage =>
-  publicClinicImage(key, PUBLIC_IMAGE_SIZES.portfolio);
-
 const heroImage = (key: PublicClinicImageKey): ClinicImage =>
   publicClinicImage(key, PUBLIC_IMAGE_SIZES.hero);
 
@@ -272,7 +269,12 @@ export const WORK_SAMPLES: WorkSample[] = [
       "ظاهر روشن‌تر و هماهنگ‌تر با فرم طبیعی دندان‌ها",
       "A brighter look aligned with natural tooth form",
     ),
-    image: portfolioImage("laminate"),
+    image: {
+      src: "/works/1.jfif",
+      sizes: PUBLIC_IMAGE_SIZES.portfolio,
+      width: 1080,
+      height: 1350,
+    },
   },
   {
     id: "whitening-shade",
@@ -286,7 +288,12 @@ export const WORK_SAMPLES: WorkSample[] = [
       "روشن‌تر شدن طبیعی بدون تغییر رنگ ترمیم‌ها یا وعده غیرواقعی",
       "Natural brightening without changing restorations or making unrealistic promises",
     ),
-    image: portfolioImage("whitening"),
+    image: {
+      src: "/works/cf6cb3f9-2060-4ed4-824b-1356964f843b.jfif",
+      sizes: PUBLIC_IMAGE_SIZES.portfolio,
+      width: 1080,
+      height: 1350,
+    },
   },
   {
     id: "composite-shape",
@@ -300,7 +307,69 @@ export const WORK_SAMPLES: WorkSample[] = [
       "فرم منظم‌تر بدون تغییر اغراق‌آمیز لبخند",
       "Cleaner shape without an exaggerated smile change",
     ),
-    image: portfolioImage("composite"),
+    image: {
+      src: "/works/cfc7f926-c971-4e77-8090-9e56e1f58e54.jfif",
+      sizes: PUBLIC_IMAGE_SIZES.portfolio,
+      width: 1080,
+      height: 1350,
+    },
+  },
+  {
+    id: "smile-design-1",
+    title: text("نمونه طراحی لبخند", "Smile design sample"),
+    service: text("طراحی لبخند", "Smile design"),
+    description: text(
+      "نمونه‌ای از نتیجه درمان زیبایی با تمرکز بر هماهنگی فرم، رنگ و خط لبخند.",
+      "An aesthetic treatment sample focused on harmony of shape, shade and smile line.",
+    ),
+    result: text(
+      "لبخندی هماهنگ با فرم طبیعی صورت",
+      "A smile balanced with natural facial features",
+    ),
+    image: {
+      src: "/works/ae25abfa-ad4b-4f68-9958-ce2d365c19cd.jfif",
+      sizes: PUBLIC_IMAGE_SIZES.portfolio,
+      width: 1080,
+      height: 1350,
+    },
+  },
+  {
+    id: "smile-design-2",
+    title: text("نمونه اصلاح فرم دندان", "Tooth-shape correction sample"),
+    service: text("اصلاح فرم", "Shape correction"),
+    description: text(
+      "نمونه‌ای از اصلاح فرم دندان‌ها با حفظ تناسب و ظاهر طبیعی لبخند.",
+      "A tooth-shape correction sample preserving proportion and a natural-looking smile.",
+    ),
+    result: text(
+      "فرم منظم و متناسب دندان‌ها",
+      "More even and proportionate tooth shapes",
+    ),
+    image: {
+      src: "/works/d8a63b12-e6e2-4189-b51d-0a7efea3851e.jfif",
+      sizes: PUBLIC_IMAGE_SIZES.portfolio,
+      width: 1080,
+      height: 1350,
+    },
+  },
+  {
+    id: "smile-design-3",
+    title: text("نمونه درمان زیبایی دندان", "Cosmetic dental treatment sample"),
+    service: text("درمان زیبایی", "Cosmetic treatment"),
+    description: text(
+      "نمونه‌ای دیگر از درمان زیبایی دندان با توجه به رنگ و فرم متناسب دندان‌ها.",
+      "Another cosmetic dental treatment sample with attention to balanced tooth shade and shape.",
+    ),
+    result: text(
+      "ظاهر روشن‌تر و هماهنگ‌تر لبخند",
+      "A brighter, more balanced smile",
+    ),
+    image: {
+      src: "/works/dcbe76fa-466f-4d61-82c8-03d1b790716b.jfif",
+      sizes: PUBLIC_IMAGE_SIZES.portfolio,
+      width: 1080,
+      height: 1350,
+    },
   },
 ];
 
