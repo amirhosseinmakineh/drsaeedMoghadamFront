@@ -91,113 +91,27 @@
   </div>
 </section>
 
-<section class="page-section care-access-panel consultation-demo">
-  <div>
-    <h2>
-      {{
-        language() === "fa"
-          ? "شماره تماس را ثبت کنید؛ مشاوران برای راهنمایی با شما تماس می‌گیرند"
-          : "Submit your phone number and consultants will call to guide you"
-      }}
+<section class="page-section doctor-intro" aria-labelledby="doctor-intro-title">
+  <div class="section-heading">
+    <span class="eyebrow">{{ language() === "fa" ? "دندان‌پزشکی زیبایی و طراحی لبخند" : "Cosmetic dentistry and smile design" }}</span>
+    <h2 id="doctor-intro-title">
+      {{ language() === "fa" ? "دکتر سعید مقدم؛ راهنمای انتخاب درمان زیبایی متناسب با وضعیت دندان" : "Dr. Saeed Moghaddam: choosing cosmetic care for your dental condition" }}
     </h2>
+  </div>
+  <div class="doctor-intro-content">
     <p>
-      {{
-        language() === "fa"
-          ? "در فرم پایین، نام، شماره تماس و درمان مورد نظر را وارد می‌کنید. اگر درمان دقیق را نمی‌دانید، فقط مشکل اصلی را در توضیح کوتاه بنویسید."
-          : "In the form below, enter your name, phone number and service of interest. If you are unsure about the exact service, describe your main concern in the short note."
-      }}
+      {{ language() === "fa" ? "در وب‌سایت دکتر سعید مقدم می‌توانید پیش از مراجعه، تفاوت کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان را بررسی کنید. هدف این راهنما کمک به شناخت کاربرد، محدودیت و مراقبت هر روش است؛ انتخاب نهایی فقط پس از معاینه دندان، لثه، مینا، بایت و ترمیم‌های قبلی انجام می‌شود." : "On Dr. Saeed Moghaddam’s website, you can compare composite veneers, porcelain veneers and teeth whitening before a visit. This guide explains each option’s uses, limits and aftercare; final selection follows examination of teeth, gums, enamel, bite and existing restorations." }}
     </p>
-    <div class="consultation-steps">
-      <article>
-        <strong>01</strong>
-        <span>{{
-          language() === "fa"
-            ? "نام و شماره تماس را وارد کنید"
-            : "Enter your name and phone number"
-        }}</span>
-      </article>
-      <article>
-        <strong>02</strong>
-        <span>{{
-          language() === "fa"
-            ? "درمان یا مشکل دندان را انتخاب کنید"
-            : "Choose the service or dental concern"
-        }}</span>
-      </article>
-      <article>
-        <strong>03</strong>
-        <span>{{
-          language() === "fa"
-            ? "درخواست را ثبت کنید و منتظر تماس مشاور بمانید"
-            : "Submit the request and wait for the consultant call"
-        }}</span>
-      </article>
-    </div>
+    <p>
+      {{ language() === "fa" ? "اگر نام «سعید مقدم» را برای بررسی خدمات دندان‌پزشکی جست‌وجو کرده‌اید، این صفحه مسیرهای درمانی معرفی‌شده در کلینیک را یک‌جا در اختیار شما می‌گذارد؛ بدون وعده نتیجه یکسان، قیمت قطعی پیش از معاینه یا ادعای درمان مناسب برای همه." : "If you searched for Saeed Moghaddam’s dental services, this page brings the clinic’s treatment paths together without promising identical results, a fixed pre-examination price or one treatment suitable for everyone." }}
+    </p>
   </div>
-  <div class="phone-mock" aria-label="Call request form demo">
-    <div class="phone-notch"></div>
-    <div class="phone-screen">
-      <div class="phone-hero-card">
-        <span><app-fa-icon name="phone"></app-fa-icon></span>
-        <div>
-          <h3>
-            {{
-              language() === "fa" ? "نمونه ثبت شماره" : "Phone submission demo"
-            }}
-          </h3>
-          <p>
-            {{
-              language() === "fa"
-                ? "این شبیه‌سازی نشان می‌دهد فرم تماس چطور کامل می‌شود."
-                : "This simulation shows how the call form is completed."
-            }}
-          </p>
-        </div>
-      </div>
-      <div class="phone-form-demo">
-        <div class="demo-field name-field">
-          <app-fa-icon name="user"></app-fa-icon>
-          <div>
-            <span>{{
-              language() === "fa" ? "نام و نام خانوادگی" : "Full name"
-            }}</span>
-            <b>{{ language() === "fa" ? "سارا محمدی" : "Sara Mohammadi" }}</b>
-          </div>
-        </div>
-        <div class="demo-field phone-field">
-          <app-fa-icon name="phone"></app-fa-icon>
-          <div>
-            <span>{{
-              language() === "fa" ? "شماره تماس" : "Phone number"
-            }}</span>
-            <b>09•• ••• ••42</b>
-          </div>
-        </div>
-        <div class="demo-field service-field">
-          <app-fa-icon name="tooth"></app-fa-icon>
-          <div>
-            <span>{{
-              language() === "fa" ? "درمان مورد نظر" : "Service of interest"
-            }}</span>
-            <b>{{
-              language() === "fa" ? "کامپوزیت ونیر" : "Composite veneers"
-            }}</b>
-          </div>
-        </div>
-        <button class="demo-submit" type="button">
-          <app-fa-icon name="check"></app-fa-icon>
-          {{ language() === "fa" ? "ثبت درخواست تماس" : "Submit call request" }}
-        </button>
-      </div>
-      <p class="call-status">
-        {{
-          language() === "fa"
-            ? "پس از ثبت، مشاور کلینیک برای توضیح مسیر مراجعه تماس می‌گیرد."
-            : "After submission, a clinic consultant calls to explain the visit path."
-        }}
-      </p>
-    </div>
-  </div>
+  <nav class="keyword-links" [attr.aria-label]="language() === 'fa' ? 'راهنمای خدمات دکتر سعید مقدم' : 'Dr. Saeed Moghaddam service guides'">
+    <a routerLink="/services/composite">{{ language() === "fa" ? "کامپوزیت دندان دکتر سعید مقدم" : "Composite veneers" }}</a>
+    <a routerLink="/services/laminate">{{ language() === "fa" ? "لمینت دندان دکتر سعید مقدم" : "Porcelain veneers" }}</a>
+    <a routerLink="/services/whitening">{{ language() === "fa" ? "بلیچینگ دندان دکتر سعید مقدم" : "Teeth whitening" }}</a>
+    <a routerLink="/about">{{ language() === "fa" ? "درباره دکتر سعید مقدم" : "About Dr. Saeed Moghaddam" }}</a>
+  </nav>
 </section>
 
 <section class="page-section service-showcase" id="services">
@@ -303,6 +217,32 @@
       </a>
     </article>
   </div>
+</section>
+
+<section class="page-section treatment-guide" aria-labelledby="treatment-comparison-title">
+  <div class="section-heading center">
+    <h2 id="treatment-comparison-title">
+      {{ language() === "fa" ? "کامپوزیت، لمینت یا بلیچینگ؛ کدام درمان برای چه هدفی است؟" : "Composite, veneers or bleaching: which treatment matches each goal?" }}
+    </h2>
+    <p>
+      {{ language() === "fa" ? "انتخاب درمان فقط با دیدن عکس یا اعلام قیمت ممکن نیست. رنگ طبیعی دندان، سلامت مینا و لثه، وضعیت بایت و ترمیم‌های قبلی باید در معاینه بررسی شوند." : "Treatment cannot be selected from a photo or price alone. Natural tooth shade, enamel and gum health, bite and existing restorations require an examination." }}
+    </p>
+  </div>
+  <div class="comparison-table" role="region" [attr.aria-label]="language() === 'fa' ? 'مقایسه درمان‌های زیبایی دندان' : 'Cosmetic dental treatment comparison'" tabindex="0">
+    <table>
+      <thead><tr>
+        <th scope="col">{{ language() === "fa" ? "درمان" : "Treatment" }}</th>
+        <th scope="col">{{ language() === "fa" ? "کاربرد اصلی" : "Primary use" }}</th>
+        <th scope="col">{{ language() === "fa" ? "نکته مهم" : "Important point" }}</th>
+      </tr></thead>
+      <tbody>
+        <tr><th scope="row"><a routerLink="/services/composite">{{ language() === "fa" ? "کامپوزیت ونیر" : "Composite veneers" }}</a></th><td>{{ language() === "fa" ? "اصلاح محدود فرم، لب‌پریدگی و فاصله‌های کوچک" : "Minor shape, chip and small-gap correction" }}</td><td>{{ language() === "fa" ? "ممکن است به پولیش دوره‌ای نیاز داشته باشد و رنگ‌پذیر است." : "May need periodic polishing and can stain." }}</td></tr>
+        <tr><th scope="row"><a routerLink="/services/laminate">{{ language() === "fa" ? "لمینت سرامیکی" : "Porcelain veneers" }}</a></th><td>{{ language() === "fa" ? "اصلاح پایدارتر فرم و رنگ در موارد انتخاب‌شده" : "More durable shape and shade correction in selected cases" }}</td><td>{{ language() === "fa" ? "درمان معمولاً برگشت‌پذیر نیست و ممکن است به تراش مینا نیاز داشته باشد." : "Usually irreversible and may require enamel preparation." }}</td></tr>
+        <tr><th scope="row"><a routerLink="/services/whitening">{{ language() === "fa" ? "بلیچینگ دندان" : "Dental bleaching" }}</a></th><td>{{ language() === "fa" ? "روشن‌کردن رنگ دندان طبیعی" : "Lightening natural tooth shade" }}</td><td>{{ language() === "fa" ? "رنگ کامپوزیت، روکش و لمینت را تغییر نمی‌دهد و ممکن است حساسیت موقت ایجاد کند." : "Does not change restorations and may cause temporary sensitivity." }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="medical-note">{{ language() === "fa" ? "این مطالب برای آگاهی عمومی است و جایگزین معاینه، تشخیص یا طرح درمان دندان‌پزشک نیست." : "This information is educational and does not replace a dentist’s examination, diagnosis or treatment plan." }}</p>
 </section>
 
 <section class="portfolio-slider page-section">
@@ -521,58 +461,6 @@
       }}
     </p>
   </form>
-</section>
-
-<section class="page-section">
-  <div class="section-heading">
-    <h2>
-      {{
-        language() === "fa"
-          ? "تجربه بیماران از روند مراجعه و درمان"
-          : "Patient experiences with visits and treatment"
-      }}
-    </h2>
-  </div>
-  <div class="testimonial-slider">
-    <article class="quote-card active-quote">
-      <span class="quote-icon"><app-fa-icon name="quote"></app-fa-icon></span>
-      <span class="stars">★★★★★</span>
-      <p>
-        “{{ pickText(testimonials[activeTestimonial()].text, language()) }}”
-      </p>
-      <b>{{ pickText(testimonials[activeTestimonial()].name, language()) }}</b>
-      <small>{{
-        pickText(testimonials[activeTestimonial()].service, language())
-      }}</small>
-    </article>
-    <div class="testimonial-side">
-      <button
-        *ngFor="let item of testimonials; let i = index"
-        type="button"
-        [class.active]="i === activeTestimonial()"
-        (click)="activeTestimonial.set(i)"
-      >
-        <span>0{{ i + 1 }}</span>
-        {{ pickText(item.service, language()) }}
-      </button>
-      <div class="slider-controls">
-        <button
-          type="button"
-          (click)="nextTestimonial(-1)"
-          aria-label="Previous review"
-        >
-          <app-fa-icon name="arrowRight"></app-fa-icon>
-        </button>
-        <button
-          type="button"
-          (click)="nextTestimonial(1)"
-          aria-label="Next review"
-        >
-          <app-fa-icon name="arrowLeft"></app-fa-icon>
-        </button>
-      </div>
-    </div>
-  </div>
 </section>
 
 <section class="page-section faq-section">
