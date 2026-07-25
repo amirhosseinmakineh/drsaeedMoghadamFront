@@ -310,59 +310,31 @@
     <h2>
       {{
         language() === "fa"
-          ? "نمونه‌کارها برای آشنایی با روند درمان"
-          : "Work samples to understand treatment changes"
+          ? "نمونه‌کارهای کامپوزیت ونیر"
+          : "Composite veneer work samples"
       }}
     </h2>
     <p>
       {{
         language() === "fa"
-          ? "این تصاویر فقط برای آشنایی با نوع تغییرات کامپوزیت، لمینت و بلیچینگ هستند؛ نتیجه هر فرد بعد از معاینه مشخص می‌شود."
-          : "These images are only a guide to the kinds of changes in composite, veneers and bleaching; each patient result is defined after examination."
+          ? "تصاویر نمونه‌کارهای کامپوزیت را در اسلایدر ببینید؛ نتیجه هر فرد پس از معاینه مشخص می‌شود."
+          : "Browse composite veneer work in the slider; each patient's result is determined after examination."
       }}
     </p>
   </div>
 
   <div class="portfolio-stage">
     <div class="portfolio-image-card">
-      @switch (workSamples[activeWorkSample()].id) {
-        @case ("whitening-shade") {
-          <img
-            src="/3.png"
-            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
-            width="1310"
-            height="1201"
-            [alt]="pickText(workSamples[activeWorkSample()].title, language())"
-            loading="lazy"
-            decoding="async"
-            fetchpriority="low"
-          />
-        }
-        @case ("composite-shape") {
-          <img
-            src="/2.png"
-            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
-            width="1310"
-            height="1200"
-            [alt]="pickText(workSamples[activeWorkSample()].title, language())"
-            loading="lazy"
-            decoding="async"
-            fetchpriority="low"
-          />
-        }
-        @default {
-          <img
-            src="/1.png"
-            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
-            width="1361"
-            height="1156"
-            [alt]="pickText(workSamples[activeWorkSample()].title, language())"
-            loading="lazy"
-            decoding="async"
-            fetchpriority="low"
-          />
-        }
-      }
+      <img
+        [src]="workSamples[activeWorkSample()].image.src"
+        [attr.sizes]="workSamples[activeWorkSample()].image.sizes"
+        [width]="workSamples[activeWorkSample()].image.width"
+        [height]="workSamples[activeWorkSample()].image.height"
+        [alt]="pickText(workSamples[activeWorkSample()].title, language())"
+        loading="lazy"
+        decoding="async"
+        fetchpriority="low"
+      />
     </div>
 
     <article class="portfolio-copy">
@@ -373,18 +345,6 @@
       </p>
       <b>{{ pickText(workSamples[activeWorkSample()].result, language()) }}</b>
     </article>
-  </div>
-
-  <div class="portfolio-thumbs">
-    <button
-      *ngFor="let sample of workSamples; let i = index"
-      type="button"
-      [class.active]="i === activeWorkSample()"
-      (click)="activeWorkSample.set(i)"
-    >
-      <span>0{{ i + 1 }}</span>
-      {{ pickText(sample.service, language()) }}
-    </button>
   </div>
 
   <div class="slider-controls">
@@ -546,7 +506,11 @@
       <app-fa-icon name="phone"></app-fa-icon>
       {{ language() === "fa" ? "ثبت درخواست تماس" : "Submit call request" }}
     </button>
-    <p *ngIf="leadFeedback()" class="success-message" [class.error]="leadFeedbackType() === 'error'">
+    <p
+      *ngIf="leadFeedback()"
+      class="success-message"
+      [class.error]="leadFeedbackType() === 'error'"
+    >
       {{ leadFeedback() }}
     </p>
     <p *ngIf="leadSent()" class="success-message">

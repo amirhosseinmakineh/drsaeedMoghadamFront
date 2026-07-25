@@ -183,9 +183,6 @@ export const publicClinicImage = (
 
 const image = publicClinicImage;
 
-const portfolioImage = (key: PublicClinicImageKey): ClinicImage =>
-  publicClinicImage(key, PUBLIC_IMAGE_SIZES.portfolio);
-
 const heroImage = (key: PublicClinicImageKey): ClinicImage =>
   publicClinicImage(key, PUBLIC_IMAGE_SIZES.hero);
 
@@ -259,50 +256,39 @@ export const STATS: StatItem[] = [
   },
 ];
 
-export const WORK_SAMPLES: WorkSample[] = [
-  {
-    id: "natural-veneer",
-    title: text("نمونه لمینت سرامیکی", "Porcelain veneer sample"),
-    service: text("لمینت دندان", "Dental veneers"),
+const COMPOSITE_WORK_IMAGE_PATHS = [
+  "/works/1.jfif",
+  "/works/cf6cb3f9-2060-4ed4-824b-1356964f843b.jfif",
+  "/works/cfc7f926-c971-4e77-8090-9e56e1f58e54.jfif",
+  "/works/ae25abfa-ad4b-4f68-9958-ce2d365c19cd.jfif",
+  "/works/d8a63b12-e6e2-4189-b51d-0a7efea3851e.jfif",
+  "/works/dcbe76fa-466f-4d61-82c8-03d1b790716b.jfif",
+] as const;
+
+export const WORK_SAMPLES: WorkSample[] = COMPOSITE_WORK_IMAGE_PATHS.map(
+  (src, index) => ({
+    id: `composite-work-${index + 1}`,
+    title: text(
+      `نمونه کامپوزیت شماره ${index + 1}`,
+      `Composite veneer sample ${index + 1}`,
+    ),
+    service: text("کامپوزیت ونیر", "Composite veneers"),
     description: text(
-      "برای اصلاح رنگ و فرم دندان‌های جلو، انتخاب رنگ، تناسب خط لبخند و سلامت بافت لثه قبل از شروع درمان بررسی می‌شود.",
-      "For front-tooth shade and shape correction, color choice, smile-line proportion and gum health are reviewed before treatment starts.",
+      "نمونه‌ای از کامپوزیت ونیر با تمرکز بر هماهنگی فرم، رنگ و خط لبخند.",
+      "A composite veneer sample focused on harmony of shape, shade and smile line.",
     ),
     result: text(
-      "ظاهر روشن‌تر و هماهنگ‌تر با فرم طبیعی دندان‌ها",
-      "A brighter look aligned with natural tooth form",
+      "نتیجه هر فرد پس از معاینه و بررسی شرایط دندان‌ها مشخص می‌شود.",
+      "Each patient's result is determined after examination and assessment of their teeth.",
     ),
-    image: portfolioImage("laminate"),
-  },
-  {
-    id: "whitening-shade",
-    title: text("نمونه بلیچینگ دندان", "Dental bleaching sample"),
-    service: text("بلیچینگ دندان", "Dental bleaching"),
-    description: text(
-      "برای روشن‌تر شدن کنترل‌شده رنگ دندان طبیعی، رنگ پایه، حساسیت، سلامت لثه و ترمیم‌های قبلی قبل از بلیچینگ بررسی می‌شود.",
-      "For controlled brightening of natural teeth, baseline shade, sensitivity, gum health and existing restorations are reviewed before bleaching.",
-    ),
-    result: text(
-      "روشن‌تر شدن طبیعی بدون تغییر رنگ ترمیم‌ها یا وعده غیرواقعی",
-      "Natural brightening without changing restorations or making unrealistic promises",
-    ),
-    image: portfolioImage("whitening"),
-  },
-  {
-    id: "composite-shape",
-    title: text("نمونه کامپوزیت دندان", "Dental composite sample"),
-    service: text("کامپوزیت ونیر", "Composite veneer"),
-    description: text(
-      "کامپوزیت برای اصلاح محافظه‌کارانه فرم، فاصله یا شکستگی‌های محدود دندان‌های جلو استفاده می‌شود و مراقبت بعد از آن اهمیت زیادی دارد.",
-      "Composite is used for conservative correction of front-tooth shape, gaps or limited chips, with aftercare playing an important role.",
-    ),
-    result: text(
-      "فرم منظم‌تر بدون تغییر اغراق‌آمیز لبخند",
-      "Cleaner shape without an exaggerated smile change",
-    ),
-    image: portfolioImage("composite"),
-  },
-];
+    image: {
+      src,
+      sizes: PUBLIC_IMAGE_SIZES.portfolio,
+      width: 1080,
+      height: 1350,
+    },
+  }),
+);
 
 export const DENTAL_SERVICES: DentalService[] = [
   {

@@ -1,8 +1,5 @@
 <article>
-  <section
-    class="page-section detail-hero"
-    [style.--accent]="service.accent"
-  >
+  <section class="page-section detail-hero" [style.--accent]="service.accent">
     <div>
       <h1>{{ pickText(service.title, language()) }}</h1>
       <h2>{{ pickText(service.subtitle, language()) }}</h2>
@@ -11,9 +8,7 @@
         <a class="primary-btn" routerLink="/contact">
           <app-fa-icon name="phone"></app-fa-icon>
           {{
-            language() === "fa"
-              ? "ثبت درخواست مشاوره"
-              : "Request consultation"
+            language() === "fa" ? "ثبت درخواست مشاوره" : "Request consultation"
           }}
         </a>
         <a class="secondary-btn" routerLink="/contact">
@@ -151,9 +146,7 @@
       </ul>
     </div>
     <div class="glass-card">
-      <span class="icon-bubble"
-        ><app-fa-icon name="phone"></app-fa-icon
-      ></span>
+      <span class="icon-bubble"><app-fa-icon name="phone"></app-fa-icon></span>
       <h3>
         {{
           language() === "fa"
@@ -231,10 +224,10 @@
         @switch (service.id) {
           @case ("laminate") {
             <img
-              src="/4.png"
+              src="/afterbefor/db72df4c-cf9e-4523-a988-396c37e6d1ac.jfif"
               sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
-              width="1310"
-              height="1200"
+              width="1080"
+              height="1350"
               [alt]="pickText(resultVisual().afterAlt, language())"
               loading="lazy"
               decoding="async"
@@ -243,10 +236,10 @@
           }
           @case ("composite") {
             <img
-              src="/5.png"
+              src="/afterbefor/e3172f11-dad3-4518-a804-4a037cdfac35.jfif"
               sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
-              width="1310"
-              height="1201"
+              width="1080"
+              height="1350"
               [alt]="pickText(resultVisual().afterAlt, language())"
               loading="lazy"
               decoding="async"
@@ -255,10 +248,10 @@
           }
           @case ("whitening") {
             <img
-              src="/6.png"
+              src="/afterbefor/76f6eaf1-5e66-4574-be7e-c519a98ed3d8.jfif"
               sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
-              width="1310"
-              height="1201"
+              width="1080"
+              height="1350"
               [alt]="pickText(resultVisual().afterAlt, language())"
               loading="lazy"
               decoding="async"
@@ -267,10 +260,10 @@
           }
           @default {
             <img
-              src="/4.png"
+              src="/afterbefor/05ff4426-9e3c-42c2-8af6-dfea085f0a08.jfif"
               sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
-              width="1310"
-              height="1200"
+              width="1080"
+              height="1350"
               [alt]="pickText(resultVisual().afterAlt, language())"
               loading="lazy"
               decoding="async"
@@ -334,9 +327,7 @@
       <a class="primary-btn" routerLink="/contact"
         ><app-fa-icon name="phone"></app-fa-icon
         >{{
-          language() === "fa"
-            ? "ثبت درخواست مشاوره"
-            : "Request consultation"
+          language() === "fa" ? "ثبت درخواست مشاوره" : "Request consultation"
         }}</a
       >
       <a class="secondary-btn" routerLink="/contact">{{
