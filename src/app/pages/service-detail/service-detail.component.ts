@@ -354,6 +354,10 @@ const DETAIL_COPY: Record<string, ServiceDetailCopy> = {
         overflow: hidden;
       }
 
+      .result-frame .comparison {
+        grid-column: 1 / -1;
+      }
+
       .result-frame img {
         width: 100%;
         height: 100%;
