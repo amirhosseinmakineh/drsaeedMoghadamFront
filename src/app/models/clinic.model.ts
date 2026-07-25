@@ -189,7 +189,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     id: "digital-smile",
     title: text(
-      "طراحی لبخند طبیعی با کامپوزیت، لمینت و بلیچینگ",
+      "دکتر سعید مقدم؛ کامپوزیت، لمینت و بلیچینگ برای طراحی لبخند طبیعی",
       "Natural smile design with composite, veneers and bleaching",
     ),
     text: text(
@@ -201,7 +201,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     id: "calm-suite",
     title: text(
-      "زیبایی دندان با انتظار واقع‌بینانه و مراقبت ایمن",
+      "دندان‌پزشکی زیبایی سعید مقدم با انتظار واقع‌بینانه و مراقبت ایمن",
       "Cosmetic dentistry with realistic expectations and safe care",
     ),
     text: text(
@@ -213,7 +213,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     id: "mobile-first",
     title: text(
-      "از انتخاب رنگ تا مراقبت بعد درمان، مسیر شفاف است",
+      "راهنمای درمان‌های زیبایی دندان دکتر سعید مقدم؛ از انتخاب رنگ تا مراقبت",
       "From shade selection to aftercare, the path stays clear",
     ),
     text: text(

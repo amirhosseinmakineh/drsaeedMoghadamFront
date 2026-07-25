@@ -737,3 +737,39 @@
 .comparison-table tbody tr:last-child > * { border-bottom: 0; }
 .comparison-table a { color: var(--brand); font-weight: 900; }
 .medical-note { margin: 0; color: var(--muted); font-size: .92rem; }
+
+.doctor-intro {
+  display: grid;
+  gap: 22px;
+  padding: clamp(28px, 5vw, 52px);
+  border: 1px solid var(--line);
+  border-radius: 40px;
+  background: linear-gradient(135deg, var(--surface), var(--cream));
+}
+
+.doctor-intro-content {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(18px, 4vw, 38px);
+}
+
+.doctor-intro-content p { margin: 0; }
+
+.keyword-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.keyword-links a {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--brand);
+  font-weight: 850;
+}
+
+@media (max-width: 640px) {
+  .doctor-intro-content { grid-template-columns: 1fr; }
+}

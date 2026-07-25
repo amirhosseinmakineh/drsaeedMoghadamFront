@@ -137,11 +137,11 @@ export class HomeComponent {
   private updateSeo(): void {
     const isFa = this.language() === "fa";
     const pageTitle = isFa
-      ? "دندان‌پزشکی زیبایی دکتر سعید مقدم | کامپوزیت، لمینت و بلیچینگ"
-      : "Dr. Saeed Moghaddam Cosmetic Dentistry | Veneers & Whitening";
+      ? "دکتر سعید مقدم | کامپوزیت، لمینت و بلیچینگ دندان"
+      : "Dr. Saeed Moghaddam | Veneers & Teeth Whitening";
     const description = isFa
-      ? "راهنمای تخصصی کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان در کلینیک دکتر سعید مقدم؛ مقایسه درمان‌ها، مراحل، مراقبت، نمونه‌کار و درخواست تماس."
-      : "Evidence-based guidance on composite and porcelain veneers and professional teeth whitening at Dr. Saeed Moghaddam Dental Clinic, with treatment comparison and aftercare.";
+      ? "وب‌سایت دکتر سعید مقدم (سعید مقدم)؛ راهنمای کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان، مقایسه روش‌ها، مراقبت، نمونه‌کار و درخواست تماس."
+      : "Dr. Saeed Moghaddam’s guide to composite and porcelain veneers and professional teeth whitening, including comparison, aftercare and call requests.";
     const canonicalUrl = `${window.location.origin}/`;
 
     this.title.setTitle(pageTitle);
@@ -188,16 +188,28 @@ export class HomeComponent {
           description,
           inLanguage: isFa ? "fa-IR" : "en-US",
           isPartOf: { "@id": `${url}#website` },
-          about: ["کامپوزیت ونیر", "لمینت سرامیکی", "بلیچینگ دندان"],
+          about: ["دکتر سعید مقدم", "سعید مقدم", "کامپوزیت ونیر", "لمینت سرامیکی", "بلیچینگ دندان"],
+          mainEntity: { "@id": `${url}#doctor` },
           lastReviewed: "2026-07-25",
         },
         {
           "@type": "Dentist",
           "@id": `${url}#clinic`,
           name: isFa ? "کلینیک دندان‌پزشکی دکتر سعید مقدم" : "Dr. Saeed Moghaddam Dental Clinic",
+          alternateName: isFa ? "کلینیک سعید مقدم" : "Saeed Moghaddam Dental Clinic",
           url,
           image: `${window.location.origin}/images/1-960.png`,
           medicalSpecialty: "Dentistry",
+          founder: { "@id": `${url}#doctor` },
+        },
+        {
+          "@type": "Person",
+          "@id": `${url}#doctor`,
+          name: isFa ? "دکتر سعید مقدم" : "Dr. Saeed Moghaddam",
+          alternateName: isFa ? "سعید مقدم" : "Saeed Moghaddam",
+          url: `${url}about`,
+          worksFor: { "@id": `${url}#clinic` },
+          knowsAbout: ["Cosmetic dentistry", "Composite veneers", "Porcelain veneers", "Teeth whitening"],
         },
       ],
     };

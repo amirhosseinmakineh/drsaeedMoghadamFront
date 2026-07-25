@@ -91,6 +91,29 @@
   </div>
 </section>
 
+<section class="page-section doctor-intro" aria-labelledby="doctor-intro-title">
+  <div class="section-heading">
+    <span class="eyebrow">{{ language() === "fa" ? "دندان‌پزشکی زیبایی و طراحی لبخند" : "Cosmetic dentistry and smile design" }}</span>
+    <h2 id="doctor-intro-title">
+      {{ language() === "fa" ? "دکتر سعید مقدم؛ راهنمای انتخاب درمان زیبایی متناسب با وضعیت دندان" : "Dr. Saeed Moghaddam: choosing cosmetic care for your dental condition" }}
+    </h2>
+  </div>
+  <div class="doctor-intro-content">
+    <p>
+      {{ language() === "fa" ? "در وب‌سایت دکتر سعید مقدم می‌توانید پیش از مراجعه، تفاوت کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان را بررسی کنید. هدف این راهنما کمک به شناخت کاربرد، محدودیت و مراقبت هر روش است؛ انتخاب نهایی فقط پس از معاینه دندان، لثه، مینا، بایت و ترمیم‌های قبلی انجام می‌شود." : "On Dr. Saeed Moghaddam’s website, you can compare composite veneers, porcelain veneers and teeth whitening before a visit. This guide explains each option’s uses, limits and aftercare; final selection follows examination of teeth, gums, enamel, bite and existing restorations." }}
+    </p>
+    <p>
+      {{ language() === "fa" ? "اگر نام «سعید مقدم» را برای بررسی خدمات دندان‌پزشکی جست‌وجو کرده‌اید، این صفحه مسیرهای درمانی معرفی‌شده در کلینیک را یک‌جا در اختیار شما می‌گذارد؛ بدون وعده نتیجه یکسان، قیمت قطعی پیش از معاینه یا ادعای درمان مناسب برای همه." : "If you searched for Saeed Moghaddam’s dental services, this page brings the clinic’s treatment paths together without promising identical results, a fixed pre-examination price or one treatment suitable for everyone." }}
+    </p>
+  </div>
+  <nav class="keyword-links" [attr.aria-label]="language() === 'fa' ? 'راهنمای خدمات دکتر سعید مقدم' : 'Dr. Saeed Moghaddam service guides'">
+    <a routerLink="/services/composite">{{ language() === "fa" ? "کامپوزیت دندان دکتر سعید مقدم" : "Composite veneers" }}</a>
+    <a routerLink="/services/laminate">{{ language() === "fa" ? "لمینت دندان دکتر سعید مقدم" : "Porcelain veneers" }}</a>
+    <a routerLink="/services/whitening">{{ language() === "fa" ? "بلیچینگ دندان دکتر سعید مقدم" : "Teeth whitening" }}</a>
+    <a routerLink="/about">{{ language() === "fa" ? "درباره دکتر سعید مقدم" : "About Dr. Saeed Moghaddam" }}</a>
+  </nav>
+</section>
+
 <section class="page-section service-showcase" id="services">
   <div class="section-heading">
     <h2>
