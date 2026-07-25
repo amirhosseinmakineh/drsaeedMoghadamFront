@@ -328,12 +328,7 @@
       @switch (workSamples[activeWorkSample()].id) {
         @case ("whitening-shade") {
           <img
-            src="/images/5-640.png"
-            srcset="
-              /images/5-360.png 360w,
-              /images/5-640.png 640w,
-              /images/5-960.png 960w
-            "
+            src="/3.png"
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
             height="1201"
@@ -345,15 +340,10 @@
         }
         @case ("composite-shape") {
           <img
-            src="/images/3-640.png"
-            srcset="
-              /images/3-360.png 360w,
-              /images/3-640.png 640w,
-              /images/3-960.png 960w
-            "
+            src="/2.png"
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
             width="1310"
-            height="1201"
+            height="1200"
             [alt]="pickText(workSamples[activeWorkSample()].title, language())"
             loading="lazy"
             decoding="async"
@@ -362,15 +352,10 @@
         }
         @default {
           <img
-            src="/images/2-640.png"
-            srcset="
-              /images/2-360.png 360w,
-              /images/2-640.png 640w,
-              /images/2-960.png 960w
-            "
+            src="/1.png"
             sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
-            width="1310"
-            height="1200"
+            width="1361"
+            height="1156"
             [alt]="pickText(workSamples[activeWorkSample()].title, language())"
             loading="lazy"
             decoding="async"

@@ -227,40 +227,11 @@
       </p>
     </div>
     <div class="result-frame">
-      <figure class="before">
-        @switch (service.id) {
-          @default {
-            <img
-              src="/images/1-640.png"
-              srcset="
-                /images/1-360.png 360w,
-                /images/1-640.png 640w,
-                /images/1-960.png 960w
-              "
-              sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
-              width="1361"
-              height="1156"
-              [alt]="pickText(resultVisual().beforeAlt, language())"
-              loading="lazy"
-              decoding="async"
-              fetchpriority="low"
-            />
-          }
-        }
-        <figcaption>
-          {{ language() === "fa" ? "قبل" : "Before" }}
-        </figcaption>
-      </figure>
-      <figure class="after">
+      <figure class="comparison">
         @switch (service.id) {
           @case ("laminate") {
             <img
-              src="/images/2-640.png"
-              srcset="
-                /images/2-360.png 360w,
-                /images/2-640.png 640w,
-                /images/2-960.png 960w
-              "
+              src="/4.png"
               sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
               width="1310"
               height="1200"
@@ -272,12 +243,7 @@
           }
           @case ("composite") {
             <img
-              src="/images/3-640.png"
-              srcset="
-                /images/3-360.png 360w,
-                /images/3-640.png 640w,
-                /images/3-960.png 960w
-              "
+              src="/5.png"
               sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
               width="1310"
               height="1201"
@@ -289,12 +255,7 @@
           }
           @case ("whitening") {
             <img
-              src="/images/5-640.png"
-              srcset="
-                /images/5-360.png 360w,
-                /images/5-640.png 640w,
-                /images/5-960.png 960w
-              "
+              src="/6.png"
               sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
               width="1310"
               height="1201"
@@ -306,15 +267,10 @@
           }
           @default {
             <img
-              src="/images/1-640.png"
-              srcset="
-                /images/1-360.png 360w,
-                /images/1-640.png 640w,
-                /images/1-960.png 960w
-              "
+              src="/4.png"
               sizes="(max-width: 640px) 92vw, (max-width: 980px) 70vw, 42vw"
-              width="1361"
-              height="1156"
+              width="1310"
+              height="1200"
               [alt]="pickText(resultVisual().afterAlt, language())"
               loading="lazy"
               decoding="async"
@@ -322,9 +278,7 @@
             />
           }
         }
-        <figcaption>{{ language() === "fa" ? "بعد" : "After" }}</figcaption>
       </figure>
-      <span></span>
     </div>
   </section>
 
