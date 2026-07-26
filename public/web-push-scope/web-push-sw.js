@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-26-lead-contact-notification";
+const SW_VERSION = "2026-07-26-private-lead-notification";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 const REALTIME_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 500, 120, 500];
 
@@ -81,10 +81,8 @@ self.addEventListener("push", (event) => {
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
     const userName = (data.userName || data.UserName || "").trim();
     const phoneNumber = (data.phoneNumber || data.PhoneNumber || "").trim();
-    const title = userName ? `شماره جدید: ${userName}` : "شماره جدید دارید";
-    const body = phoneNumber
-      ? `شماره تماس: ${phoneNumber}`
-      : (payload.body || "").trim();
+    const title = "شماره جدید دارید";
+    const body = "برای مشاهده، اعلان را باز کنید.";
     const baseOptions = {
       body,
       tag,
