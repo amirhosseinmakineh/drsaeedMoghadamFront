@@ -1,4 +1,4 @@
-export const DASHBOARD_MOBILE_LAYOUT_STYLES = `
+@mixin dashboard-mobile-layout {
   .dashboard-mobile-header,
   .mobile-sidebar-backdrop,
   .mobile-sidebar-close,
@@ -161,4 +161,4 @@ export const DASHBOARD_MOBILE_LAYOUT_STYLES = `
       padding-top: 10px;
     }
   }
-`;
+}

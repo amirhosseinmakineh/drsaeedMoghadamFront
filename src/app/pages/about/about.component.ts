@@ -11,60 +11,7 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
   standalone: true,
   imports: [NgFor, RouterLink, FaIconComponent],
   templateUrl: "./about.component.html",
-  styles: [
-    `
-      .about-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(300px, 0.55fr);
-        gap: 28px;
-        align-items: center;
-        padding-top: 140px;
-      }
-
-      .about-hero h1 {
-        margin: 0 0 16px;
-        font-size: clamp(2rem, 3.8vw, 3.55rem);
-      }
-
-      .doctor-card {
-        padding: 30px;
-        border: 1px solid var(--line);
-        border-radius: 42px;
-        background: var(--surface);
-        box-shadow: var(--shadow);
-      }
-
-      .doctor-card .icon-bubble {
-        width: 76px;
-        height: 76px;
-        font-size: 2.2rem;
-      }
-
-      .story-panel {
-        display: grid;
-        grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
-        gap: 26px;
-        align-items: center;
-        padding: 38px;
-        border: 1px solid var(--line);
-        border-radius: 42px;
-        background: color-mix(in srgb, var(--surface) 82%, transparent);
-        box-shadow: var(--shadow);
-      }
-
-      @media (max-width: 820px) {
-        .about-hero,
-        .story-panel {
-          grid-template-columns: 1fr;
-          padding-top: 112px;
-        }
-
-        .story-panel {
-          padding: 24px;
-        }
-      }
-    `,
-  ],
+  styleUrl: "./about.component.scss",
 })
 export class AboutComponent {
   language = signal<LanguageCode>("fa");

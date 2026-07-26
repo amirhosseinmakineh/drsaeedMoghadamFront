@@ -1,0 +1,113 @@
+.toast-stack {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  z-index: 12000;
+  display: grid;
+  gap: 10px;
+  width: min(460px, calc(100vw - 24px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 12px 12px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  font-weight: 900;
+  line-height: 1.6;
+  pointer-events: auto;
+}
+.toast.has-action {
+  padding: 14px 12px 14px 16px;
+  border-color: color-mix(in srgb, var(--brand) 42%, var(--line));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 10%, var(--surface)),
+    color-mix(in srgb, var(--brand-2) 8%, var(--surface))
+  );
+}
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+.toast-message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  text-align: center;
+}
+.toast-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: #1b1712;
+  font: inherit;
+  font-weight: 950;
+  line-height: 1.4;
+  cursor: pointer;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--brand) 22%, transparent);
+}
+.toast-action:hover {
+  filter: brightness(1.03);
+}
+.toast-dismiss {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  color: inherit;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.toast-dismiss span {
+  display: block;
+  margin-top: -2px;
+}
+.toast-dismiss:hover {
+  background: color-mix(in srgb, var(--text) 12%, var(--surface));
+}
+.toast.success {
+  border-color: color-mix(in srgb, #16a34a 40%, var(--line));
+  background: color-mix(in srgb, #16a34a 12%, var(--surface));
+  color: #14532d;
+}
+.toast.error {
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--line));
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+  color: #991b1b;
+}
+.toast.info {
+  border-color: color-mix(in srgb, var(--brand) 40%, var(--line));
+  background: color-mix(in srgb, var(--brand) 10%, var(--surface));
+  color: var(--text);
+}
+.toast.info.has-action {
+  border-color: color-mix(in srgb, var(--brand) 42%, var(--line));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 10%, var(--surface)),
+    color-mix(in srgb, var(--brand-2) 8%, var(--surface))
+  );
+}

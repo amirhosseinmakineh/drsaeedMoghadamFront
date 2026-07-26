@@ -14,24 +14,7 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
   standalone: true,
   imports: [NgFor, RouterLink, FaIconComponent],
   templateUrl: "./services.component.html",
-  styles: [
-    `
-      .page-hero {
-        padding-top: 140px;
-      }
-
-      .page-hero h1 {
-        margin: 0 0 16px;
-        font-size: clamp(1.7rem, 3vw, 2.8rem);
-      }
-
-      @media (max-width: 820px) {
-        .page-hero {
-          padding-top: 112px;
-        }
-      }
-    `,
-  ],
+  styleUrl: "./services.component.scss",
 })
 export class ServicesComponent {
   language = signal<LanguageCode>("fa");
