@@ -60,21 +60,7 @@ const iconPaths: Record<string, string> = {
   selector: "app-fa-icon",
   standalone: true,
   templateUrl: "./fa-icon.component.html",
-  styles: [
-    `
-      .fa-icon {
-        display: inline-block;
-        width: 1em;
-        height: 1em;
-        fill: none;
-        stroke: currentColor;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        stroke-width: 2;
-        vertical-align: -0.12em;
-      }
-    `,
-  ],
+  styleUrl: "./fa-icon.component.scss",
 })
 export class FaIconComponent {
   @Input() name = "star";
