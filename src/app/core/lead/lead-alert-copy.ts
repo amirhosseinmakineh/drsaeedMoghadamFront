@@ -10,29 +10,38 @@ export interface RealtimeLeadNotificationDetails {
 }
 
 export function buildRealtimeLeadNotificationTitle(
-  _details?: RealtimeLeadNotificationDetails,
+  details?: RealtimeLeadNotificationDetails,
 ): string {
-  return LEAD_ALERT_PUSH_TITLE;
+  const name = normalizeLeadField(details?.userName);
+  if (!name) return LEAD_ALERT_PUSH_TITLE;
+  return details?.isReminder ? `یادآوری شماره: ${name}` : `شماره جدید: ${name}`;
 }
 
 export function buildRealtimeLeadNotificationBody(
-  _details?: RealtimeLeadNotificationDetails,
+  details?: RealtimeLeadNotificationDetails,
 ): string {
-  return LEAD_ALERT_PUSH_BODY;
+  const phoneNumber = normalizeLeadField(details?.phoneNumber);
+  return phoneNumber ? `شماره تماس: ${phoneNumber}` : LEAD_ALERT_PUSH_BODY;
 }
 
 export function resolveRealtimeLeadNotificationTitle(
-  _details?: RealtimeLeadNotificationDetails,
-  _fallbackTitle?: string | null,
+  details?: RealtimeLeadNotificationDetails,
+  fallbackTitle?: string | null,
 ): string {
-  return LEAD_ALERT_PUSH_TITLE;
+  const builtTitle = buildRealtimeLeadNotificationTitle(details);
+  if (builtTitle !== LEAD_ALERT_PUSH_TITLE) return builtTitle;
+  return normalizeLeadField(fallbackTitle) || builtTitle;
 }
 
 export function resolveRealtimeLeadNotificationBody(
-  _details?: RealtimeLeadNotificationDetails,
-  _fallbackBody?: string | null,
+  details?: RealtimeLeadNotificationDetails,
+  fallbackBody?: string | null,
 ): string {
-  return LEAD_ALERT_PUSH_BODY;
+  return (
+    buildRealtimeLeadNotificationBody(details) ||
+    normalizeLeadField(fallbackBody) ||
+    LEAD_ALERT_PUSH_BODY
+  );
 }
 
 export function normalizeLeadField(value?: string | null): string {
