@@ -1,7 +1,7 @@
 export const LEAD_ALERT_MESSAGE = "شماره جدید دارید";
 export const LEAD_ALERT_ACTION_LABEL = "ببین";
 export const LEAD_ALERT_PUSH_TITLE = "شماره جدید دارید";
-export const LEAD_ALERT_PUSH_BODY = "";
+export const LEAD_ALERT_PUSH_BODY = "برای مشاهده، اعلان را باز کنید.";
 
 export interface RealtimeLeadNotificationDetails {
   userName?: string | null;
