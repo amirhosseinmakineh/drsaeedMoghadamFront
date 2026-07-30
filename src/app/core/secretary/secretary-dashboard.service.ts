@@ -40,18 +40,10 @@ export interface SecretaryReservation {
   ConsultantUserId?: string | null;
   patientUserId?: string | null;
   PatientUserId?: string | null;
-  requiresPatientProfile?: boolean | null;
-  RequiresPatientProfile?: boolean | null;
   reservationAt?: string;
   ReservationAt?: string;
-  secretaryReservationReviewStatus?: number | null;
-  SecretaryReservationReviewStatus?: number | null;
-  secretaryReservationReviewedAt?: string | null;
-  SecretaryReservationReviewedAt?: string | null;
-  secretaryReservationReviewerUserId?: string | null;
-  SecretaryReservationReviewerUserId?: string | null;
-  secretaryReservationReviewNote?: string | null;
-  SecretaryReservationReviewNote?: string | null;
+  isWaitingForConsultantTimeConfirmation?: boolean | null;
+  IsWaitingForConsultantTimeConfirmation?: boolean | null;
   patientName?: string | null;
   PatientName?: string | null;
   patientPhoneNumber?: string | null;
@@ -97,39 +89,10 @@ export interface SecretaryReservationFilters {
   searchText?: string;
   attendanceConfirmationStatus?: number | null;
   onlyWaitingForSecretaryReview?: boolean;
-  reservationReviewStatus?: number | null;
-  onlyPendingReservationReview?: boolean;
   onlyDue?: boolean;
   includeCanceled?: boolean;
   pageNumber: number;
   pageSize: number;
-}
-
-export interface CompletePatientProfileRequest {
-  reservationId: number;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  passwordHash: string;
-  avatarImageName?: string | null;
-  gender: number;
-  birthDate: string;
-  emergencyPhoneNumber?: string | null;
-  insuranceName?: string | null;
-  notes?: string | null;
-}
-
-export interface CompletePatientProfileResponse {
-  reservationId: number;
-  patientUserId: string;
-  patientProfileId: number;
-  leadAssignmentId: number;
-  consultantProfileId: number;
-  reservationAt: string;
-  patientName: string;
-  patientPhoneNumber: string;
-  isCompleteProfile: boolean;
-  roleName: string;
 }
 
 export interface ReviewAttendanceRequest {
@@ -139,20 +102,11 @@ export interface ReviewAttendanceRequest {
   note: string | null;
 }
 
-export interface ReviewSecretaryReservationRequest {
+export interface SecretaryChangeReservationTimeRequest {
   reservationId: number;
   secretaryUserId: string;
-  newReservationAt?: string | null;
+  newReservationAt: string;
   note: string | null;
-}
-
-export interface ReviewSecretaryReservationResponse {
-  reservationId: number;
-  reservationAt: string;
-  reviewStatus: number;
-  reviewedAt: string;
-  secretaryUserId: string;
-  note?: string | null;
 }
 
 @Injectable({ providedIn: "root" })
@@ -168,11 +122,9 @@ export class SecretaryDashboardService {
     payload: CompleteSecretaryProfileRequest,
   ): Observable<ApiCommandResponse<string>> {
     return this.http
-      .post<ApiCommandResponse<string>>(
-        `${this.apiBaseUrl}/Secretary`,
-        payload,
-        { headers: this.authHeaders() },
-      )
+      .post<
+        ApiCommandResponse<string>
+      >(`${this.apiBaseUrl}/Secretary`, payload, { headers: this.authHeaders() })
       .pipe(this.ensureCommandSucceeded("تکمیل پروفایل منشی انجام نشد"));
   }
 
@@ -212,30 +164,6 @@ export class SecretaryDashboardService {
     });
   }
 
-  getPendingReservationReviews(
-    pageNumber = 1,
-    pageSize = 50,
-  ): Observable<PaginatedResponse<SecretaryReservation>> {
-    return this.getReservations({
-      onlyPendingReservationReview: true,
-      includeCanceled: false,
-      pageNumber,
-      pageSize,
-    });
-  }
-
-  reviewSecretaryReservation(
-    payload: ReviewSecretaryReservationRequest,
-  ): Observable<ApiCommandResponse<ReviewSecretaryReservationResponse>> {
-    return this.http
-      .post<ApiCommandResponse<ReviewSecretaryReservationResponse>>(
-        `${this.apiBaseUrl}/Reservation/ReviewSecretaryReservation`,
-        payload,
-        { headers: this.authHeaders() },
-      )
-      .pipe(this.ensureCommandSucceeded("بررسی زمان رزرو انجام نشد"));
-  }
-
   reviewAttendance(
     payload: ReviewAttendanceRequest,
   ): Observable<ApiCommandResponse> {
@@ -248,16 +176,16 @@ export class SecretaryDashboardService {
       .pipe(this.ensureCommandSucceeded("ثبت بررسی حضور انجام نشد"));
   }
 
-  completePatientProfile(
-    payload: CompletePatientProfileRequest,
-  ): Observable<ApiCommandResponse<CompletePatientProfileResponse>> {
+  changeReservationTime(
+    payload: SecretaryChangeReservationTimeRequest,
+  ): Observable<ApiCommandResponse<SecretaryReservation>> {
     return this.http
-      .post<ApiCommandResponse<CompletePatientProfileResponse>>(
-        `${this.apiBaseUrl}/Reservation/CompletePatientProfile`,
+      .post<ApiCommandResponse<SecretaryReservation>>(
+        `${this.apiBaseUrl}/Reservation/SecretaryChangeTime`,
         payload,
         { headers: this.authHeaders() },
       )
-      .pipe(this.ensureCommandSucceeded("تشکیل پرونده بیمار انجام نشد"));
+      .pipe(this.ensureCommandSucceeded("تغییر زمان رزرو انجام نشد"));
   }
 
   private authHeaders(): HttpHeaders {

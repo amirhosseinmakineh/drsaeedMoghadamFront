@@ -231,6 +231,11 @@ export interface ConfirmAttendanceRequest {
   note: string | null;
 }
 
+export interface ConfirmSecretaryTimeChangeRequest {
+  reservationId: number;
+  consultantProfileId: number;
+}
+
 export interface ConsultantReservation {
   id?: number;
   Id?: number;
@@ -246,6 +251,12 @@ export interface ConsultantReservation {
   RequiresPatientProfile?: boolean;
   reservationAt?: string;
   ReservationAt?: string;
+  isWaitingForConsultantTimeConfirmation?: boolean | null;
+  IsWaitingForConsultantTimeConfirmation?: boolean | null;
+  secretaryTimeChangeNote?: string | null;
+  SecretaryTimeChangeNote?: string | null;
+  secretaryChangedReservationAt?: string | null;
+  SecretaryChangedReservationAt?: string | null;
   patientName?: string;
   PatientName?: string;
   patientPhoneNumber?: string;
@@ -703,14 +714,29 @@ export class ConsultantDashboardService {
       .pipe(this.ensureCommandSucceeded("ویرایش رزرو انجام نشد"));
   }
 
+  confirmSecretaryTimeChange(
+    payload: ConfirmSecretaryTimeChangeRequest,
+  ): Observable<ApiCommandResponse<ConsultantReservation>> {
+    return this.http
+      .post<ApiCommandResponse<ConsultantReservation>>(
+        `${this.apiBaseUrl}/Reservation/ConfirmSecretaryTimeChange`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("تایید زمان جدید رزرو انجام نشد"));
+  }
+
   getConsultantPatientProfiles(
     filters: PatientProfileFilters,
   ): Observable<PaginatedResponse<ConsultantPatientProfile>> {
     return this.http
-      .get<unknown>(`${this.apiBaseUrl}/Reservation/ConsultantPatientProfiles`, {
-        headers: this.authHeaders(),
-        params: this.toParams(filters),
-      })
+      .get<unknown>(
+        `${this.apiBaseUrl}/Reservation/ConsultantPatientProfiles`,
+        {
+          headers: this.authHeaders(),
+          params: this.toParams(filters),
+        },
+      )
       .pipe(
         map((response) =>
           this.normalizePaginatedResponse<ConsultantPatientProfile>(
@@ -720,10 +746,7 @@ export class ConsultantDashboardService {
         ),
         catchError((error) =>
           throwError(() =>
-            this.toUserFacingError(
-              error,
-              "دریافت پرونده‌های بیمار انجام نشد",
-            ),
+            this.toUserFacingError(error, "دریافت پرونده‌های بیمار انجام نشد"),
           ),
         ),
       );
@@ -838,8 +861,7 @@ export class ConsultantDashboardService {
     const resolvedLeads = leads.length ? leads : nestedLeads;
 
     return {
-      canReceive:
-        this.readBoolean(source, "canReceive", "CanReceive") ?? false,
+      canReceive: this.readBoolean(source, "canReceive", "CanReceive") ?? false,
       blockReason:
         this.readString(source, "blockReason", "BlockReason") ?? null,
       leads: resolvedLeads,

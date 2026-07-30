@@ -21,30 +21,19 @@ import {
   readAttendanceStatus,
 } from "../../core/reservation/reservation-attendance";
 import {
-  CompletePatientProfileRequest,
   SecretaryReservation,
   SecretaryDashboardService,
 } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
-import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
-import {
-  createRelativeYearDateInIran,
-  createYesterdayInIran,
-  toIranDateInputValue,
-} from "../../utils/iran-datetime.util";
 
-export type SecretaryReservationTab =
-  | "reservationReview"
-  | "queue"
-  | "all"
-  | "completed";
+export type SecretaryReservationTab = "queue" | "all" | "completed";
 
 @Component({
   selector: "app-secretary-reservations",
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseDatepickerComponent],
+  imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-reservations.component.html",
   styleUrl: "./secretary-reservations.component.scss",
@@ -58,28 +47,21 @@ export class SecretaryReservationsComponent
   activeTab: SecretaryReservationTab = "queue";
   items: SecretaryReservation[] = [];
   notes: Record<number, string> = {};
-  rescheduleDialogOpen = false;
-  selectedReservation: SecretaryReservation | null = null;
-  newReservationAt = "";
-  profileDialogOpen = false;
-  profileSaving = false;
-  selectedProfileReservation: SecretaryReservation | null = null;
-  profileForm = this.emptyProfileForm();
-  selectedProfileBirthDate?: Date;
-  readonly birthDatePickerLabel = { fa: "تاریخ تولد", en: "Birth date" };
-  readonly birthDateMinDate = createRelativeYearDateInIran(-120);
-  readonly birthDateMaxDate = createYesterdayInIran();
   loading = false;
   savingId: number | null = null;
   feedback = "";
   feedbackType: "success" | "error" = "success";
   statusFilter: number | null = null;
-  reservationReviewFilter: number | null = null;
   searchText = "";
   includeCanceled = false;
   pageNumber = 1;
   pageSize = 20;
   totalPages = 1;
+  timeDialogOpen = false;
+  timeSaving = false;
+  selectedTimeReservation: SecretaryReservation | null = null;
+  newReservationAt = "";
+  timeChangeNote = "";
 
   private loadRequestId = 0;
   private pollId: ReturnType<typeof setInterval> | null = null;
@@ -94,7 +76,10 @@ export class SecretaryReservationsComponent
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {
-    this.markDirty = createCoalescedMarkForCheck(this.cdr, () => this.destroyed);
+    this.markDirty = createCoalescedMarkForCheck(
+      this.cdr,
+      () => this.destroyed,
+    );
   }
 
   ngOnInit(): void {
@@ -143,30 +128,6 @@ export class SecretaryReservationsComponent
     this.markDirty();
     this.loadSubscription?.unsubscribe();
 
-    if (this.activeTab === "reservationReview") {
-      this.loadSubscription = this.secretaryApi
-        .getPendingReservationReviews(this.pageNumber, this.pageSize)
-        .pipe(
-          finalize(() => {
-            if (requestId === this.loadRequestId) {
-              this.loading = false;
-              this.markDirty();
-            }
-          }),
-        )
-        .subscribe({
-          next: (response) => {
-            if (requestId !== this.loadRequestId) return;
-            this.items = response.items ?? [];
-            this.pageNumber = response.pageNumber;
-            this.totalPages = response.totalPages;
-            this.markDirty();
-          },
-          error: (error) => this.handleLoadError(requestId, error),
-        });
-      return;
-    }
-
     if (this.activeTab === "queue") {
       this.loadSubscription = this.secretaryApi
         .getAttendanceReviews(this.pageNumber, this.pageSize)
@@ -210,12 +171,14 @@ export class SecretaryReservationsComponent
       })
         .pipe(
           map(({ approved, rejected }) => {
-            const merged = [...(approved.items ?? []), ...(rejected.items ?? [])]
-              .sort(
-                (left, right) =>
-                  new Date(this.reservationAt(right)).getTime() -
-                  new Date(this.reservationAt(left)).getTime(),
-              );
+            const merged = [
+              ...(approved.items ?? []),
+              ...(rejected.items ?? []),
+            ].sort(
+              (left, right) =>
+                new Date(this.reservationAt(right)).getTime() -
+                new Date(this.reservationAt(left)).getTime(),
+            );
             const totalCount =
               (approved.totalCount ?? 0) + (rejected.totalCount ?? 0);
             const totalPages = Math.max(
@@ -251,7 +214,6 @@ export class SecretaryReservationsComponent
         pageSize: this.pageSize,
         includeCanceled: this.includeCanceled,
         attendanceConfirmationStatus: this.statusFilter,
-        reservationReviewStatus: this.reservationReviewFilter,
         searchText: this.searchText.trim() || undefined,
       })
       .pipe(
@@ -315,79 +277,91 @@ export class SecretaryReservationsComponent
       });
   }
 
-  approveReservationTime(item: SecretaryReservation): void {
-    this.submitReservationReview(item, null);
+  canChangeTime(item: SecretaryReservation): boolean {
+    const status = readAttendanceStatus(
+      item,
+      "attendanceConfirmationStatus",
+      "AttendanceConfirmationStatus",
+    );
+    return (
+      status !== AttendanceConfirmationStatus.SecretaryApproved &&
+      status !== AttendanceConfirmationStatus.SecretaryRejected &&
+      !(item.isCanceled ?? item.IsCanceled) &&
+      !(
+        item.isWaitingForConsultantTimeConfirmation ??
+        item.IsWaitingForConsultantTimeConfirmation
+      )
+    );
   }
 
-  openRescheduleDialog(item: SecretaryReservation): void {
-    this.selectedReservation = item;
+  openTimeDialog(item: SecretaryReservation): void {
+    this.selectedTimeReservation = item;
     this.newReservationAt = this.toDateTimeLocalValue(this.reservationAt(item));
-    this.rescheduleDialogOpen = true;
+    this.timeChangeNote = "";
+    this.timeDialogOpen = true;
+    this.markDirty();
   }
 
-  closeRescheduleDialog(): void {
-    if (this.savingId !== null) return;
-    this.rescheduleDialogOpen = false;
-    this.selectedReservation = null;
+  closeTimeDialog(): void {
+    if (this.timeSaving) return;
+    this.timeDialogOpen = false;
+    this.selectedTimeReservation = null;
     this.newReservationAt = "";
+    this.timeChangeNote = "";
+    this.markDirty();
   }
 
-  submitReschedule(): void {
-    if (!this.selectedReservation) return;
-    const selectedTime = new Date(this.newReservationAt);
-    if (!this.newReservationAt || !Number.isFinite(selectedTime.getTime())) {
+  submitTimeChange(): void {
+    const reservationId = this.selectedTimeReservation
+      ? this.reservationId(this.selectedTimeReservation)
+      : null;
+    const secretaryUserId = this.auth.user()?.userId;
+    const date = new Date(this.newReservationAt);
+    if (!reservationId || !secretaryUserId) {
+      this.showFeedback("شناسه رزرو یا منشی در دسترس نیست", "error");
+      return;
+    }
+    if (!this.newReservationAt || !Number.isFinite(date.getTime())) {
       this.showFeedback("زمان جدید رزرو را وارد کنید", "error");
       return;
     }
-    if (selectedTime.getTime() <= Date.now()) {
+    if (date.getTime() <= Date.now()) {
       this.showFeedback("زمان رزرو باید در آینده باشد", "error");
       return;
     }
-    const currentTime = new Date(
-      this.reservationAt(this.selectedReservation),
-    ).getTime();
-    if (
-      Number.isFinite(currentTime) &&
-      Math.abs(selectedTime.getTime() - currentTime) < 60_000
-    ) {
-      this.showFeedback(
-        "برای تغییر زمان، زمانی متفاوت از زمان فعلی انتخاب کنید",
-        "error",
-      );
+    if (this.timeChangeNote.trim().length > 1000) {
+      this.showFeedback("توضیح تغییر زمان نباید بیشتر از ۱۰۰۰ کاراکتر باشد", "error");
       return;
     }
 
-    this.submitReservationReview(
-      this.selectedReservation,
-      selectedTime.toISOString(),
-    );
-  }
-
-  canReviewReservationTime(item: SecretaryReservation): boolean {
-    return (
-      this.activeTab === "reservationReview" &&
-      this.reservationReviewStatus(item) === 1 &&
-      !(item.isCanceled ?? item.IsCanceled)
-    );
-  }
-
-  reservationReviewLabel(item: SecretaryReservation): string {
-    switch (this.reservationReviewStatus(item)) {
-      case 2:
-        return "زمان تایید شده";
-      case 3:
-        return "زمان تغییر کرده";
-      default:
-        return "منتظر بررسی زمان";
-    }
-  }
-
-  reservationReviewBadge(item: SecretaryReservation): string {
-    return this.reservationReviewStatus(item) === 1 ? "warn" : "success";
-  }
-
-  minReservationDateTime(): string {
-    return this.toDateTimeLocalValue(new Date(Date.now() + 60_000).toISOString());
+    this.timeSaving = true;
+    this.secretaryApi
+      .changeReservationTime({
+        reservationId,
+        secretaryUserId,
+        newReservationAt: date.toISOString(),
+        note: this.timeChangeNote.trim() || null,
+      })
+      .pipe(finalize(() => (this.timeSaving = false)))
+      .subscribe({
+        next: (response) => {
+          this.timeSaving = false;
+          this.showFeedback(
+            response.message ||
+              "زمان رزرو تغییر کرد و برای تایید مشاور ارسال شد",
+            "success",
+          );
+          this.closeTimeDialog();
+          this.load();
+        },
+        error: (error) =>
+          this.showFeedback(
+            error instanceof Error && error.message
+              ? error.message
+              : "تغییر زمان رزرو انجام نشد",
+            "error",
+          ),
+      });
   }
 
   goToPage(page: number): void {
@@ -397,9 +371,6 @@ export class SecretaryReservationsComponent
   }
 
   emptyCopy(): string {
-    if (this.activeTab === "reservationReview") {
-      return "رزروی در صف بررسی زمان وجود ندارد.";
-    }
     if (this.activeTab === "queue") {
       return "موردی در صف بررسی تایید حضور وجود ندارد.";
     }
@@ -422,100 +393,6 @@ export class SecretaryReservationsComponent
     );
   }
 
-  requiresPatientProfile(item: SecretaryReservation): boolean {
-    return (item.requiresPatientProfile ?? item.RequiresPatientProfile) === true;
-  }
-
-  openProfileDialog(item: SecretaryReservation): void {
-    const [firstName, ...rest] = this.patientName(item).split(" ").filter(Boolean);
-    this.selectedProfileReservation = item;
-    this.profileForm = {
-      ...this.emptyProfileForm(),
-      firstName: firstName || "",
-      lastName: rest.join(" "),
-      phoneNumber: this.patientPhone(item),
-    };
-    this.selectedProfileBirthDate = undefined;
-    this.profileDialogOpen = true;
-  }
-
-  closeProfileDialog(): void {
-    if (this.profileSaving) return;
-    this.profileDialogOpen = false;
-    this.selectedProfileReservation = null;
-    this.profileForm = this.emptyProfileForm();
-    this.selectedProfileBirthDate = undefined;
-  }
-
-  setProfileBirthDate(date: Date): void {
-    this.selectedProfileBirthDate = date;
-    this.profileForm.birthDate = toIranDateInputValue(date);
-  }
-
-  submitProfile(): void {
-    const reservationId = this.selectedProfileReservation
-      ? this.reservationId(this.selectedProfileReservation)
-      : null;
-    const validation = this.validateProfileForm();
-    if (!reservationId || validation) {
-      this.showFeedback(validation || "شناسه رزرو در دسترس نیست", "error");
-      return;
-    }
-
-    const payload: CompletePatientProfileRequest = {
-      reservationId,
-      firstName: this.profileForm.firstName.trim(),
-      lastName: this.profileForm.lastName.trim(),
-      phoneNumber: this.profileForm.phoneNumber.trim(),
-      passwordHash: this.profileForm.passwordHash,
-      avatarImageName: null,
-      gender: Number(this.profileForm.gender),
-      birthDate: new Date(`${this.profileForm.birthDate}T00:00:00`).toISOString(),
-      emergencyPhoneNumber:
-        this.profileForm.emergencyPhoneNumber.trim() || null,
-      insuranceName: this.profileForm.insuranceName.trim() || null,
-      notes: this.profileForm.notes.trim() || null,
-    };
-
-    this.profileSaving = true;
-    this.secretaryApi
-      .completePatientProfile(payload)
-      .pipe(finalize(() => (this.profileSaving = false)))
-      .subscribe({
-        next: (response) => {
-          this.showFeedback(
-            response.message || "پرونده بیمار ثبت شد",
-            "success",
-          );
-          this.closeProfileDialog();
-          this.load();
-        },
-        error: (error) =>
-          this.showFeedback(
-            error instanceof Error && error.message
-              ? error.message
-              : "ثبت پرونده انجام نشد",
-            "error",
-          ),
-      });
-  }
-
-  validateProfileForm(): string | null {
-    if (!this.profileForm.firstName.trim()) return "نام بیمار الزامی است";
-    if (!this.profileForm.lastName.trim()) return "نام خانوادگی بیمار الزامی است";
-    if (!/^09\d{9}$/.test(this.profileForm.phoneNumber.trim()))
-      return "شماره موبایل بیمار معتبر نیست";
-    if (this.profileForm.passwordHash.length < 6)
-      return "رمز عبور باید حداقل ۶ کاراکتر باشد";
-    if (
-      !this.profileForm.birthDate ||
-      new Date(`${this.profileForm.birthDate}T00:00:00`).getTime() >= Date.now()
-    ) {
-      return "تاریخ تولد بیمار معتبر نیست";
-    }
-    return null;
-  }
-
   reservationId(item: SecretaryReservation): number | null {
     const value = item.id ?? item.Id;
     const numeric = Number(value);
@@ -523,15 +400,21 @@ export class SecretaryReservationsComponent
   }
 
   patientName(item: SecretaryReservation): string {
-    return item.patientName?.trim() || item.PatientName?.trim() || "بیمار بدون نام";
+    return (
+      item.patientName?.trim() || item.PatientName?.trim() || "بیمار بدون نام"
+    );
   }
 
   patientPhone(item: SecretaryReservation): string {
-    return item.patientPhoneNumber?.trim() || item.PatientPhoneNumber?.trim() || "-";
+    return (
+      item.patientPhoneNumber?.trim() || item.PatientPhoneNumber?.trim() || "-"
+    );
   }
 
   patientCity(item: SecretaryReservation): string {
-    return item.patientCity?.trim() || item.PatientCity?.trim() || "شهر ثبت نشده";
+    return (
+      item.patientCity?.trim() || item.PatientCity?.trim() || "شهر ثبت نشده"
+    );
   }
 
   consultantName(item: SecretaryReservation): string {
@@ -621,80 +504,6 @@ export class SecretaryReservationsComponent
     );
   }
 
-  private reservationReviewStatus(item: SecretaryReservation): number {
-    return Number(
-      item.secretaryReservationReviewStatus ??
-        item.SecretaryReservationReviewStatus ??
-        1,
-    );
-  }
-
-  private submitReservationReview(
-    item: SecretaryReservation,
-    newReservationAt: string | null,
-  ): void {
-    const reservationId = this.reservationId(item);
-    const secretaryUserId = this.auth.user()?.userId;
-    if (!reservationId || !secretaryUserId) {
-      this.showFeedback(
-        "شناسه رزرو یا شناسه کاربر منشی در دسترس نیست",
-        "error",
-      );
-      return;
-    }
-
-    const note = (this.notes[reservationId] || "").trim();
-    if (note.length > 1000) {
-      this.showFeedback("یادداشت منشی نباید بیشتر از ۱۰۰۰ کاراکتر باشد", "error");
-      return;
-    }
-
-    this.savingId = reservationId;
-    this.secretaryApi
-      .reviewSecretaryReservation({
-        reservationId,
-        secretaryUserId,
-        ...(newReservationAt ? { newReservationAt } : {}),
-        note: note || null,
-      })
-      .pipe(
-        finalize(() => {
-          this.savingId = null;
-          this.markDirty();
-        }),
-      )
-      .subscribe({
-        next: (response) => {
-          this.rescheduleDialogOpen = false;
-          this.selectedReservation = null;
-          this.newReservationAt = "";
-          delete this.notes[reservationId];
-          this.showFeedback(
-            response.message ||
-              (newReservationAt
-                ? "زمان رزرو با موفقیت تغییر کرد"
-                : "زمان رزرو با موفقیت تایید شد"),
-            "success",
-          );
-          this.load();
-        },
-        error: (error) =>
-          this.showFeedback(
-            error instanceof Error && error.message
-              ? error.message
-              : "بررسی زمان رزرو انجام نشد",
-            "error",
-          ),
-      });
-  }
-
-  private toDateTimeLocalValue(value: string): string {
-    const date = new Date(value);
-    if (!Number.isFinite(date.getTime())) return "";
-    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-    return local.toISOString().slice(0, 16);
-  }
-
   private startPolling(): void {
     this.stopPolling();
     const intervalMs = this.activeTab === "queue" ? 15000 : 30000;
@@ -711,19 +520,11 @@ export class SecretaryReservationsComponent
     }
   }
 
-  private emptyProfileForm() {
-    return {
-      firstName: "",
-      lastName: "",
-      phoneNumber: "",
-      passwordHash: "123456",
-      avatarImageName: null,
-      gender: 1,
-      birthDate: "",
-      emergencyPhoneNumber: "",
-      insuranceName: "",
-      notes: "",
-    };
+  private toDateTimeLocalValue(value: string): string {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return "";
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 16);
   }
 
   private showFeedback(message: string, type: "success" | "error"): void {

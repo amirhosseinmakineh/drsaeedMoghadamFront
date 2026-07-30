@@ -99,12 +99,36 @@
             }
           </dl>
 
+          @if (isWaitingForTimeConfirmation(reservation)) {
+            <div class="confirmation-box">
+              <strong>تغییر زمان توسط منشی</strong>
+              <p>
+                منشی زمان رزرو را به
+                <b>{{ formatDateTime(reservationAt(reservation)) }}</b>
+                تغییر داده است.
+              </p>
+              <p>{{ timeChangeNote(reservation) }}</p>
+              <button
+                class="primary-action compact"
+                type="button"
+                [disabled]="savingId === reservationId(reservation)"
+                (click)="confirmSecretaryTimeChange(reservation)"
+              >
+                {{
+                  savingId === reservationId(reservation)
+                    ? "در حال تایید..."
+                    : "تایید زمان جدید"
+                }}
+              </button>
+            </div>
+          }
+
           @if (canConfirm(reservation)) {
             <div class="confirmation-box">
               <strong>تایید حضور بیمار</strong>
               <p>
-                لطفاً مشخص کنید بیمار در زمان رزرو حاضر شد یا خیر. پس از
-                تایید، رزرو برای بررسی منشی ارسال می‌شود.
+                لطفاً مشخص کنید بیمار در زمان رزرو حاضر شد یا خیر. پس از تایید،
+                رزرو برای بررسی منشی ارسال می‌شود.
               </p>
               <label>
                 یادداشت (اختیاری)
@@ -142,17 +166,21 @@
             </p>
           }
 
-          @if (canEdit(reservation)) {
-            <div class="dialog-actions">
-              <button
-                class="secondary-action compact"
-                type="button"
-                (click)="openEditDialog(reservation)"
-              >
-                ویرایش رزرو
-              </button>
-            </div>
-          }
+          <div class="dialog-actions">
+            <button
+              class="secondary-action compact"
+              type="button"
+              [disabled]="!canEdit(reservation)"
+              [attr.title]="
+                canEdit(reservation)
+                  ? 'تغییر تاریخ و ساعت رزرو'
+                  : 'رزرو نهایی یا لغو شده و قابل تغییر نیست'
+              "
+              (click)="openEditDialog(reservation)"
+            >
+              تغییر زمان رزرو
+            </button>
+          </div>
         </article>
       }
     </div>
@@ -184,7 +212,7 @@
 <app-base-dialog
   [open]="editDialogOpen"
   [showFooter]="false"
-  title="ویرایش رزرو"
+  title="تغییر زمان رزرو"
   [closable]="!editSaving"
   (closed)="closeEditDialog()"
 >
@@ -276,8 +304,12 @@
       >
         انصراف
       </button>
-      <button class="primary-action compact" type="submit" [disabled]="editSaving">
-        {{ editSaving ? "در حال ذخیره..." : "ذخیره ویرایش" }}
+      <button
+        class="primary-action compact"
+        type="submit"
+        [disabled]="editSaving"
+      >
+        {{ editSaving ? "در حال ذخیره..." : "ثبت زمان جدید" }}
       </button>
     </div>
   </form>
