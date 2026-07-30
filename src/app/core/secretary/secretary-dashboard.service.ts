@@ -1,6 +1,14 @@
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { Observable, catchError, map, throwError } from "rxjs";
+import {
+  Observable,
+  catchError,
+  forkJoin,
+  map,
+  of,
+  switchMap,
+  throwError,
+} from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
 
@@ -78,6 +86,20 @@ export interface SecretaryReservation {
   Description?: string | null;
   isCanceled?: boolean | null;
   IsCanceled?: boolean | null;
+  secretaryReservationReviewStatus?: number | null;
+  SecretaryReservationReviewStatus?: number | null;
+  isConfirmedWithPatient?: boolean | null;
+  IsConfirmedWithPatient?: boolean | null;
+  followUpAt?: string | null;
+  FollowUpAt?: string | null;
+  reminderAt?: string | null;
+  ReminderAt?: string | null;
+  needsFollowUp?: boolean | null;
+  NeedsFollowUp?: boolean | null;
+  followUpPriority?: number | null;
+  FollowUpPriority?: number | null;
+  lastActivityAt?: string | null;
+  LastActivityAt?: string | null;
 }
 
 export interface SecretaryReservationFilters {
@@ -87,6 +109,8 @@ export interface SecretaryReservationFilters {
   searchText?: string;
   attendanceConfirmationStatus?: number | null;
   onlyWaitingForSecretaryReview?: boolean;
+  onlyPendingReservationReview?: boolean;
+  reservationReviewStatus?: number | null;
   onlyDue?: boolean;
   includeCanceled?: boolean;
   pageNumber: number;
@@ -113,11 +137,9 @@ export class SecretaryDashboardService {
     payload: CompleteSecretaryProfileRequest,
   ): Observable<ApiCommandResponse<string>> {
     return this.http
-      .post<ApiCommandResponse<string>>(
-        `${this.apiBaseUrl}/Secretary`,
-        payload,
-        { headers: this.authHeaders() },
-      )
+      .post<
+        ApiCommandResponse<string>
+      >(`${this.apiBaseUrl}/Secretary`, payload, { headers: this.authHeaders() })
       .pipe(this.ensureCommandSucceeded("تکمیل پروفایل منشی انجام نشد"));
   }
 
@@ -155,6 +177,37 @@ export class SecretaryDashboardService {
       pageNumber,
       pageSize,
     });
+  }
+
+  getDashboardReservations(): Observable<SecretaryReservation[]> {
+    const pageSize = 100;
+    const baseFilters: SecretaryReservationFilters = {
+      includeCanceled: true,
+      pageNumber: 1,
+      pageSize,
+    };
+
+    return this.getReservations(baseFilters).pipe(
+      switchMap((firstPage) => {
+        if (firstPage.totalPages <= 1) return of(firstPage.items);
+
+        const remainingPages = Array.from(
+          { length: firstPage.totalPages - 1 },
+          (_, index) =>
+            this.getReservations({
+              ...baseFilters,
+              pageNumber: index + 2,
+            }),
+        );
+
+        return forkJoin(remainingPages).pipe(
+          map((pages) => [
+            ...firstPage.items,
+            ...pages.flatMap((page) => page.items),
+          ]),
+        );
+      }),
+    );
   }
 
   reviewAttendance(
