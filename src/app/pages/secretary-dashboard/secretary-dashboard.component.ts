@@ -32,6 +32,7 @@ type SecretaryDashboardSection =
   | "overview"
   | "profile"
   | "reservations"
+  | "reservation-reviews"
   | "reviews";
 
 interface SecretaryDashboardLink {
@@ -44,6 +45,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
   "profile",
   "reservations",
+  "reservation-reviews",
   "reviews",
 ];
 
@@ -70,6 +72,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "profile", label: "پروفایل", icon: "shield" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
+    { id: "reservation-reviews", label: "بررسی زمان رزرو", icon: "check" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
   ];
 
@@ -126,7 +129,10 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   get visibleDashboardLinks(): SecretaryDashboardLink[] {
     if (!this.isProfileReady()) {
       return this.dashboardLinks.filter(
-        (item) => item.id !== "reservations" && item.id !== "reviews",
+        (item) =>
+          item.id !== "reservations" &&
+          item.id !== "reservation-reviews" &&
+          item.id !== "reviews",
       );
     }
 
@@ -177,6 +183,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     if (
       (section === "overview" ||
         section === "reservations" ||
+        section === "reservation-reviews" ||
         section === "reviews") &&
       !this.isProfileReady()
     ) {
