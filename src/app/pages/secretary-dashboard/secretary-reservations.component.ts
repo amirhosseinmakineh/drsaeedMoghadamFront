@@ -35,7 +35,11 @@ import {
   toIranDateInputValue,
 } from "../../utils/iran-datetime.util";
 
-export type SecretaryReservationTab = "queue" | "all" | "completed";
+export type SecretaryReservationTab =
+  | "reservationReview"
+  | "queue"
+  | "all"
+  | "completed";
 
 @Component({
   selector: "app-secretary-reservations",
@@ -54,6 +58,9 @@ export class SecretaryReservationsComponent
   activeTab: SecretaryReservationTab = "queue";
   items: SecretaryReservation[] = [];
   notes: Record<number, string> = {};
+  rescheduleDialogOpen = false;
+  selectedReservation: SecretaryReservation | null = null;
+  newReservationAt = "";
   profileDialogOpen = false;
   profileSaving = false;
   selectedProfileReservation: SecretaryReservation | null = null;
@@ -67,6 +74,7 @@ export class SecretaryReservationsComponent
   feedback = "";
   feedbackType: "success" | "error" = "success";
   statusFilter: number | null = null;
+  reservationReviewFilter: number | null = null;
   searchText = "";
   includeCanceled = false;
   pageNumber = 1;
@@ -134,6 +142,30 @@ export class SecretaryReservationsComponent
     this.feedback = "";
     this.markDirty();
     this.loadSubscription?.unsubscribe();
+
+    if (this.activeTab === "reservationReview") {
+      this.loadSubscription = this.secretaryApi
+        .getPendingReservationReviews(this.pageNumber, this.pageSize)
+        .pipe(
+          finalize(() => {
+            if (requestId === this.loadRequestId) {
+              this.loading = false;
+              this.markDirty();
+            }
+          }),
+        )
+        .subscribe({
+          next: (response) => {
+            if (requestId !== this.loadRequestId) return;
+            this.items = response.items ?? [];
+            this.pageNumber = response.pageNumber;
+            this.totalPages = response.totalPages;
+            this.markDirty();
+          },
+          error: (error) => this.handleLoadError(requestId, error),
+        });
+      return;
+    }
 
     if (this.activeTab === "queue") {
       this.loadSubscription = this.secretaryApi
@@ -219,6 +251,7 @@ export class SecretaryReservationsComponent
         pageSize: this.pageSize,
         includeCanceled: this.includeCanceled,
         attendanceConfirmationStatus: this.statusFilter,
+        reservationReviewStatus: this.reservationReviewFilter,
         searchText: this.searchText.trim() || undefined,
       })
       .pipe(
@@ -282,6 +315,81 @@ export class SecretaryReservationsComponent
       });
   }
 
+  approveReservationTime(item: SecretaryReservation): void {
+    this.submitReservationReview(item, null);
+  }
+
+  openRescheduleDialog(item: SecretaryReservation): void {
+    this.selectedReservation = item;
+    this.newReservationAt = this.toDateTimeLocalValue(this.reservationAt(item));
+    this.rescheduleDialogOpen = true;
+  }
+
+  closeRescheduleDialog(): void {
+    if (this.savingId !== null) return;
+    this.rescheduleDialogOpen = false;
+    this.selectedReservation = null;
+    this.newReservationAt = "";
+  }
+
+  submitReschedule(): void {
+    if (!this.selectedReservation) return;
+    const selectedTime = new Date(this.newReservationAt);
+    if (!this.newReservationAt || !Number.isFinite(selectedTime.getTime())) {
+      this.showFeedback("زمان جدید رزرو را وارد کنید", "error");
+      return;
+    }
+    if (selectedTime.getTime() <= Date.now()) {
+      this.showFeedback("زمان رزرو باید در آینده باشد", "error");
+      return;
+    }
+    const currentTime = new Date(
+      this.reservationAt(this.selectedReservation),
+    ).getTime();
+    if (
+      Number.isFinite(currentTime) &&
+      Math.abs(selectedTime.getTime() - currentTime) < 60_000
+    ) {
+      this.showFeedback(
+        "برای تغییر زمان، زمانی متفاوت از زمان فعلی انتخاب کنید",
+        "error",
+      );
+      return;
+    }
+
+    this.submitReservationReview(
+      this.selectedReservation,
+      selectedTime.toISOString(),
+    );
+  }
+
+  canReviewReservationTime(item: SecretaryReservation): boolean {
+    return (
+      this.activeTab === "reservationReview" &&
+      this.reservationReviewStatus(item) === 1 &&
+      !(item.isCanceled ?? item.IsCanceled)
+    );
+  }
+
+  reservationReviewLabel(item: SecretaryReservation): string {
+    switch (this.reservationReviewStatus(item)) {
+      case 2:
+        return "زمان تایید شده";
+      case 3:
+        return "زمان تغییر کرده";
+      default:
+        return "منتظر بررسی زمان";
+    }
+  }
+
+  reservationReviewBadge(item: SecretaryReservation): string {
+    return this.reservationReviewStatus(item) === 1 ? "warn" : "success";
+  }
+
+  minReservationDateTime(): string {
+    return this.toDateTimeLocalValue(new Date(Date.now() + 60_000).toISOString());
+  }
+
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
     this.pageNumber = page;
@@ -289,6 +397,9 @@ export class SecretaryReservationsComponent
   }
 
   emptyCopy(): string {
+    if (this.activeTab === "reservationReview") {
+      return "رزروی در صف بررسی زمان وجود ندارد.";
+    }
     if (this.activeTab === "queue") {
       return "موردی در صف بررسی تایید حضور وجود ندارد.";
     }
@@ -508,6 +619,80 @@ export class SecretaryReservationsComponent
         : "دریافت رزروها انجام نشد",
       "error",
     );
+  }
+
+  private reservationReviewStatus(item: SecretaryReservation): number {
+    return Number(
+      item.secretaryReservationReviewStatus ??
+        item.SecretaryReservationReviewStatus ??
+        1,
+    );
+  }
+
+  private submitReservationReview(
+    item: SecretaryReservation,
+    newReservationAt: string | null,
+  ): void {
+    const reservationId = this.reservationId(item);
+    const secretaryUserId = this.auth.user()?.userId;
+    if (!reservationId || !secretaryUserId) {
+      this.showFeedback(
+        "شناسه رزرو یا شناسه کاربر منشی در دسترس نیست",
+        "error",
+      );
+      return;
+    }
+
+    const note = (this.notes[reservationId] || "").trim();
+    if (note.length > 1000) {
+      this.showFeedback("یادداشت منشی نباید بیشتر از ۱۰۰۰ کاراکتر باشد", "error");
+      return;
+    }
+
+    this.savingId = reservationId;
+    this.secretaryApi
+      .reviewSecretaryReservation({
+        reservationId,
+        secretaryUserId,
+        ...(newReservationAt ? { newReservationAt } : {}),
+        note: note || null,
+      })
+      .pipe(
+        finalize(() => {
+          this.savingId = null;
+          this.markDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          this.rescheduleDialogOpen = false;
+          this.selectedReservation = null;
+          this.newReservationAt = "";
+          delete this.notes[reservationId];
+          this.showFeedback(
+            response.message ||
+              (newReservationAt
+                ? "زمان رزرو با موفقیت تغییر کرد"
+                : "زمان رزرو با موفقیت تایید شد"),
+            "success",
+          );
+          this.load();
+        },
+        error: (error) =>
+          this.showFeedback(
+            error instanceof Error && error.message
+              ? error.message
+              : "بررسی زمان رزرو انجام نشد",
+            "error",
+          ),
+      });
+  }
+
+  private toDateTimeLocalValue(value: string): string {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return "";
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 16);
   }
 
   private startPolling(): void {

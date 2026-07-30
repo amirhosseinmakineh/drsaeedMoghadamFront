@@ -44,6 +44,14 @@ export interface SecretaryReservation {
   RequiresPatientProfile?: boolean | null;
   reservationAt?: string;
   ReservationAt?: string;
+  secretaryReservationReviewStatus?: number | null;
+  SecretaryReservationReviewStatus?: number | null;
+  secretaryReservationReviewedAt?: string | null;
+  SecretaryReservationReviewedAt?: string | null;
+  secretaryReservationReviewerUserId?: string | null;
+  SecretaryReservationReviewerUserId?: string | null;
+  secretaryReservationReviewNote?: string | null;
+  SecretaryReservationReviewNote?: string | null;
   patientName?: string | null;
   PatientName?: string | null;
   patientPhoneNumber?: string | null;
@@ -89,6 +97,8 @@ export interface SecretaryReservationFilters {
   searchText?: string;
   attendanceConfirmationStatus?: number | null;
   onlyWaitingForSecretaryReview?: boolean;
+  reservationReviewStatus?: number | null;
+  onlyPendingReservationReview?: boolean;
   onlyDue?: boolean;
   includeCanceled?: boolean;
   pageNumber: number;
@@ -127,6 +137,22 @@ export interface ReviewAttendanceRequest {
   secretaryUserId: string;
   approved: boolean;
   note: string | null;
+}
+
+export interface ReviewSecretaryReservationRequest {
+  reservationId: number;
+  secretaryUserId: string;
+  newReservationAt?: string | null;
+  note: string | null;
+}
+
+export interface ReviewSecretaryReservationResponse {
+  reservationId: number;
+  reservationAt: string;
+  reviewStatus: number;
+  reviewedAt: string;
+  secretaryUserId: string;
+  note?: string | null;
 }
 
 @Injectable({ providedIn: "root" })
@@ -184,6 +210,30 @@ export class SecretaryDashboardService {
       pageNumber,
       pageSize,
     });
+  }
+
+  getPendingReservationReviews(
+    pageNumber = 1,
+    pageSize = 50,
+  ): Observable<PaginatedResponse<SecretaryReservation>> {
+    return this.getReservations({
+      onlyPendingReservationReview: true,
+      includeCanceled: false,
+      pageNumber,
+      pageSize,
+    });
+  }
+
+  reviewSecretaryReservation(
+    payload: ReviewSecretaryReservationRequest,
+  ): Observable<ApiCommandResponse<ReviewSecretaryReservationResponse>> {
+    return this.http
+      .post<ApiCommandResponse<ReviewSecretaryReservationResponse>>(
+        `${this.apiBaseUrl}/Reservation/ReviewSecretaryReservation`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("بررسی زمان رزرو انجام نشد"));
   }
 
   reviewAttendance(
