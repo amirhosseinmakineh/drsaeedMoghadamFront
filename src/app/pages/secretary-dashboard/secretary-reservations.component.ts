@@ -27,6 +27,7 @@ import {
 import { ToastService } from "../../core/toast/toast.service";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
+import { SecretaryDashboardPreset } from "./secretary-overview.component";
 
 export type SecretaryReservationTab = "queue" | "all" | "completed";
 
@@ -43,6 +44,7 @@ export class SecretaryReservationsComponent
 {
   @Input() profileReady = false;
   @Input() initialTab: SecretaryReservationTab = "queue";
+  @Input() preset: SecretaryDashboardPreset | null = null;
 
   activeTab: SecretaryReservationTab = "queue";
   items: SecretaryReservation[] = [];
@@ -89,6 +91,14 @@ export class SecretaryReservationsComponent
     if (changes["initialTab"]?.currentValue) {
       this.activeTab = changes["initialTab"].currentValue;
     }
+    if (
+      changes["preset"] &&
+      !changes["preset"].firstChange &&
+      this.profileReady
+    ) {
+      this.pageNumber = 1;
+      this.load();
+    }
     if (changes["profileReady"]?.currentValue === true) {
       this.load();
       this.startPolling();
@@ -99,6 +109,68 @@ export class SecretaryReservationsComponent
     this.destroyed = true;
     this.stopPolling();
     this.loadSubscription?.unsubscribe();
+  }
+
+  private filterPreset(
+    items: SecretaryReservation[],
+    preset: SecretaryDashboardPreset,
+  ): SecretaryReservation[] {
+    const activeItems = items.filter(
+      (item) => !(item.isCanceled ?? item.IsCanceled ?? false),
+    );
+    const isToday = (value: string): boolean => {
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) return false;
+      const formatter = new Intl.DateTimeFormat("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "Asia/Tehran",
+      });
+      return formatter.format(date) === formatter.format(new Date());
+    };
+
+    if (preset === "pending") {
+      return activeItems.filter(
+        (item) =>
+          Number(
+            item.secretaryReservationReviewStatus ??
+              item.SecretaryReservationReviewStatus,
+          ) === 1,
+      );
+    }
+    if (preset === "confirmed-today") {
+      return activeItems.filter(
+        (item) =>
+          isToday(this.reservationAt(item)) &&
+          [2, 3].includes(
+            Number(
+              item.secretaryReservationReviewStatus ??
+                item.SecretaryReservationReviewStatus,
+            ),
+          ),
+      );
+    }
+    if (preset === "followups-today") {
+      return activeItems.filter(
+        (item) =>
+          isToday(item.followUpAt ?? item.FollowUpAt ?? "") ||
+          isToday(item.reminderAt ?? item.ReminderAt ?? "") ||
+          (item.needsFollowUp ?? item.NeedsFollowUp) === true,
+      );
+    }
+
+    return activeItems.filter((item) => {
+      const reservationTime = new Date(this.reservationAt(item)).getTime();
+      return (
+        Number.isFinite(reservationTime) &&
+        reservationTime < Date.now() &&
+        (item.consultantSaysPatientAttended ??
+          item.ConsultantSaysPatientAttended) === false &&
+        readAttendanceStatus(item, "attendanceConfirmationStatus") ===
+          AttendanceConfirmationStatus.SecretaryApproved
+      );
+    });
   }
 
   setTab(tab: SecretaryReservationTab): void {
@@ -122,6 +194,34 @@ export class SecretaryReservationsComponent
     this.feedback = "";
     this.markDirty();
     this.loadSubscription?.unsubscribe();
+
+    if (this.preset) {
+      this.loadSubscription = this.secretaryApi
+        .getDashboardReservations()
+        .pipe(
+          map((items) => this.filterPreset(items, this.preset!)),
+          finalize(() => {
+            if (requestId === this.loadRequestId) {
+              this.loading = false;
+              this.markDirty();
+            }
+          }),
+        )
+        .subscribe({
+          next: (items) => {
+            if (requestId !== this.loadRequestId) return;
+            this.totalPages = Math.max(
+              1,
+              Math.ceil(items.length / this.pageSize),
+            );
+            const start = (this.pageNumber - 1) * this.pageSize;
+            this.items = items.slice(start, start + this.pageSize);
+            this.markDirty();
+          },
+          error: (error) => this.handleLoadError(requestId, error),
+        });
+      return;
+    }
 
     if (this.activeTab === "queue") {
       this.loadSubscription = this.secretaryApi

@@ -22,6 +22,10 @@ import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-rout
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
+import {
+  SecretaryDashboardPreset,
+  SecretaryOverviewComponent,
+} from "./secretary-overview.component";
 
 interface SecretaryProfileForm {
   nationalityCode: string;
@@ -56,6 +60,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     RouterLink,
     FaIconComponent,
     SecretaryReservationsComponent,
+    SecretaryOverviewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-dashboard.component.html",
@@ -94,6 +99,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   profileSaving = false;
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
+  reservationPreset: SecretaryDashboardPreset | null = null;
 
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
@@ -165,6 +171,11 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     this.syncSectionQueryParam(resolvedSection);
     this.closeMobileSidebar();
     this.markDirty();
+  }
+
+  openDashboardList(preset: SecretaryDashboardPreset): void {
+    this.reservationPreset = preset;
+    this.setSection("reservations");
   }
 
   private resolveSection(
