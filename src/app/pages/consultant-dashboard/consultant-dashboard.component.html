@@ -648,15 +648,6 @@
                       >
                         رزرو وقت
                       </button>
-                      @if (canEditReservationForLead(lead)) {
-                        <button
-                          class="secondary-action compact"
-                          type="button"
-                          (click)="openEditReservationDialog(lead)"
-                        >
-                          ویرایش رزرو
-                        </button>
-                      }
                     </div>
                   </article>
                 }
@@ -813,15 +804,6 @@
                     >
                       رزرو وقت
                     </button>
-                    @if (canEditReservationForLead(lead)) {
-                      <button
-                        class="secondary-action compact"
-                        type="button"
-                        (click)="openEditReservationDialog(lead)"
-                      >
-                        ویرایش رزرو
-                      </button>
-                    }
                   </div>
                 </article>
               }
@@ -940,10 +922,6 @@
                     <div>
                       <dt>منطقه</dt>
                       <dd>{{ profile.patientRegion || profile.PatientRegion || "-" }}</dd>
-                    </div>
-                    <div>
-                      <dt>بیمه</dt>
-                      <dd>{{ profile.insuranceName || profile.InsuranceName || "-" }}</dd>
                     </div>
                   </dl>
                 </article>
@@ -1110,15 +1088,6 @@
                     >
                       رزرو وقت
                     </button>
-                    @if (canEditReservationForLead(lead)) {
-                      <button
-                        class="secondary-action compact"
-                        type="button"
-                        (click)="openEditReservationDialog(lead)"
-                      >
-                        ویرایش رزرو
-                      </button>
-                    }
                   </div>
                 </article>
               }

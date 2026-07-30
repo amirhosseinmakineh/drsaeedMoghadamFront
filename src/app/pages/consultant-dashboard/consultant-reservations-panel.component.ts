@@ -47,7 +47,12 @@ export type ConsultantReservationTab = "pending" | "all" | "completed";
 @Component({
   selector: "app-consultant-reservations-panel",
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseDialogComponent, BaseDatepickerComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    BaseDialogComponent,
+    BaseDatepickerComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./consultant-reservations-panel.component.html",
   styleUrl: "./consultant-reservations-panel.component.scss",
@@ -100,7 +105,10 @@ export class ConsultantReservationsPanelComponent
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {
-    this.markDirty = createCoalescedMarkForCheck(this.cdr, () => this.destroyed);
+    this.markDirty = createCoalescedMarkForCheck(
+      this.cdr,
+      () => this.destroyed,
+    );
   }
 
   ngOnInit(): void {
@@ -177,7 +185,8 @@ export class ConsultantReservationsPanelComponent
       .getReservations({
         consultantProfileId: this.profileId,
         includeCanceled: false,
-        onlySecretaryReviewed: this.activeTab === "completed" ? true : undefined,
+        onlySecretaryReviewed:
+          this.activeTab === "completed" ? true : undefined,
         pageNumber: this.pageNumber,
         pageSize: this.pageSize,
       })
@@ -237,8 +246,7 @@ export class ConsultantReservationsPanelComponent
           );
           this.load();
         },
-        error: (error) =>
-          this.showFeedback(this.errorMessage(error), "error"),
+        error: (error) => this.showFeedback(this.errorMessage(error), "error"),
       });
   }
 
@@ -389,10 +397,12 @@ export class ConsultantReservationsPanelComponent
     this.editForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
       reservationTime: toIranTimeInputValue(date),
-      patientCity: this.patientCity(reservation) === "شهر ثبت نشده"
-        ? ""
-        : this.patientCity(reservation),
-      patientRegion: reservation.patientRegion || reservation.PatientRegion || "",
+      patientCity:
+        this.patientCity(reservation) === "شهر ثبت نشده"
+          ? ""
+          : this.patientCity(reservation),
+      patientRegion:
+        reservation.patientRegion || reservation.PatientRegion || "",
       attendanceProbabilityPercent: Number(this.probability(reservation)) || 80,
       attendancePrediction:
         reservation.attendancePrediction ||
@@ -425,15 +435,15 @@ export class ConsultantReservationsPanelComponent
       : null;
     if (!this.profileId || !reservationId) return;
 
- if (!this.editForm.reservationDate) {
-  this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
-  return;
-}
+    if (!this.editForm.reservationDate) {
+      this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
+      return;
+    }
 
-const reservationAt = combineIranDateAndTime(
-  this.editForm.reservationDate,
-  this.editForm.reservationTime,
-);
+    const reservationAt = combineIranDateAndTime(
+      this.editForm.reservationDate,
+      this.editForm.reservationTime,
+    );
     if (!reservationAt) {
       this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
       return;
@@ -457,12 +467,14 @@ const reservationAt = combineIranDateAndTime(
       .pipe(finalize(() => (this.editSaving = false)))
       .subscribe({
         next: (response) => {
-          this.showFeedback(response.message || "رزرو با موفقیت ویرایش شد", "success");
+          this.showFeedback(
+            response.message || "زمان رزرو با موفقیت تغییر کرد",
+            "success",
+          );
           this.closeEditDialog();
           this.load();
         },
-        error: (error) =>
-          this.showFeedback(this.errorMessage(error), "error"),
+        error: (error) => this.showFeedback(this.errorMessage(error), "error"),
       });
   }
 
@@ -496,7 +508,7 @@ const reservationAt = combineIranDateAndTime(
     this.feedback = message;
     this.feedbackType = type;
     if (type === "success") this.toast.success(message);
-    else     this.toast.error(message);
+    else this.toast.error(message);
     this.markDirty();
   }
 }
