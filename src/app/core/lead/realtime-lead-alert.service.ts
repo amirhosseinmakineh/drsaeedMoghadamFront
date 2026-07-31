@@ -153,15 +153,9 @@ export class RealtimeLeadAlertService implements OnDestroy {
       this.emitAlerts();
     }
 
-    const canPickup = await firstValueFrom(
-      this.pickupService.canPickupLead(profileId),
-    );
-    if (!canPickup) {
-      this.showDailyLimitNotificationOnce();
-      this.markLeadTaken(leadId);
-      return;
-    }
-
+    // Do not repeat the CanPickupLead preflight here. Alerts are already checked
+    // before they are displayed and the atomic pickup endpoint enforces the same
+    // limit. A second, serial request made the primary action noticeably slower.
     const result = await firstValueFrom(
       this.pickupService.pickupLead(leadId, profileId),
     );
@@ -169,8 +163,10 @@ export class RealtimeLeadAlertService implements OnDestroy {
     if (result.status === "success") {
       this.toast.success(result.message);
       this.markLeadTaken(leadId);
-      await this.setConsultantOfflineAfterPickup(profileId);
       this.notifyLeadPickedUp(leadId, result.callDeadlineAt);
+      // Updating availability is housekeeping and must not hold up showing the
+      // newly assigned lead. Reconcile it in the background instead.
+      void this.setConsultantOfflineAfterPickup(profileId);
       await this.router.navigate(["/dashboard/consultant"], {
         queryParams: {
           section: "leads",

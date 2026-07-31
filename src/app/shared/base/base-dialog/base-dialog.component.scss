@@ -5,13 +5,19 @@
   display: grid;
   place-items: center;
   padding: 18px;
+  overflow: hidden;
   background: rgba(43, 33, 24, 0.34);
 }
 .base-dialog {
   position: relative;
   width: min(520px, 100%);
   max-height: 92vh;
-  overflow: auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid
     color-mix(in srgb, var(--line, #d9e3ea) 75%, transparent);
   border-radius: 34px;
@@ -116,8 +122,11 @@ footer {
 }
 @media (max-width: 640px) {
   .dialog-backdrop {
+    display: flex;
+    justify-content: center;
     align-items: end;
     padding: 10px;
+    height: 100dvh;
   }
   .base-dialog,
   .base-dialog.wide {
