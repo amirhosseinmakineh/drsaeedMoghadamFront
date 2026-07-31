@@ -114,6 +114,7 @@ export class SecretaryReservationRequestsComponent
   reservationDate: Date | null = null;
   fromDate: Date | null = null;
   toDate: Date | null = null;
+  dateFilterMode: "exact" | "range" = "exact";
   sortBy = "requestCreatedAt";
   sortDirection: "asc" | "desc" = "desc";
 
@@ -193,6 +194,34 @@ export class SecretaryReservationRequestsComponent
     this.sortBy = "requestCreatedAt";
     this.sortDirection = "desc";
     this.applyFilters();
+  }
+
+  clearDateFilters(): void {
+    this.reservationDate = null;
+    this.fromDate = null;
+    this.toDate = null;
+    this.applyFilters();
+  }
+
+  setDateFilterMode(mode: "exact" | "range"): void {
+    this.dateFilterMode = mode;
+    if (mode === "exact") {
+      this.fromDate = null;
+      this.toDate = null;
+    } else {
+      this.reservationDate = null;
+    }
+  }
+
+  dateFilterLabel(): string {
+    const activeCount = [
+      this.reservationDate,
+      this.fromDate,
+      this.toDate,
+    ].filter(Boolean).length;
+    if (!activeCount) return "فیلتر تاریخ";
+    if (this.reservationDate) return "تاریخ رزرو انتخاب شده";
+    return activeCount === 2 ? "بازه تاریخ انتخاب شده" : "یک تاریخ انتخاب شده";
   }
 
   changePageSize(): void {
@@ -550,6 +579,7 @@ export class SecretaryReservationRequestsComponent
     this.reservationDate = this.readDateParam(params.get("reservationDate"));
     this.fromDate = this.readDateParam(params.get("requestFrom"));
     this.toDate = this.readDateParam(params.get("requestTo"));
+    this.dateFilterMode = this.fromDate || this.toDate ? "range" : "exact";
     this.sortBy = params.get("requestSort") ?? "requestCreatedAt";
     this.sortDirection =
       params.get("requestDirection") === "asc" ? "asc" : "desc";
