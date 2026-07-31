@@ -100,6 +100,21 @@ export interface SecretaryReservation {
   FollowUpPriority?: number | null;
   lastActivityAt?: string | null;
   LastActivityAt?: string | null;
+  reservationRequestStatus?: number | null;
+  requestedServiceName?: string | null;
+  consultantReport?: string | null;
+  requestCreatedAt?: string | null;
+  lastChangedByName?: string | null;
+  priority?: number | null;
+  callCount?: number | null;
+  rejectionReason?: string | null;
+  cancellationReason?: string | null;
+  visitResultStatus?: number | null;
+  initialReservationAt?: string | null;
+  doctorName?: string | null;
+  roomName?: string | null;
+  lastFollowUpAt?: string | null;
+  lastContactResult?: string | null;
 }
 
 export interface SecretaryReservationFilters {
@@ -111,6 +126,14 @@ export interface SecretaryReservationFilters {
   onlyWaitingForSecretaryReview?: boolean;
   onlyPendingReservationReview?: boolean;
   reservationReviewStatus?: number | null;
+  reservationRequestStatus?: number | null;
+  visitResultStatus?: number | null;
+  reservationDate?: string;
+  followUpDueOn?: string;
+  isConfirmedWithPatient?: boolean | null;
+  consultantName?: string;
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
   onlyDue?: boolean;
   includeCanceled?: boolean;
   pageNumber: number;
@@ -122,6 +145,27 @@ export interface ReviewAttendanceRequest {
   secretaryUserId: string;
   approved: boolean;
   note: string | null;
+}
+
+export interface SecretaryReservationActivity {
+  activityId: number;
+  activityType: string;
+  description: string;
+  createdAt: string;
+  actorDisplayName?: string | null;
+  previousValue?: string | null;
+  newValue?: string | null;
+}
+
+export interface RescheduleReservationRequest {
+  reservationAt: string;
+  reason?: string | null;
+  note?: string | null;
+}
+
+export interface RejectReservationRequest {
+  reasonCode: number;
+  reason: string;
 }
 
 @Injectable({ providedIn: "root" })
@@ -220,6 +264,130 @@ export class SecretaryDashboardService {
         { headers: this.authHeaders() },
       )
       .pipe(this.ensureCommandSucceeded("ثبت بررسی حضور انجام نشد"));
+  }
+
+  confirmReservation(
+    reservationId: number,
+    note: string | null,
+  ): Observable<ApiCommandResponse> {
+    return this.postReservationCommand(
+      reservationId,
+      "secretary-confirm",
+      { note },
+      "تایید رزرو انجام نشد",
+    );
+  }
+
+  rescheduleReservation(
+    reservationId: number,
+    payload: RescheduleReservationRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.postReservationCommand(
+      reservationId,
+      "secretary-reschedule",
+      payload,
+      "تغییر زمان رزرو انجام نشد",
+    );
+  }
+
+  rejectReservation(
+    reservationId: number,
+    payload: RejectReservationRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.postReservationCommand(
+      reservationId,
+      "secretary-reject",
+      payload,
+      "رد درخواست رزرو انجام نشد",
+    );
+  }
+
+  addReservationNote(
+    reservationId: number,
+    note: string,
+  ): Observable<ApiCommandResponse> {
+    return this.postReservationCommand(
+      reservationId,
+      "notes",
+      { note },
+      "ثبت یادداشت انجام نشد",
+    );
+  }
+
+  logPatientContact(
+    reservationId: number,
+    result: string,
+    note: string | null,
+  ): Observable<ApiCommandResponse> {
+    return this.postReservationCommand(
+      reservationId,
+      "contacts",
+      { result, note },
+      "ثبت تماس انجام نشد",
+    );
+  }
+
+  createFollowUp(
+    reservationId: number,
+    scheduledAt: string,
+    reason: string,
+  ): Observable<ApiCommandResponse> {
+    return this.postReservationCommand(
+      reservationId,
+      "follow-ups",
+      { scheduledAt, reason },
+      "ثبت پیگیری انجام نشد",
+    );
+  }
+
+  recordVisitResult(
+    reservationId: number,
+    visitResultStatus: number,
+    note: string | null,
+  ): Observable<ApiCommandResponse> {
+    return this.postReservationCommand(
+      reservationId,
+      "visit-result",
+      { visitResultStatus, note },
+      "ثبت نتیجه مراجعه انجام نشد",
+    );
+  }
+
+  getReservationHistory(
+    reservationId: number,
+  ): Observable<SecretaryReservationActivity[]> {
+    return this.http
+      .get<
+        ApiCommandResponse<SecretaryReservationActivity[]>
+      >(`${this.apiBaseUrl}/Reservation/${reservationId}/history`, { headers: this.authHeaders() })
+      .pipe(
+        map((response) => {
+          if (!response?.isSuccess) {
+            throw new Error(response?.message || "دریافت تاریخچه انجام نشد");
+          }
+          return Array.isArray(response.data) ? response.data : [];
+        }),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت تاریخچه انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  private postReservationCommand(
+    reservationId: number,
+    action: string,
+    payload: object,
+    fallback: string,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .post<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Reservation/${reservationId}/${action}`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded(fallback));
   }
 
   private authHeaders(): HttpHeaders {

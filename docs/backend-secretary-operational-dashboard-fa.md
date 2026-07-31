@@ -90,11 +90,11 @@ Authorization: Bearer {token}
 
 ### ۵-۱. پارامترهای اختیاری
 
-| پارامتر | نوع | توضیح |
-| --- | --- | --- |
-| `date` | `date` | تاریخ روز کاری با قالب `YYYY-MM-DD`؛ در صورت نبود، امروز منطقه زمانی کلینیک |
-| `timeZone` | `string` | اختیاری؛ مقدار پیش‌فرض `Asia/Tehran` |
-| `listSize` | `integer` | تعداد رکورد هر فهرست تکمیلی؛ پیش‌فرض ۵ و حداکثر ۲۰ |
+| پارامتر    | نوع       | توضیح                                                                       |
+| ---------- | --------- | --------------------------------------------------------------------------- |
+| `date`     | `date`    | تاریخ روز کاری با قالب `YYYY-MM-DD`؛ در صورت نبود، امروز منطقه زمانی کلینیک |
+| `timeZone` | `string`  | اختیاری؛ مقدار پیش‌فرض `Asia/Tehran`                                        |
+| `listSize` | `integer` | تعداد رکورد هر فهرست تکمیلی؛ پیش‌فرض ۵ و حداکثر ۲۰                          |
 
 تمام محاسبات «امروز» باید در منطقه زمانی `Asia/Tehran` انجام شوند، نه براساس UTC سرور.
 
@@ -304,14 +304,14 @@ GET /api/Reservation/SecretaryReservations
   &pageSize=20
 ```
 
-| فیلتر | کاربرد |
-| --- | --- |
-| `reservationRequestStatus` | کارت منتظر بررسی و رزروهای قطعی |
-| `visitResultStatus` | فهرست No Show و نیازمند پیگیری |
-| `followUpDueOn` | پیگیری‌های یک روز کاری |
-| `reservationDate` | رزروهای همان روز، براساس منطقه زمانی کلینیک |
-| `isConfirmedWithPatient` | رزروهای نهایی‌نشده با بیمار |
-| `searchText` | جست‌وجوی نام، موبایل و مشاور |
+| فیلتر                      | کاربرد                                      |
+| -------------------------- | ------------------------------------------- |
+| `reservationRequestStatus` | کارت منتظر بررسی و رزروهای قطعی             |
+| `visitResultStatus`        | فهرست No Show و نیازمند پیگیری              |
+| `followUpDueOn`            | پیگیری‌های یک روز کاری                      |
+| `reservationDate`          | رزروهای همان روز، براساس منطقه زمانی کلینیک |
+| `isConfirmedWithPatient`   | رزروهای نهایی‌نشده با بیمار                 |
+| `searchText`               | جست‌وجوی نام، موبایل و مشاور                |
 
 پاسخ باید Pagination استاندارد فعلی را حفظ کند:
 
@@ -426,3 +426,137 @@ PUT /api/Reservation/{reservationId}/follow-ups/{followUpId}
 5. پیاده‌سازی `SecretaryDashboard` summary endpoint؛
 6. انتشار OpenAPI/Swagger به‌روز و نمونه پاسخ واقعی برای اتصال نهایی فرانت؛
 7. تست دسترسی، منطقه زمانی، concurrency، Pagination و کارایی.
+
+## ۱۷. قرارداد تکمیلی صفحه درخواست‌های رزرو
+
+فرانت صفحه درخواست‌ها از همان `GET /api/Reservation/SecretaryReservations` استفاده می‌کند و علاوه بر فیلترهای بخش ۱۱، فیلدهای زیر را در هر آیتم مصرف می‌کند:
+
+| فیلد                       | نوع              | الزامی | کاربرد                            |
+| -------------------------- | ---------------- | ------ | --------------------------------- |
+| `reservationId` یا `id`    | `integer`        | بله    | شناسه پایدار درخواست              |
+| `patientName`              | `string`         | بله    | نام بیمار                         |
+| `patientPhoneNumber`       | `string`         | بله    | تماس مستقیم                       |
+| `requestedServiceName`     | `string`         | خیر    | خدمت یا درمان درخواستی            |
+| `consultantFullName`       | `string`         | بله    | مشاور ثبت‌کننده                   |
+| `consultantReport`         | `string`         | خیر    | گزارش کامل مشاور                  |
+| `reservationAt`            | `DateTimeOffset` | بله    | زمان فعلی رزرو                    |
+| `initialReservationAt`     | `DateTimeOffset` | خیر    | زمان پیشنهادی اولیه و تغییرناپذیر |
+| `requestCreatedAt`         | `DateTimeOffset` | بله    | زمان ثبت درخواست                  |
+| `lastActivityAt`           | `DateTimeOffset` | خیر    | آخرین تغییر                       |
+| `lastChangedByName`        | `string`         | خیر    | آخرین کاربر تغییردهنده            |
+| `reservationRequestStatus` | `integer`        | بله    | وضعیت رسمی درخواست                |
+| `priority`                 | `integer`        | خیر    | اولویت عملیاتی                    |
+| `callCount`                | `integer`        | خیر    | تعداد تماس‌های ثبت‌شده            |
+| `isConfirmedWithPatient`   | `boolean`        | خیر    | نتیجه هماهنگی بیمار               |
+| `rejectionReason`          | `string`         | خیر    | دلیل رد                           |
+| `cancellationReason`       | `string`         | خیر    | دلیل لغو                          |
+| `visitResultStatus`        | `integer`        | خیر    | نتیجه مراجعه                      |
+| `doctorName`               | `string`         | خیر    | پزشک رزرو                         |
+| `roomName`                 | `string`         | خیر    | اتاق یا یونیت                     |
+| `lastFollowUpAt`           | `DateTimeOffset` | خیر    | زمان آخرین پیگیری بیمار           |
+| `lastContactResult`        | `string`         | خیر    | نتیجه آخرین تماس ثبت‌شده          |
+
+پارامترهای `sortBy` مجاز باید Whitelist شوند: `requestCreatedAt`، `reservationAt` و `reservationRequestStatus`. مقدار `sortDirection` فقط `asc` یا `desc` است. فیلتر `consultantName` باید در سمت سرور اعمال شود. ترکیب تمام فیلترها باید با عملگر منطقی AND انجام شود.
+
+## ۱۸. تاریخچه رزرو و بیمار
+
+```http
+GET /api/Reservation/{reservationId}/history
+```
+
+پاسخ `data` یک آرایه مرتب‌شده از جدیدترین به قدیمی‌ترین با ساختار زیر است:
+
+```json
+{
+  "activityId": 12,
+  "activityType": "ReservationRescheduled",
+  "description": "زمان رزرو تغییر کرد",
+  "createdAt": "2026-08-01T10:15:00Z",
+  "actorDisplayName": "منشی کلینیک",
+  "previousValue": "2026-08-02T09:00:00+03:30",
+  "newValue": "2026-08-02T11:00:00+03:30"
+}
+```
+
+تاریخچه باید شامل ایجاد درخواست، تأیید، تغییر زمان، رد، لغو، تماس، یادداشت، Reminder، Follow-up، نتیجه مراجعه و تشکیل پرونده باشد. این endpoint فقط Read است و endpoint حذف History نباید برای منشی ارائه شود.
+
+## ۱۹. ثبت تماس، یادداشت، پیگیری و نتیجه مراجعه
+
+### ثبت تماس
+
+```http
+POST /api/Reservation/{reservationId}/contacts
+```
+
+```json
+{
+  "result": "Answered",
+  "note": "زمان مراجعه با بیمار مرور شد"
+}
+```
+
+مقادیر رسمی `result` باید توسط بک‌اند اعلام شوند. مقادیر فعلی مورد انتظار فرانت `Answered`، `NoAnswer`، `Busy` و `CallBack` هستند.
+
+### ثبت یادداشت
+
+```http
+POST /api/Reservation/{reservationId}/notes
+```
+
+```json
+{
+  "note": "بیمار درخواست هماهنگی مجدد دارد"
+}
+```
+
+یادداشت خالی یا فقط Space رد شود و محدودیت طول در OpenAPI اعلام شود.
+
+### ثبت پیگیری
+
+```http
+POST /api/Reservation/{reservationId}/follow-ups
+```
+
+```json
+{
+  "scheduledAt": "2026-08-02T10:00:00Z",
+  "reason": "تماس مجدد برای تایید نهایی"
+}
+```
+
+زمان گذشته پذیرفته نشود و ایجاد پیگیری باید `reservationRequestStatus` را در صورت قواعد محصول به `NeedsFollowUp` تغییر دهد.
+
+### ثبت نتیجه مراجعه
+
+```http
+POST /api/Reservation/{reservationId}/visit-result
+```
+
+```json
+{
+  "visitResultStatus": 3,
+  "note": "بیمار مراجعه نکرد"
+}
+```
+
+ثبت نتیجه فقط پس از سررسید رزرو و برای وضعیت‌های مجاز انجام شود. نتیجه جدید، Activity تاریخچه و شمارنده داشبورد را به‌صورت تراکنشی به‌روز کند.
+
+## ۲۰. APIهای هنوز لازم برای تکمیل اتصال فرانت
+
+در زمان نگارش این سند، APIهای زیر در قرارداد فعلی مخزن مستند نشده‌اند و باید توسط بک‌اند پیاده‌سازی و در Swagger منتشر شوند:
+
+- `GET /api/Reservation/SecretaryDashboard` برای آمار و فهرست‌های داشبورد؛
+- فیلترهای `reservationRequestStatus`، `reservationDate`، `followUpDueOn`، `visitResultStatus`، `isConfirmedWithPatient`، `consultantName`، `sortBy` و `sortDirection` روی `SecretaryReservations`؛
+- `POST /api/Reservation/{id}/secretary-confirm`؛
+- `POST /api/Reservation/{id}/secretary-reschedule`؛
+- `POST /api/Reservation/{id}/secretary-reject`؛
+- `GET /api/Reservation/{id}/history`؛
+- `POST /api/Reservation/{id}/contacts`؛
+- `POST /api/Reservation/{id}/notes`؛
+- `POST /api/Reservation/{id}/follow-ups`؛
+- `POST /api/Reservation/{id}/visit-result`؛
+- API ظرفیت و ساعات کاری، اگر اعتبارسنجی پیش از Submit در فرانت الزامی است؛
+- API جزئیات محدود بیمار برای منشی، اگر اطلاعات موردنیاز داخل DTO رزرو قابل ارائه نیست؛
+- وضعیت ارسال Notification به بیمار پس از تأیید یا تغییر زمان.
+
+تا قبل از ارائه API ساعات کاری و ظرفیت، بک‌اند مرجع نهایی اعتبارسنجی تداخل، ظرفیت و ساعات مجاز است و باید پیام خطای قابل فهم و کد `409` یا `422` برگرداند.

@@ -22,6 +22,7 @@ import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-rout
 import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
+import { SecretaryReservationRequestsComponent } from "./secretary-reservation-requests.component";
 import {
   SecretaryDashboardPreset,
   SecretaryOverviewComponent,
@@ -60,6 +61,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     RouterLink,
     FaIconComponent,
     SecretaryReservationsComponent,
+    SecretaryReservationRequestsComponent,
     SecretaryOverviewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
