@@ -407,6 +407,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.activeSection = "leads";
     this.syncSectionQueryParam("leads");
     this.leadTypeFilter = LEAD_TYPE.RealTime;
+    this.leadStateFilter = null;
+    this.leadFromDate = null;
+    this.leadToDate = null;
+    this.leadPageNumber = 1;
     this.highlightedLeadAssignmentId = leadId;
     this.refreshDashboard();
     this.loadLeads();
@@ -1231,7 +1235,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       document
         .getElementById(elementId)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
       setTimeout(() => {
         if (this.highlightedLeadAssignmentId === targetId) {
           this.highlightedLeadAssignmentId = null;
@@ -1598,7 +1602,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   isReportDialogClosable(): boolean {
-    return this.reportDialogMode === "edit";
+    return true;
   }
 
   submitLeadReport(): void {
@@ -3765,7 +3769,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private commitLeadsFromApi(items: ConsultantLead[]): void {
-    this.leads = this.applyPendingReportPatches(items);
+    const patchedItems = this.applyPendingReportPatches(items);
+    const highlightedId = this.highlightedLeadAssignmentId;
+    this.leads = highlightedId
+      ? [...patchedItems].sort((left, right) => {
+          const leftIsHighlighted = this.leadId(left) === highlightedId;
+          const rightIsHighlighted = this.leadId(right) === highlightedId;
+          return Number(rightIsHighlighted) - Number(leftIsHighlighted);
+        })
+      : patchedItems;
     this.syncReportedLeadIdsFromLeads(this.leads);
     this.syncReservedLeadIdsFromLeads(this.leads);
     this.syncCallInitiatedFromLeads(this.leads);
