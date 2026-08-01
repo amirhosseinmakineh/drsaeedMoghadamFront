@@ -187,7 +187,7 @@ export const NAV_ITEMS: NavItem[] = [
 
 export const HERO_SLIDES: HeroSlide[] = [
   {
-    id: "digital-smile",
+    id: "clinic-care",
     title: text(
       "دکتر سعید مقدم؛ کامپوزیت، لمینت و بلیچینگ برای طراحی لبخند طبیعی",
       "Natural smile design with composite, veneers and bleaching",
@@ -199,7 +199,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     image: heroImage("clinic"),
   },
   {
-    id: "calm-suite",
+    id: "treatment-planning",
     title: text(
       "دندان‌پزشکی زیبایی سعید مقدم با انتظار واقع‌بینانه و مراقبت ایمن",
       "Cosmetic dentistry with realistic expectations and safe care",
@@ -211,7 +211,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     image: heroImage("laminate"),
   },
   {
-    id: "mobile-first",
+    id: "aftercare-guide",
     title: text(
       "راهنمای درمان‌های زیبایی دندان دکتر سعید مقدم؛ از انتخاب رنگ تا مراقبت",
       "From shade selection to aftercare, the path stays clear",
@@ -261,13 +261,13 @@ export const WORK_SAMPLES: WorkSample[] = COMPOSITE_WORK_IMAGE_PATHS.map(
   (src, index) => ({
     id: `composite-work-${index + 1}`,
     title: text(
-      `نمونه کامپوزیت شماره ${index + 1}`,
-      `Composite veneer sample ${index + 1}`,
+      `تصویر درمان کامپوزیت ${index + 1}`,
+      `Composite veneer case image ${index + 1}`,
     ),
     service: text("کامپوزیت ونیر", "Composite veneers"),
     description: text(
-      "نمونه‌ای از کامپوزیت ونیر با تمرکز بر هماهنگی فرم، رنگ و خط لبخند.",
-      "A composite veneer sample focused on harmony of shape, shade and smile line.",
+      "تصویر ثبت‌شده از درمان کامپوزیت ونیر در مجموعه دکتر سعید مقدم.",
+      "A documented composite veneer treatment image from Dr. Saeed Moghaddam’s practice.",
     ),
     result: text(
       "نتیجه هر فرد پس از معاینه و بررسی شرایط دندان‌ها مشخص می‌شود.",
@@ -301,7 +301,7 @@ export const DENTAL_SERVICES: DentalService[] = [
       "کامپوزیت ونیر راهکاری مستقیم و کم‌تهاجمی برای اصلاح برخی مشکلات فرم و رنگ دندان است؛ مثل لب‌پریدگی محدود، فاصله کوچک، نامنظمی خفیف یا نیاز به بازسازی ظریف لبه دندان. پیش از شروع، بایت، سلامت لثه، پوسیدگی، کیفیت مینای دندان، رنگ پایه، ترمیم‌های قبلی، بهداشت دهان و عادت‌هایی مثل دندان‌قروچه بررسی می‌شود. مطابق اصول سلامت دهان، کامپوزیت برای همه موارد جایگزین لمینت یا بلیچینگ نیست و باید درباره رنگ‌پذیری، لب‌پریدگی احتمالی، نیاز به پولیش دوره‌ای و مراقبت غذایی توضیح شفاف داده شود.",
       "Composite veneers are a direct, minimally invasive option for selected shape and shade concerns such as limited chips, small gaps, mild irregularity or edge rebuilding. Bite, gum health, decay, enamel quality, baseline shade, previous restorations, hygiene and habits such as grinding are reviewed first. In line with oral-health principles, composite is not a replacement for veneers or bleaching in every case, and staining, possible chipping, periodic polishing and diet-related care must be explained clearly.",
     ),
-    duration: text("اغلب ۱ تا ۲ جلسه", "Often 1 to 2 visits"),
+    duration: text("پس از معاینه و تعیین تعداد دندان مشخص می‌شود", "Confirmed after examination and tooth-count assessment"),
     cost: text(
       "وابسته به تعداد دندان و میزان اصلاح فرم",
       "Depends on tooth count and shaping complexity",
@@ -481,8 +481,8 @@ export const DENTAL_SERVICES: DentalService[] = [
       "Porcelain veneers suit people who want better shade, shape, size or harmony of front teeth without an artificial look. Active decay, enamel quality, gum health, sensitivity, smile line, lip form, skin tone, bite and grinding habits are reviewed first. In line with accepted oral-health principles, shade selection and preparation should be conservative, explainable and matched to the patient because veneer treatment is precise and usually irreversible.",
     ),
     duration: text(
-      "معمولاً ۱۰ تا ۱۴ روز پس از آماده‌سازی",
-      "Usually 10 to 14 days after preparation",
+      "پس از معاینه و هماهنگی مراحل لابراتوار مشخص می‌شود",
+      "Confirmed after examination and laboratory planning",
     ),
     cost: text(
       "وابسته به تعداد دندان، جنس سرامیک و طراحی لبخند",

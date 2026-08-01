@@ -45,9 +45,13 @@
   gap: 14px;
 }
 
-.info-panel h3,
+.info-panel h2,
 .info-panel p {
   margin: 0;
+}
+
+.info-panel h2 {
+  font-size: 1.05rem;
 }
 
 .map-card {
@@ -72,6 +76,20 @@
   gap: 8px;
   color: var(--muted);
   font-weight: 900;
+}
+
+.contact-form ol {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding-inline-start: 24px;
+  line-height: 1.9;
+}
+
+.contact-form > p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.9;
 }
 
 .success-message {
