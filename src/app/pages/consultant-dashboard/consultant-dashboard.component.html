@@ -131,6 +131,26 @@
         </p>
       }
 
+      @if (shouldShowWorkloadNotification && workloadNotificationMessage) {
+        <section class="workload-warning" role="alert">
+          <div>
+            <strong>تعیین تکلیف شماره‌های قبلی</strong>
+            <p>{{ workloadNotificationMessage }}</p>
+            <ul>
+              <li>بدون گزارش: {{ pendingReportCount }}</li>
+              <li>بدون تماس و گزارش: {{ uncalledWithoutReportCount }}</li>
+              <li>
+                نیازمند پیگیری: {{ followUpCount }} از سقف
+                {{ maximumAllowedFollowUps }}
+              </li>
+            </ul>
+          </div>
+          <button class="primary-action compact" type="button" (click)="setSection('leads')">
+            مشاهده شماره‌های من
+          </button>
+        </section>
+      }
+
       @if (activeSection === "overview" && isProfileReady()) {
         <section class="consultant-overview">
           @if (!isProfileReady()) {
@@ -244,7 +264,7 @@
               <button
                 class="primary-action"
                 type="button"
-                [disabled]="onlineSaving || isOnline || !canGoOnline()"
+                [disabled]="onlineSaving || isOnline || !canGoOnline() || isNewLeadBlocked"
                 (click)="setOnlineStatus(true)"
               >
                 <app-fa-icon name="mobile"></app-fa-icon>
@@ -407,7 +427,7 @@
               <button
                 class="primary-action"
                 type="button"
-                [disabled]="onlineSaving || isOnline || !canGoOnline()"
+                [disabled]="onlineSaving || isOnline || !canGoOnline() || isNewLeadBlocked"
                 (click)="setOnlineStatus(true)"
               >
                 <app-fa-icon name="mobile"></app-fa-icon>

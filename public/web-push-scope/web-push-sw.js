@@ -237,11 +237,15 @@ self.addEventListener("message", (event) => {
 
 function notificationTag(data) {
   if (data.type === "test_push") return "test-push";
+  if (data.type === "ConsultantLeadWorkloadBlocked") return "consultant-workload-blocked";
   return "consultant-notification";
 }
 
 function notificationTitle(data) {
   if (data.type === "test_push") return "تست نوتیفیکیشن";
+  if (data.type === "ConsultantLeadWorkloadBlocked") {
+    return "تعیین تکلیف شماره‌های قبلی";
+  }
   return "اعلان جدید";
 }
 
@@ -254,6 +258,9 @@ function notificationBody(data) {
 
 function notificationUrl(data) {
   if (data.type === "test_push") return "/dashboard/consultant";
+  if (data.type === "ConsultantLeadWorkloadBlocked") {
+    return data.route || "/consultant/leads";
+  }
   return "/dashboard/consultant";
 }
 

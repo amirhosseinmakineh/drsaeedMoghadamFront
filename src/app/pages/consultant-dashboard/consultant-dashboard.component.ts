@@ -220,6 +220,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   dashboardStatusLoaded = false;
   todayReservationsCount = 0;
   onlineStatusBlockReason: string | null = null;
+  pendingReportCount = 0;
+  uncalledWithoutReportCount = 0;
+  followUpCount = 0;
+  maximumAllowedFollowUps = 0;
+  isNewLeadBlocked = false;
+  shouldShowWorkloadNotification = false;
+  workloadNotificationMessage: string | null = null;
+  private lastWorkloadNotificationMessage: string | null = null;
 
   leads: ConsultantLead[] = [];
   leadsLoading = false;
@@ -418,6 +426,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.scrollToHighlightedLead();
   };
 
+  private readonly workloadBlockedListener = (event: Event): void => {
+    const message = (event as CustomEvent<{ message?: string }>).detail?.message;
+    if (message) this.showFeedback(message, "error");
+    this.setSection("leads");
+    this.refreshDashboard();
+  };
+
   private readonly destroyRef = inject(DestroyRef);
   private readonly mobileSidebar = bindDashboardMobileSidebar(
     this,
@@ -463,6 +478,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.closeMobileSidebar();
+    if (this.route.snapshot.data["initialSection"] === "leads") {
+      this.activeSection = "leads";
+    }
     this.profileId = this.currentProfileId();
     this.timerStarts = this.readJson<Record<string, number>>(
       this.timerStorageKey(),
@@ -486,6 +504,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     void this.syncPushRegistrationState();
     window.addEventListener("consultant-push-message", this.pushMessageListener);
     window.addEventListener("consultant-lead-picked-up", this.leadPickedUpListener);
+    window.addEventListener("consultant-workload-blocked", this.workloadBlockedListener);
     window.addEventListener("focus", this.onPushStateSync);
     document.addEventListener("visibilitychange", this.onPushStateSync);
     if (this.isProfileReady()) {
@@ -536,6 +555,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       "consultant-lead-picked-up",
       this.leadPickedUpListener,
     );
+    window.removeEventListener(
+      "consultant-workload-blocked",
+      this.workloadBlockedListener,
+    );
     window.removeEventListener("focus", this.onPushStateSync);
     document.removeEventListener("visibilitychange", this.onPushStateSync);
   }
@@ -552,7 +575,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   canGoOnline(): boolean {
-    return canConsultantGoOnline();
+    return (
+      canConsultantGoOnline() &&
+      !this.isNewLeadBlocked &&
+      (!this.dashboardStatusLoaded || this.canGoOnlineFromStatus)
+    );
   }
 
   private markAttendanceReadyForOnline(): void {
@@ -902,10 +929,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           if (!options.silent) {
-            this.showFeedback(
-              this.errorMessage(error, "تغییر وضعیت آنلاین انجام نشد"),
-              "error",
+            const message = this.errorMessage(
+              error,
+              "تغییر وضعیت آنلاین انجام نشد",
             );
+            this.showFeedback(message, "error");
+            if (isOnline) {
+              this.setSection("leads");
+              this.refreshDashboard();
+            }
           }
         },
       });
@@ -1858,6 +1890,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
           }
+          this.loadDashboardStatus();
         },
         error: (error) =>
           this.showFeedback(
@@ -2959,6 +2992,29 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.todayReservationsCount = status.todayReservationsCount ?? 0;
     this.dashboardStatusLoaded = true;
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
+    this.pendingReportCount = status.pendingReportCount;
+    this.uncalledWithoutReportCount = status.uncalledWithoutReportCount;
+    this.followUpCount = status.followUpCount;
+    this.maximumAllowedFollowUps = status.maximumAllowedFollowUps;
+    this.isNewLeadBlocked = status.isNewLeadBlocked;
+    this.shouldShowWorkloadNotification =
+      status.shouldShowWorkloadNotification;
+    this.workloadNotificationMessage = status.workloadNotificationMessage;
+    if (
+      status.shouldShowWorkloadNotification &&
+      status.workloadNotificationMessage &&
+      status.workloadNotificationMessage !== this.lastWorkloadNotificationMessage
+    ) {
+      this.lastWorkloadNotificationMessage = status.workloadNotificationMessage;
+      this.toast.action(
+        status.workloadNotificationMessage,
+        { label: "مشاهده شماره‌ها", handler: () => this.setSection("leads") },
+        "error",
+        null,
+      );
+    } else if (!status.shouldShowWorkloadNotification) {
+      this.lastWorkloadNotificationMessage = null;
+    }
     this.applyConsultantStatusFrom(status.raw);
     this.configurePollTimer();
     this.syncRealtimeLeadPolling();
