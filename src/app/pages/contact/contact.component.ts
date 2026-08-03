@@ -1,122 +1,52 @@
 import { Component, signal } from "@angular/core";
-import { NgFor, NgIf } from "@angular/common";
-import { FormsModule } from "@angular/forms";
+import { NgFor } from "@angular/common";
 import { Meta, Title } from "@angular/platform-browser";
-import {
-  ContactFormModel,
-  DENTAL_SERVICES,
-  LanguageCode,
-  pickText,
-} from "../../models/clinic.model";
-import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import { LanguageCode } from "../../models/clinic.model";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
-import { ToastService } from "../../core/toast/toast.service";
-import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 
 @Component({
   selector: "app-contact",
   standalone: true,
-  imports: [FormsModule, NgFor, NgIf, BaseDatepickerComponent, FaIconComponent],
+  imports: [NgFor, FaIconComponent],
   templateUrl: "./contact.component.html",
   styleUrl: "./contact.component.scss",
 })
 export class ContactComponent {
   language = signal<LanguageCode>("fa");
-  sent = signal(false);
-  feedback = signal("");
-  feedbackType = signal<"success" | "error">("success");
-  services = DENTAL_SERVICES;
-  form: ContactFormModel = {
-    fullName: "",
-    phone: "",
-    serviceId: DENTAL_SERVICES[0].id,
-    message: "",
-  };
-  protected readonly pickText = pickText;
-  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   infoItems = [
     {
+      icon: "user",
+      title: { fa: "ثبت اطلاعات بیمار", en: "Patient details" },
+      text: {
+        fa: "اطلاعات مراجعه‌کننده در حساب کاربری ثبت می‌شود تا درخواست قابل پیگیری باشد.",
+        en: "Patient details are submitted through an account so the request remains traceable.",
+      },
+    },
+    {
       icon: "phone",
-      title: { fa: "تماس مشاور", en: "Consultant call" },
+      title: { fa: "هماهنگی مراجعه", en: "Visit coordination" },
       text: {
-        fa: "شماره خود را ثبت کنید تا برای راهنمایی اولیه تماس گرفته شود.",
-        en: "Leave your number for an initial guidance call.",
+        fa: "پس از ثبت درخواست، وضعیت هماهنگی و اطلاعات مراجعه از مسیر حساب کاربری پیگیری می‌شود.",
+        en: "After submitting a request, coordination status and visit details can be followed through the account.",
       },
     },
     {
-      icon: "location",
-      title: { fa: "مراجعه حضوری", en: "In-person visit" },
+      icon: "tooth",
+      title: { fa: "معاینه دندان‌پزشکی", en: "Dental examination" },
       text: {
-        fa: "مسیر مراجعه پس از هماهنگی با کلینیک اعلام می‌شود.",
-        en: "Visit directions are shared after clinic coordination.",
-      },
-    },
-    {
-      icon: "clock",
-      title: { fa: "ساعات پاسخگویی", en: "Response hours" },
-      text: {
-        fa: "شنبه تا پنجشنبه، ۹ تا ۲۰",
-        en: "Saturday to Thursday, 9:00 to 20:00",
+        fa: "نوع درمان، تعداد جلسات و هزینه نهایی پس از معاینه و طرح درمان مشخص می‌شود.",
+        en: "Treatment, visit count and final fees are confirmed after examination and treatment planning.",
       },
     },
   ];
 
-  constructor(
-    private title: Title,
-    private meta: Meta,
-    private toast: ToastService,
-  ) {
+  constructor(private title: Title, private meta: Meta) {
     this.updateSeo();
   }
 
   setLanguage(language: LanguageCode): void {
     this.language.set(language);
     this.updateSeo();
-  }
-
-  submit(): void {
-    const validationError = this.validateContactForm();
-    if (validationError) {
-      this.showFeedback(validationError, "error");
-      return;
-    }
-
-    this.sent.set(true);
-    this.showFeedback(
-      this.language() === "fa"
-        ? "درخواست شما ثبت شد."
-        : "Your request has been recorded.",
-      "success",
-    );
-  }
-
-  validateContactForm(): string | null {
-    const isFa = this.language() === "fa";
-    if (!this.form.fullName.trim())
-      return isFa ? "نام و نام خانوادگی الزامی است" : "Full name is required";
-    if (this.form.fullName.trim().length > 100)
-      return isFa
-        ? "نام نباید بیشتر از ۱۰۰ کاراکتر باشد"
-        : "Full name must be at most 100 characters";
-    if (!/^09\d{9}$/.test(this.form.phone.trim()))
-      return isFa ? "شماره موبایل معتبر نیست" : "Mobile number is invalid";
-    if (!this.services.some((service) => service.id === this.form.serviceId))
-      return isFa ? "درمان مورد نظر معتبر نیست" : "Selected service is invalid";
-    if (this.form.message.trim().length > 1000)
-      return isFa
-        ? "پیام کوتاه نباید بیشتر از ۱۰۰۰ کاراکتر باشد"
-        : "Short message must be at most 1000 characters";
-    return null;
-  }
-
-  private showFeedback(message: string, type: "success" | "error"): void {
-    this.feedback.set(message);
-    this.feedbackType.set(type);
-    if (type === "success") {
-      this.toast.success(message);
-      return;
-    }
-    this.toast.error(message);
   }
 
   openAuth(): void {
@@ -127,14 +57,14 @@ export class ContactComponent {
     const isFa = this.language() === "fa";
     this.title.setTitle(
       isFa
-        ? "تماس با ما | کلینیک دندان‌پزشکی دکتر سعید مقدم"
-        : "Contact us | Dr. Saeed Moghaddam Dental Clinic",
+        ? "درخواست نوبت دندان‌پزشکی | دکتر سعید مقدم"
+        : "Dental appointment request | Dr. Saeed Moghaddam",
     );
     this.meta.updateTag({
       name: "description",
       content: isFa
-        ? "فرم درخواست تماس مشاور، ساعات پاسخگویی و راهنمای هماهنگی مراجعه کلینیک دندان‌پزشکی دکتر سعید مقدم."
-        : "Consultant call request form, response hours and visit coordination guidance for Dr. Saeed Moghaddam Dental Clinic.",
+        ? "راهنمای ثبت درخواست نوبت، پیگیری مراجعه و معاینه برای خدمات کامپوزیت، لمینت و بلیچینگ دکتر سعید مقدم."
+        : "How to request and follow a dental appointment for composite veneers, porcelain veneers and bleaching with Dr. Saeed Moghaddam.",
     });
   }
 }

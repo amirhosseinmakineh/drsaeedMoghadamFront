@@ -53,7 +53,7 @@
       </svg>
     </div>
     @switch (heroSlides[activeSlide()].id) {
-      @case ("mobile-first") {
+      @case ("aftercare-guide") {
         <img
           src="/images/5-640.png"
           srcset="
@@ -376,91 +376,15 @@
   </div>
 </section>
 
-<section class="page-section lead-section">
+<section class="page-section lead-section" aria-labelledby="appointment-title">
   <div>
-    <h2>
-      {{
-        language() === "fa"
-          ? "فرم ثبت شماره تماس برای دریافت راهنمایی"
-          : "Phone number form for guidance"
-      }}
-    </h2>
-    <p>
-      {{
-        language() === "fa"
-          ? "اگر نمی‌دانید کدام درمان مناسب‌تر است، شماره و توضیح کوتاه را ثبت کنید تا تماس اولیه دقیق‌تر انجام شود."
-          : "If you are unsure which treatment fits best, submit your number and a short note so the first call can be more useful."
-      }}
-    </p>
-    <app-base-datepicker
-      [language]="language()"
-      [selectedDate]="lead.preferredDate"
-      (dateChange)="lead.preferredDate = $event"
-    ></app-base-datepicker>
+    <h2 id="appointment-title">{{ language() === "fa" ? "درخواست نوبت و پیگیری درمان" : "Appointments and treatment follow-up" }}</h2>
+    <p>{{ language() === "fa" ? "برای ثبت اطلاعات واقعی بیمار، انتخاب زمان مراجعه و پیگیری درخواست، وارد حساب کاربری شوید. پیشنهاد درمان و هزینه نهایی فقط پس از معاینه اعلام می‌شود." : "Sign in to submit verified patient details, choose a visit time and follow your request. Treatment recommendations and final fees are provided only after examination." }}</p>
   </div>
-
-  <form class="lead-form" (ngSubmit)="submitLead()">
-    <label>
-      {{ language() === "fa" ? "نام و نام خانوادگی" : "Full name" }}
-      <input
-        [(ngModel)]="lead.fullName"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadFullName"
-        required
-        autocomplete="name"
-      />
-    </label>
-    <label>
-      {{ language() === "fa" ? "شماره تماس" : "Phone number" }}
-      <input
-        [(ngModel)]="lead.phone"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadPhone"
-        required
-        inputmode="tel"
-        autocomplete="tel"
-      />
-    </label>
-    <label>
-      {{ language() === "fa" ? "درمان مورد نظر" : "Service of interest" }}
-      <select
-        [(ngModel)]="lead.serviceId"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadService"
-      >
-        <option *ngFor="let service of services" [value]="service.id">
-          {{ pickText(service.title, language()) }}
-        </option>
-      </select>
-    </label>
-    <label>
-      {{ language() === "fa" ? "توضیح کوتاه" : "Short note" }}
-      <textarea
-        [(ngModel)]="lead.message"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadMessage"
-        rows="4"
-      ></textarea>
-    </label>
-    <button class="primary-btn" type="submit">
-      <app-fa-icon name="phone"></app-fa-icon>
-      {{ language() === "fa" ? "ثبت درخواست تماس" : "Submit call request" }}
-    </button>
-    <p
-      *ngIf="leadFeedback()"
-      class="success-message"
-      [class.error]="leadFeedbackType() === 'error'"
-    >
-      {{ leadFeedback() }}
-    </p>
-    <p *ngIf="leadSent()" class="success-message">
-      {{
-        language() === "fa"
-          ? "درخواست تماس شما ثبت شد. مشاور کلینیک برای راهنمایی با شما تماس می‌گیرد."
-          : "Your call request has been recorded. A clinic consultant will contact you for guidance."
-      }}
-    </p>
-  </form>
+  <div class="hero-actions">
+    <button class="primary-btn" type="button" (click)="openAuth()"><app-fa-icon name="user"></app-fa-icon>{{ language() === "fa" ? "ورود یا ساخت حساب" : "Sign in or create account" }}</button>
+    <a class="secondary-btn" routerLink="/contact"><app-fa-icon name="phone"></app-fa-icon>{{ language() === "fa" ? "راهنمای مراجعه" : "Visit guidance" }}</a>
+  </div>
 </section>
 
 <section class="page-section faq-section">
