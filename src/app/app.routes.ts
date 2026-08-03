@@ -68,6 +68,15 @@ export const routes: Routes = [
     data: { role: "consultant" },
   },
   {
+    path: "consultant/leads",
+    canActivate: [authGuard, roleGuard(["consultant"])],
+    loadComponent: () =>
+      import("./pages/consultant-dashboard/consultant-dashboard.component").then(
+        (m) => m.ConsultantDashboardComponent,
+      ),
+    data: { role: "consultant", initialSection: "leads" },
+  },
+  {
     path: "dashboard/secretary",
     canActivate: [authGuard, roleGuard(["secretary"])],
     loadComponent: () =>

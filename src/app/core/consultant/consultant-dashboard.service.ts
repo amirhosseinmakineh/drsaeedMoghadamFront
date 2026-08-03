@@ -53,6 +53,13 @@ export interface ConsultantDashboardStatus {
   canGoOnline: boolean;
   onlineStatusBlockReason: string | null;
   todayReservationsCount: number;
+  pendingReportCount: number;
+  uncalledWithoutReportCount: number;
+  followUpCount: number;
+  maximumAllowedFollowUps: number;
+  isNewLeadBlocked: boolean;
+  shouldShowWorkloadNotification: boolean;
+  workloadNotificationMessage: string | null;
   raw?: unknown;
 }
 
@@ -823,6 +830,37 @@ export class ConsultantDashboardService {
           "todayReservationsCount",
           "TodayReservationsCount",
         ) ?? 0,
+      pendingReportCount:
+        this.readNumber(source, "pendingReportCount", "PendingReportCount") ?? 0,
+      uncalledWithoutReportCount:
+        this.readNumber(
+          source,
+          "uncalledWithoutReportCount",
+          "UncalledWithoutReportCount",
+        ) ?? 0,
+      followUpCount:
+        this.readNumber(source, "followUpCount", "FollowUpCount") ?? 0,
+      maximumAllowedFollowUps:
+        this.readNumber(
+          source,
+          "maximumAllowedFollowUps",
+          "MaximumAllowedFollowUps",
+        ) ?? 0,
+      isNewLeadBlocked:
+        this.readBoolean(source, "isNewLeadBlocked", "IsNewLeadBlocked") ??
+        false,
+      shouldShowWorkloadNotification:
+        this.readBoolean(
+          source,
+          "shouldShowWorkloadNotification",
+          "ShouldShowWorkloadNotification",
+        ) ?? false,
+      workloadNotificationMessage:
+        this.readString(
+          source,
+          "workloadNotificationMessage",
+          "WorkloadNotificationMessage",
+        ) ?? null,
       raw: response,
     };
   }

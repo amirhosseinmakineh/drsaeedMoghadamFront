@@ -189,6 +189,17 @@ export class RealtimeLeadAlertService implements OnDestroy {
       return;
     }
 
+    if (result.status === "workloadBlocked") {
+      this.toast.error(result.message || "ابتدا شماره‌های قبلی را تعیین تکلیف کنید.");
+      this.markLeadTaken(leadId);
+      window.dispatchEvent(
+        new CustomEvent("consultant-workload-blocked", {
+          detail: { message: result.message },
+        }),
+      );
+      return;
+    }
+
     this.toast.error(result.message || "برداشتن لید ناموفق بود.");
     if (alert) {
       alert.isSubmitting = false;

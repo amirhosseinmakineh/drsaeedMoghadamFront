@@ -9,6 +9,7 @@ export type PickupLeadStatus =
   | "success"
   | "alreadyTaken"
   | "dailyLimitReached"
+  | "workloadBlocked"
   | "error";
 
 export interface PickupLeadResponse {
@@ -104,6 +105,10 @@ export class RealtimeLeadPickupService {
 
     if (error.status === 409) {
       return { status: "alreadyTaken", message };
+    }
+
+    if (error.status === 423) {
+      return { status: "workloadBlocked", message };
     }
 
     return { status: "error", message };
