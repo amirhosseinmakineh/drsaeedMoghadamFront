@@ -146,6 +146,10 @@
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
               <strong>گزارش تماس لیدها</strong>
             </button>
+            <button type="button" (click)="setSection('dailyReservationsReport')">
+              <span><app-fa-icon name="table"></app-fa-icon></span>
+              <strong>گزارش روزانه رزروها</strong>
+            </button>
             <button type="button" (click)="setSection('reservations')">
               <span><app-fa-icon name="calendar"></app-fa-icon></span>
               <strong>رزروها و تایید حضور</strong>
@@ -402,6 +406,10 @@
 
         @if (activeSection === "leadReports") {
           <app-admin-lead-call-reports></app-admin-lead-call-reports>
+        }
+
+        @if (activeSection === "dailyReservationsReport") {
+          <app-admin-daily-reservations-report></app-admin-daily-reservations-report>
         }
 
         @if (activeSection === "reservations") {
