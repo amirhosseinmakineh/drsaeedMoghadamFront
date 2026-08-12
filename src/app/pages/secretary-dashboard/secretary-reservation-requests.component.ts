@@ -11,13 +11,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import {
-  Subject,
-  Subscription,
-  debounceTime,
-  distinctUntilChanged,
-  finalize,
-} from "rxjs";
+import { Subscription, finalize } from "rxjs";
 import {
   SecretaryDashboardService,
   SecretaryReservation,
@@ -132,8 +126,6 @@ export class SecretaryReservationRequestsComponent
   followUpTime = "";
   visitResult = 2;
 
-  private readonly searchChanges = new Subject<string>();
-  private readonly subscriptions = new Subscription();
   private loadSubscription: Subscription | null = null;
   private requestId = 0;
 
@@ -147,11 +139,6 @@ export class SecretaryReservationRequestsComponent
 
   ngOnInit(): void {
     this.restoreFromUrl();
-    this.subscriptions.add(
-      this.searchChanges
-        .pipe(debounceTime(400), distinctUntilChanged())
-        .subscribe(() => this.applyFilters()),
-    );
     if (this.profileReady) this.load();
   }
 
@@ -164,11 +151,6 @@ export class SecretaryReservationRequestsComponent
 
   ngOnDestroy(): void {
     this.loadSubscription?.unsubscribe();
-    this.subscriptions.unsubscribe();
-  }
-
-  onSearchChange(value: string): void {
-    this.searchChanges.next(value.trim());
   }
 
   setQuickFilter(value: QuickFilter): void {
@@ -181,6 +163,12 @@ export class SecretaryReservationRequestsComponent
     this.pageNumber = 1;
     this.syncUrl();
     this.load();
+  }
+
+  searchReservations(): void {
+    this.searchText = this.searchText.trim();
+    this.consultantName = this.consultantName.trim();
+    this.applyFilters();
   }
 
   clearFilters(): void {
