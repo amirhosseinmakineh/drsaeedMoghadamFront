@@ -83,7 +83,7 @@ export class ConsultantReservationsPanelComponent
     reservationTime: "",
     patientCity: "",
     patientRegion: "",
-    attendanceProbabilityPercent: 80,
+    attendanceProbabilityPercent: 8,
     attendancePrediction: "",
     secondaryPhoneNumber: "",
     description: "",
@@ -403,7 +403,11 @@ export class ConsultantReservationsPanelComponent
           : this.patientCity(reservation),
       patientRegion:
         reservation.patientRegion || reservation.PatientRegion || "",
-      attendanceProbabilityPercent: Number(this.probability(reservation)) || 80,
+      attendanceProbabilityPercent: Number(
+        reservation.attendanceProbabilityPercent ??
+          reservation.AttendanceProbabilityPercent ??
+          8,
+      ),
       attendancePrediction:
         reservation.attendancePrediction ||
         reservation.AttendancePrediction ||
@@ -446,6 +450,15 @@ export class ConsultantReservationsPanelComponent
     );
     if (!reservationAt) {
       this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
+      return;
+    }
+
+    if (
+      !Number.isFinite(this.editForm.attendanceProbabilityPercent) ||
+      this.editForm.attendanceProbabilityPercent < 0 ||
+      this.editForm.attendanceProbabilityPercent > 10
+    ) {
+      this.showFeedback("احتمال حضور باید بین ۰ تا ۱۰ باشد", "error");
       return;
     }
 

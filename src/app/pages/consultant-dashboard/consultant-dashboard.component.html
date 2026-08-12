@@ -1236,14 +1236,14 @@
         </label>
       </div>
       <label>
-        درصد احتمال حضور
+        احتمال حضور (۰ تا ۱۰)
         <input
           [(ngModel)]="reportForm.attendanceProbabilityPercent"
           [ngModelOptions]="ngModelBlurOptions"
           name="leadReportAttendanceProbability"
           type="number"
           min="0"
-          max="100"
+          max="10"
         />
       </label>
       <label>
@@ -1343,14 +1343,14 @@
       </div>
 
       <label>
-        درصد احتمال حضور
+        احتمال حضور (۰ تا ۱۰)
         <input
           [(ngModel)]="reservationForm.attendanceProbabilityPercent"
           [ngModelOptions]="ngModelBlurOptions"
           name="reservationAttendanceProbability"
           type="number"
           min="0"
-          max="100"
+          max="10"
         />
       </label>
 
