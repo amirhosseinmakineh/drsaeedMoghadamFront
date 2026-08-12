@@ -902,20 +902,26 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             response,
             response.data,
           );
-          if (isOnline) {
+          // The API can accept the command while still returning an authoritative
+          // offline status (for example when the pending-lead/report validation
+          // blocks this online attempt). Never overwrite that status locally.
+          const onlineWasRejected = isOnline && status.isOnline === false;
+          if (isOnline && status.isOnline === null) {
             this.isOnline = true;
           } else if (status.isOnline === null) {
             this.isOnline = false;
           }
-          if (isOnline && status.isAvailable === null) this.isAvailable = true;
+          if (isOnline && !onlineWasRejected && status.isAvailable === null) {
+            this.isAvailable = true;
+          }
           if (!options.silent) {
             this.showFeedback(
               response.message ||
                 (isOnline ? "شما آنلاین شدید" : "شما آفلاین شدید"),
-              "success",
+              onlineWasRejected ? "error" : "success",
             );
           }
-          if (isOnline) {
+          if (isOnline && !onlineWasRejected) {
             void this.ensureLeadPushRegistration(true);
           } else {
             this.realtimeLeadAlerts.stopPolling();
@@ -928,6 +934,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
+          // A failed online command must never leave the toggle in an optimistic
+          // online state. The backend message is surfaced as the immediate UI
+          // feedback; push notifications continue through the existing channel.
+          if (isOnline) this.isOnline = false;
           if (!options.silent) {
             const message = this.errorMessage(
               error,
