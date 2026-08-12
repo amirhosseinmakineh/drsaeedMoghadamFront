@@ -294,7 +294,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     description: "",
     patientCity: "",
     patientRegion: "",
-    attendanceProbabilityPercent: 80,
+    attendanceProbabilityPercent: 8,
     attendancePrediction: "",
   };
   reservations: ConsultantReservation[] = [];
@@ -1664,9 +1664,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       attendanceProbabilityPercent !== null &&
       (!Number.isFinite(attendanceProbabilityPercent) ||
         attendanceProbabilityPercent < 0 ||
-        attendanceProbabilityPercent > 100)
+        attendanceProbabilityPercent > 10)
     ) {
-      this.showFeedback("درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد", "error");
+      this.showFeedback("احتمال حضور باید بین ۰ تا ۱۰ باشد", "error");
       this.reportSaving = false;
       return;
     }
@@ -1819,9 +1819,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       attendanceProbabilityPercent !== null &&
       (!Number.isFinite(attendanceProbabilityPercent) ||
         attendanceProbabilityPercent < 0 ||
-        attendanceProbabilityPercent > 100)
+        attendanceProbabilityPercent > 10)
     ) {
-      this.showFeedback("درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد", "error");
+      this.showFeedback("احتمال حضور باید بین ۰ تا ۱۰ باشد", "error");
       this.reportSaving = false;
       return;
     }
@@ -3703,7 +3703,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       patientRegion:
         reservation.patientRegion || reservation.PatientRegion || "",
       attendanceProbabilityPercent:
-        Number(this.reservationAttendanceProbability(reservation)) || 80,
+        Number(
+          reservation.attendanceProbabilityPercent ??
+            reservation.AttendanceProbabilityPercent ??
+            8,
+        ),
       attendancePrediction:
         this.reservationAttendancePrediction(reservation) ||
         this.defaultAttendancePrediction(),
@@ -4072,9 +4076,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       attendanceProbabilityPercent !== null &&
       (!Number.isFinite(attendanceProbabilityPercent) ||
         attendanceProbabilityPercent < 0 ||
-        attendanceProbabilityPercent > 100)
+        attendanceProbabilityPercent > 10)
     )
-      return "درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد";
+      return "احتمال حضور باید بین ۰ تا ۱۰ باشد";
 
     return null;
   }
@@ -4101,9 +4105,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (
       !Number.isFinite(this.reservationForm.attendanceProbabilityPercent) ||
       this.reservationForm.attendanceProbabilityPercent < 0 ||
-      this.reservationForm.attendanceProbabilityPercent > 100
+      this.reservationForm.attendanceProbabilityPercent > 10
     )
-      return "درصد احتمال حضور باید بین ۰ تا ۱۰۰ باشد";
+      return "احتمال حضور باید بین ۰ تا ۱۰ باشد";
 
     const secondaryPhone = this.reservationForm.secondaryPhoneNumber.trim();
     if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone))
