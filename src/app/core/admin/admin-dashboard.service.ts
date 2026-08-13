@@ -314,6 +314,55 @@ export interface LeadCallReportExportFilters {
   to?: string;
 }
 
+export interface DailyReservationsReportFilters {
+  date?: string;
+  consultantProfileId?: number;
+  requestStatus?: number;
+}
+
+export interface DailyReservationsSummary {
+  total: number;
+  active: number;
+  canceled: number;
+  pendingSecretaryReview: number;
+  confirmed: number;
+  rescheduled: number;
+  rejected: number;
+  uniqueConsultants: number;
+}
+
+export interface DailyReservationReportItem {
+  reservationId: number;
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  consultantFullName: string;
+  consultantPhoneNumber: string;
+  patientName: string;
+  patientPhoneNumber: string;
+  secondaryPhoneNumber: string | null;
+  patientCity: string | null;
+  patientRegion: string | null;
+  businessName: string | null;
+  attendanceProbabilityPercent: number | null;
+  reservationAt: string;
+  createdAt: string;
+  requestStatus: number;
+  requestStatusTitle: string;
+  visitResultStatus: number;
+  visitResultStatusTitle: string;
+  isConfirmedWithPatient: boolean;
+  isCanceled: boolean;
+  cancellationReason: string | null;
+  description: string | null;
+}
+
+export interface DailyReservationsReport {
+  date: string;
+  generatedAt: string;
+  summary: DailyReservationsSummary;
+  items: DailyReservationReportItem[];
+}
+
 export interface LeadFilters {
   profileId?: number;
   leadAssignmentState?: number | null;
@@ -830,6 +879,29 @@ export class AdminDashboardService {
     filters: LeadCallReportExportFilters,
   ): Observable<Blob> {
     return this.exportCsvReport("lead-call-reports/export", filters);
+  }
+
+  getDailyReservationsReport(
+    filters: DailyReservationsReportFilters,
+  ): Observable<DailyReservationsReport> {
+    return this.http
+      .get<DailyReservationsReport>(
+        `${this.apiBaseUrl}/admin/reports/daily-reservations`,
+        { headers: this.authHeaders(), params: this.toParams(filters) },
+      )
+      .pipe(
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت گزارش روزانه رزروها انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  exportDailyReservationsReport(
+    filters: DailyReservationsReportFilters,
+  ): Observable<Blob> {
+    return this.exportCsvReport("daily-reservations/export", filters);
   }
 
   exportReservationsReport(
