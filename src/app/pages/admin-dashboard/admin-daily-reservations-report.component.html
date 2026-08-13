@@ -19,12 +19,16 @@
     </label>
     <label class="select-filter consultant-filter">
       مشاور
-      <select [(ngModel)]="consultantProfileId" name="consultantProfileId" [disabled]="consultantsLoading">
-        <option [ngValue]="null">{{ consultantsLoading ? "در حال دریافت مشاوران..." : "همه مشاوران" }}</option>
+      <select [(ngModel)]="consultantProfileId" name="consultantProfileId"
+        [disabled]="consultantsLoading" (focus)="loadConsultants()" (pointerdown)="loadConsultants()">
+        <option [ngValue]="null">{{ consultantsLoading ? "در حال دریافت مشاوران..." : consultantsLoadError ? "تلاش دوباره برای دریافت مشاوران" : "همه مشاوران" }}</option>
         <option *ngFor="let consultant of consultants" [ngValue]="consultantId(consultant)">
           {{ consultantName(consultant) }}
         </option>
       </select>
+      @if (consultantsLoadError) {
+        <button class="retry-consultants" type="button" (click)="loadConsultants(true)">دریافت دوباره فهرست مشاوران</button>
+      }
     </label>
     <label class="select-filter status-filter">
       وضعیت درخواست

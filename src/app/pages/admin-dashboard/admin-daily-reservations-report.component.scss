@@ -34,6 +34,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .apply-button { grid-column: 2; grid-row: 3; align-self: end; }
 label { display: grid; gap: 8px; color: var(--muted); font-weight: 900; }
 select { min-height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; }
+.retry-consultants { border: 0; padding: 0; background: transparent; color: var(--danger); font: inherit; font-size: .78rem; font-weight: 800; text-align: right; cursor: pointer; }
 .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 12px; }
 .summary-grid article { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface-muted); }
 .summary-grid small { color: var(--muted); font-weight: 800; }.summary-grid strong { font-size: 1.6rem; }.summary-grid .success strong { color: var(--success); }.summary-grid .danger strong { color: var(--danger); }

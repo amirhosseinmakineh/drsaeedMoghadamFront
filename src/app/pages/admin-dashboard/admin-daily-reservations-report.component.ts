@@ -32,6 +32,7 @@ export class AdminDailyReservationsReportComponent implements OnInit {
   requestStatus: number | null = null;
   consultants: Consultant[] = [];
   consultantsLoading = false;
+  consultantsLoadError = "";
   report: DailyReservationsReport | null = null;
   loading = false;
   downloading = false;
@@ -55,7 +56,7 @@ export class AdminDailyReservationsReportComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadConsultants();
+    this.loadConsultants(true);
     this.loadReport();
   }
 
@@ -129,8 +130,13 @@ export class AdminDailyReservationsReportComponent implements OnInit {
     };
   }
 
-  private loadConsultants(): void {
+  loadConsultants(force = false): void {
+    if (this.consultantsLoading) return;
+    if (!force && this.consultants.length) return;
+
     this.consultantsLoading = true;
+    this.consultantsLoadError = "";
+    this.cdr.markForCheck();
     this.adminApi
       .getConsultantsList({ pageNumber: 1, pageSize: 500 })
       .pipe(finalize(() => {
@@ -144,7 +150,11 @@ export class AdminDailyReservationsReportComponent implements OnInit {
           );
           this.cdr.markForCheck();
         },
-        error: (error) => this.toast.error(this.errorText(error)),
+        error: (error) => {
+          this.consultantsLoadError = this.errorText(error);
+          this.toast.error(this.consultantsLoadError);
+          this.cdr.markForCheck();
+        },
       });
   }
 
