@@ -27,6 +27,7 @@ import { ToastService } from "../../core/toast/toast.service";
 import { AdminReservationsTableComponent } from "../admin-dashboard/admin-reservations-table.component";
 import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendance-table.component";
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
+import { AdminDailyReservationsReportComponent } from "../admin-dashboard/admin-daily-reservations-report.component";
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
 import { AdminPresenceDashboardComponent } from "../admin-dashboard/admin-presence-dashboard.component";
 import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consultant-profile.component";
@@ -59,6 +60,7 @@ type DashboardSection =
   | "consultantProfile"
   | "leads"
   | "leadReports"
+  | "dailyReservationsReport"
   | "reservations"
   | "presence";
 type UserDialogMode = "add" | "edit";
@@ -90,6 +92,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "consultantProfile",
   "leads",
   "leadReports",
+  "dailyReservationsReport",
   "reservations",
   "presence",
 ];
@@ -106,6 +109,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     TableComponent,
     AdminLeadsTableComponent,
     AdminLeadCallReportsComponent,
+    AdminDailyReservationsReportComponent,
     AdminAttendanceTableComponent,
     AdminReservationsTableComponent,
     AdminPresenceDashboardComponent,
@@ -127,6 +131,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "consultantProfile", label: "پروفایل مشاور", icon: "user" },
     { id: "leads", label: "لیدها", icon: "clipboard" },
     { id: "leadReports", label: "گزارش تماس", icon: "clipboard" },
+    { id: "dailyReservationsReport", label: "گزارش روزانه رزروها", icon: "table" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "presence", label: "وضعیت مشاوران", icon: "clock" },
   ];
