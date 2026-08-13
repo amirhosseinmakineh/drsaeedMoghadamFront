@@ -599,6 +599,26 @@ export class AdminDashboardService {
     );
   }
 
+  getConsultantsList(
+    filters: ConsultantFilters = { pageNumber: 1, pageSize: 500 },
+  ): Observable<PaginatedResponse<Consultant>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<Consultant>(response, filters),
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت فهرست مشاوران انجام نشد"),
+          ),
+        ),
+      );
+  }
+
   private fetchConsultantProfiles(): Observable<PaginatedResponse<Consultant>> {
     return this.http
       .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {

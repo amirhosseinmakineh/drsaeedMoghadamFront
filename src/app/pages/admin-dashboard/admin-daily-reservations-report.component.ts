@@ -31,6 +31,7 @@ export class AdminDailyReservationsReportComponent implements OnInit {
   consultantProfileId: number | null = null;
   requestStatus: number | null = null;
   consultants: Consultant[] = [];
+  consultantsLoading = false;
   report: DailyReservationsReport | null = null;
   loading = false;
   downloading = false;
@@ -102,28 +103,49 @@ export class AdminDailyReservationsReportComponent implements OnInit {
     return formatIranDateTime(value);
   }
 
-  consultantName(consultant: Consultant): string {
-    return [consultant.firstName || consultant.FirstName, consultant.lastName || consultant.LastName]
-      .filter(Boolean).join(" ") || `مشاور ${consultant.profileId}`;
-  }
-
   trackReservation(_: number, item: DailyReservationReportItem): number {
     return item.reservationId;
+  }
+
+  consultantId(consultant: Consultant): number {
+    return consultant.profileId ?? consultant.ProfileId!;
+  }
+
+  consultantName(consultant: Consultant): string {
+    const fullName = [
+      consultant.firstName || consultant.FirstName,
+      consultant.lastName || consultant.LastName,
+    ].filter(Boolean).join(" ");
+    return fullName || `مشاور ${this.consultantId(consultant)}`;
   }
 
   private filters(): DailyReservationsReportFilters {
     return {
       date: toIranDateInputValue(this.selectedDate),
-      ...(this.consultantProfileId ? { consultantProfileId: this.consultantProfileId } : {}),
+      ...(this.consultantProfileId !== null
+        ? { consultantProfileId: this.consultantProfileId }
+        : {}),
       ...(this.requestStatus ? { requestStatus: this.requestStatus } : {}),
     };
   }
 
   private loadConsultants(): void {
-    this.adminApi.getConsultants({ pageNumber: 1, pageSize: 500 }).subscribe({
-      next: ({ items }) => { this.consultants = items; this.cdr.markForCheck(); },
-      error: () => { /* The report remains usable without the optional consultant list. */ },
-    });
+    this.consultantsLoading = true;
+    this.adminApi
+      .getConsultantsList({ pageNumber: 1, pageSize: 500 })
+      .pipe(finalize(() => {
+        this.consultantsLoading = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: ({ items }) => {
+          this.consultants = items.filter((item) =>
+            Number.isFinite(this.consultantId(item)),
+          );
+          this.cdr.markForCheck();
+        },
+        error: (error) => this.toast.error(this.errorText(error)),
+      });
   }
 
   private errorText(error: unknown): string {

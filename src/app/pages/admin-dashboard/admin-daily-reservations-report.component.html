@@ -19,9 +19,9 @@
     </label>
     <label class="select-filter consultant-filter">
       مشاور
-      <select [(ngModel)]="consultantProfileId" name="consultantProfileId">
-        <option [ngValue]="null">همه مشاوران</option>
-        <option *ngFor="let consultant of consultants" [ngValue]="consultant.profileId">
+      <select [(ngModel)]="consultantProfileId" name="consultantProfileId" [disabled]="consultantsLoading">
+        <option [ngValue]="null">{{ consultantsLoading ? "در حال دریافت مشاوران..." : "همه مشاوران" }}</option>
+        <option *ngFor="let consultant of consultants" [ngValue]="consultantId(consultant)">
           {{ consultantName(consultant) }}
         </option>
       </select>
