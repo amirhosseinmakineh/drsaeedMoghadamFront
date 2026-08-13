@@ -1,0 +1,83 @@
+<section class="daily-report" aria-labelledby="daily-report-title">
+  <header class="panel-heading">
+    <div>
+      <span>گزارش مدیریتی</span>
+      <h2 id="daily-report-title">رزروهای ثبت‌شده در روز کاری</h2>
+      <p>مبنای این گزارش زمان ثبت رزرو به وقت ایران است، نه زمان مراجعه بیمار.</p>
+    </div>
+    <button class="export-button" type="button" [disabled]="downloading" (click)="download()">
+      <span class="button-icon" aria-hidden="true">⇩</span>
+      {{ downloading ? "در حال آماده‌سازی..." : "خروجی اکسل" }}
+    </button>
+  </header>
+
+  <form class="filters" (ngSubmit)="loadReport()">
+    <label class="date-filter">
+      تاریخ ثبت رزرو
+      <app-base-datepicker [label]="datePickerLabel" [selectedDate]="selectedDate"
+        [unrestrictedDates]="true" (dateChange)="setDate($event)"></app-base-datepicker>
+    </label>
+    <label class="select-filter consultant-filter">
+      مشاور
+      <select [(ngModel)]="consultantProfileId" name="consultantProfileId" [disabled]="consultantsLoading">
+        <option [ngValue]="null">{{ consultantsLoading ? "در حال دریافت مشاوران..." : "همه مشاوران" }}</option>
+        <option *ngFor="let consultant of consultants" [ngValue]="consultantId(consultant)">
+          {{ consultantName(consultant) }}
+        </option>
+      </select>
+    </label>
+    <label class="select-filter status-filter">
+      وضعیت درخواست
+      <select [(ngModel)]="requestStatus" name="requestStatus">
+        <option [ngValue]="null">همه وضعیت‌ها</option>
+        <option *ngFor="let status of requestStatuses" [ngValue]="status.value">{{ status.label }}</option>
+      </select>
+    </label>
+    <button class="apply-button" type="submit" [disabled]="loading">
+      {{ loading ? "در حال دریافت..." : "نمایش گزارش" }}
+    </button>
+  </form>
+
+  @if (errorMessage) { <p class="feedback error">{{ errorMessage }}</p> }
+
+  @if (report) {
+    <section class="summary-grid" aria-label="خلاصه گزارش">
+      <article><small>کل رزروها</small><strong>{{ report.summary.total }}</strong></article>
+      <article class="success"><small>فعال</small><strong>{{ report.summary.active }}</strong></article>
+      <article class="danger"><small>لغوشده</small><strong>{{ report.summary.canceled }}</strong></article>
+      <article><small>در انتظار منشی</small><strong>{{ report.summary.pendingSecretaryReview }}</strong></article>
+      <article class="success"><small>تاییدشده</small><strong>{{ report.summary.confirmed }}</strong></article>
+      <article><small>زمان‌بندی مجدد</small><strong>{{ report.summary.rescheduled }}</strong></article>
+      <article class="danger"><small>ردشده</small><strong>{{ report.summary.rejected }}</strong></article>
+      <article><small>مشاور یکتا</small><strong>{{ report.summary.uniqueConsultants }}</strong></article>
+    </section>
+
+    <div class="table-heading">
+      <div><h3>جزئیات رزروها</h3><small>تولید گزارش: {{ formatDateTime(report.generatedAt) }}</small></div>
+      <b>{{ report.items.length }} رکورد</b>
+    </div>
+    @if (!report.items.length && !loading) {
+      <div class="empty-state">رزروی با فیلترهای انتخاب‌شده ثبت نشده است.</div>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>شناسه</th><th>مشاور</th><th>بیمار</th><th>موقعیت</th><th>زمان مراجعه</th><th>زمان ثبت</th><th>وضعیت درخواست</th><th>نتیجه مراجعه</th><th>احتمال حضور</th><th>لغو</th><th>توضیحات</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let item of report.items; trackBy: trackReservation" [class.canceled-row]="item.isCanceled">
+              <td>#{{ item.reservationId }}</td>
+              <td><strong>{{ item.consultantFullName || "-" }}</strong><small>{{ item.consultantPhoneNumber || "-" }}</small></td>
+              <td><strong>{{ item.patientName || "-" }}</strong><small>{{ item.patientPhoneNumber || "-" }}</small><small *ngIf="item.secondaryPhoneNumber">{{ item.secondaryPhoneNumber }}</small></td>
+              <td>{{ item.patientCity || "-" }}<small>{{ item.patientRegion || item.businessName || "" }}</small></td>
+              <td>{{ formatDateTime(item.reservationAt) }}</td><td>{{ formatDateTime(item.createdAt) }}</td>
+              <td><span class="badge status">{{ item.requestStatusTitle }}</span></td>
+              <td><span class="badge visit">{{ item.visitResultStatusTitle }}</span></td>
+              <td>{{ item.attendanceProbabilityPercent === null ? "-" : item.attendanceProbabilityPercent + "٪" }}</td>
+              <td><span class="badge" [class.badge-danger]="item.isCanceled" [class.badge-success]="!item.isCanceled">{{ item.isCanceled ? "لغو شده" : "خیر" }}</span><small *ngIf="item.cancellationReason">{{ item.cancellationReason }}</small></td>
+              <td class="description">{{ item.description || "-" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>

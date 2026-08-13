@@ -1,4 +1,6 @@
 .base-datepicker {
+  width: 100%;
+  min-width: 0;
   display: grid;
   gap: 14px;
   padding: 16px;
@@ -61,7 +63,7 @@ header strong {
   display: grid;
   place-items: center;
   gap: 2px;
-  min-height: 58px;
+  min-height: clamp(46px, 5vw, 64px);
   border: 0;
   border-radius: 17px;
   background: var(--surface-muted, #efe2d0);
@@ -110,6 +112,7 @@ header strong {
   font-weight: 800;
 }
 input {
+  box-sizing: border-box;
   width: 100%;
   border: 1px solid
     color-mix(in srgb, var(--line, #dbe6ee) 92%, transparent);
@@ -118,6 +121,18 @@ input {
   background: var(--surface, #fff);
   color: var(--text, #14222e);
   font: inherit;
+}
+@media (min-width: 900px) {
+  .base-datepicker {
+    padding: clamp(16px, 2vw, 24px);
+  }
+  .week-row,
+  .day-grid {
+    gap: clamp(6px, 0.8vw, 12px);
+  }
+  .day-grid button {
+    border-radius: clamp(14px, 1.4vw, 20px);
+  }
 }
 @media (max-width: 560px) {
   header {
