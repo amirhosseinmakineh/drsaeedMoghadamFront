@@ -12,12 +12,12 @@
   </header>
 
   <form class="filters" (ngSubmit)="loadReport()">
-    <label>
+    <label class="date-filter">
       تاریخ ثبت رزرو
       <app-base-datepicker [label]="datePickerLabel" [selectedDate]="selectedDate"
         [unrestrictedDates]="true" (dateChange)="setDate($event)"></app-base-datepicker>
     </label>
-    <label>
+    <label class="select-filter consultant-filter">
       مشاور
       <select [(ngModel)]="consultantProfileId" name="consultantProfileId">
         <option [ngValue]="null">همه مشاوران</option>
@@ -26,7 +26,7 @@
         </option>
       </select>
     </label>
-    <label>
+    <label class="select-filter status-filter">
       وضعیت درخواست
       <select [(ngModel)]="requestStatus" name="requestStatus">
         <option [ngValue]="null">همه وضعیت‌ها</option>
