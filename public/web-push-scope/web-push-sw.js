@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-07-26-private-lead-notification";
+const SW_VERSION = "2026-08-14-realtime-burnt-lead-notification";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 const REALTIME_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 500, 120, 500];
 
@@ -12,13 +12,18 @@ async function showRealtimeLeadNotification(title, body, baseOptions) {
   try {
     await self.registration.showNotification(title, {
       ...baseOptions,
+      body,
       actions: [
         { action: "pickup", title: "ببین" },
         { action: "dismiss", title: "بستن" },
       ],
     });
-  } catch {
-    await self.registration.showNotification(title, baseOptions);
+  } catch (error) {
+    console.warn(
+      "[RealtimeLead Push] notification actions are unavailable",
+      error,
+    );
+    await self.registration.showNotification(title, { ...baseOptions, body });
   }
 }
 
@@ -34,7 +39,8 @@ function parsePushPayload(event) {
       body: payload.body ?? "",
       data: payload.data ?? {},
     };
-  } catch {
+  } catch (error) {
+    console.error("[RealtimeLead Push Error] Invalid JSON payload", error);
     return {
       title: "اعلان",
       body: event.data.text() ?? "",
@@ -60,6 +66,7 @@ function closeRealtimeLeadNotifications(leadId) {
 
 self.addEventListener("push", (event) => {
   const payload = parsePushPayload(event);
+  console.log("[SW PUSH]", payload);
   const data = payload.data ?? {};
   const type = data.type ?? "";
 
@@ -77,7 +84,16 @@ self.addEventListener("push", (event) => {
   }
 
   if (type === "RealtimeLead") {
-    const leadId = data.leadId;
+    const leadId = Number(data.leadId);
+    if (!Number.isFinite(leadId) || leadId <= 0) {
+      console.error(
+        "[RealtimeLead Push Error] Invalid leadId in push payload",
+        payload,
+      );
+      return;
+    }
+    const leadLimitType =
+      data.leadLimitType === "Burnt" ? "Burnt" : "Realtime";
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
     const userName = (data.userName || data.UserName || "").trim();
     const phoneNumber = (data.phoneNumber || data.PhoneNumber || "").trim();
@@ -94,6 +110,8 @@ self.addEventListener("push", (event) => {
       badge: notificationAsset("/icons/icon-96x96.png"),
       data: {
         ...data,
+        leadId: String(leadId),
+        leadLimitType,
         userName,
         phoneNumber,
       },
@@ -106,15 +124,26 @@ self.addEventListener("push", (event) => {
           includeUncontrolled: true,
         });
 
-        await showRealtimeLeadNotification(title, body, baseOptions);
+        await showRealtimeLeadNotification(
+          payload.title || title,
+          payload.body || body,
+          baseOptions,
+        );
 
         for (const client of windowClients) {
           client.postMessage({
-            type: "web-push-message",
-            payload: { title, body, data: baseOptions.data },
+            type: "RealtimeLead",
+            payload: {
+              title: payload.title || title,
+              body: payload.body || body,
+              data: baseOptions.data,
+            },
           });
         }
-      })(),
+      })().catch((error) => {
+        console.error("[RealtimeLead Push Error]", error);
+        throw error;
+      }),
     );
     return;
   }
@@ -185,8 +214,17 @@ self.addEventListener("notificationclick", (event) => {
   const type = data.type ?? "";
   const action = event.action;
 
+  if (action === "dismiss") return;
+
   if (type === "RealtimeLead") {
     const leadId = Number(data.leadId);
+    if (!Number.isFinite(leadId) || leadId <= 0) {
+      console.error(
+        "[RealtimeLead Push Error] Invalid leadId on notification click",
+        data,
+      );
+      return;
+    }
     const message =
       action === "pickup"
         ? { type: "RealtimeLeadPickup", leadId }
