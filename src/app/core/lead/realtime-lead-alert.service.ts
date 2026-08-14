@@ -23,6 +23,7 @@ import { RealtimeLeadPickupService } from "./realtime-lead-pickup.service";
 
 export interface RealtimeLeadAlert {
   leadId: number;
+  leadLimitType: "Realtime" | "Burnt";
   userName?: string | null;
   phoneNumber?: string | null;
   isSubmitting: boolean;
@@ -36,6 +37,7 @@ type ServiceWorkerMessage =
   | { type: "RealtimeLeadOpen"; leadId: number };
 
 interface IncomingLeadDetails extends RealtimeLeadNotificationDetails {
+  leadLimitType?: "Realtime" | "Burnt";
   title?: string;
   body?: string;
 }
@@ -58,6 +60,11 @@ export class RealtimeLeadAlertService implements OnDestroy {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private pollingProfileId: number | null = null;
   private pollingInFlight = false;
+  private readonly onServiceWorkerMessage = (
+    event: MessageEvent<ServiceWorkerMessage>,
+  ): void => {
+    void this.handleServiceWorkerMessage(event.data);
+  };
   private readonly onPushMessage = (event: Event): void => {
     const detail = (
       event as CustomEvent<{
@@ -67,11 +74,22 @@ export class RealtimeLeadAlertService implements OnDestroy {
       }>
     ).detail;
     const leadId = Number(detail?.data?.["leadId"]);
-    if (detail?.data?.["type"] !== "RealtimeLead" || !Number.isFinite(leadId)) {
+    if (
+      detail?.data?.["type"] !== "RealtimeLead" ||
+      !Number.isFinite(leadId) ||
+      leadId <= 0
+    ) {
+      if (detail?.data?.["type"] === "RealtimeLead") {
+        console.error("Invalid leadId in push payload", detail);
+      }
       return;
     }
 
+    const leadLimitType =
+      detail.data?.["leadLimitType"] === "Burnt" ? "Burnt" : "Realtime";
+
     void this.notifyIncomingLead(leadId, {
+      leadLimitType,
       userName: detail?.data?.["userName"] ?? detail?.data?.["UserName"],
       phoneNumber:
         detail?.data?.["phoneNumber"] ?? detail?.data?.["PhoneNumber"],
@@ -98,9 +116,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.initialized = true;
     navigator.serviceWorker?.addEventListener(
       "message",
-      (event: MessageEvent<ServiceWorkerMessage>) => {
-        void this.handleServiceWorkerMessage(event.data);
-      },
+      this.onServiceWorkerMessage,
     );
     window.addEventListener("consultant-push-message", this.onPushMessage);
   }
@@ -115,6 +131,10 @@ export class RealtimeLeadAlertService implements OnDestroy {
       clearTimeout(timer);
     }
     this.dismissedLeadCooldownTimers.clear();
+    navigator.serviceWorker?.removeEventListener(
+      "message",
+      this.onServiceWorkerMessage,
+    );
     window.removeEventListener("consultant-push-message", this.onPushMessage);
     this.alertsSubject.complete();
   }
@@ -288,8 +308,8 @@ export class RealtimeLeadAlertService implements OnDestroy {
         userName: lead.userName ?? lead.UserName,
         phoneNumber: lead.phoneNumber ?? lead.PhoneNumber,
       });
-    } catch {
-      // Polling is a fallback; ignore transient API errors.
+    } catch (error) {
+      console.warn("[RealtimeLead] Fallback polling failed", error);
     } finally {
       this.pollingInFlight = false;
     }
@@ -371,6 +391,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
       const existingAlert = this.activeAlerts.get(leadId);
       if (existingAlert) {
+        existingAlert.leadLimitType = details.leadLimitType ?? "Realtime";
         existingAlert.userName =
           notificationDetails.userName ?? existingAlert.userName;
         existingAlert.phoneNumber =
@@ -379,6 +400,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
       } else {
         this.activeAlerts.set(leadId, {
           leadId,
+          leadLimitType: details.leadLimitType ?? "Realtime",
           userName: notificationDetails.userName,
           phoneNumber: notificationDetails.phoneNumber,
           isSubmitting: false,
@@ -402,6 +424,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
         data: {
           type: "RealtimeLead",
           leadId: String(leadId),
+          leadLimitType: details.leadLimitType ?? "Realtime",
           userName: notificationDetails.userName ?? "",
           phoneNumber: notificationDetails.phoneNumber ?? "",
           isReminder: notificationDetails.isReminder ? "true" : "false",

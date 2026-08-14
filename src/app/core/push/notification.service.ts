@@ -48,8 +48,14 @@ export class NotificationService {
           return;
         }
 
-        if (event.data?.type !== "web-push-message") return;
+        if (
+          event.data?.type !== "web-push-message" &&
+          event.data?.type !== "RealtimeLead"
+        ) {
+          return;
+        }
         const payload = this.normalizePayload(event.data.payload);
+        console.log("[NotificationService] Foreground push received", payload);
         for (const listener of this.foregroundListeners) {
           listener(payload);
         }
@@ -134,14 +140,19 @@ export class NotificationService {
         await registration.showNotification(title, notificationOptions);
         return true;
       }
-    } catch {
+    } catch (error) {
+      console.error(
+        "[NotificationService] Service worker notification failed",
+        error,
+      );
       // Fall back to the Notification constructor below.
     }
 
     try {
       new Notification(title, notificationOptions);
       return true;
-    } catch {
+    } catch (error) {
+      console.error("[NotificationService] Local notification failed", error);
       return false;
     }
   }
@@ -372,7 +383,9 @@ export class NotificationService {
 
   private async ensureServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
     if (this.swRegistration?.active) {
-      await this.swRegistration.update().catch(() => undefined);
+      await this.swRegistration.update().catch((error) => {
+        console.warn("[NotificationService] Service worker update failed", error);
+      });
       return this.swRegistration;
     }
 
