@@ -21,6 +21,7 @@ import { ToastService } from "../../core/toast/toast.service";
 import {
   AttendanceConfirmationStatus,
   attendanceStatusPresentation,
+  readAttendanceStatus,
 } from "../../core/reservation/reservation-attendance";
 import {
   BaseDatepickerComponent,
@@ -66,18 +67,6 @@ const STATUS_OPTIONS = [
   value: AttendanceConfirmationStatus;
   label: string;
 }>;
-
-const REQUEST_STATUS_LABELS: Record<ReservationRequestStatus, string> = {
-  [ReservationRequestStatus.PendingSecretaryReview]: "منتظر بررسی",
-  [ReservationRequestStatus.Confirmed]: "تایید شده",
-  [ReservationRequestStatus.Rescheduled]: "تغییر زمان داده شده",
-  [ReservationRequestStatus.Rejected]: "رد شده",
-  [ReservationRequestStatus.Canceled]: "لغو شده",
-  [ReservationRequestStatus.WaitingPatientConfirmation]: "در انتظار تایید بیمار",
-  [ReservationRequestStatus.NeedsFollowUp]: "نیاز به پیگیری",
-  [ReservationRequestStatus.Attended]: "مراجعه کرد",
-  [ReservationRequestStatus.NoShow]: "مراجعه نکرد",
-};
 
 @Component({
   selector: "app-secretary-reservation-requests",
@@ -394,18 +383,11 @@ export class SecretaryReservationRequestsComponent
   }
 
   statusLabel(item: SecretaryReservation): string {
-    return (
-      REQUEST_STATUS_LABELS[this.status(item) as ReservationRequestStatus] ??
-      "نامشخص"
-    );
+    return attendanceStatusPresentation(this.attendanceStatus(item)).label;
   }
 
   statusClass(item: SecretaryReservation): string {
-    const status = this.status(item);
-    if ([2, 3, 8].includes(status)) return "success";
-    if ([4, 5, 9].includes(status)) return "danger";
-    if ([6, 7].includes(status)) return "warn";
-    return "muted";
+    return attendanceStatusPresentation(this.attendanceStatus(item)).badgeClass;
   }
 
   reservationId(item: SecretaryReservation): number | null {
@@ -465,6 +447,12 @@ export class SecretaryReservationRequestsComponent
         item.SecretaryReservationReviewStatus ??
         0,
     );
+  }
+
+  private attendanceStatus(
+    item: SecretaryReservation,
+  ): AttendanceConfirmationStatus | null {
+    return readAttendanceStatus(item, "attendanceConfirmationStatus");
   }
 
   private loadHistory(item: SecretaryReservation): void {
