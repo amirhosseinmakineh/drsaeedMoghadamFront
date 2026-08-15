@@ -19,11 +19,17 @@ import {
 } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
 import {
+  AttendanceConfirmationStatus,
+  attendanceStatusPresentation,
+} from "../../core/reservation/reservation-attendance";
+import {
   BaseDatepickerComponent,
   BaseDialogComponent,
 } from "../../shared/base";
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
 
+// This workflow status is returned for display/actions and is deliberately not
+// used by the attendance filter sent to SecretaryReservations.
 enum ReservationRequestStatus {
   PendingSecretaryReview = 1,
   Confirmed = 2,
@@ -48,22 +54,30 @@ type DialogMode =
   | "visit";
 
 const STATUS_OPTIONS = [
-  {
-    value: ReservationRequestStatus.PendingSecretaryReview,
-    label: "منتظر بررسی",
-  },
-  {
-    value: ReservationRequestStatus.WaitingPatientConfirmation,
-    label: "در انتظار تایید بیمار",
-  },
-  { value: ReservationRequestStatus.Confirmed, label: "تایید شده" },
-  { value: ReservationRequestStatus.Rescheduled, label: "تغییر زمان داده شده" },
-  { value: ReservationRequestStatus.NeedsFollowUp, label: "نیاز به پیگیری" },
-  { value: ReservationRequestStatus.Rejected, label: "رد شده" },
-  { value: ReservationRequestStatus.Canceled, label: "لغو شده" },
-  { value: ReservationRequestStatus.Attended, label: "مراجعه کرد" },
-  { value: ReservationRequestStatus.NoShow, label: "مراجعه نکرد" },
-] as const;
+  AttendanceConfirmationStatus.PendingConsultantConfirmation,
+  AttendanceConfirmationStatus.ConsultantConfirmedPresent,
+  AttendanceConfirmationStatus.ConsultantConfirmedAbsent,
+  AttendanceConfirmationStatus.SecretaryApproved,
+  AttendanceConfirmationStatus.SecretaryRejected,
+].map((value) => ({
+  value,
+  label: attendanceStatusPresentation(value).label,
+})) satisfies ReadonlyArray<{
+  value: AttendanceConfirmationStatus;
+  label: string;
+}>;
+
+const REQUEST_STATUS_LABELS: Record<ReservationRequestStatus, string> = {
+  [ReservationRequestStatus.PendingSecretaryReview]: "منتظر بررسی",
+  [ReservationRequestStatus.Confirmed]: "تایید شده",
+  [ReservationRequestStatus.Rescheduled]: "تغییر زمان داده شده",
+  [ReservationRequestStatus.Rejected]: "رد شده",
+  [ReservationRequestStatus.Canceled]: "لغو شده",
+  [ReservationRequestStatus.WaitingPatientConfirmation]: "در انتظار تایید بیمار",
+  [ReservationRequestStatus.NeedsFollowUp]: "نیاز به پیگیری",
+  [ReservationRequestStatus.Attended]: "مراجعه کرد",
+  [ReservationRequestStatus.NoShow]: "مراجعه نکرد",
+};
 
 @Component({
   selector: "app-secretary-reservation-requests",
@@ -87,10 +101,10 @@ export class SecretaryReservationRequestsComponent
   readonly statusOptions = STATUS_OPTIONS;
   readonly quickFilters: { value: QuickFilter; label: string }[] = [
     { value: "all", label: "همه درخواست‌ها" },
-    { value: "pending", label: "منتظر بررسی" },
-    { value: "confirmed", label: "تایید شده" },
+    { value: "pending", label: "منتظر تایید مشاور" },
+    { value: "confirmed", label: "تایید نهایی منشی" },
     { value: "followup", label: "نیاز به پیگیری" },
-    { value: "rejected", label: "رد شده" },
+    { value: "rejected", label: "رد نهایی منشی" },
   ];
 
   items: SecretaryReservation[] = [];
@@ -104,12 +118,11 @@ export class SecretaryReservationRequestsComponent
   quickFilter: QuickFilter = "all";
   searchText = "";
   consultantName = "";
-  statusFilter: number | null = null;
+  statusFilter: AttendanceConfirmationStatus | null = null;
   reservationDate: Date | null = null;
   fromDate: Date | null = null;
   toDate: Date | null = null;
   dateFilterMode: "exact" | "range" = "exact";
-  sortBy = "requestCreatedAt";
   sortDirection: "asc" | "desc" = "desc";
 
   selected: SecretaryReservation | null = null;
@@ -179,7 +192,6 @@ export class SecretaryReservationRequestsComponent
     this.reservationDate = null;
     this.fromDate = null;
     this.toDate = null;
-    this.sortBy = "requestCreatedAt";
     this.sortDirection = "desc";
     this.applyFilters();
   }
@@ -238,14 +250,13 @@ export class SecretaryReservationRequestsComponent
         includeCanceled: true,
         searchText: this.searchText.trim() || undefined,
         consultantName: this.consultantName.trim() || undefined,
-        reservationRequestStatus: this.statusFilter,
+        attendanceConfirmationStatus: this.statusFilter,
         reservationDate: this.toDateParam(this.reservationDate),
         from: this.toDateParam(this.fromDate),
         to: this.toDateParam(this.toDate),
         followUpDueOn:
           this.quickFilter === "followup" ? this.todayParam() : undefined,
         visitResultStatus: this.preset === "no-show" ? 3 : null,
-        sortBy: this.sortBy,
         sortDirection: this.sortDirection,
       })
       .pipe(
@@ -384,8 +395,8 @@ export class SecretaryReservationRequestsComponent
 
   statusLabel(item: SecretaryReservation): string {
     return (
-      STATUS_OPTIONS.find((option) => option.value === this.status(item))
-        ?.label ?? "نامشخص"
+      REQUEST_STATUS_LABELS[this.status(item) as ReservationRequestStatus] ??
+      "نامشخص"
     );
   }
 
@@ -528,15 +539,17 @@ export class SecretaryReservationRequestsComponent
     return value.toISOString();
   }
 
-  private statusForQuickFilter(filter: QuickFilter): number | null {
+  private statusForQuickFilter(
+    filter: QuickFilter,
+  ): AttendanceConfirmationStatus | null {
     return filter === "pending"
-      ? 1
+      ? AttendanceConfirmationStatus.PendingConsultantConfirmation
       : filter === "confirmed"
-        ? 2
+        ? AttendanceConfirmationStatus.SecretaryApproved
         : filter === "followup"
-          ? 7
+          ? null
           : filter === "rejected"
-            ? 4
+            ? AttendanceConfirmationStatus.SecretaryRejected
             : null;
   }
 
@@ -559,16 +572,18 @@ export class SecretaryReservationRequestsComponent
     const filter = params.get("requestFilter") as QuickFilter | null;
     if (filter && this.quickFilters.some((item) => item.value === filter))
       this.quickFilter = filter;
-    this.statusFilter = params.has("requestStatus")
-      ? Number(params.get("requestStatus"))
-      : this.statusForQuickFilter(this.quickFilter);
+    const restoredStatus = Number(params.get("attendanceStatus"));
+    this.statusFilter =
+      params.has("attendanceStatus") &&
+      STATUS_OPTIONS.some((option) => option.value === restoredStatus)
+        ? (restoredStatus as AttendanceConfirmationStatus)
+        : this.statusForQuickFilter(this.quickFilter);
     this.searchText = params.get("requestSearch") ?? "";
     this.consultantName = params.get("consultant") ?? "";
     this.reservationDate = this.readDateParam(params.get("reservationDate"));
     this.fromDate = this.readDateParam(params.get("requestFrom"));
     this.toDate = this.readDateParam(params.get("requestTo"));
     this.dateFilterMode = this.fromDate || this.toDate ? "range" : "exact";
-    this.sortBy = params.get("requestSort") ?? "requestCreatedAt";
     this.sortDirection =
       params.get("requestDirection") === "asc" ? "asc" : "desc";
     this.pageNumber = Math.max(1, Number(params.get("requestPage")) || 1);
@@ -584,13 +599,14 @@ export class SecretaryReservationRequestsComponent
       replaceUrl: true,
       queryParams: {
         requestFilter: this.quickFilter === "all" ? null : this.quickFilter,
-        requestStatus: this.statusFilter,
+        requestStatus: null,
+        attendanceStatus: this.statusFilter,
         requestSearch: this.searchText.trim() || null,
         consultant: this.consultantName.trim() || null,
         reservationDate: this.toDateParam(this.reservationDate) ?? null,
         requestFrom: this.toDateParam(this.fromDate) ?? null,
         requestTo: this.toDateParam(this.toDate) ?? null,
-        requestSort: this.sortBy !== "requestCreatedAt" ? this.sortBy : null,
+        requestSort: null,
         requestDirection:
           this.sortDirection !== "desc" ? this.sortDirection : null,
         requestPage: this.pageNumber > 1 ? this.pageNumber : null,

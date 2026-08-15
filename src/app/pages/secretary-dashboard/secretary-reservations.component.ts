@@ -53,7 +53,17 @@ export class SecretaryReservationsComponent
   savingId: number | null = null;
   feedback = "";
   feedbackType: "success" | "error" = "success";
-  statusFilter: number | null = null;
+  statusFilter: AttendanceConfirmationStatus | null = null;
+  readonly statusOptions = [
+    AttendanceConfirmationStatus.PendingConsultantConfirmation,
+    AttendanceConfirmationStatus.ConsultantConfirmedPresent,
+    AttendanceConfirmationStatus.ConsultantConfirmedAbsent,
+    AttendanceConfirmationStatus.SecretaryApproved,
+    AttendanceConfirmationStatus.SecretaryRejected,
+  ].map((value) => ({
+    value,
+    label: attendanceStatusPresentation(value).label,
+  }));
   searchText = "";
   includeCanceled = false;
   pageNumber = 1;
@@ -182,6 +192,11 @@ export class SecretaryReservationsComponent
   }
 
   applySearch(): void {
+    this.pageNumber = 1;
+    this.load();
+  }
+
+  applyStatusFilter(): void {
     this.pageNumber = 1;
     this.load();
   }
