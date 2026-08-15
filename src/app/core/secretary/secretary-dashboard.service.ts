@@ -11,6 +11,7 @@ import {
 } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
+import { AttendanceConfirmationStatus } from "../reservation/reservation-attendance";
 
 export interface ApiCommandResponse<T = unknown> {
   isSuccess: boolean;
@@ -62,7 +63,7 @@ export interface SecretaryReservation {
   BusinessName?: string | null;
   attendanceProbabilityPercent?: number | null;
   AttendanceProbabilityPercent?: number | null;
-  attendanceConfirmationStatus?: number | null;
+  attendanceConfirmationStatus?: AttendanceConfirmationStatus | null;
   AttendanceConfirmationStatus?: number | null;
   consultantSaysPatientAttended?: boolean | null;
   ConsultantSaysPatientAttended?: boolean | null;
@@ -122,17 +123,15 @@ export interface SecretaryReservationFilters {
   from?: string;
   to?: string;
   searchText?: string;
-  attendanceConfirmationStatus?: number | null;
+  attendanceConfirmationStatus?: AttendanceConfirmationStatus | null;
   onlyWaitingForSecretaryReview?: boolean;
   onlyPendingReservationReview?: boolean;
   reservationReviewStatus?: number | null;
-  reservationRequestStatus?: number | null;
   visitResultStatus?: number | null;
   reservationDate?: string;
   followUpDueOn?: string;
   isConfirmedWithPatient?: boolean | null;
   consultantName?: string;
-  sortBy?: string;
   sortDirection?: "asc" | "desc";
   onlyDue?: boolean;
   includeCanceled?: boolean;
