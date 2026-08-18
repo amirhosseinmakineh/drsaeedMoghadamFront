@@ -203,6 +203,10 @@ export class SecretaryReservationsComponent
     this.load();
   }
 
+  onAnnouncementSaved(): void {
+    this.load();
+  }
+
   load(): void {
     if (!this.profileReady) return;
 
