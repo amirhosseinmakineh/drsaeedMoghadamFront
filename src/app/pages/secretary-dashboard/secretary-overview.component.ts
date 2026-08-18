@@ -21,6 +21,7 @@ import {
   SecretaryReservation,
 } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
+import { formatReservationTime } from "../../utils/iran-datetime.util";
 
 export type SecretaryDashboardPreset =
   | "needs-call"
@@ -233,6 +234,10 @@ export class SecretaryOverviewComponent implements OnChanges, OnDestroy {
       timeStyle: "short",
       timeZone: "Asia/Tehran",
     }).format(date);
+  }
+
+  formatAppointmentTime(value: string): string {
+    return formatReservationTime(value);
   }
 
   trackReservation(_: number, item: SecretaryReservation): number | string {

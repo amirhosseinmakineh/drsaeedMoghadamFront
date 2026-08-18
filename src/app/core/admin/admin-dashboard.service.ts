@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 import { Observable, catchError, forkJoin, from, map, switchMap, throwError } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
+import { ReservationDto } from "../reservation/reservation.model";
 import { ensureCsvBlob } from "../../utils/file-download.util";
 
 export interface ApiCommandResponse<T = unknown> {
@@ -371,11 +372,7 @@ export interface LeadFilters {
   pageSize: number;
 }
 
-export interface SecretaryReservation {
-  id?: number;
-  Id?: number;
-  secretaryAnnouncementStatus?: string | null;
-  SecretaryAnnouncementStatus?: string | null;
+export interface SecretaryReservation extends ReservationDto {
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   consultantProfileId?: number;
@@ -388,10 +385,6 @@ export interface SecretaryReservation {
   PatientUserId?: string | null;
   requiresPatientProfile?: boolean;
   RequiresPatientProfile?: boolean;
-  reservationAt?: string | null;
-  ReservationAt?: string | null;
-  patientName?: string | null;
-  PatientName?: string | null;
   patientPhoneNumber?: string | null;
   PatientPhoneNumber?: string | null;
   secondaryPhoneNumber?: string | null;

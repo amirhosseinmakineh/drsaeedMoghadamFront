@@ -37,6 +37,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
 import {
   combineIranDateAndTime,
   formatIranDateTime,
+  formatReservationTime,
   nowInIran,
   startOfIranDay,
   toIranTimeInputValue,
@@ -375,6 +376,10 @@ export class ConsultantReservationsPanelComponent
 
   formatDateTime(value: string): string {
     return formatIranDateTime(value);
+  }
+
+  formatAppointmentTime(value: string): string {
+    return formatReservationTime(value);
   }
 
   canEdit(reservation: ConsultantReservation): boolean {

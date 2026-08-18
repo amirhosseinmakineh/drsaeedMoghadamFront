@@ -61,10 +61,7 @@ export function toIranTimeInputValue(date: Date): string {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-export function combineIranDateAndTime(
-  date: Date,
-  time: string,
-): Date | null {
+export function combineIranDateAndTime(date: Date, time: string): Date | null {
   const dateValue = toIranDateInputValue(date);
   const [hours, minutes] = time.split(":").map(Number);
   if (
@@ -122,6 +119,20 @@ export function formatIranTime(value?: string | Date | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/** Formats an appointment's backend clock value as a 24-hour HH:mm string. */
+export function formatReservationTime(value?: string | Date | null): string {
+  if (!value) return "-";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  }).format(date);
 }
 
 export function createRelativeYearDateInIran(yearsOffset: number): Date {

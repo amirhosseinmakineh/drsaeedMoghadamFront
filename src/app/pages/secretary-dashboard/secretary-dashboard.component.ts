@@ -94,6 +94,28 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     return user ? this.auth.roleLabel(user.role, "fa") : "منشی";
   });
 
+  readonly secretaryTypeLabel = computed(() => {
+    const type = this.user()?.secretaryType?.toLowerCase();
+    if (type === "assistant") return "منشی کمکی";
+    if (type === "main") return "منشی اصلی";
+    return "منشی";
+  });
+
+  readonly secretaryAllowedDayLabels = computed(() =>
+    (this.user()?.allowedDays ?? []).map(
+      (day) =>
+        ({
+          Saturday: "شنبه",
+          Sunday: "یکشنبه",
+          Monday: "دوشنبه",
+          Tuesday: "سه‌شنبه",
+          Wednesday: "چهارشنبه",
+          Thursday: "پنجشنبه",
+          Friday: "جمعه",
+        })[day] ?? day,
+    ),
+  );
+
   profileForm: SecretaryProfileForm = {
     nationalityCode: "",
     address: "",
@@ -138,7 +160,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
       );
     }
 
-    return this.dashboardLinks.filter((item) => item.id !== "profile");
+    return this.dashboardLinks;
   }
 
   ngOnInit(): void {
@@ -183,10 +205,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   private resolveSection(
     section: SecretaryDashboardSection,
   ): SecretaryDashboardSection {
-    if (section === "profile" && this.isProfileReady()) {
-      return "overview";
-    }
-
     if (
       (section === "overview" ||
         section === "reservations" ||
@@ -202,10 +220,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   private syncSectionQueryParam(section: SecretaryDashboardSection): void {
     const resolvedSection = this.resolveSection(section);
     const querySection =
-      resolvedSection === "overview" ||
-      (resolvedSection === "profile" && this.isProfileReady())
-        ? null
-        : resolvedSection;
+      resolvedSection === "overview" ? null : resolvedSection;
     const currentSection = this.route.snapshot.queryParamMap.get("section");
 
     if ((currentSection ?? null) === querySection) return;

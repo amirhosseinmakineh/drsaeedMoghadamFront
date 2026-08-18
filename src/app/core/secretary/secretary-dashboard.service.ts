@@ -12,6 +12,7 @@ import {
 import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
 import { AttendanceConfirmationStatus } from "../reservation/reservation-attendance";
+import { ReservationDto } from "../reservation/reservation.model";
 
 export interface ApiCommandResponse<T = unknown> {
   isSuccess: boolean;
@@ -36,9 +37,13 @@ export interface CompleteSecretaryProfileRequest {
   isCompleteProfile: boolean;
 }
 
-export interface SecretaryReservation {
-  id?: number;
-  Id?: number;
+export interface SecretaryReservation extends ReservationDto {
+  canManage?: boolean;
+  CanManage?: boolean;
+  canEdit?: boolean;
+  CanEdit?: boolean;
+  canUpdateSecretaryAnnouncement?: boolean;
+  CanUpdateSecretaryAnnouncement?: boolean;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   consultantProfileId?: number;
@@ -49,10 +54,6 @@ export interface SecretaryReservation {
   ConsultantUserId?: string | null;
   patientUserId?: string | null;
   PatientUserId?: string | null;
-  reservationAt?: string;
-  ReservationAt?: string;
-  patientName?: string | null;
-  PatientName?: string | null;
   patientPhoneNumber?: string | null;
   PatientPhoneNumber?: string | null;
   patientCity?: string | null;
@@ -216,6 +217,26 @@ export class SecretaryDashboardService {
     private auth: AuthService,
   ) {}
 
+  canManageReservation(reservation: SecretaryReservation): boolean {
+    return this.backendPermission(
+      reservation.canManage ??
+        reservation.CanManage ??
+        reservation.canEdit ??
+        reservation.CanEdit,
+    );
+  }
+
+  canUpdateAnnouncement(reservation: SecretaryReservation): boolean {
+    return this.backendPermission(
+      reservation.canUpdateSecretaryAnnouncement ??
+        reservation.CanUpdateSecretaryAnnouncement ??
+        reservation.canManage ??
+        reservation.CanManage ??
+        reservation.canEdit ??
+        reservation.CanEdit,
+    );
+  }
+
   completeProfile(
     payload: CompleteSecretaryProfileRequest,
   ): Observable<ApiCommandResponse<string>> {
@@ -344,6 +365,17 @@ export class SecretaryDashboardService {
       .pipe(this.ensureCommandSucceeded("ثبت بررسی حضور انجام نشد"));
   }
 
+  updateSecretaryAnnouncement(
+    payload: UpdateSecretaryAnnouncementRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .put<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Reservation/SecretaryAnnouncement`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت اعلام منشی انجام نشد"));
+  }
 
   confirmReservation(
     reservationId: number,
@@ -620,6 +652,14 @@ export class SecretaryDashboardService {
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      error.status === 403
+    ) {
+      return new Error("شما در این روز دسترسی مدیریت رزرو ندارید.");
+    }
     if (error instanceof Error && error.message) return error;
     if (typeof error === "object" && error !== null && "error" in error) {
       const httpError = error as {
@@ -634,5 +674,13 @@ export class SecretaryDashboardService {
     }
 
     return new Error(fallback);
+  }
+
+  private backendPermission(permission: boolean | null | undefined): boolean {
+    if (typeof permission === "boolean") return permission;
+
+    const secretaryType = this.auth.user()?.secretaryType?.toLowerCase();
+    if (secretaryType === "assistant") return false;
+    return true;
   }
 }

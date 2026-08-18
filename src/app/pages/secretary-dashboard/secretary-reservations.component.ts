@@ -28,13 +28,15 @@ import { ToastService } from "../../core/toast/toast.service";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
+import { formatReservationTime } from "../../utils/iran-datetime.util";
+import { SecretaryAnnouncementEditorComponent } from "./secretary-announcement-editor.component";
 
 export type SecretaryReservationTab = "queue" | "all" | "completed";
 
 @Component({
   selector: "app-secretary-reservations",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SecretaryAnnouncementEditorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-reservations.component.html",
   styleUrl: "./secretary-reservations.component.scss",
@@ -163,6 +165,10 @@ export class SecretaryReservationsComponent
 
   applyStatusFilter(): void {
     this.pageNumber = 1;
+    this.load();
+  }
+
+  onAnnouncementSaved(): void {
     this.load();
   }
 
@@ -312,6 +318,7 @@ export class SecretaryReservationsComponent
   }
 
   review(item: SecretaryReservation, approved: boolean): void {
+    if (!this.canManage(item)) return;
     const reservationId = this.reservationId(item);
     const secretaryUserId = this.auth.user()?.userId;
     if (!reservationId || !secretaryUserId) {
@@ -379,6 +386,14 @@ export class SecretaryReservationsComponent
       (item.isWaitingForSecretaryReview ?? item.IsWaitingForSecretaryReview) ===
         true,
     );
+  }
+
+  canManage(item: SecretaryReservation): boolean {
+    return this.secretaryApi.canManageReservation(item);
+  }
+
+  canUpdateAnnouncement(item: SecretaryReservation): boolean {
+    return this.secretaryApi.canUpdateAnnouncement(item);
   }
 
   reservationId(item: SecretaryReservation): number | null {
@@ -479,6 +494,10 @@ export class SecretaryReservationsComponent
           timeStyle: "short",
         }).format(date)
       : value;
+  }
+
+  formatAppointmentTime(value: string): string {
+    return formatReservationTime(value);
   }
 
   private handleLoadError(requestId: number, error: unknown): void {

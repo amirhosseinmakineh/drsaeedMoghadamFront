@@ -43,6 +43,7 @@ import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-rout
 import {
   combineIranDateAndTime,
   formatIranDateTime,
+  formatReservationTime,
   nowInIran,
   nowInIranMs,
   toIranDateInputValue,
@@ -2960,6 +2961,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   formatDateTime(value: string): string {
     return formatIranDateTime(value);
+  }
+
+  formatAppointmentTime(value: string): string {
+    return formatReservationTime(value);
   }
 
   leadContactedAt(lead: ConsultantLead): string {

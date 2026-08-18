@@ -5,11 +5,12 @@ import {
   Component,
   Input,
   OnChanges,
+  OnDestroy,
   OnInit,
   SimpleChanges,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { finalize } from "rxjs";
+import { finalize, Subscription } from "rxjs";
 import {
   AdminDashboardService,
   SecretaryReservation,
@@ -30,7 +31,8 @@ import {
   TableComponent,
 } from "../../shared/base/table/table.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
-import { formatIranDateTime, startOfIranDay, toIranDateInputValue } from "../../utils/iran-datetime.util";
+import { formatIranDateTime, formatReservationTime, startOfIranDay, toIranDateInputValue } from "../../utils/iran-datetime.util";
+import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 
 type ReservationTableMode = "system" | "consultant";
 type ReservationView = "reservations" | "attendanceConfirmations";
@@ -43,7 +45,7 @@ type ReservationView = "reservations" | "attendanceConfirmations";
   styleUrl: "./admin-reservations-table.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminReservationsTableComponent implements OnInit, OnChanges {
+export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() mode: ReservationTableMode = "system";
   @Input() profileId: number | null = null;
   @Input() title = "مدیریت رزروها و تایید حضور";
@@ -61,6 +63,8 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
   feedback = "";
   totalCount = 0;
   totalPages = 1;
+  private readonly refreshSubscription: Subscription;
+  private pollId: ReturnType<typeof setInterval> | null = null;
 
   filters: SecretaryReservationFilters = {
     pageNumber: 1,
@@ -86,8 +90,16 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
     },
     {
       key: "reservationAt",
-      label: "زمان رزرو",
-      value: (row) => this.formatDateTime(this.reservationAt(row)),
+      label: "زمان مراجعه بیمار",
+      value: (row) => formatReservationTime(this.reservationAt(row)),
+    },
+    {
+      key: "secretaryAnnouncement",
+      label: "اعلام منشی",
+      value: (row) =>
+        row.secretaryAnnouncement?.trim() ||
+        row.SecretaryAnnouncement?.trim() ||
+        "-",
     },
     {
       key: "secretaryAnnouncement",
@@ -143,14 +155,23 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
 
   constructor(
     private adminApi: AdminDashboardService,
+    reservationSync: ReservationSyncService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.refreshSubscription = reservationSync.refreshRequested$.subscribe(() => this.load());
+  }
+
+  ngOnDestroy(): void {
+    this.refreshSubscription.unsubscribe();
+    this.stopPolling();
+  }
 
   ngOnInit(): void {
     this.syncProfileFilter();
     this.syncDateFilter();
     this.syncSelectedDatePersian();
     this.load();
+    this.startPolling();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -336,6 +357,20 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
 
   private formatDateTime(value: string): string {
     return formatIranDateTime(value);
+  }
+
+  private startPolling(): void {
+    this.stopPolling();
+    this.pollId = setInterval(() => {
+      if (this.loading || document.visibilityState === "hidden") return;
+      this.load();
+    }, 5000);
+  }
+
+  private stopPolling(): void {
+    if (!this.pollId) return;
+    clearInterval(this.pollId);
+    this.pollId = null;
   }
 
   private errorMessage(error: unknown, fallback: string): string {

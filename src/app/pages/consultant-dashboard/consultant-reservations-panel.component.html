@@ -76,8 +76,8 @@
           </header>
           <dl>
             <div>
-              <dt>زمان رزرو</dt>
-              <dd>{{ formatDateTime(reservationAt(reservation)) }}</dd>
+              <dt>زمان مراجعه بیمار</dt>
+              <dd>{{ formatAppointmentTime(reservationAt(reservation)) }}</dd>
             </div>
             <div>
               <dt>احتمال حضور</dt>
@@ -103,8 +103,8 @@
             <div class="confirmation-box">
               <strong>تایید حضور بیمار</strong>
               <p>
-                لطفاً مشخص کنید بیمار در زمان رزرو حاضر شد یا خیر. پس از تایید،
-                رزرو برای بررسی منشی ارسال می‌شود.
+                لطفاً مشخص کنید بیمار در زمان مراجعه بیمار حاضر شد یا خیر. پس از
+                تایید، رزرو برای بررسی منشی ارسال می‌شود.
               </p>
               <label>
                 یادداشت (اختیاری)
@@ -138,7 +138,7 @@
 
           @if (isPendingNotYetDue(reservation)) {
             <p class="pending-hint">
-              پس از رسیدن زمان رزرو، دکمه‌های تایید حضور فعال می‌شوند.
+              پس از رسیدن زمان مراجعه بیمار، دکمه‌های تایید حضور فعال می‌شوند.
             </p>
           }
 
@@ -154,7 +154,7 @@
               "
               (click)="openEditDialog(reservation)"
             >
-              تغییر زمان رزرو
+              تغییر زمان مراجعه بیمار
             </button>
           </div>
         </article>
@@ -188,7 +188,7 @@
 <app-base-dialog
   [open]="editDialogOpen"
   [showFooter]="false"
-  title="تغییر زمان رزرو"
+  title="تغییر زمان مراجعه بیمار"
   [closable]="!editSaving"
   (closed)="closeEditDialog()"
 >

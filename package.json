@@ -6,6 +6,7 @@
     "ng": "ng",
     "build": "npm run optimize:images && node scripts/generate-webpush-config.mjs && ng build --configuration production && node scripts/validate-webpush-config.mjs",
     "build:local": "SKIP_WEBPUSH_CONFIG_CHECK=1 npm run build",
+    "check:secretary-template": "node scripts/validate-secretary-reservations-template.mjs",
     "generate:webpush": "node scripts/generate-webpush-config.mjs",
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
     "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
