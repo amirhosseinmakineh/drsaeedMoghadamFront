@@ -149,6 +149,7 @@ export interface SecretaryAnnouncementRequest {
   description: string | null;
 }
 
+
 export interface SecretaryReservationFilters {
   consultantProfileId?: number | null;
   from?: string;
@@ -343,17 +344,6 @@ export class SecretaryDashboardService {
       .pipe(this.ensureCommandSucceeded("ثبت بررسی حضور انجام نشد"));
   }
 
-  updateSecretaryAnnouncement(
-    payload: UpdateSecretaryAnnouncementRequest,
-  ): Observable<ApiCommandResponse> {
-    return this.http
-      .put<ApiCommandResponse>(
-        `${this.apiBaseUrl}/Reservation/SecretaryAnnouncement`,
-        payload,
-        { headers: this.authHeaders() },
-      )
-      .pipe(this.ensureCommandSucceeded("ثبت اعلام منشی انجام نشد"));
-  }
 
   confirmReservation(
     reservationId: number,
