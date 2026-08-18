@@ -99,5 +99,37 @@ export const routes: Routes = [
       ),
     data: { role: "patient" },
   },
+  {
+    path: "financial/wallet",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./pages/financial/wallet-dashboard.component").then(
+        (m) => m.WalletDashboardComponent,
+      ),
+  },
+  {
+    path: "financial/transactions",
+    canActivate: [authGuard, roleGuard(["admin"])],
+    loadComponent: () =>
+      import("./pages/financial/transactions-list.component").then(
+        (m) => m.TransactionsListComponent,
+      ),
+  },
+  {
+    path: "financial/transactions/:id",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./pages/financial/transaction-details.component").then(
+        (m) => m.TransactionDetailsComponent,
+      ),
+  },
+  {
+    path: "admin/wallets",
+    canActivate: [authGuard, roleGuard(["admin"])],
+    loadComponent: () =>
+      import("./pages/financial/admin-wallets.component").then(
+        (m) => m.AdminWalletsComponent,
+      ),
+  },
   { path: "**", redirectTo: "" },
 ];

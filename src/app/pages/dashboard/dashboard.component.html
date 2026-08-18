@@ -84,6 +84,15 @@
         <app-fa-icon [name]="item.icon"></app-fa-icon>
         <span>{{ item.label }}</span>
       </button>
+      @if (isAdmin()) {
+        <div class="nav-group-label">امور مالی</div>
+        <a routerLink="/admin/wallets" (click)="closeMobileSidebar()">
+          <app-fa-icon name="users"></app-fa-icon><span>کیف پول کاربران</span>
+        </a>
+        <a routerLink="/financial/transactions" (click)="closeMobileSidebar()">
+          <app-fa-icon name="list"></app-fa-icon><span>تراکنش‌های مالی</span>
+        </a>
+      }
     </nav>
 
     <button
@@ -158,6 +167,18 @@
               <span><app-fa-icon name="clock"></app-fa-icon></span>
               <strong>وضعیت مشاوران</strong>
             </button>
+          </section>
+
+          <section class="financial-dashboard-section" aria-labelledby="financial-heading">
+            <header class="panel-heading">
+              <div><span>امور مالی</span><h2 id="financial-heading">مدیریت مالی</h2><p>مشاهده و مدیریت کیف پول‌ها و گردش مالی سیستم</p></div>
+              <div class="financial-actions"><a class="primary-filter" routerLink="/admin/wallets">مدیریت کیف پول‌ها</a><a class="export-action" routerLink="/financial/transactions">تراکنش‌های مالی</a></div>
+            </header>
+            <div class="financial-summary-grid">
+              <article><span><app-fa-icon name="users"></app-fa-icon></span><small>تعداد کیف پول‌ها</small><strong>{{ financialSummaryLoading ? '…' : financialWalletCount }}</strong></article>
+              <article><span><app-fa-icon name="dashboard"></app-fa-icon></span><small>مجموع موجودی کاربران</small><strong>{{ financialSummaryLoading ? '…' : (financialTotalBalance | number:'1.0-0') + ' تومان' }}</strong></article>
+              <article><span><app-fa-icon name="list"></app-fa-icon></span><small>آخرین تراکنش‌ها</small><strong>{{ financialSummaryLoading ? '…' : financialTransactionsCount }}</strong></article>
+            </div>
           </section>
         }
 
@@ -447,6 +468,15 @@
           <h3>فضای اختصاصی</h3>
           <strong>{{ dashboardTitle() }}</strong>
         </article>
+
+        @if (ownWallet) {
+          <article class="wallet-dashboard-card">
+            <span><app-fa-icon name="dashboard"></app-fa-icon></span>
+            <h3>کیف پول من</h3>
+            <strong>{{ ownWallet.balance | number:'1.0-0' }} تومان</strong>
+            <a class="primary-filter" routerLink="/financial/wallet">مشاهده جزئیات</a>
+          </article>
+        }
       </div>
     }
   </main>

@@ -14,6 +14,8 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
 import { Subscription, catchError, finalize, firstValueFrom, map, of, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
+import { Wallet } from "../../core/financial/financial.models";
+import { WalletService } from "../../core/financial/wallet.service";
 import {
   CompletePatientProfileRequest,
   ConsultantDashboardService,
@@ -227,6 +229,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   isNewLeadBlocked = false;
   shouldShowWorkloadNotification = false;
   workloadNotificationMessage: string | null = null;
+  ownWallet: Wallet | null = null;
+  walletLoading = false;
   private lastWorkloadNotificationMessage: string | null = null;
 
   leads: ConsultantLead[] = [];
@@ -445,6 +449,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private consultantApi: ConsultantDashboardService,
+    private walletApi: WalletService,
     private pushNotifications: PushNotificationService,
     private notifications: NotificationService,
     private realtimeLeadAlerts: RealtimeLeadAlertService,
@@ -478,6 +483,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.closeMobileSidebar();
+    this.loadOwnWallet();
     if (this.route.snapshot.data["initialSection"] === "leads") {
       this.activeSection = "leads";
     }
@@ -532,6 +538,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     } else {
       this.activeSection = "profile";
     }
+  }
+
+  private loadOwnWallet(): void {
+    this.walletLoading = true;
+    this.walletApi.getMyWallet().subscribe({
+      next: (wallet) => { this.ownWallet = wallet; this.walletLoading = false; this.markViewDirty(); },
+      error: () => { this.ownWallet = null; this.walletLoading = false; this.markViewDirty(); },
+    });
   }
 
   ngOnDestroy(): void {

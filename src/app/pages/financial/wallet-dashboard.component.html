@@ -1,0 +1,25 @@
+<main class="financial-page" dir="rtl">
+  <header class="page-heading"><div><span class="eyebrow">هسته مالی</span><h1>کیف پول من</h1><p>موجودی و گردش‌های مالی حساب شما</p></div></header>
+  @if (loading()) { <div class="state-card">در حال دریافت اطلاعات کیف پول…</div> }
+  @else if (error()) { <div class="state-card error">{{ error() }}<button type="button" (click)="load()">تلاش دوباره</button></div> }
+  @else if (wallet(); as item) {
+    <section class="balance-card">
+      <div><span>موجودی کیف پول</span><strong>{{ item.balance | number:'1.0-0' }} <small>تومان</small></strong></div>
+      <span class="wallet-status" [class.inactive]="!item.isActive">{{ item.isActive ? 'فعال' : 'غیرفعال' }}</span>
+      <p>تاریخ ایجاد: {{ item.createdAt | date:'yyyy/MM/dd' }}</p>
+    </section>
+    <section class="panel"><div class="section-title"><h2>آخرین تراکنش‌ها</h2><span>{{ item.transactions.length || 0 }} تراکنش</span></div>
+      @if (item.transactions.length) {
+        <div class="transactions">
+          @for (transaction of item.transactions; track transaction.id) {
+            <a class="transaction-card" [routerLink]="['/financial/transactions', transaction.id]">
+              <span class="direction" [class.debit]="transaction.direction === 'Debit'">{{ transaction.direction === 'Credit' ? '+' : '−' }}</span>
+              <div><strong>{{ typeLabel(transaction.type) }}</strong><small>{{ transaction.description || 'بدون توضیحات' }}</small></div>
+              <div class="transaction-amount"><strong>{{ transaction.amount | number:'1.0-0' }}</strong><small>{{ transaction.createdAt | date:'yyyy/MM/dd' }}</small></div>
+            </a>
+          }
+        </div>
+      } @else { <div class="empty">هنوز تراکنشی ثبت نشده است.</div> }
+    </section>
+  }
+</main>

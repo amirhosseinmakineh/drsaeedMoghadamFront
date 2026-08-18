@@ -1,0 +1,19 @@
+<main class="financial-page narrow" dir="rtl">
+  <a class="back-link" routerLink="/financial/wallet">→ بازگشت به کیف پول</a>
+  <header class="page-heading"><div><span class="eyebrow">جزئیات تراکنش</span><h1>رسید تراکنش</h1></div></header>
+  @if (loading()) { <div class="state-card">در حال دریافت تراکنش…</div> }
+  @else if (error()) { <div class="state-card error">{{ error() }}<button type="button" (click)="load()">تلاش دوباره</button></div> }
+  @else if (transaction(); as item) {
+    <section class="receipt">
+      <div class="receipt-head"><span class="direction" [class.debit]="item.direction === 'Debit'">{{ item.direction === 'Credit' ? '+' : '−' }}</span><div><small>مبلغ تراکنش</small><strong>{{ item.amount | number:'1.0-0' }} تومان</strong></div></div>
+      <dl>
+        <div><dt>شماره تراکنش</dt><dd>{{ item.transactionNumber || item.id }}</dd></div>
+        <div><dt>نوع</dt><dd>{{ typeLabel(item.type) }}</dd></div>
+        <div><dt>وضعیت</dt><dd><span class="status-badge" [attr.data-status]="item.status">{{ statusLabel(item.status) }}</span></dd></div>
+        <div><dt>تاریخ</dt><dd>{{ item.createdAt | date:'yyyy/MM/dd، HH:mm' }}</dd></div>
+        <div><dt>ثبت‌کننده</dt><dd>{{ item.createdByName || 'سیستم' }}</dd></div>
+        <div class="wide"><dt>توضیحات</dt><dd>{{ item.description || 'بدون توضیحات' }}</dd></div>
+      </dl>
+    </section>
+  }
+</main>
