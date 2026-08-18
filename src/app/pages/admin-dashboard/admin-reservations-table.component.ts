@@ -64,6 +64,7 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
   totalCount = 0;
   totalPages = 1;
   private readonly refreshSubscription: Subscription;
+  private pollId: ReturnType<typeof setInterval> | null = null;
 
   filters: SecretaryReservationFilters = {
     pageNumber: 1,
@@ -132,6 +133,7 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
 
   ngOnDestroy(): void {
     this.refreshSubscription.unsubscribe();
+    this.stopPolling();
   }
 
   ngOnInit(): void {
@@ -139,6 +141,7 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
     this.syncDateFilter();
     this.syncSelectedDatePersian();
     this.load();
+    this.startPolling();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -324,6 +327,20 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
 
   private formatDateTime(value: string): string {
     return formatIranDateTime(value);
+  }
+
+  private startPolling(): void {
+    this.stopPolling();
+    this.pollId = setInterval(() => {
+      if (this.loading || document.visibilityState === "hidden") return;
+      this.load();
+    }, 5000);
+  }
+
+  private stopPolling(): void {
+    if (!this.pollId) return;
+    clearInterval(this.pollId);
+    this.pollId = null;
   }
 
   private errorMessage(error: unknown, fallback: string): string {

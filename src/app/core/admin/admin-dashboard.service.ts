@@ -373,8 +373,6 @@ export interface LeadFilters {
 }
 
 export interface SecretaryReservation extends ReservationDto {
-  id?: number;
-  Id?: number;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   consultantProfileId?: number;
@@ -387,10 +385,6 @@ export interface SecretaryReservation extends ReservationDto {
   PatientUserId?: string | null;
   requiresPatientProfile?: boolean;
   RequiresPatientProfile?: boolean;
-  reservationAt?: string | null;
-  ReservationAt?: string | null;
-  patientName?: string | null;
-  PatientName?: string | null;
   patientPhoneNumber?: string | null;
   PatientPhoneNumber?: string | null;
   secondaryPhoneNumber?: string | null;

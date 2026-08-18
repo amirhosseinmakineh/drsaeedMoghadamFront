@@ -38,8 +38,6 @@ export interface CompleteSecretaryProfileRequest {
 }
 
 export interface SecretaryReservation extends ReservationDto {
-  id?: number;
-  Id?: number;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   consultantProfileId?: number;
@@ -50,10 +48,6 @@ export interface SecretaryReservation extends ReservationDto {
   ConsultantUserId?: string | null;
   patientUserId?: string | null;
   PatientUserId?: string | null;
-  reservationAt?: string;
-  ReservationAt?: string;
-  patientName?: string | null;
-  PatientName?: string | null;
   patientPhoneNumber?: string | null;
   PatientPhoneNumber?: string | null;
   patientCity?: string | null;

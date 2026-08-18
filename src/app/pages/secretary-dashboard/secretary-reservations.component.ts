@@ -55,6 +55,7 @@ export class SecretaryReservationsComponent
   loading = false;
   savingId: number | null = null;
   readonly savingAnnouncementIds = new Set<number>();
+  readonly dirtyAnnouncementIds = new Set<number>();
   feedback = "";
   feedbackType: "success" | "error" = "success";
   statusFilter: AttendanceConfirmationStatus | null = null;
@@ -430,6 +431,7 @@ export class SecretaryReservationsComponent
       )
       .subscribe({
         next: (response) => {
+          this.dirtyAnnouncementIds.delete(reservationId);
           this.showFeedback(
             response.message || "اعلام منشی با موفقیت ثبت شد",
             "success",
@@ -453,6 +455,11 @@ export class SecretaryReservationsComponent
       item.SecretaryAnnouncementUpdatedAt ??
       ""
     );
+  }
+
+  markAnnouncementDirty(item: SecretaryReservation): void {
+    const reservationId = this.reservationId(item);
+    if (reservationId) this.dirtyAnnouncementIds.add(reservationId);
   }
 
   isCanceled(item: SecretaryReservation): boolean {
@@ -606,7 +613,12 @@ export class SecretaryReservationsComponent
   private syncAnnouncements(items: SecretaryReservation[]): void {
     for (const item of items) {
       const id = this.reservationId(item);
-      if (!id || this.savingAnnouncementIds.has(id)) continue;
+      if (
+        !id ||
+        this.savingAnnouncementIds.has(id) ||
+        this.dirtyAnnouncementIds.has(id)
+      )
+        continue;
       this.announcements[id] =
         item.secretaryAnnouncement ?? item.SecretaryAnnouncement ?? "";
     }
