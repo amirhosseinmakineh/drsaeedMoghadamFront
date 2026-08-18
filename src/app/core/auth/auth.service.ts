@@ -17,6 +17,8 @@ export interface AuthUser {
   profileId?: number;
   consultantProfileId?: number;
   isCompleteProfile?: boolean;
+  secretaryType?: string;
+  allowedDays?: string[];
 }
 
 export interface RegisterRequest {
@@ -64,6 +66,10 @@ type TokenResponseData =
       profileId?: number | string;
       consultantProfileId?: number | string;
       isCompleteProfile?: boolean | string;
+      secretaryType?: string;
+      SecretaryType?: string;
+      allowedDays?: string[] | string;
+      AllowedDays?: string[] | string;
     };
 
 interface StoredSession {
@@ -445,6 +451,15 @@ export class AuthService {
           "profileComplete",
           "ProfileComplete",
         ]) ?? this.dataBoolean(data, "isCompleteProfile"),
+      secretaryType:
+        this.claimValue(claims, ["secretaryType", "SecretaryType"]) ??
+        this.dataString(data, "secretaryType", "SecretaryType"),
+      allowedDays: this.stringList(
+        claims["allowedDays"] ??
+          claims["AllowedDays"] ??
+          data["allowedDays"] ??
+          data["AllowedDays"],
+      ),
       roleName,
       role: roles[0] ?? this.normalizeRole(roleName),
       roles,
@@ -583,6 +598,19 @@ export class AuthService {
     }
 
     return values;
+  }
+
+  private stringList(value: unknown): string[] | undefined {
+    const values = Array.isArray(value)
+      ? value
+      : typeof value === "string"
+        ? value.split(",")
+        : [];
+    const normalized = values
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    return normalized.length ? normalized : undefined;
   }
 
   private claimNumber(

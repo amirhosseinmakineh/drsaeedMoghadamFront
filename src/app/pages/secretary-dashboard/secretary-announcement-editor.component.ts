@@ -29,6 +29,7 @@ import { formatIranDateTime } from "../../utils/iran-datetime.util";
 })
 export class SecretaryAnnouncementEditorComponent implements OnChanges {
   @Input({ required: true }) reservation!: SecretaryReservation;
+  @Input() canEdit = false;
   @Output() readonly saved = new EventEmitter<void>();
 
   announcement = "";
@@ -62,7 +63,7 @@ export class SecretaryAnnouncementEditorComponent implements OnChanges {
       this.toast.error("شناسه رزرو یا شناسه کاربر منشی در دسترس نیست");
       return;
     }
-    if (this.canceled || this.saving) return;
+    if (!this.canEdit || this.canceled || this.saving) return;
 
     this.saving = true;
     this.api

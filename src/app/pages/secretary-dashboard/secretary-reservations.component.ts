@@ -203,6 +203,10 @@ export class SecretaryReservationsComponent
     this.load();
   }
 
+  onAnnouncementSaved(): void {
+    this.load();
+  }
+
   load(): void {
     if (!this.profileReady) return;
 
@@ -349,6 +353,7 @@ export class SecretaryReservationsComponent
   }
 
   review(item: SecretaryReservation, approved: boolean): void {
+    if (!this.canManage(item)) return;
     const reservationId = this.reservationId(item);
     const secretaryUserId = this.auth.user()?.userId;
     if (!reservationId || !secretaryUserId) {
@@ -416,6 +421,14 @@ export class SecretaryReservationsComponent
       (item.isWaitingForSecretaryReview ?? item.IsWaitingForSecretaryReview) ===
         true,
     );
+  }
+
+  canManage(item: SecretaryReservation): boolean {
+    return this.secretaryApi.canManageReservation(item);
+  }
+
+  canUpdateAnnouncement(item: SecretaryReservation): boolean {
+    return this.secretaryApi.canUpdateAnnouncement(item);
   }
 
   reservationId(item: SecretaryReservation): number | null {

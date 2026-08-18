@@ -38,6 +38,12 @@ export interface CompleteSecretaryProfileRequest {
 }
 
 export interface SecretaryReservation extends ReservationDto {
+  canManage?: boolean;
+  CanManage?: boolean;
+  canEdit?: boolean;
+  CanEdit?: boolean;
+  canUpdateSecretaryAnnouncement?: boolean;
+  CanUpdateSecretaryAnnouncement?: boolean;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   consultantProfileId?: number;
@@ -182,6 +188,26 @@ export class SecretaryDashboardService {
     private http: HttpClient,
     private auth: AuthService,
   ) {}
+
+  canManageReservation(reservation: SecretaryReservation): boolean {
+    return this.backendPermission(
+      reservation.canManage ??
+        reservation.CanManage ??
+        reservation.canEdit ??
+        reservation.CanEdit,
+    );
+  }
+
+  canUpdateAnnouncement(reservation: SecretaryReservation): boolean {
+    return this.backendPermission(
+      reservation.canUpdateSecretaryAnnouncement ??
+        reservation.CanUpdateSecretaryAnnouncement ??
+        reservation.canManage ??
+        reservation.CanManage ??
+        reservation.canEdit ??
+        reservation.CanEdit,
+    );
+  }
 
   completeProfile(
     payload: CompleteSecretaryProfileRequest,
@@ -559,6 +585,14 @@ export class SecretaryDashboardService {
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      error.status === 403
+    ) {
+      return new Error("شما در این روز دسترسی مدیریت رزرو ندارید.");
+    }
     if (error instanceof Error && error.message) return error;
     if (typeof error === "object" && error !== null && "error" in error) {
       const httpError = error as {
@@ -573,5 +607,13 @@ export class SecretaryDashboardService {
     }
 
     return new Error(fallback);
+  }
+
+  private backendPermission(permission: boolean | null | undefined): boolean {
+    if (typeof permission === "boolean") return permission;
+
+    const secretaryType = this.auth.user()?.secretaryType?.toLowerCase();
+    if (secretaryType === "assistant") return false;
+    return true;
   }
 }
