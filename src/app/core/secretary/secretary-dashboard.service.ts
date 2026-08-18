@@ -82,6 +82,8 @@ export interface SecretaryReservation extends ReservationDto {
   SecretaryReviewNote?: string | null;
   secretaryAnnouncement?: string | null;
   SecretaryAnnouncement?: string | null;
+  secretaryAnnouncementStatus?: string | null;
+  SecretaryAnnouncementStatus?: string | null;
   secretaryAnnouncementUpdatedAt?: string | null;
   SecretaryAnnouncementUpdatedAt?: string | null;
   secretaryAnnouncementUserId?: string | null;
