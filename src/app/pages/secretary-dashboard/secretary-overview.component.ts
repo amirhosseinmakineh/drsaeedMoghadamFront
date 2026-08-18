@@ -17,15 +17,16 @@ import {
 } from "../../core/reservation/reservation-attendance";
 import {
   SecretaryDashboardService,
+  SecretaryDashboardSummary,
   SecretaryReservation,
 } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 
 export type SecretaryDashboardPreset =
-  | "pending"
-  | "confirmed-today"
-  | "followups-today"
-  | "no-show";
+  | "needs-call"
+  | "secretary-confirmed"
+  | "secretary-no-answer"
+  | "secretary-cancelled";
 
 interface DashboardCard {
   preset: SecretaryDashboardPreset;
@@ -51,6 +52,7 @@ export class SecretaryOverviewComponent implements OnChanges, OnDestroy {
   loading = false;
   errorMessage = "";
   reservations: SecretaryReservation[] = [];
+  summary: SecretaryDashboardSummary = { requiresCall: 0, confirmed: 0, noAnswer: 0, cancelled: 0 };
 
   private loadSubscription: Subscription | null = null;
   private requestId = 0;
@@ -71,35 +73,35 @@ export class SecretaryOverviewComponent implements OnChanges, OnDestroy {
   get cards(): DashboardCard[] {
     return [
       {
-        preset: "pending",
-        title: "درخواست‌های رزرو جدید",
-        description: "در انتظار بررسی منشی",
-        icon: "calendar",
-        count: this.pendingRequests.length,
+        preset: "needs-call",
+        title: "رزروهای نیازمند تماس",
+        description: "در انتظار اعلام منشی",
+        icon: "phone",
+        count: this.summary.requiresCall,
         tone: "info",
       },
       {
-        preset: "confirmed-today",
-        title: "رزروهای تاییدشده امروز",
-        description: "مراجعه‌های قطعی امروز",
+        preset: "secretary-confirmed",
+        title: "تایید شده",
+        description: "تایید تلفنی بیمار",
         icon: "check",
-        count: this.confirmedToday.length,
+        count: this.summary.confirmed,
         tone: "success",
       },
       {
-        preset: "followups-today",
-        title: "پیگیری‌های امروز",
-        description: "تماس و یادآوری امروز",
+        preset: "secretary-no-answer",
+        title: "پاسخ نداده",
+        description: "تماس‌های بدون پاسخ",
         icon: "phone",
-        count: this.followUpsToday.length,
+        count: this.summary.noAnswer,
         tone: "warning",
       },
       {
-        preset: "no-show",
-        title: "عدم مراجعه",
-        description: "بیماران مراجعه‌نکرده",
+        preset: "secretary-cancelled",
+        title: "لغو شده",
+        description: "لغو توسط بیمار",
         icon: "close",
-        count: this.noShows.length,
+        count: this.summary.cancelled,
         tone: "danger",
       },
     ];
@@ -189,7 +191,7 @@ export class SecretaryOverviewComponent implements OnChanges, OnDestroy {
     this.errorMessage = "";
     this.loadSubscription?.unsubscribe();
     this.loadSubscription = this.secretaryApi
-      .getDashboardReservations()
+      .getDashboardSummary()
       .pipe(
         finalize(() => {
           if (requestId !== this.requestId) return;
@@ -198,14 +200,14 @@ export class SecretaryOverviewComponent implements OnChanges, OnDestroy {
         }),
       )
       .subscribe({
-        next: (items) => {
+        next: (summary) => {
           if (requestId !== this.requestId) return;
-          this.reservations = items ?? [];
+          this.summary = summary;
           this.cdr.markForCheck();
         },
         error: (error) => {
           if (requestId !== this.requestId) return;
-          this.reservations = [];
+          this.summary = { requiresCall: 0, confirmed: 0, noAnswer: 0, cancelled: 0 };
           this.errorMessage =
             error instanceof Error && error.message
               ? error.message
