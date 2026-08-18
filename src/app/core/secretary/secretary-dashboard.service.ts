@@ -79,6 +79,12 @@ export interface SecretaryReservation {
   SecretaryApprovedConsultantConfirmation?: boolean | null;
   secretaryReviewNote?: string | null;
   SecretaryReviewNote?: string | null;
+  secretaryAnnouncement?: string | null;
+  SecretaryAnnouncement?: string | null;
+  secretaryAnnouncementUpdatedAt?: string | null;
+  SecretaryAnnouncementUpdatedAt?: string | null;
+  secretaryAnnouncementUserId?: string | null;
+  SecretaryAnnouncementUserId?: string | null;
   isAttendanceScoreApplied?: boolean | null;
   IsAttendanceScoreApplied?: boolean | null;
   attendanceScoreValue?: number | null;
@@ -144,6 +150,12 @@ export interface ReviewAttendanceRequest {
   secretaryUserId: string;
   approved: boolean;
   note: string | null;
+}
+
+export interface UpdateSecretaryAnnouncementRequest {
+  reservationId: number;
+  secretaryUserId: string;
+  secretaryAnnouncement: string | null;
 }
 
 export interface SecretaryReservationActivity {
@@ -263,6 +275,18 @@ export class SecretaryDashboardService {
         { headers: this.authHeaders() },
       )
       .pipe(this.ensureCommandSucceeded("ثبت بررسی حضور انجام نشد"));
+  }
+
+  updateSecretaryAnnouncement(
+    payload: UpdateSecretaryAnnouncementRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .put<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Reservation/SecretaryAnnouncement`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت اعلام منشی انجام نشد"));
   }
 
   confirmReservation(

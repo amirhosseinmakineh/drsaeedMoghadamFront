@@ -49,8 +49,10 @@ export class SecretaryReservationsComponent
   activeTab: SecretaryReservationTab = "queue";
   items: SecretaryReservation[] = [];
   notes: Record<number, string> = {};
+  announcements: Record<number, string> = {};
   loading = false;
   savingId: number | null = null;
+  readonly savingAnnouncementIds = new Set<number>();
   feedback = "";
   feedbackType: "success" | "error" = "success";
   statusFilter: AttendanceConfirmationStatus | null = null;
@@ -231,6 +233,7 @@ export class SecretaryReservationsComponent
             );
             const start = (this.pageNumber - 1) * this.pageSize;
             this.items = items.slice(start, start + this.pageSize);
+            this.syncAnnouncements(this.items);
             this.markDirty();
           },
           error: (error) => this.handleLoadError(requestId, error),
@@ -253,6 +256,7 @@ export class SecretaryReservationsComponent
           next: (response) => {
             if (requestId !== this.loadRequestId) return;
             this.items = response.items ?? [];
+            this.syncAnnouncements(this.items);
             this.pageNumber = response.pageNumber;
             this.totalPages = response.totalPages;
             this.markDirty();
@@ -309,6 +313,7 @@ export class SecretaryReservationsComponent
           next: (response) => {
             if (requestId !== this.loadRequestId) return;
             this.items = response.items;
+            this.syncAnnouncements(this.items);
             this.pageNumber = response.pageNumber;
             this.totalPages = response.totalPages;
             this.markDirty();
@@ -338,6 +343,7 @@ export class SecretaryReservationsComponent
         next: (response) => {
           if (requestId !== this.loadRequestId) return;
           this.items = response.items ?? [];
+          this.syncAnnouncements(this.items);
           this.pageNumber = response.pageNumber;
           this.totalPages = response.totalPages;
           this.markDirty();
@@ -385,6 +391,69 @@ export class SecretaryReservationsComponent
             "error",
           ),
       });
+  }
+
+  saveAnnouncement(item: SecretaryReservation): void {
+    const reservationId = this.reservationId(item);
+    const secretaryUserId = this.auth.user()?.userId;
+    if (!reservationId || !secretaryUserId) {
+      this.showFeedback(
+        "شناسه رزرو یا شناسه کاربر منشی در دسترس نیست",
+        "error",
+      );
+      return;
+    }
+    if (this.isCanceled(item) || this.savingAnnouncementIds.has(reservationId)) {
+      return;
+    }
+
+    const announcement = (this.announcements[reservationId] ?? "").trim();
+    this.savingAnnouncementIds.add(reservationId);
+    this.markDirty();
+    this.secretaryApi
+      .updateSecretaryAnnouncement({
+        reservationId,
+        secretaryUserId,
+        secretaryAnnouncement: announcement || null,
+      })
+      .pipe(
+        finalize(() => {
+          this.savingAnnouncementIds.delete(reservationId);
+          this.markDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          item.secretaryAnnouncement = announcement || null;
+          item.secretaryAnnouncementUpdatedAt = new Date().toISOString();
+          item.secretaryAnnouncementUserId = secretaryUserId;
+          this.announcements[reservationId] = announcement;
+          this.showFeedback(
+            response.message || "اعلام منشی با موفقیت ثبت شد",
+            "success",
+          );
+          this.markDirty();
+        },
+        error: (error) =>
+          this.showFeedback(
+            error instanceof Error && error.message
+              ? error.message
+              : "ثبت اعلام منشی انجام نشد",
+            "error",
+          ),
+      });
+  }
+
+  announcementUpdatedAt(item: SecretaryReservation): string {
+    return (
+      item.secretaryAnnouncementUpdatedAt ??
+      item.SecretaryAnnouncementUpdatedAt ??
+      ""
+    );
+  }
+
+  isCanceled(item: SecretaryReservation): boolean {
+    return (item.isCanceled ?? item.IsCanceled) === true;
   }
 
   goToPage(page: number): void {
@@ -527,11 +596,26 @@ export class SecretaryReservationsComponent
     );
   }
 
+  private syncAnnouncements(items: SecretaryReservation[]): void {
+    for (const item of items) {
+      const id = this.reservationId(item);
+      if (!id || this.savingAnnouncementIds.has(id)) continue;
+      this.announcements[id] =
+        item.secretaryAnnouncement ?? item.SecretaryAnnouncement ?? "";
+    }
+  }
+
   private startPolling(): void {
     this.stopPolling();
     const intervalMs = this.activeTab === "queue" ? 15000 : 30000;
     this.pollId = setInterval(() => {
-      if (!this.profileReady || this.loading || this.savingId) return;
+      if (
+        !this.profileReady ||
+        this.loading ||
+        this.savingId ||
+        this.savingAnnouncementIds.size
+      )
+        return;
       this.load();
     }, intervalMs);
   }
