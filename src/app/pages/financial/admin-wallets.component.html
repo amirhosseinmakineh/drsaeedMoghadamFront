@@ -1,0 +1,26 @@
+<main class="financial-page admin" dir="rtl">
+  <header class="page-heading"><div><span class="eyebrow">مدیریت مالی</span><h1>کیف پول کاربران</h1><p>مشاهده موجودی و انجام عملیات مجاز کیف پول</p></div><button type="button" class="outline-button" (click)="load()">به‌روزرسانی</button></header>
+  @if (loading()) { <div class="state-card">در حال دریافت کیف پول‌ها…</div> }
+  @else if (error()) { <div class="state-card error">{{ error() }}<button type="button" (click)="load()">تلاش دوباره</button></div> }
+  @else {
+    <section class="wallet-grid">
+      @for (wallet of wallets(); track wallet.userId) {
+        <article class="user-wallet-card"><div class="user-line"><span class="avatar">{{ (wallet.userName || 'ک').charAt(0) }}</span><div><h2>{{ wallet.userName || 'کاربر' }}</h2><span>{{ roleLabel(wallet.roleName) }}</span></div><span class="wallet-status" [class.inactive]="!wallet.isActive">{{ wallet.isActive ? 'فعال' : 'غیرفعال' }}</span></div>
+          <div class="card-balance"><small>موجودی کیف پول</small><strong>{{ wallet.balance | number:'1.0-0' }} <small>تومان</small></strong></div>
+          <div class="card-actions"><button type="button" class="deposit" (click)="open(wallet, 'deposit')">+ شارژ</button><button type="button" class="withdraw" (click)="open(wallet, 'withdraw')">− برداشت</button></div>
+        </article>
+      } @empty { <div class="empty">کیف پولی برای نمایش وجود ندارد.</div> }
+    </section>
+  }
+  @if (selected(); as wallet) {
+    <div class="modal-backdrop" (click)="close()"><section class="wallet-modal" role="dialog" aria-modal="true" [attr.aria-label]="operation() === 'deposit' ? 'شارژ کیف پول' : 'برداشت از کیف پول'" (click)="$event.stopPropagation()">
+      <header><div><span class="eyebrow">عملیات کیف پول</span><h2>{{ operation() === 'deposit' ? 'شارژ کیف پول' : 'برداشت از کیف پول' }}</h2></div><button type="button" class="close" (click)="close()" aria-label="بستن">×</button></header>
+      <label>کاربر<input [value]="wallet.userName || 'کاربر'" disabled></label>
+      <label>مبلغ (تومان)<input inputmode="numeric" autocomplete="off" placeholder="مثلاً 5,000,000" [ngModel]="amount" (ngModelChange)="onAmount($event)"></label>
+      <label>توضیحات<textarea rows="3" [(ngModel)]="description" placeholder="توضیحات اختیاری"></textarea></label>
+      @if (formError()) { <p class="form-message error">{{ formError() }}</p> }
+      @if (success()) { <p class="form-message success">{{ success() }}</p> }
+      <button class="submit-button" [class.danger]="operation() === 'withdraw'" type="button" [disabled]="submitting() || !!success()" (click)="submit()">{{ submitting() ? 'در حال ثبت…' : operation() === 'deposit' ? 'تأیید شارژ' : 'تأیید برداشت' }}</button>
+    </section></div>
+  }
+</main>
