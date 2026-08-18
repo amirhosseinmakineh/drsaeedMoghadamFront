@@ -374,6 +374,8 @@ export interface LeadFilters {
 export interface SecretaryReservation {
   id?: number;
   Id?: number;
+  secretaryAnnouncementStatus?: string | null;
+  SecretaryAnnouncementStatus?: string | null;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   consultantProfileId?: number;

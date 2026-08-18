@@ -397,6 +397,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if ([
+      "ReservationSecretaryNoAnswer",
+      "ReservationSecretaryConfirmed",
+      "ReservationSecretaryCancelled",
+    ].includes(pushType ?? "")) {
+      if (detail.body) this.showFeedback(`🔔 ${detail.body}`, "info");
+      return;
+    }
+
     if (detail.body) this.showFeedback(detail.body, "success");
   };
 

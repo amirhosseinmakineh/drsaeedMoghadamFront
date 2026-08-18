@@ -414,10 +414,16 @@ export class PushNotificationService {
 
   private handleForegroundMessage(payload: WebPushMessagePayload): void {
     const pushType = payload.data?.["type"];
+    const secretaryTypes = [
+      "ReservationSecretaryNoAnswer",
+      "ReservationSecretaryConfirmed",
+      "ReservationSecretaryCancelled",
+    ];
     if (
       pushType &&
       pushType !== "test_push" &&
-      pushType !== "RealtimeLead"
+      pushType !== "RealtimeLead" &&
+      !secretaryTypes.includes(pushType)
     ) {
       return;
     }

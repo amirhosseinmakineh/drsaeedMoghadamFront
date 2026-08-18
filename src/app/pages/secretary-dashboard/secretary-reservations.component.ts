@@ -140,47 +140,12 @@ export class SecretaryReservationsComponent
       return formatter.format(date) === formatter.format(new Date());
     };
 
-    if (preset === "pending") {
-      return activeItems.filter(
-        (item) =>
-          Number(
-            item.secretaryReservationReviewStatus ??
-              item.SecretaryReservationReviewStatus,
-          ) === 1,
-      );
-    }
-    if (preset === "confirmed-today") {
-      return activeItems.filter(
-        (item) =>
-          isToday(this.reservationAt(item)) &&
-          [2, 3].includes(
-            Number(
-              item.secretaryReservationReviewStatus ??
-                item.SecretaryReservationReviewStatus,
-            ),
-          ),
-      );
-    }
-    if (preset === "followups-today") {
-      return activeItems.filter(
-        (item) =>
-          isToday(item.followUpAt ?? item.FollowUpAt ?? "") ||
-          isToday(item.reminderAt ?? item.ReminderAt ?? "") ||
-          (item.needsFollowUp ?? item.NeedsFollowUp) === true,
-      );
-    }
-
-    return activeItems.filter((item) => {
-      const reservationTime = new Date(this.reservationAt(item)).getTime();
-      return (
-        Number.isFinite(reservationTime) &&
-        reservationTime < Date.now() &&
-        (item.consultantSaysPatientAttended ??
-          item.ConsultantSaysPatientAttended) === false &&
-        readAttendanceStatus(item, "attendanceConfirmationStatus") ===
-          AttendanceConfirmationStatus.SecretaryApproved
-      );
-    });
+    const expected = preset === "secretary-confirmed" ? "Confirmed" :
+      preset === "secretary-no-answer" ? "NoAnswer" :
+      preset === "secretary-cancelled" ? "CancelledByPatient" : "NotCalled";
+    return activeItems.filter((item) =>
+      (item.secretaryAnnouncementStatus ?? item.SecretaryAnnouncementStatus ?? "NotCalled") === expected,
+    );
   }
 
   setTab(tab: SecretaryReservationTab): void {

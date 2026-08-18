@@ -16,6 +16,7 @@ import {
   SecretaryDashboardService,
   SecretaryReservation,
   SecretaryReservationActivity,
+  SecretaryAnnouncementStatus,
 } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
 import {
@@ -53,6 +54,18 @@ type DialogMode =
   | "note"
   | "followup"
   | "visit";
+
+const SECRETARY_ANNOUNCEMENT_OPTIONS: ReadonlyArray<{
+  value: SecretaryAnnouncementStatus;
+  label: string;
+}> = [
+  { value: "NotCalled", label: "تماس نشده" },
+  { value: "NoAnswer", label: "پاسخ نداد" },
+  { value: "Confirmed", label: "تایید شده" },
+  { value: "CancelledByPatient", label: "لغو توسط بیمار" },
+  { value: "RescheduleRequested", label: "درخواست تغییر زمان" },
+  { value: "CallAgain", label: "تماس مجدد" },
+];
 
 const STATUS_OPTIONS = [
   AttendanceConfirmationStatus.PendingConsultantConfirmation,
@@ -95,6 +108,7 @@ export class SecretaryReservationRequestsComponent
     { value: "followup", label: "نیاز به پیگیری" },
     { value: "rejected", label: "رد نهایی منشی" },
   ];
+  readonly secretaryAnnouncementOptions = SECRETARY_ANNOUNCEMENT_OPTIONS;
 
   items: SecretaryReservation[] = [];
   totalCount = 0;
@@ -108,6 +122,8 @@ export class SecretaryReservationRequestsComponent
   searchText = "";
   consultantName = "";
   statusFilter: AttendanceConfirmationStatus | null = null;
+  reservationStatus = "";
+  secretaryAnnouncementFilter: SecretaryAnnouncementStatus | null = null;
   reservationDate: Date | null = null;
   fromDate: Date | null = null;
   toDate: Date | null = null;
@@ -123,7 +139,7 @@ export class SecretaryReservationRequestsComponent
   rejectionText = "";
   newDate: Date | null = null;
   newTime = "";
-  contactResult = "Answered";
+  contactResult: SecretaryAnnouncementStatus = "NotCalled";
   followUpDate: Date | null = null;
   followUpTime = "";
   visitResult = 2;
@@ -178,6 +194,8 @@ export class SecretaryReservationRequestsComponent
     this.searchText = "";
     this.consultantName = "";
     this.statusFilter = null;
+    this.reservationStatus = "";
+    this.secretaryAnnouncementFilter = null;
     this.reservationDate = null;
     this.fromDate = null;
     this.toDate = null;
@@ -240,12 +258,14 @@ export class SecretaryReservationRequestsComponent
         searchText: this.searchText.trim() || undefined,
         consultantName: this.consultantName.trim() || undefined,
         attendanceConfirmationStatus: this.statusFilter,
+        reservationStatus: this.reservationStatus || null,
+        secretaryAnnouncementStatus: this.secretaryAnnouncementFilter,
         reservationDate: this.toDateParam(this.reservationDate),
         from: this.toDateParam(this.fromDate),
         to: this.toDateParam(this.toDate),
         followUpDueOn:
           this.quickFilter === "followup" ? this.todayParam() : undefined,
-        visitResultStatus: this.preset === "no-show" ? 3 : null,
+        visitResultStatus: null,
         sortDirection: this.sortDirection,
       })
       .pipe(
@@ -287,6 +307,7 @@ export class SecretaryReservationRequestsComponent
     this.newTime = "";
     this.followUpDate = null;
     this.followUpTime = "";
+    this.contactResult = this.secretaryAnnouncementStatus(item);
     if (mode === "details") this.loadHistory(item);
   }
 
@@ -323,11 +344,11 @@ export class SecretaryReservationRequestsComponent
         reason: this.resolvedRejectionReason(),
       });
     } else if (this.dialogMode === "contact") {
-      request = this.api.logPatientContact(
-        id,
-        this.contactResult,
-        this.note.trim() || null,
-      );
+      request = this.api.updateSecretaryAnnouncement({
+        reservationId: id,
+        status: this.contactResult,
+        description: this.note.trim() || null,
+      });
     } else if (this.dialogMode === "note") {
       request = this.api.addReservationNote(id, this.note.trim());
     } else if (this.dialogMode === "followup") {
@@ -388,6 +409,24 @@ export class SecretaryReservationRequestsComponent
 
   statusClass(item: SecretaryReservation): string {
     return attendanceStatusPresentation(this.attendanceStatus(item)).badgeClass;
+  }
+
+  secretaryAnnouncementStatus(item: SecretaryReservation): SecretaryAnnouncementStatus {
+    return item.secretaryAnnouncementStatus ?? item.SecretaryAnnouncementStatus ?? "NotCalled";
+  }
+
+  secretaryAnnouncementLabel(item: SecretaryReservation): string {
+    const status = this.secretaryAnnouncementStatus(item);
+    if (status === "Confirmed") return "🟢 تایید شده";
+    if (status === "NoAnswer") return "🟠 پاسخ نداد";
+    if (status === "CancelledByPatient") return "🔴 لغو شده";
+    if (status === "NotCalled") return "⚪ تماس نشده";
+    return SECRETARY_ANNOUNCEMENT_OPTIONS.find((option) => option.value === status)?.label ?? status;
+  }
+
+  secretaryAnnouncementClass(item: SecretaryReservation): string {
+    const status = this.secretaryAnnouncementStatus(item);
+    return status === "Confirmed" ? "success" : status === "CancelledByPatient" ? "danger" : status === "NoAnswer" ? "warn" : "muted";
   }
 
   reservationId(item: SecretaryReservation): number | null {
@@ -543,16 +582,13 @@ export class SecretaryReservationRequestsComponent
 
   private applyPreset(preset: SecretaryDashboardPreset): void {
     this.preset = preset;
-    if (preset === "pending") this.setQuickFilter("pending");
-    else if (preset === "confirmed-today") {
-      this.reservationDate = new Date();
-      this.setQuickFilter("confirmed");
-    } else if (preset === "followups-today") this.setQuickFilter("followup");
-    else {
-      this.quickFilter = "all";
-      this.statusFilter = null;
-      this.applyFilters();
-    }
+    this.quickFilter = "all";
+    this.statusFilter = null;
+    this.secretaryAnnouncementFilter =
+      preset === "secretary-confirmed" ? "Confirmed" :
+      preset === "secretary-no-answer" ? "NoAnswer" :
+      preset === "secretary-cancelled" ? "CancelledByPatient" : "NotCalled";
+    this.applyFilters();
   }
 
   private restoreFromUrl(): void {
@@ -568,6 +604,9 @@ export class SecretaryReservationRequestsComponent
         : this.statusForQuickFilter(this.quickFilter);
     this.searchText = params.get("requestSearch") ?? "";
     this.consultantName = params.get("consultant") ?? "";
+    this.reservationStatus = params.get("reservationStatus") ?? "";
+    const announcement = params.get("secretaryAnnouncementStatus") as SecretaryAnnouncementStatus | null;
+    this.secretaryAnnouncementFilter = SECRETARY_ANNOUNCEMENT_OPTIONS.some((option) => option.value === announcement) ? announcement : null;
     this.reservationDate = this.readDateParam(params.get("reservationDate"));
     this.fromDate = this.readDateParam(params.get("requestFrom"));
     this.toDate = this.readDateParam(params.get("requestTo"));
@@ -591,6 +630,8 @@ export class SecretaryReservationRequestsComponent
         attendanceStatus: this.statusFilter,
         requestSearch: this.searchText.trim() || null,
         consultant: this.consultantName.trim() || null,
+        reservationStatus: this.reservationStatus || null,
+        secretaryAnnouncementStatus: this.secretaryAnnouncementFilter,
         reservationDate: this.toDateParam(this.reservationDate) ?? null,
         requestFrom: this.toDateParam(this.fromDate) ?? null,
         requestTo: this.toDateParam(this.toDate) ?? null,

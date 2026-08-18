@@ -116,6 +116,31 @@ export interface SecretaryReservation {
   roomName?: string | null;
   lastFollowUpAt?: string | null;
   lastContactResult?: string | null;
+  secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
+  SecretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
+  secretaryAnnouncementDescription?: string | null;
+  SecretaryAnnouncementDescription?: string | null;
+}
+
+export type SecretaryAnnouncementStatus =
+  | "NotCalled"
+  | "NoAnswer"
+  | "Confirmed"
+  | "CancelledByPatient"
+  | "RescheduleRequested"
+  | "CallAgain";
+
+export interface SecretaryDashboardSummary {
+  requiresCall: number;
+  confirmed: number;
+  noAnswer: number;
+  cancelled: number;
+}
+
+export interface SecretaryAnnouncementRequest {
+  reservationId: number;
+  status: SecretaryAnnouncementStatus;
+  description: string | null;
 }
 
 export interface SecretaryReservationFilters {
@@ -128,6 +153,8 @@ export interface SecretaryReservationFilters {
   onlyPendingReservationReview?: boolean;
   reservationReviewStatus?: number | null;
   visitResultStatus?: number | null;
+  reservationStatus?: string | null;
+  secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
   reservationDate?: string;
   followUpDueOn?: string;
   isConfirmedWithPatient?: boolean | null;
@@ -251,6 +278,45 @@ export class SecretaryDashboardService {
         );
       }),
     );
+  }
+
+  getDashboardSummary(): Observable<SecretaryDashboardSummary> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/secretary/dashboard/summary`, {
+        headers: this.authHeaders(),
+      })
+      .pipe(
+        map((response) => {
+          const root = response as Record<string, unknown>;
+          const value = (root?.["data"] ?? root) as Record<string, unknown>;
+          const number = (...keys: string[]): number => {
+            const found = keys.map((key) => value?.[key]).find((item) => item != null);
+            const parsed = Number(found);
+            return Number.isFinite(parsed) ? parsed : 0;
+          };
+          return {
+            requiresCall: number("requiresCall", "RequiresCall", "needsCall", "NeedsCall"),
+            confirmed: number("confirmed", "Confirmed"),
+            noAnswer: number("noAnswer", "NoAnswer"),
+            cancelled: number("cancelled", "Cancelled", "canceled", "Canceled"),
+          };
+        }),
+        catchError((error) =>
+          throwError(() => this.toUserFacingError(error, "دریافت خلاصه تماس‌ها انجام نشد")),
+        ),
+      );
+  }
+
+  updateSecretaryAnnouncement(
+    payload: SecretaryAnnouncementRequest,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .put<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Reservation/SecretaryAnnouncement`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت نتیجه تماس انجام نشد"));
   }
 
   reviewAttendance(

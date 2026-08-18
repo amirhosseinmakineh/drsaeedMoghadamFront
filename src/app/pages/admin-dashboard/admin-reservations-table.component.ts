@@ -105,11 +105,33 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges {
         ),
     },
     {
+      key: "secretaryAnnouncement",
+      label: "اعلام منشی",
+      value: (row) => this.secretaryAnnouncementLabel(row),
+      badge: (row) => this.secretaryAnnouncementBadge(row),
+    },
+    {
       key: "city",
       label: "شهر",
       value: (row) => this.patientCity(row),
     },
   ];
+
+  secretaryAnnouncementLabel(row: SecretaryReservation): string {
+    const status = row.secretaryAnnouncementStatus ?? row.SecretaryAnnouncementStatus ?? "NotCalled";
+    if (status === "Confirmed") return "🟢 تایید شده";
+    if (status === "NoAnswer") return "🟠 پاسخ نداد";
+    if (status === "CancelledByPatient") return "🔴 لغو شده";
+    if (status === "NotCalled") return "⚪ تماس نشده";
+    if (status === "RescheduleRequested") return "درخواست تغییر زمان";
+    if (status === "CallAgain") return "تماس مجدد";
+    return status;
+  }
+
+  secretaryAnnouncementBadge(row: SecretaryReservation): "success" | "danger" | "warn" | "muted" {
+    const status = row.secretaryAnnouncementStatus ?? row.SecretaryAnnouncementStatus ?? "NotCalled";
+    return status === "Confirmed" ? "success" : status === "CancelledByPatient" ? "danger" : status === "NoAnswer" ? "warn" : "muted";
+  }
 
   constructor(
     private adminApi: AdminDashboardService,

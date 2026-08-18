@@ -1,6 +1,6 @@
 /* global self, clients */
 
-const SW_VERSION = "2026-08-14-realtime-burnt-lead-notification";
+const SW_VERSION = "2026-08-18-secretary-reservation-notifications";
 const REALTIME_LEAD_TAG_PREFIX = "realtime-lead-";
 const REALTIME_LEAD_VIBRATE_PATTERN = [400, 120, 400, 120, 400, 120, 500, 120, 500];
 
@@ -36,7 +36,7 @@ function parsePushPayload(event) {
     const payload = event.data.json();
     return {
       title: payload.title ?? "",
-      body: payload.body ?? "",
+      body: payload.message ?? payload.body ?? "",
       data: payload.data ?? {},
     };
   } catch (error) {
@@ -181,12 +181,14 @@ self.addEventListener("push", (event) => {
 
   if (payload.title || payload.body) {
     event.waitUntil(
-      self.registration.showNotification(payload.title || "اعلان", {
-        body: payload.body,
+      Promise.all([
+        notifyClients({ type: "web-push-message", payload }),
+        self.registration.showNotification(payload.title || "اعلان", {
+        body: payload.body || payload.message,
         data,
         icon: notificationAsset("/icons/icon-192x192.png"),
         badge: notificationAsset("/icons/icon-96x96.png"),
-      }),
+      })]),
     );
   }
 });

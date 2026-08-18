@@ -48,9 +48,15 @@ export class NotificationService {
           return;
         }
 
+        const secretaryTypes = [
+          "ReservationSecretaryNoAnswer",
+          "ReservationSecretaryConfirmed",
+          "ReservationSecretaryCancelled",
+        ];
         if (
           event.data?.type !== "web-push-message" &&
-          event.data?.type !== "RealtimeLead"
+          event.data?.type !== "RealtimeLead" &&
+          !secretaryTypes.includes(event.data?.type)
         ) {
           return;
         }
@@ -441,15 +447,20 @@ export class NotificationService {
     }
 
     const record = payload as Record<string, unknown>;
-    const data =
+    const sourceData =
       typeof record["data"] === "object" && record["data"] !== null
         ? (record["data"] as Record<string, string>)
         : undefined;
+    const rootType = typeof record["type"] === "string" ? record["type"] : undefined;
+    const data = rootType ? { ...sourceData, type: rootType } : sourceData;
 
     return {
       title:
         typeof record["title"] === "string" ? record["title"] : "اعلان جدید",
-      body: typeof record["body"] === "string" ? record["body"] : "",
+      body:
+        typeof record["message"] === "string"
+          ? record["message"]
+          : typeof record["body"] === "string" ? record["body"] : "",
       data,
     };
   }
