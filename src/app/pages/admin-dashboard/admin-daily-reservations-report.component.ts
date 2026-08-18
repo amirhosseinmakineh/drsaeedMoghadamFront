@@ -14,6 +14,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
 import { downloadBlob } from "../../utils/file-download.util";
 import {
   formatIranDateTime,
+  formatReservationTime,
   nowInIran,
   toIranDateInputValue,
 } from "../../utils/iran-datetime.util";
@@ -102,6 +103,10 @@ export class AdminDailyReservationsReportComponent implements OnInit {
 
   formatDateTime(value: string | null | undefined): string {
     return formatIranDateTime(value);
+  }
+
+  formatAppointmentTime(value: string | null | undefined): string {
+    return formatReservationTime(value);
   }
 
   trackReservation(_: number, item: DailyReservationReportItem): number {

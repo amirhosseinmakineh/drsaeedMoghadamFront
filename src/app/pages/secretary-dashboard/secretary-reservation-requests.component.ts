@@ -28,6 +28,8 @@ import {
   BaseDialogComponent,
 } from "../../shared/base";
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
+import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
+import { formatReservationTime } from "../../utils/iran-datetime.util";
 
 // This workflow status is returned for display/actions and is deliberately not
 // used by the attendance filter sent to SecretaryReservations.
@@ -136,6 +138,7 @@ export class SecretaryReservationRequestsComponent
     private route: ActivatedRoute,
     private router: Router,
     private toast: ToastService,
+    private reservationSync: ReservationSyncService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -357,6 +360,7 @@ export class SecretaryReservationRequestsComponent
           this.saving = false;
           this.toast.success(response.message || "عملیات با موفقیت ثبت شد");
           this.closeDialog();
+          this.reservationSync.requestRefresh();
           this.load();
         },
         error: (error) =>
@@ -438,6 +442,9 @@ export class SecretaryReservationRequestsComponent
           timeZone: "Asia/Tehran",
         }).format(date)
       : "-";
+  }
+  formatAppointmentTime(value?: string | null): string {
+    return formatReservationTime(value);
   }
 
   private status(item: SecretaryReservation): number {
