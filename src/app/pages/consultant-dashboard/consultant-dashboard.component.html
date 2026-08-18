@@ -83,6 +83,9 @@
         <app-fa-icon [name]="item.icon"></app-fa-icon>
         <span>{{ item.label }}</span>
       </button>
+      <a class="dashboard-nav-link" routerLink="/financial/wallet" (click)="closeMobileSidebar()">
+        <app-fa-icon name="dashboard"></app-fa-icon><span>مالی من</span>
+      </a>
     </nav>
 
     <button
@@ -182,6 +185,12 @@
             </button>
           }
         </section>
+
+        <article class="consultant-wallet-card">
+          <span><app-fa-icon name="dashboard"></app-fa-icon></span>
+          <div><small>مالی من</small><h3>موجودی کیف پول</h3><strong>{{ walletLoading ? '…' : (ownWallet?.balance ?? 0 | number:'1.0-0') + ' تومان' }}</strong></div>
+          <a class="primary-action compact" routerLink="/financial/wallet">مشاهده جزئیات</a>
+        </article>
 
         @if (!isProfileReady()) {
           <section class="consultant-panel locked-panel">

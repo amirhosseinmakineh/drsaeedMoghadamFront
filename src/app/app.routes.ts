@@ -108,6 +108,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "financial/transactions",
+    canActivate: [authGuard, roleGuard(["admin"])],
+    loadComponent: () =>
+      import("./pages/financial/transactions-list.component").then(
+        (m) => m.TransactionsListComponent,
+      ),
+  },
+  {
     path: "financial/transactions/:id",
     canActivate: [authGuard],
     loadComponent: () =>

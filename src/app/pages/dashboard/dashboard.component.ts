@@ -22,6 +22,8 @@ import {
   UserFilters,
 } from "../../core/admin/admin-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
+import { Wallet } from "../../core/financial/financial.models";
+import { WalletService } from "../../core/financial/wallet.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { AdminReservationsTableComponent } from "../admin-dashboard/admin-reservations-table.component";
@@ -202,6 +204,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   feedbackType: "success" | "error" = "success";
   exportingUsers = false;
   exportingConsultants = false;
+  financialWallets: Wallet[] = [];
+  ownWallet: Wallet | null = null;
+  financialSummaryLoading = false;
   consultantsDailySummaryDate = "";
   consultantsTodayReservationsTotal = 0;
   private usersLoadRequestId = 0;
@@ -296,6 +301,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private adminApi: AdminDashboardService,
+    private walletApi: WalletService,
     private pushNotifications: PushNotificationService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
@@ -312,6 +318,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.closeMobileSidebar();
     if (this.isAdmin()) {
+      this.loadFinancialSummary();
       this.loadUsers();
       this.loadConsultants();
       this.applySectionRouteParams(this.route.snapshot.queryParamMap);
@@ -319,7 +326,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
         (params) => this.applySectionRouteParams(params),
       );
       this.syncSectionQueryParam(this.activeSection);
+    } else {
+      this.loadOwnWallet();
     }
+  }
+
+  get financialWalletCount(): number { return this.financialWallets.length; }
+  get financialTotalBalance(): number { return this.financialWallets.reduce((total, wallet) => total + (Number(wallet.balance) || 0), 0); }
+  get financialTransactionsCount(): number { return this.financialWallets.reduce((total, wallet) => total + (wallet.transactions?.length ?? 0), 0); }
+
+  private loadFinancialSummary(): void {
+    this.financialSummaryLoading = true;
+    this.walletApi.getWallets().subscribe({
+      next: (wallets) => { this.financialWallets = wallets; this.financialSummaryLoading = false; this.markDirty(); },
+      error: () => { this.financialSummaryLoading = false; this.markDirty(); },
+    });
+  }
+
+  private loadOwnWallet(): void {
+    this.walletApi.getMyWallet().subscribe({
+      next: (wallet) => { this.ownWallet = wallet; this.markDirty(); },
+      error: () => { this.ownWallet = null; this.markDirty(); },
+    });
   }
 
   ngOnDestroy(): void {
