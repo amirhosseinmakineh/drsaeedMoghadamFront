@@ -281,6 +281,7 @@ export class SecretaryReservationRequestsComponent
   }
 
   openDialog(item: SecretaryReservation, mode: DialogMode): void {
+    if (mode !== "details" && !this.hasManagementAccess(item)) return;
     this.selected = item;
     this.dialogMode = mode;
     this.note = "";
@@ -303,7 +304,13 @@ export class SecretaryReservationRequestsComponent
   submitDialog(): void {
     const item = this.selected;
     const id = item ? this.reservationId(item) : null;
-    if (!item || !id || !this.dialogMode || this.dialogMode === "details")
+    if (
+      !item ||
+      !id ||
+      !this.dialogMode ||
+      this.dialogMode === "details" ||
+      !this.hasManagementAccess(item)
+    )
       return;
     const validation = this.validateDialog(item);
     if (validation) {
@@ -370,15 +377,23 @@ export class SecretaryReservationRequestsComponent
 
   canManage(item: SecretaryReservation): boolean {
     return (
+      this.hasManagementAccess(item) &&
       this.status(item) === ReservationRequestStatus.PendingSecretaryReview
     );
   }
 
+  hasManagementAccess(item: SecretaryReservation): boolean {
+    return this.api.canManageReservation(item);
+  }
+
   canRecordVisit(item: SecretaryReservation): boolean {
-    return [
-      ReservationRequestStatus.Confirmed,
-      ReservationRequestStatus.Rescheduled,
-    ].includes(this.status(item) as ReservationRequestStatus);
+    return (
+      this.hasManagementAccess(item) &&
+      [
+        ReservationRequestStatus.Confirmed,
+        ReservationRequestStatus.Rescheduled,
+      ].includes(this.status(item) as ReservationRequestStatus)
+    );
   }
 
   phoneHref(item: SecretaryReservation): string | null {
