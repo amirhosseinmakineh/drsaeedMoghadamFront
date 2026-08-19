@@ -12,11 +12,16 @@ const requestsComponentPath = new URL(
   "../src/app/pages/secretary-dashboard/secretary-reservation-requests.component.ts",
   import.meta.url,
 );
+const secretaryServicePath = new URL(
+  "../src/app/core/secretary/secretary-dashboard.service.ts",
+  import.meta.url,
+);
 
-const [template, component, requestsComponent] = await Promise.all([
+const [template, component, requestsComponent, secretaryService] = await Promise.all([
   readFile(templatePath, "utf8"),
   readFile(componentPath, "utf8"),
   readFile(requestsComponentPath, "utf8"),
+  readFile(secretaryServicePath, "utf8"),
 ]);
 
 const legacyParentBindings = [
@@ -52,19 +57,57 @@ if (!/^  notes: Record<number, string> = \{\};$/m.test(component)) {
   );
 }
 
-for (const methodName of [
+const createFlowMembers = [
   "openCreateDialog",
   "closeCreateDialog",
   "createReservation",
-]) {
+  "loadCreateOptions",
+  "filteredPatientOptions",
+  "filteredConsultantOptions",
+  "patientOptionId",
+  "patientOptionName",
+  "patientOptionPhone",
+  "consultantOptionId",
+  "consultantOptionName",
+  "consultantOptionPhone",
+  "normalizeSearch",
+];
+
+for (const memberName of createFlowMembers) {
   const declarations = requestsComponent.match(
-    new RegExp(`^  ${methodName}\\(`, "gm"),
+    new RegExp(
+      `^  (?:(?:private )?${memberName}\\(|get ${memberName}\\()`,
+      "gm",
+    ),
   ) ?? [];
   if (declarations.length !== 1) {
     throw new Error(
-      `Secretary reservation requests component must declare ${methodName} exactly once; found ${declarations.length}`,
+      `Secretary reservation requests component must declare ${memberName} exactly once; found ${declarations.length}`,
     );
   }
+}
+
+for (const declaration of [
+  "consultantSearch = \"\";",
+  "consultantOptions: SecretaryConsultantOption[] = [];",
+]) {
+  if (!requestsComponent.includes(declaration)) {
+    throw new Error(
+      `Secretary reservation requests component is missing create-flow state: ${declaration}`,
+    );
+  }
+}
+
+if (!requestsComponent.includes("SecretaryConsultantOption,")) {
+  throw new Error(
+    "Secretary reservation requests component must import SecretaryConsultantOption",
+  );
+}
+
+if (!/^  getConsultantOptions\(\): Observable<SecretaryConsultantOption\[]> \{$/m.test(secretaryService)) {
+  throw new Error(
+    "Secretary dashboard service must expose getConsultantOptions for the create flow",
+  );
 }
 
 console.log(
