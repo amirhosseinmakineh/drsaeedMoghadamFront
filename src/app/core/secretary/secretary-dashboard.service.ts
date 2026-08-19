@@ -216,19 +216,6 @@ export interface CreateSecretaryReservationRequest {
   reservationType: ReservationType;
 }
 
-export interface SecretaryConsultantOption {
-  profileId?: number;
-  ProfileId?: number;
-  consultantProfileId?: number;
-  ConsultantProfileId?: number;
-  firstName?: string | null;
-  FirstName?: string | null;
-  lastName?: string | null;
-  LastName?: string | null;
-  phoneNumber?: string | null;
-  PhoneNumber?: string | null;
-}
-
 export interface SecretaryPatientOption {
   id?: number;
   Id?: number;
@@ -248,6 +235,14 @@ export interface SecretaryPatientOption {
   User?: Record<string, unknown> | null;
   lead?: Record<string, unknown> | null;
   Lead?: Record<string, unknown> | null;
+  consultantProfileId?: number | null;
+  ConsultantProfileId?: number | null;
+  consultantFullName?: string | null;
+  ConsultantFullName?: string | null;
+  consultantPhoneNumber?: string | null;
+  ConsultantPhoneNumber?: string | null;
+  consultant?: Record<string, unknown> | null;
+  Consultant?: Record<string, unknown> | null;
 }
 
 export interface UpdateSecretaryAnnouncementRequest {
@@ -447,28 +442,6 @@ export class SecretaryDashboardService {
         { headers: this.authHeaders() },
       )
       .pipe(this.ensureCommandSucceeded("ثبت رزرو انجام نشد"));
-  }
-
-  getConsultantOptions(): Observable<SecretaryConsultantOption[]> {
-    const filters = { pageNumber: 1, pageSize: 500 };
-    return this.http
-      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
-        headers: this.authHeaders(),
-        params: this.toParams(filters),
-      })
-      .pipe(
-        map((response) =>
-          this.normalizePaginatedResponse<SecretaryConsultantOption>(
-            response,
-            filters,
-          ).items,
-        ),
-        catchError((error) =>
-          throwError(() =>
-            this.toUserFacingError(error, "دریافت فهرست مشاوران انجام نشد"),
-          ),
-        ),
-      );
   }
 
   getPatientOptions(): Observable<SecretaryPatientOption[]> {

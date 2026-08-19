@@ -17,7 +17,6 @@ import {
   SecretaryReservation,
   SecretaryAnnouncementStatus,
   ReservationType,
-  SecretaryConsultantOption,
   SecretaryPatientOption,
 } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
@@ -147,9 +146,7 @@ export class SecretaryReservationRequestsComponent
   createOptionsLoading = false;
   createOptionsError = "";
   patientSearch = "";
-  consultantSearch = "";
   patientOptions: SecretaryPatientOption[] = [];
-  consultantOptions: SecretaryConsultantOption[] = [];
 
   selected: SecretaryReservation | null = null;
   dialogMode: DialogMode | null = null;
@@ -489,6 +486,169 @@ export class SecretaryReservationRequestsComponent
 
   consultantOptionPhone(item: SecretaryConsultantOption): string {
     return item.phoneNumber ?? item.PhoneNumber ?? "";
+  }
+
+  private normalizeSearch(value: string): string {
+    return value.toLocaleLowerCase("fa").replaceAll("ي", "ی").replaceAll("ك", "ک").trim();
+  }
+
+  openCreateDialog(type = ReservationType.AfterSalesService): void {
+    if (!this.canCreate) return;
+    this.createReservationType = type;
+    this.createLeadAssignmentId = null;
+    this.createConsultantProfileId = null;
+    this.createDate = null;
+    this.createTime = "";
+    this.createDescription = "";
+    this.createServiceTitle = "";
+    this.patientSearch = "";
+    this.createDialogOpen = true;
+    this.loadCreateOptions();
+  }
+
+  closeCreateDialog(): void {
+    if (!this.saving) this.createDialogOpen = false;
+  }
+
+  createReservation(): void {
+    if (!this.canCreate || this.saving) return;
+    if (!this.createLeadAssignmentId || !this.createConsultantProfileId) {
+      this.toast.error("ابتدا بیماری را انتخاب کنید که مشاور فعال دارد");
+      return;
+    }
+    if (!this.createDate || !this.createTime) {
+      this.toast.error("تاریخ و ساعت مراجعه الزامی است");
+      return;
+    }
+    if (!this.createServiceTitle.trim()) {
+      this.toast.error("عنوان خدمت پس از فروش الزامی است");
+      return;
+    }
+    const reservationAt = this.combineDateTime(this.createDate, this.createTime);
+    if (new Date(reservationAt).getTime() <= Date.now()) {
+      this.toast.error("زمان مراجعه باید در آینده باشد");
+      return;
+    }
+    this.saving = true;
+    this.api.createReservation({
+      leadAssignmentId: this.createLeadAssignmentId,
+      consultantProfileId: this.createConsultantProfileId,
+      reservationAt,
+      description: [
+        `خدمت: ${this.createServiceTitle.trim()}`,
+        this.createDescription.trim(),
+      ].filter(Boolean).join("\n"),
+      reservationType: this.createReservationType,
+    }).pipe(finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: (response) => {
+          this.toast.success(response.message || "رزرو با موفقیت ثبت شد");
+          this.createDialogOpen = false;
+          this.reservationSync.requestRefresh();
+          this.load();
+        },
+        error: (error) => this.toast.error(this.errorText(error, "ثبت رزرو انجام نشد")),
+      });
+  }
+
+  loadCreateOptions(): void {
+    if (this.createOptionsLoading) return;
+    this.createOptionsLoading = true;
+    this.createOptionsError = "";
+    this.api.getPatientOptions().pipe(finalize(() => {
+      this.createOptionsLoading = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: (patients) => {
+        this.patientOptions = patients;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        this.createOptionsError = this.errorText(
+          error,
+          "دریافت فهرست بیماران انجام نشد",
+        );
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  get filteredPatientOptions(): SecretaryPatientOption[] {
+    const query = this.normalizeSearch(this.patientSearch);
+    if (!query) return this.patientOptions;
+    return this.patientOptions.filter((item) =>
+      this.normalizeSearch(`${this.patientOptionName(item)} ${this.patientOptionPhone(item)}`).includes(query),
+    );
+  }
+
+  patientOptionId(item: SecretaryPatientOption): number {
+    return Number(item.leadAssignmentId ?? item.LeadAssignmentId ?? item.id ?? item.Id);
+  }
+
+  patientOptionName(item: SecretaryPatientOption): string {
+    const person = item.user ?? item.User ?? item.lead ?? item.Lead ?? {};
+    const fullName = item.fullName?.trim() || item.FullName?.trim();
+    const composedName = [
+      item.firstName ?? item.FirstName ?? person["firstName"] ?? person["FirstName"],
+      item.lastName ?? item.LastName ?? person["lastName"] ?? person["LastName"],
+    ].filter(Boolean).join(" ").trim();
+    return fullName || composedName || item.userName || item.UserName || "بیمار بدون نام";
+  }
+
+  patientOptionPhone(item: SecretaryPatientOption): string {
+    const person = item.user ?? item.User ?? item.lead ?? item.Lead ?? {};
+    return String(item.phoneNumber ?? item.PhoneNumber ?? person["phoneNumber"] ?? person["PhoneNumber"] ?? "");
+  }
+
+  onPatientSelected(leadAssignmentId: number | null): void {
+    this.createLeadAssignmentId = leadAssignmentId;
+    const patient = this.selectedPatientOption;
+    this.createConsultantProfileId = patient
+      ? this.patientConsultantId(patient)
+      : null;
+  }
+
+  get selectedPatientOption(): SecretaryPatientOption | null {
+    if (!this.createLeadAssignmentId) return null;
+    return this.patientOptions.find(
+      (item) => this.patientOptionId(item) === this.createLeadAssignmentId,
+    ) ?? null;
+  }
+
+  patientConsultantId(item: SecretaryPatientOption): number | null {
+    const consultant = item.consultant ?? item.Consultant ?? {};
+    const value = Number(
+      item.consultantProfileId ??
+      item.ConsultantProfileId ??
+      consultant["profileId"] ??
+      consultant["ProfileId"] ??
+      consultant["consultantProfileId"] ??
+      consultant["ConsultantProfileId"],
+    );
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  patientConsultantName(item: SecretaryPatientOption): string {
+    const consultant = item.consultant ?? item.Consultant ?? {};
+    const fullName = item.consultantFullName?.trim() ||
+      item.ConsultantFullName?.trim() ||
+      String(consultant["fullName"] ?? consultant["FullName"] ?? "").trim();
+    const composedName = [
+      consultant["firstName"] ?? consultant["FirstName"],
+      consultant["lastName"] ?? consultant["LastName"],
+    ].filter(Boolean).join(" ").trim();
+    return fullName || composedName || "مشاور ثبت نشده";
+  }
+
+  patientConsultantPhone(item: SecretaryPatientOption): string {
+    const consultant = item.consultant ?? item.Consultant ?? {};
+    return String(
+      item.consultantPhoneNumber ??
+      item.ConsultantPhoneNumber ??
+      consultant["phoneNumber"] ??
+      consultant["PhoneNumber"] ??
+      "",
+    );
   }
 
   private normalizeSearch(value: string): string {
