@@ -82,8 +82,6 @@ export interface SecretaryReservation extends ReservationDto {
   SecretaryReviewNote?: string | null;
   secretaryAnnouncement?: string | null;
   SecretaryAnnouncement?: string | null;
-  secretaryAnnouncementStatus?: string | null;
-  SecretaryAnnouncementStatus?: string | null;
   secretaryAnnouncementUpdatedAt?: string | null;
   SecretaryAnnouncementUpdatedAt?: string | null;
   secretaryAnnouncementUserId?: string | null;
@@ -343,18 +341,6 @@ export class SecretaryDashboardService {
       );
   }
 
-  updateSecretaryAnnouncement(
-    payload: SecretaryAnnouncementRequest,
-  ): Observable<ApiCommandResponse> {
-    return this.http
-      .put<ApiCommandResponse>(
-        `${this.apiBaseUrl}/Reservation/SecretaryAnnouncement`,
-        payload,
-        { headers: this.authHeaders() },
-      )
-      .pipe(this.ensureCommandSucceeded("ثبت نتیجه تماس انجام نشد"));
-  }
-
   reviewAttendance(
     payload: ReviewAttendanceRequest,
   ): Observable<ApiCommandResponse> {
@@ -368,7 +354,9 @@ export class SecretaryDashboardService {
   }
 
   updateSecretaryAnnouncement(
-    payload: UpdateSecretaryAnnouncementRequest,
+    payload:
+      | SecretaryAnnouncementRequest
+      | UpdateSecretaryAnnouncementRequest,
   ): Observable<ApiCommandResponse> {
     return this.http
       .put<ApiCommandResponse>(
