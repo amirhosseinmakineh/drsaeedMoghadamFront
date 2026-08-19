@@ -130,6 +130,10 @@
               <span><app-fa-icon name="users"></app-fa-icon></span>
               <strong>مدیریت کاربران</strong>
             </button>
+            <button type="button" (click)="setSection('secretaries')">
+              <span><app-fa-icon name="user"></app-fa-icon></span>
+              <strong>مدیریت منشی‌ها</strong>
+            </button>
             <button type="button" (click)="setSection('consultants')">
               <span><app-fa-icon name="doctor"></app-fa-icon></span>
               <strong>مدیریت مشاوران</strong>
@@ -264,6 +268,84 @@
               (addClick)="openAddUserDialog()"
               (actionClick)="handleUserAction($event)"
               (pageChange)="changeUsersPage($event)"
+            ></app-base-table>
+          </section>
+        }
+
+        @if (activeSection === "secretaries") {
+          <section class="admin-panel">
+            <header class="panel-heading">
+              <div>
+                <span>منشی‌ها</span>
+                <h2>مدیریت منشی‌های اصلی و کمکی</h2>
+              </div>
+            </header>
+
+            <form class="filter-grid users-filter" (ngSubmit)="applySecretaryFilters()">
+              <label class="secretary-search">
+                جست‌وجو
+                <input
+                  [ngModel]="secretaryFilters.search"
+                  (ngModelChange)="onSecretarySearchChange($event)"
+                  name="secretarySearch"
+                  placeholder="نام، نام خانوادگی یا موبایل"
+                />
+              </label>
+              <label>نام<input [(ngModel)]="secretaryFilters.firstName" name="secretaryFirstName" /></label>
+              <label>نام خانوادگی<input [(ngModel)]="secretaryFilters.lastName" name="secretaryLastName" /></label>
+              <label>موبایل<input [(ngModel)]="secretaryFilters.phoneNumber" name="secretaryPhone" inputmode="tel" /></label>
+              <label>
+                نوع منشی
+                <select [(ngModel)]="secretaryFilters.secretaryType" name="secretaryTypeFilter">
+                  <option [ngValue]="null">همه</option>
+                  <option [ngValue]="secretaryTypes.Main">اصلی</option>
+                  <option [ngValue]="secretaryTypes.Assistant">کمکی</option>
+                </select>
+              </label>
+              <label>
+                جنسیت
+                <select [(ngModel)]="secretaryFilters.gender" name="secretaryGender">
+                  <option [ngValue]="null">همه</option>
+                  <option [ngValue]="1">مرد</option>
+                  <option [ngValue]="2">زن</option>
+                </select>
+              </label>
+              <label>
+                وضعیت
+                <select [(ngModel)]="secretaryFilters.isActive" name="secretaryActive">
+                  <option [ngValue]="null">همه</option>
+                  <option [ngValue]="true">فعال</option>
+                  <option [ngValue]="false">غیرفعال</option>
+                </select>
+              </label>
+              <label>
+                تکمیل پروفایل
+                <select [(ngModel)]="secretaryFilters.isCompleteName" name="secretaryComplete">
+                  <option [ngValue]="null">همه</option>
+                  <option [ngValue]="true">تکمیل‌شده</option>
+                  <option [ngValue]="false">ناقص</option>
+                </select>
+              </label>
+              <button class="primary-filter" type="submit">اعمال فیلتر</button>
+            </form>
+
+            <app-base-table
+              title="لیست منشی‌ها"
+              [columns]="secretaryColumns"
+              [data]="secretaries"
+              [showAdd]="true"
+              [showEdit]="true"
+              [showDelete]="true"
+              [loading]="secretariesLoading"
+              [currentPage]="secretaryFilters.pageNumber"
+              [pageSize]="secretaryFilters.pageSize"
+              [totalCount]="secretariesTotalCount"
+              [totalPages]="secretariesTotalPages"
+              addLabel="افزودن منشی"
+              emptyText="منشی‌ای برای نمایش وجود ندارد"
+              (addClick)="openAddSecretaryDialog()"
+              (actionClick)="handleSecretaryAction($event)"
+              (pageChange)="changeSecretariesPage($event)"
             ></app-base-table>
           </section>
         }
@@ -454,7 +536,9 @@
   <app-base-dialog
     [open]="userDialogOpen"
     [showFooter]="false"
-    [title]="userDialogMode === 'add' ? 'افزودن کاربر' : 'ویرایش کاربر'"
+    [title]="activeSection === 'secretaries'
+      ? (userDialogMode === 'add' ? 'افزودن منشی' : 'ویرایش منشی')
+      : (userDialogMode === 'add' ? 'افزودن کاربر' : 'ویرایش کاربر')"
     (closed)="closeUserDialog()"
   >
     <form class="dialog-form" (ngSubmit)="submitUserForm()">
@@ -516,19 +600,21 @@
             <option [ngValue]="2">زن</option>
           </select>
         </label>
-        <label>
-          نقش
-          <select
-            [(ngModel)]="userForm.roleName"
-            name="dialogRole"
-            (ngModelChange)="onUserRoleChange($event)"
-          >
-            <option value="Admin">ادمین</option>
-            <option value="Consultant">مشاور</option>
-            <option value="Secretary">منشی</option>
-            <option value="NormalUser">کاربر عادی</option>
-          </select>
-        </label>
+        @if (activeSection !== "secretaries") {
+          <label>
+            نقش
+            <select
+              [(ngModel)]="userForm.roleName"
+              name="dialogRole"
+              (ngModelChange)="onUserRoleChange($event)"
+            >
+              <option value="Admin">ادمین</option>
+              <option value="Consultant">مشاور</option>
+              <option value="Secretary">منشی</option>
+              <option value="NormalUser">کاربر عادی</option>
+            </select>
+          </label>
+        }
       </div>
       @if (userForm.roleName === "Secretary") {
         <section class="secretary-access-editor">
