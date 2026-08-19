@@ -173,6 +173,11 @@ export enum ReservationType {
 
 export interface SecretaryAnnouncementRequest {
   reservationId: number;
+  /**
+   * Kept optional for compatibility with older API typings. The backend command
+   * ignores this JSON field and resolves the acting secretary from JWT claims.
+   */
+  secretaryUserId?: string;
   status: SecretaryAnnouncementStatus;
   description: string | null;
 }
@@ -244,12 +249,6 @@ export interface SecretaryPatientOption {
   ConsultantPhoneNumber?: string | null;
   consultant?: Record<string, unknown> | null;
   Consultant?: Record<string, unknown> | null;
-}
-
-export interface UpdateSecretaryAnnouncementRequest {
-  reservationId: number;
-  secretaryUserId: string;
-  secretaryAnnouncement: string | null;
 }
 
 export interface SecretaryReservationActivity {
@@ -469,9 +468,7 @@ export class SecretaryDashboardService {
   }
 
   updateSecretaryAnnouncement(
-    payload:
-      | SecretaryAnnouncementRequest
-      | UpdateSecretaryAnnouncementRequest,
+    payload: SecretaryAnnouncementRequest,
   ): Observable<ApiCommandResponse> {
     return this.http
       .put<ApiCommandResponse>(
