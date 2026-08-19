@@ -57,7 +57,7 @@
     </section>
 
     <div class="table-heading">
-      <div><h3>جزئیات رزروها</h3><small>تولید گزارش: {{ formatDateTime(report.generatedAt) }}</small></div>
+      <div><h3>جزئیات رزروها{{ report.datePersian ? " - " + report.datePersian : "" }}</h3><small>تولید گزارش: {{ report.generatedAtPersian || formatDateTime(report.generatedAt) }}</small></div>
       <b>{{ report.items.length }} رکورد</b>
     </div>
     @if (!report.items.length && !loading) {
@@ -72,7 +72,7 @@
               <td><strong>{{ item.consultantFullName || "-" }}</strong><small>{{ item.consultantPhoneNumber || "-" }}</small></td>
               <td><strong>{{ item.patientName || "-" }}</strong><small>{{ item.patientPhoneNumber || "-" }}</small><small *ngIf="item.secondaryPhoneNumber">{{ item.secondaryPhoneNumber }}</small></td>
               <td>{{ item.patientCity || "-" }}<small>{{ item.patientRegion || item.businessName || "" }}</small></td>
-              <td>{{ formatAppointmentTime(item.reservationAt) }}</td><td>{{ formatDateTime(item.createdAt) }}</td>
+              <td>{{ item.appointmentDateTimePersian || formatAppointmentTime(item.reservationAt) }}</td><td>{{ item.createdAtPersian || formatDateTime(item.createdAt) }}</td>
               <td><span class="badge status">{{ item.requestStatusTitle }}</span></td>
               <td><span class="badge visit">{{ item.visitResultStatusTitle }}</span></td>
               <td>{{ item.attendanceProbabilityPercent === null ? "-" : item.attendanceProbabilityPercent + "٪" }}</td>

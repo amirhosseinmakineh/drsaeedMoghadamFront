@@ -47,6 +47,16 @@ export interface SecretaryAccessResult {
 }
 
 export interface SecretaryReservation extends ReservationDto {
+  reservationAtPersian?: string | null;
+  ReservationAtPersian?: string | null;
+  createdAt?: string | null;
+  CreatedAt?: string | null;
+  createdAtPersian?: string | null;
+  CreatedAtPersian?: string | null;
+  reservationType?: ReservationType | null;
+  ReservationType?: ReservationType | null;
+  patientReceivedService?: boolean | null;
+  PatientReceivedService?: boolean | null;
   canManage?: boolean;
   CanManage?: boolean;
   canEdit?: boolean;
@@ -83,6 +93,8 @@ export interface SecretaryReservation extends ReservationDto {
   IsWaitingForSecretaryReview?: boolean | null;
   secretaryReviewedAt?: string | null;
   SecretaryReviewedAt?: string | null;
+  secretaryReviewedAtPersian?: string | null;
+  SecretaryReviewedAtPersian?: string | null;
   secretaryUserId?: string | null;
   SecretaryUserId?: string | null;
   secretaryApprovedConsultantConfirmation?: boolean | null;
@@ -151,6 +163,12 @@ export interface SecretaryDashboardSummary {
   confirmed: number;
   noAnswer: number;
   cancelled: number;
+  afterSalesServices: number;
+}
+
+export enum ReservationType {
+  Regular = 1,
+  AfterSalesService = 2,
 }
 
 export interface SecretaryAnnouncementRequest {
@@ -177,6 +195,7 @@ export interface SecretaryReservationFilters {
   isConfirmedWithPatient?: boolean | null;
   consultantName?: string;
   sortDirection?: "asc" | "desc";
+  reservationType?: ReservationType | null;
   onlyDue?: boolean;
   includeCanceled?: boolean;
   pageNumber: number;
@@ -185,9 +204,16 @@ export interface SecretaryReservationFilters {
 
 export interface ReviewAttendanceRequest {
   reservationId: number;
-  secretaryUserId: string;
-  approved: boolean;
+  patientReceivedService: boolean;
   note: string | null;
+}
+
+export interface CreateSecretaryReservationRequest {
+  leadAssignmentId: number;
+  consultantProfileId: number;
+  reservationAt: string;
+  description: string | null;
+  reservationType: ReservationType;
 }
 
 export interface UpdateSecretaryAnnouncementRequest {
@@ -351,6 +377,7 @@ export class SecretaryDashboardService {
             confirmed: number("confirmed", "Confirmed"),
             noAnswer: number("noAnswer", "NoAnswer"),
             cancelled: number("cancelled", "Cancelled", "canceled", "Canceled"),
+            afterSalesServices: number("afterSalesServices", "AfterSalesServices"),
           };
         }),
         catchError((error) =>
@@ -369,6 +396,18 @@ export class SecretaryDashboardService {
         { headers: this.authHeaders() },
       )
       .pipe(this.ensureCommandSucceeded("ثبت بررسی حضور انجام نشد"));
+  }
+
+  createReservation(
+    payload: CreateSecretaryReservationRequest,
+  ): Observable<ApiCommandResponse<SecretaryReservation>> {
+    return this.http
+      .post<ApiCommandResponse<SecretaryReservation>>(
+        `${this.apiBaseUrl}/Reservation`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت رزرو انجام نشد"));
   }
 
   updateSecretaryAnnouncement(

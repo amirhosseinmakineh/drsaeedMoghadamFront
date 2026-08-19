@@ -17,6 +17,7 @@ import {
   SecretaryReservation,
   SecretaryReservationActivity,
   SecretaryAnnouncementStatus,
+  ReservationType,
 } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
 import {
@@ -47,6 +48,7 @@ enum ReservationRequestStatus {
 }
 
 type QuickFilter = "all" | "pending" | "confirmed" | "followup" | "rejected";
+type ReservationTypeFilter = "all" | "regular" | "after-sales";
 type DialogMode =
   | "details"
   | "confirm"
@@ -101,6 +103,7 @@ export class SecretaryReservationRequestsComponent
 {
   @Input() profileReady = false;
   @Input() preset: SecretaryDashboardPreset | null = null;
+  @Input() canCreate = false;
 
   readonly statusOptions = STATUS_OPTIONS;
   readonly quickFilters: { value: QuickFilter; label: string }[] = [
@@ -130,7 +133,16 @@ export class SecretaryReservationRequestsComponent
   fromDate: Date | null = null;
   toDate: Date | null = null;
   dateFilterMode: "exact" | "range" = "exact";
-  sortDirection: "asc" | "desc" = "desc";
+  sortDirection: "asc" | "desc" = "asc";
+  reservationTypeFilter: ReservationTypeFilter = "all";
+
+  createDialogOpen = false;
+  createLeadAssignmentId: number | null = null;
+  createConsultantProfileId: number | null = null;
+  createDate: Date | null = null;
+  createTime = "";
+  createDescription = "";
+  createReservationType = ReservationType.AfterSalesService;
 
   selected: SecretaryReservation | null = null;
   dialogMode: DialogMode | null = null;
@@ -180,6 +192,11 @@ export class SecretaryReservationRequestsComponent
     this.applyFilters();
   }
 
+  setReservationTypeFilter(value: ReservationTypeFilter): void {
+    this.reservationTypeFilter = value;
+    this.applyFilters();
+  }
+
   applyFilters(): void {
     this.pageNumber = 1;
     this.syncUrl();
@@ -202,7 +219,8 @@ export class SecretaryReservationRequestsComponent
     this.reservationDate = null;
     this.fromDate = null;
     this.toDate = null;
-    this.sortDirection = "desc";
+    this.sortDirection = "asc";
+    this.reservationTypeFilter = "all";
     this.applyFilters();
   }
 
@@ -270,6 +288,12 @@ export class SecretaryReservationRequestsComponent
           this.quickFilter === "followup" ? this.todayParam() : undefined,
         visitResultStatus: null,
         sortDirection: this.sortDirection,
+        reservationType:
+          this.reservationTypeFilter === "regular"
+            ? ReservationType.Regular
+            : this.reservationTypeFilter === "after-sales"
+              ? ReservationType.AfterSalesService
+              : null,
       })
       .pipe(
         finalize(() => {
@@ -320,6 +344,55 @@ export class SecretaryReservationRequestsComponent
     this.dialogMode = null;
     this.selected = null;
     this.history = [];
+  }
+
+  openCreateDialog(type = ReservationType.AfterSalesService): void {
+    if (!this.canCreate) return;
+    this.createReservationType = type;
+    this.createLeadAssignmentId = null;
+    this.createConsultantProfileId = null;
+    this.createDate = null;
+    this.createTime = "";
+    this.createDescription = "";
+    this.createDialogOpen = true;
+  }
+
+  closeCreateDialog(): void {
+    if (!this.saving) this.createDialogOpen = false;
+  }
+
+  createReservation(): void {
+    if (!this.canCreate || this.saving) return;
+    if (!this.createLeadAssignmentId || !this.createConsultantProfileId) {
+      this.toast.error("انتخاب بیمار/لید و مشاور الزامی است");
+      return;
+    }
+    if (!this.createDate || !this.createTime) {
+      this.toast.error("تاریخ و ساعت مراجعه الزامی است");
+      return;
+    }
+    const reservationAt = this.combineDateTime(this.createDate, this.createTime);
+    if (new Date(reservationAt).getTime() <= Date.now()) {
+      this.toast.error("زمان مراجعه باید در آینده باشد");
+      return;
+    }
+    this.saving = true;
+    this.api.createReservation({
+      leadAssignmentId: this.createLeadAssignmentId,
+      consultantProfileId: this.createConsultantProfileId,
+      reservationAt,
+      description: this.createDescription.trim() || null,
+      reservationType: this.createReservationType,
+    }).pipe(finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: (response) => {
+          this.toast.success(response.message || "رزرو با موفقیت ثبت شد");
+          this.createDialogOpen = false;
+          this.reservationSync.requestRefresh();
+          this.load();
+        },
+        error: (error) => this.toast.error(this.errorText(error, "ثبت رزرو انجام نشد")),
+      });
   }
 
   submitDialog(): void {
@@ -500,6 +573,14 @@ export class SecretaryReservationRequestsComponent
   formatAppointmentTime(value?: string | null): string {
     return formatReservationTime(value);
   }
+  displayReservationAt(item: SecretaryReservation): string {
+    return item.reservationAtPersian ?? item.ReservationAtPersian ??
+      this.formatAppointmentTime(this.reservationAt(item));
+  }
+  displayCreatedAt(item: SecretaryReservation): string {
+    return item.createdAtPersian ?? item.CreatedAtPersian ??
+      this.formatDate(item.createdAt ?? item.CreatedAt ?? item.requestCreatedAt);
+  }
 
   private status(item: SecretaryReservation): number {
     return Number(
@@ -606,7 +687,8 @@ export class SecretaryReservationRequestsComponent
     this.preset = preset;
     this.quickFilter = "all";
     this.statusFilter = null;
-    this.secretaryAnnouncementFilter =
+    this.reservationTypeFilter = preset === "after-sales" ? "after-sales" : "all";
+    this.secretaryAnnouncementFilter = preset === "after-sales" ? null :
       preset === "secretary-confirmed" ? "Confirmed" :
       preset === "secretary-no-answer" ? "NoAnswer" :
       preset === "secretary-cancelled" ? "CancelledByPatient" : "NotCalled";
@@ -634,7 +716,9 @@ export class SecretaryReservationRequestsComponent
     this.toDate = this.readDateParam(params.get("requestTo"));
     this.dateFilterMode = this.fromDate || this.toDate ? "range" : "exact";
     this.sortDirection =
-      params.get("requestDirection") === "asc" ? "asc" : "desc";
+      params.get("requestDirection") === "desc" ? "desc" : "asc";
+    const type = params.get("reservationType") as ReservationTypeFilter | null;
+    this.reservationTypeFilter = ["regular", "after-sales"].includes(type ?? "") ? type! : "all";
     this.pageNumber = Math.max(1, Number(params.get("requestPage")) || 1);
     this.pageSize = [10, 20, 50].includes(Number(params.get("requestPageSize")))
       ? Number(params.get("requestPageSize"))
@@ -659,7 +743,8 @@ export class SecretaryReservationRequestsComponent
         requestTo: this.toDateParam(this.toDate) ?? null,
         requestSort: null,
         requestDirection:
-          this.sortDirection !== "desc" ? this.sortDirection : null,
+          this.sortDirection !== "asc" ? this.sortDirection : null,
+        reservationType: this.reservationTypeFilter === "all" ? null : this.reservationTypeFilter,
         requestPage: this.pageNumber > 1 ? this.pageNumber : null,
         requestPageSize: this.pageSize !== 20 ? this.pageSize : null,
       },
