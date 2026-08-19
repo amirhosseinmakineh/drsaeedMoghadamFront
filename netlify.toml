@@ -1,15 +1,6 @@
 [build]
-command = "npm run build"
+command = "npm run build -- --configuration stage"
 publish = "dist/demo/browser"
-
-# Web Push (VAPID) requires these environment variables in
-# Netlify → Site configuration → Environment variables (Build scope):
-#   WEBPUSH_VAPID_PUBLIC_KEY
-# Browser API requests use the same-origin /api proxy below. This avoids CORS
-# preflight failures while preserving Authorization headers.
-#
-# Backend must also have WEBPUSH_VAPID_PUBLIC_KEY, WEBPUSH_VAPID_PRIVATE_KEY,
-# and WEBPUSH_VAPID_SUBJECT configured at runtime.
 
 [build.environment]
 NODE_VERSION = "20"
@@ -17,13 +8,13 @@ REQUIRE_WEBPUSH_CONFIG = "true"
 
 [[redirects]]
   from = "/api/*"
-  to = "https://api.drsaeedmoghadam.com/api/:splat"
+  to = "https://drmoghdamatest-10b-drsaeedtest2.runflare.cloud/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/hubs/*"
-  to = "https://api.drsaeedmoghadam.com/hubs/:splat"
+  to = "https://drmoghdamatest-10b-drsaeedtest2.runflare.cloud/hubs/:splat"
   status = 200
   force = true
 
