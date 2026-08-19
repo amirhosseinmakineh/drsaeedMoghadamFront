@@ -13,24 +13,114 @@
   @media (min-width: 981px) {
     .dashboard-layout,
     .dashboard-layout.admin-mode {
-      width: calc(100% - clamp(32px, 3vw, 56px));
-      max-width: none;
-      grid-template-columns: clamp(250px, 18vw, 300px) minmax(0, 1fr);
+      width: min(1920px, calc(100% - clamp(28px, 3vw, 64px)));
+      grid-template-columns: clamp(238px, 17vw, 296px) minmax(0, 1fr);
+      gap: clamp(16px, 1.5vw, 28px);
       margin-inline: auto;
+      padding-top: clamp(20px, 2.5vw, 38px);
     }
 
     .dashboard-sidebar {
-      max-height: calc(100vh - 36px);
+      top: clamp(14px, 2vw, 24px);
+      max-height: calc(100dvh - clamp(28px, 4vw, 48px));
       overflow-y: auto;
+      overscroll-behavior: contain;
       scrollbar-width: thin;
     }
 
     .dashboard-nav button {
       min-height: 46px;
+      transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .dashboard-nav button:hover {
+      transform: translateX(-2px);
+    }
+
+    .dashboard-content,
+    .admin-shell,
+    .consultant-shell,
+    .secretary-shell {
+      min-width: 0;
     }
 
     .dashboard-content {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .dashboard-hero {
+      padding: clamp(24px, 2.6vw, 42px);
+    }
+
+    // Dashboard sections can contain wide tables and dense filter rows. Keep
+    // those sections inside the content column instead of letting the complete
+    // two-column shell overflow on medium desktop screens.
+    .dashboard-content > *,
+    .admin-shell > *,
+    .consultant-shell > *,
+    .secretary-shell > * {
       min-width: 0;
+      max-width: 100%;
+    }
+  }
+
+  // Compact laptops still use the full desktop navigation, but with a calmer
+  // sidebar/content ratio so operational panels retain useful working space.
+  @media (min-width: 981px) and (max-width: 1240px) {
+    .dashboard-layout,
+    .dashboard-layout.admin-mode {
+      width: calc(100% - 24px);
+      grid-template-columns: 224px minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .dashboard-sidebar {
+      gap: 14px;
+      padding: 16px;
+      border-radius: 28px;
+    }
+
+    .dashboard-user-card {
+      gap: 10px;
+      padding: 14px;
+      border-radius: 22px;
+    }
+
+    .dashboard-user-card .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 19px;
+    }
+
+    .dashboard-user-card h1 {
+      overflow: hidden;
+      font-size: 1.05rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dashboard-nav {
+      gap: 7px;
+    }
+
+    .dashboard-nav button {
+      padding-inline: 11px;
+      font-size: 0.86rem;
+    }
+  }
+
+  @media (min-width: 1600px) {
+    .dashboard-layout,
+    .dashboard-layout.admin-mode {
+      grid-template-columns: 296px minmax(0, 1fr);
+    }
+
+    .dashboard-content {
+      gap: 22px;
     }
   }
 
