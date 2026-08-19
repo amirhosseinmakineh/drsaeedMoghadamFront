@@ -30,6 +30,22 @@ export interface PaginatedResponse<T> {
   source?: unknown;
 }
 
+export type SecretaryPermission =
+  | "ViewReservations"
+  | "EditReservations"
+  | "ConfirmAttendance"
+  | "SecretaryAnnouncement"
+  | "ViewPatients"
+  | "CreateReservation"
+  | "CancelReservation";
+
+export interface SecretaryAccessResult {
+  isSecretary: boolean;
+  hasFullAccess: boolean;
+  allowedDays: string[];
+  permissions: SecretaryPermission[];
+}
+
 export interface CompleteSecretaryProfileRequest {
   userId: string;
   nationalityCode: string;
@@ -216,6 +232,25 @@ export class SecretaryDashboardService {
     private http: HttpClient,
     private auth: AuthService,
   ) {}
+
+  getAccess(): Observable<SecretaryAccessResult> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Secretary/access`, { headers: this.authHeaders() })
+      .pipe(map((response) => {
+        const envelope = response as { data?: unknown; Data?: unknown };
+        const value = (envelope.data ?? envelope.Data ?? response) as Record<string, unknown>;
+        const list = (camel: string, pascal: string): string[] => {
+          const raw = value[camel] ?? value[pascal];
+          return Array.isArray(raw) ? raw.map(String) : [];
+        };
+        return {
+          isSecretary: Boolean(value["isSecretary"] ?? value["IsSecretary"]),
+          hasFullAccess: Boolean(value["hasFullAccess"] ?? value["HasFullAccess"]),
+          allowedDays: list("allowedDays", "AllowedDays"),
+          permissions: list("permissions", "Permissions") as SecretaryPermission[],
+        };
+      }));
+  }
 
   canManageReservation(reservation: SecretaryReservation): boolean {
     return this.backendPermission(

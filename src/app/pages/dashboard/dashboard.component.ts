@@ -19,6 +19,8 @@ import {
   ConsultantDailySummaryItem,
   ConsultantFilters,
   SaveUserRequest,
+  SecretaryPermissionType,
+  SecretaryType,
   UserFilters,
 } from "../../core/admin/admin-dashboard.service";
 import { AuthService } from "../../core/auth/auth.service";
@@ -83,7 +85,12 @@ interface UserFormModel {
   birthDate: string;
   isActive: boolean;
   roleName: string;
+  secretaryType: SecretaryType;
+  secretaryAccess: Record<number, { enabled: boolean; permissions: SecretaryPermissionType[] }>;
 }
+
+interface SecretaryDayOption { value: number; label: string }
+interface SecretaryPermissionOption { value: SecretaryPermissionType; label: string }
 
 const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "overview",
@@ -185,6 +192,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   userSaving = false;
   userFormOriginalRole = "";
   userForm: UserFormModel = this.emptyUserForm();
+  readonly secretaryTypes = SecretaryType;
+  readonly secretaryDays: SecretaryDayOption[] = [
+    { value: 6, label: "شنبه" }, { value: 0, label: "یکشنبه" },
+    { value: 1, label: "دوشنبه" }, { value: 2, label: "سه‌شنبه" },
+    { value: 3, label: "چهارشنبه" }, { value: 4, label: "پنجشنبه" },
+    { value: 5, label: "جمعه" },
+  ];
+  readonly secretaryPermissionOptions: SecretaryPermissionOption[] = [
+    { value: SecretaryPermissionType.ViewReservations, label: "مشاهده رزرو" },
+    { value: SecretaryPermissionType.EditReservations, label: "ویرایش رزرو" },
+    { value: SecretaryPermissionType.ConfirmAttendance, label: "تایید حضور" },
+    { value: SecretaryPermissionType.SecretaryAnnouncement, label: "ثبت اعلام منشی" },
+    { value: SecretaryPermissionType.ViewPatients, label: "مشاهده بیمار" },
+    { value: SecretaryPermissionType.CreateReservation, label: "ایجاد رزرو" },
+    { value: SecretaryPermissionType.CancelReservation, label: "لغو رزرو" },
+  ];
   selectedUserBirthDate?: Date;
   readonly birthDatePickerLabel = { fa: "تاریخ تولد", en: "Birth date" };
   readonly birthDateMinDate = createRelativeYearDateInIran(-120);
@@ -577,6 +600,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       birthDate: "",
       isActive: Boolean(user.isActive),
       roleName,
+      secretaryType: this.parseSecretaryType(user.secretaryType ?? user.SecretaryType),
+      secretaryAccess: this.buildSecretaryAccess(user),
     };
     this.userDialogOpen = true;
     this.markDirty();
@@ -590,6 +615,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ) {
       this.userForm.isCompleteProfile = false;
     }
+  }
+
+  toggleSecretaryPermission(day: number, permission: SecretaryPermissionType, enabled: boolean): void {
+    const permissions = this.userForm.secretaryAccess[day].permissions;
+    this.userForm.secretaryAccess[day].permissions = enabled
+      ? Array.from(new Set([...permissions, permission]))
+      : permissions.filter((item) => item !== permission);
+  }
+
+  hasSecretaryPermission(day: number, permission: SecretaryPermissionType): boolean {
+    return this.userForm.secretaryAccess[day].permissions.includes(permission);
   }
 
   closeUserDialog(): void {
@@ -890,6 +926,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
       roleName,
     };
 
+    if (roleName === "Secretary") {
+      payload.secretaryType = this.userForm.secretaryType;
+      if (this.userForm.secretaryType === SecretaryType.Assistant) {
+        payload.secretaryAccessSchedules = this.secretaryDays.map(({ value }) => ({
+          dayOfWeek: value,
+          isActive: this.userForm.secretaryAccess[value].enabled,
+        }));
+        payload.secretaryAccessPermissions = this.secretaryDays.flatMap(({ value }) =>
+          this.userForm.secretaryAccess[value].permissions.map((permissionType) => ({
+            dayOfWeek: value, permissionType,
+            isActive: this.userForm.secretaryAccess[value].enabled,
+          })),
+        );
+      } else {
+        payload.secretaryAccessSchedules = [];
+        payload.secretaryAccessPermissions = [];
+      }
+    }
+
     if (this.userDialogMode === "add") {
       payload.passwordHash = this.userForm.passwordHash;
       payload.birthDate = `${this.userForm.birthDate}T00:00:00`;
@@ -914,7 +969,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
       birthDate: "",
       isActive: true,
       roleName: "NormalUser",
+      secretaryType: SecretaryType.Main,
+      secretaryAccess: this.emptySecretaryAccess(),
     };
+  }
+
+  private emptySecretaryAccess(): UserFormModel["secretaryAccess"] {
+    return Object.fromEntries([6, 0, 1, 2, 3, 4, 5].map((value) => [value, { enabled: false, permissions: [] }])) as UserFormModel["secretaryAccess"];
+  }
+
+  private parseSecretaryType(value: number | string | null | undefined): SecretaryType {
+    return value === SecretaryType.Assistant || String(value).toLowerCase() === "assistant" || String(value) === "2"
+      ? SecretaryType.Assistant : SecretaryType.Main;
+  }
+
+  private buildSecretaryAccess(user: AdminUser): UserFormModel["secretaryAccess"] {
+    const access = this.emptySecretaryAccess();
+    for (const schedule of user.secretaryAccessSchedules ?? user.SecretaryAccessSchedules ?? []) {
+      const day = Number(schedule.dayOfWeek ?? (schedule as unknown as { DayOfWeek: number }).DayOfWeek);
+      if (access[day]) access[day].enabled = Boolean(schedule.isActive ?? (schedule as unknown as { IsActive: boolean }).IsActive);
+    }
+    for (const permission of user.secretaryAccessPermissions ?? user.SecretaryAccessPermissions ?? []) {
+      const raw = permission as unknown as { DayOfWeek?: number; PermissionType?: SecretaryPermissionType; IsActive?: boolean };
+      const day = Number(permission.dayOfWeek ?? raw.DayOfWeek);
+      const type = Number(permission.permissionType ?? raw.PermissionType) as SecretaryPermissionType;
+      if (access[day] && (permission.isActive ?? raw.IsActive ?? true)) access[day].permissions.push(type);
+    }
+    return access;
   }
 
   private normalizeUser(user: AdminUser): AdminUser {

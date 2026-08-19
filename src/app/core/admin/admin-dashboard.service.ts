@@ -53,6 +53,38 @@ export interface AdminUser {
   ConsultantIsOnline?: boolean | null;
   consultantIsAvailable?: boolean | null;
   ConsultantIsAvailable?: boolean | null;
+  secretaryType?: number | string | null;
+  SecretaryType?: number | string | null;
+  secretaryAccessSchedules?: SecretaryAccessSchedule[];
+  SecretaryAccessSchedules?: SecretaryAccessSchedule[];
+  secretaryAccessPermissions?: SecretaryAccessPermission[];
+  SecretaryAccessPermissions?: SecretaryAccessPermission[];
+}
+
+export enum SecretaryType {
+  Main = 1,
+  Assistant = 2,
+}
+
+export enum SecretaryPermissionType {
+  ViewReservations = 1,
+  EditReservations = 2,
+  ConfirmAttendance = 3,
+  SecretaryAnnouncement = 4,
+  ViewPatients = 5,
+  CreateReservation = 6,
+  CancelReservation = 7,
+}
+
+export interface SecretaryAccessSchedule {
+  dayOfWeek: number;
+  isActive: boolean;
+}
+
+export interface SecretaryAccessPermission {
+  dayOfWeek: number;
+  permissionType: SecretaryPermissionType;
+  isActive: boolean;
 }
 
 export interface SaveUserRequest {
@@ -67,6 +99,9 @@ export interface SaveUserRequest {
   birthDate?: string;
   isActive?: boolean;
   roleName: string;
+  secretaryType?: SecretaryType;
+  secretaryAccessSchedules?: SecretaryAccessSchedule[];
+  secretaryAccessPermissions?: SecretaryAccessPermission[];
 }
 
 export interface UserFilters {
