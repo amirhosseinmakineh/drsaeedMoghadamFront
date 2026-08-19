@@ -212,6 +212,11 @@ export interface RescheduleReservationRequest {
   note?: string | null;
 }
 
+export interface UpdateSecretaryReservationTimeRequest {
+  reservationAt: string;
+  appointmentDateTime?: string;
+}
+
 export interface RejectReservationRequest {
   reasonCode: number;
   reason: string;
@@ -407,6 +412,31 @@ export class SecretaryDashboardService {
       payload,
       "تغییر زمان رزرو انجام نشد",
     );
+  }
+
+  updateReservationTime(
+    reservationId: number,
+    reservationAt: string,
+  ): Observable<ApiCommandResponse<SecretaryReservation>> {
+    const payload: UpdateSecretaryReservationTimeRequest = { reservationAt };
+    return this.http
+      .patch<ApiCommandResponse<SecretaryReservation>>(
+        `${this.apiBaseUrl}/Reservation/SecretaryReservations/${reservationId}/time`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(
+        catchError((error) => {
+          if (error?.status === 401) {
+            return throwError(() => new Error("نشست کاربر منقضی شده است"));
+          }
+          if (error?.status === 403) {
+            return throwError(() => new Error("دسترسی تغییر رزرو را ندارید"));
+          }
+          return throwError(() => error);
+        }),
+      )
+      .pipe(this.ensureCommandSucceeded("تغییر زمان رزرو انجام نشد"));
   }
 
   rejectReservation(
