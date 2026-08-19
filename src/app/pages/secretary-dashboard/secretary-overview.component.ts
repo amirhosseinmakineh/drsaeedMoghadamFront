@@ -27,7 +27,8 @@ export type SecretaryDashboardPreset =
   | "needs-call"
   | "secretary-confirmed"
   | "secretary-no-answer"
-  | "secretary-cancelled";
+  | "secretary-cancelled"
+  | "after-sales";
 
 interface DashboardCard {
   preset: SecretaryDashboardPreset;
@@ -53,7 +54,7 @@ export class SecretaryOverviewComponent implements OnChanges, OnDestroy {
   loading = false;
   errorMessage = "";
   reservations: SecretaryReservation[] = [];
-  summary: SecretaryDashboardSummary = { requiresCall: 0, confirmed: 0, noAnswer: 0, cancelled: 0 };
+  summary: SecretaryDashboardSummary = { requiresCall: 0, confirmed: 0, noAnswer: 0, cancelled: 0, afterSalesServices: 0 };
 
   private loadSubscription: Subscription | null = null;
   private requestId = 0;
@@ -73,6 +74,14 @@ export class SecretaryOverviewComponent implements OnChanges, OnDestroy {
 
   get cards(): DashboardCard[] {
     return [
+      {
+        preset: "after-sales",
+        title: "خدمات پس از فروش",
+        description: "رزروهای فعال خدمات پس از فروش",
+        icon: "calendar",
+        count: this.summary.afterSalesServices,
+        tone: "info",
+      },
       {
         preset: "needs-call",
         title: "رزروهای نیازمند تماس",
@@ -208,7 +217,7 @@ export class SecretaryOverviewComponent implements OnChanges, OnDestroy {
         },
         error: (error) => {
           if (requestId !== this.requestId) return;
-          this.summary = { requiresCall: 0, confirmed: 0, noAnswer: 0, cancelled: 0 };
+          this.summary = { requiresCall: 0, confirmed: 0, noAnswer: 0, cancelled: 0, afterSalesServices: 0 };
           this.errorMessage =
             error instanceof Error && error.message
               ? error.message
