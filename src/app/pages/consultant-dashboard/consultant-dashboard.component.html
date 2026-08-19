@@ -1343,14 +1343,14 @@
       </div>
 
       <label>
-        احتمال حضور (۰ تا ۱۰)
+        احتمال حضور (۰ تا {{ isReservationEditMode() ? "۱۰۰" : "۱۰" }})
         <input
           [(ngModel)]="reservationForm.attendanceProbabilityPercent"
           [ngModelOptions]="ngModelBlurOptions"
           name="reservationAttendanceProbability"
           type="number"
           min="0"
-          max="10"
+          [max]="isReservationEditMode() ? 100 : 10"
         />
       </label>
 

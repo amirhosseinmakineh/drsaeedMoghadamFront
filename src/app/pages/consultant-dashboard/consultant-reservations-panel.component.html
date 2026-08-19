@@ -233,14 +233,14 @@
       </label>
     </div>
     <label>
-      احتمال حضور (۰ تا ۱۰)
+      احتمال حضور (۰ تا ۱۰۰)
       <input
         [(ngModel)]="editForm.attendanceProbabilityPercent"
         [ngModelOptions]="ngModelBlurOptions"
         name="editAttendanceProbability"
         type="number"
         min="0"
-        max="10"
+        max="100"
       />
     </label>
     <label>

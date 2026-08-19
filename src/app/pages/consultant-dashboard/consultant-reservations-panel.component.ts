@@ -20,7 +20,6 @@ import {
   UpdateReservationRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import {
-  AttendanceConfirmationStatus,
   attendanceScoreLabel,
   attendanceStatusPresentation,
   canConsultantConfirmDueReservation,
@@ -383,19 +382,12 @@ export class ConsultantReservationsPanelComponent
   }
 
   canEdit(reservation: ConsultantReservation): boolean {
-    const status = readAttendanceStatus(
-      reservation,
-      "attendanceConfirmationStatus",
-      "AttendanceConfirmationStatus",
-    );
-    return (
-      status !== AttendanceConfirmationStatus.SecretaryApproved &&
-      status !== AttendanceConfirmationStatus.SecretaryRejected &&
-      !(reservation.isCanceled ?? reservation.IsCanceled)
-    );
+    return (reservation.canEdit ?? reservation.CanEdit) === true;
   }
 
   openEditDialog(reservation: ConsultantReservation): void {
+    if (!this.canEdit(reservation)) return;
+
     const reservationAt = this.reservationAt(reservation);
     const date = reservationAt ? new Date(reservationAt) : new Date();
     this.editingReservation = reservation;
@@ -461,15 +453,13 @@ export class ConsultantReservationsPanelComponent
     if (
       !Number.isFinite(this.editForm.attendanceProbabilityPercent) ||
       this.editForm.attendanceProbabilityPercent < 0 ||
-      this.editForm.attendanceProbabilityPercent > 10
+      this.editForm.attendanceProbabilityPercent > 100
     ) {
-      this.showFeedback("احتمال حضور باید بین ۰ تا ۱۰ باشد", "error");
+      this.showFeedback("احتمال حضور باید بین ۰ تا ۱۰۰ باشد", "error");
       return;
     }
 
     const payload: UpdateReservationRequest = {
-      reservationId,
-      consultantProfileId: this.profileId,
       reservationAt: reservationAt.toISOString(),
       patientCity: this.editForm.patientCity.trim(),
       patientRegion: this.editForm.patientRegion.trim(),
@@ -481,7 +471,7 @@ export class ConsultantReservationsPanelComponent
 
     this.editSaving = true;
     this.consultantApi
-      .updateReservation(payload)
+      .updateReservation(reservationId, payload)
       .pipe(finalize(() => (this.editSaving = false)))
       .subscribe({
         next: (response) => {

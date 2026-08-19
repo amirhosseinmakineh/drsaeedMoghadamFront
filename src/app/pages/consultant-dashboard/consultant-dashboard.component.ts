@@ -61,11 +61,6 @@ import {
   resolveLeadAssignmentType,
 } from "../../core/lead/lead-enums";
 import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
-import {
-  AttendanceConfirmationStatus,
-  readAttendanceStatus,
-} from "../../core/reservation/reservation-attendance";
-
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
 const PENDING_REPORT_PATCH_TTL_MS = 60_000;
@@ -2045,16 +2040,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   canEditReservation(reservation: ConsultantReservation): boolean {
-    const status = readAttendanceStatus(
-      reservation,
-      "attendanceConfirmationStatus",
-      "AttendanceConfirmationStatus",
-    );
-    return (
-      status !== AttendanceConfirmationStatus.SecretaryApproved &&
-      status !== AttendanceConfirmationStatus.SecretaryRejected &&
-      !(reservation.isCanceled ?? reservation.IsCanceled)
-    );
+    return (reservation.canEdit ?? reservation.CanEdit) === true;
   }
 
   canEditReservationForLead(lead: ConsultantLead): boolean {
@@ -2277,8 +2263,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     const payload: UpdateReservationRequest = {
-      reservationId,
-      consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
       patientCity: this.reservationForm.patientCity.trim(),
       patientRegion: this.reservationForm.patientRegion.trim(),
@@ -2294,7 +2278,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.clearFeedback();
 
     this.consultantApi
-      .updateReservation(payload)
+      .updateReservation(reservationId, payload)
       .pipe(
         finalize(() => {
           this.reservationSaving = false;
@@ -4129,9 +4113,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (
       !Number.isFinite(this.reservationForm.attendanceProbabilityPercent) ||
       this.reservationForm.attendanceProbabilityPercent < 0 ||
-      this.reservationForm.attendanceProbabilityPercent > 10
+      this.reservationForm.attendanceProbabilityPercent >
+        (this.isReservationEditMode() ? 100 : 10)
     )
-      return "احتمال حضور باید بین ۰ تا ۱۰ باشد";
+      return this.isReservationEditMode()
+        ? "احتمال حضور باید بین ۰ تا ۱۰۰ باشد"
+        : "احتمال حضور باید بین ۰ تا ۱۰ باشد";
 
     const secondaryPhone = this.reservationForm.secondaryPhoneNumber.trim();
     if (secondaryPhone && !/^09\d{9}$/.test(secondaryPhone))
