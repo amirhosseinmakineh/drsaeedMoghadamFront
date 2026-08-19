@@ -120,9 +120,6 @@ export interface SecretaryFilters {
   firstName?: string;
   lastName?: string;
   phoneNumber?: string;
-  gender?: number | null;
-  isActive?: boolean | null;
-  isCompleteName?: boolean | null;
   secretaryType?: SecretaryType | null;
   pageNumber: number;
   pageSize: number;

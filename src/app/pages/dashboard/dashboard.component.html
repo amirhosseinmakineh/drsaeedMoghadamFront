@@ -302,30 +302,6 @@
                   <option [ngValue]="secretaryTypes.Assistant">کمکی</option>
                 </select>
               </label>
-              <label>
-                جنسیت
-                <select [(ngModel)]="secretaryFilters.gender" name="secretaryGender">
-                  <option [ngValue]="null">همه</option>
-                  <option [ngValue]="1">مرد</option>
-                  <option [ngValue]="2">زن</option>
-                </select>
-              </label>
-              <label>
-                وضعیت
-                <select [(ngModel)]="secretaryFilters.isActive" name="secretaryActive">
-                  <option [ngValue]="null">همه</option>
-                  <option [ngValue]="true">فعال</option>
-                  <option [ngValue]="false">غیرفعال</option>
-                </select>
-              </label>
-              <label>
-                تکمیل پروفایل
-                <select [(ngModel)]="secretaryFilters.isCompleteName" name="secretaryComplete">
-                  <option [ngValue]="null">همه</option>
-                  <option [ngValue]="true">تکمیل‌شده</option>
-                  <option [ngValue]="false">ناقص</option>
-                </select>
-              </label>
               <button class="primary-filter" type="submit">اعمال فیلتر</button>
             </form>
 
