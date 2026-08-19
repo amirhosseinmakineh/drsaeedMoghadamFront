@@ -56,6 +56,7 @@ export class SecretaryReservationsComponent
 
   activeTab: SecretaryReservationTab = "queue";
   items: SecretaryReservation[] = [];
+  notes: Record<number, string> = {};
   loading = false;
   savingId: number | null = null;
   timeDialogItem: SecretaryReservation | null = null;
