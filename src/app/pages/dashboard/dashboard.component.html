@@ -220,17 +220,6 @@
                 </select>
               </label>
               <label>
-                جنسیت
-                <select
-                  [(ngModel)]="userFilters.gender"
-                  [ngModelOptions]="ngModelBlurOptions"
-                  name="userGender"
-                >
-                  <option [ngValue]="1">مرد</option>
-                  <option [ngValue]="2">زن</option>
-                </select>
-              </label>
-              <label>
                 وضعیت
                 <select
                   [(ngModel)]="userFilters.isActive"
@@ -666,4 +655,17 @@
       بک‌اند نمایش داده می‌شود.
     </p>
   </app-base-dialog>
+
+  <nav class="mobile-primary-nav" aria-label="دسترسی سریع داشبورد">
+    <button
+      *ngFor="let item of visibleLinks.slice(0, 4); trackBy: trackDashboardLink"
+      type="button"
+      [class.active]="activeSection === item.id"
+      [attr.aria-current]="activeSection === item.id ? 'page' : null"
+      (click)="setSection(item.id)"
+    >
+      <app-fa-icon [name]="item.icon"></app-fa-icon>
+      <span>{{ item.label }}</span>
+    </button>
+  </nav>
 </section>

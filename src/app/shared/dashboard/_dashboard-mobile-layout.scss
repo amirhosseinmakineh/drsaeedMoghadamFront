@@ -1,10 +1,37 @@
 @mixin dashboard-mobile-layout {
   .dashboard-mobile-header,
+  .mobile-primary-nav,
   .mobile-sidebar-backdrop,
   .mobile-sidebar-close,
   .mobile-sidebar-header,
   .mobile-menu-btn {
     display: none;
+  }
+
+  // Keep desktop dashboards dense and predictable; mobile navigation must not
+  // leak into wide layouts.
+  @media (min-width: 981px) {
+    .dashboard-layout,
+    .dashboard-layout.admin-mode {
+      width: calc(100% - clamp(32px, 3vw, 56px));
+      max-width: none;
+      grid-template-columns: clamp(250px, 18vw, 300px) minmax(0, 1fr);
+      margin-inline: auto;
+    }
+
+    .dashboard-sidebar {
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .dashboard-nav button {
+      min-height: 46px;
+    }
+
+    .dashboard-content {
+      min-width: 0;
+    }
   }
 
   @media (max-width: 980px) {
@@ -158,7 +185,86 @@
     }
 
     .dashboard-content {
-      padding-top: 10px;
+      padding-top: 2px;
+      padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-primary-nav {
+      position: fixed;
+      inset-inline: 10px;
+      bottom: max(10px, env(safe-area-inset-bottom));
+      z-index: 85;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+      gap: 4px;
+      padding: 6px;
+      border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+      border-radius: 22px;
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      box-shadow: 0 14px 36px rgba(39, 27, 14, 0.2);
+      backdrop-filter: blur(18px);
+    }
+
+    .mobile-primary-nav button {
+      display: grid;
+      place-items: center;
+      gap: 3px;
+      min-width: 0;
+      min-height: 54px;
+      padding: 5px 3px;
+      border: 0;
+      border-radius: 16px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.68rem;
+      font-weight: 900;
+    }
+
+    .mobile-primary-nav button span {
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mobile-primary-nav button.active {
+      background: color-mix(in srgb, var(--brand) 14%, var(--surface));
+      color: var(--brand);
+    }
+
+    .mobile-primary-nav button:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--brand) 35%, transparent);
+      outline-offset: 1px;
+    }
+
+    .mobile-primary-nav app-fa-icon {
+      font-size: 1.05rem;
+    }
+
+    .dashboard-hero h2 {
+      font-size: clamp(1.05rem, 5vw, 1.35rem);
+      line-height: 1.6;
+    }
+
+    button,
+    a,
+    input,
+    select,
+    textarea {
+      touch-action: manipulation;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .mobile-avatar,
+    .mobile-logout-btn span {
+      display: none;
+    }
+
+    .dashboard-mobile-header {
+      gap: 6px;
+      padding-inline: 8px;
     }
   }
 }

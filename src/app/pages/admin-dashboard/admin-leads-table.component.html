@@ -48,19 +48,6 @@
     </label>
 
     <label>
-      نوع تخصیص
-      <select
-        [(ngModel)]="filters.leadAssignmentType"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadAssignmentType"
-      >
-        @for (option of typeFilterOptions; track option.label) {
-          <option [ngValue]="option.value">{{ option.label }}</option>
-        }
-      </select>
-    </label>
-
-    <label>
       موبایل
       <input
         [(ngModel)]="phoneFilter"

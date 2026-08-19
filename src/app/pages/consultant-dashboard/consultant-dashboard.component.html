@@ -1614,4 +1614,17 @@
       </div>
     </form>
   </app-base-dialog>
+
+  <nav class="mobile-primary-nav" aria-label="دسترسی سریع داشبورد">
+    <button
+      *ngFor="let item of visibleDashboardLinks.slice(0, 4); trackBy: trackDashboardLink"
+      type="button"
+      [class.active]="activeSection === item.id"
+      [attr.aria-current]="activeSection === item.id ? 'page' : null"
+      (click)="setSection(item.id)"
+    >
+      <app-fa-icon [name]="item.icon"></app-fa-icon>
+      <span>{{ item.label }}</span>
+    </button>
+  </nav>
 </section>
