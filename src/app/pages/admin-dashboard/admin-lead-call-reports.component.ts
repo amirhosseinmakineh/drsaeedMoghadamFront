@@ -96,7 +96,10 @@ validateFilters(): string | null {
       .subscribe({
         next: (blob) => {
           downloadBlob(blob, this.fileName(filters));
-          this.showFeedback("فایل گزارش تماس لیدها دانلود شد", "success");
+          this.showFeedback(
+            "فایل گزارش تماس درخواست‌های مشاوره دانلود شد",
+            "success",
+          );
         },
         error: (error) =>
           this.showFeedback(

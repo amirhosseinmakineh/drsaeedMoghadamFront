@@ -34,6 +34,7 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 import {
   combineIranDateAndTime,
   formatIranDateTime,
@@ -113,6 +114,7 @@ export class ConsultantReservationsPanelComponent
   private loadRequestId = 0;
   private pollId: ReturnType<typeof setInterval> | null = null;
   private loadSubscription: Subscription | null = null;
+  private readonly realtimeSubscription: Subscription;
   private searchDebounceId: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
@@ -121,12 +123,16 @@ export class ConsultantReservationsPanelComponent
   constructor(
     private consultantApi: ConsultantDashboardService,
     private toast: ToastService,
+    reservationSync: ReservationSyncService,
     private cdr: ChangeDetectorRef,
   ) {
     this.markDirty = createCoalescedMarkForCheck(
       this.cdr,
       () => this.destroyed,
     );
+    this.realtimeSubscription = reservationSync.refreshRequested$.subscribe(() => {
+      if (this.profileReady) this.load();
+    });
   }
 
   ngOnInit(): void {
@@ -150,6 +156,7 @@ export class ConsultantReservationsPanelComponent
     this.destroyed = true;
     this.stopPolling();
     this.loadSubscription?.unsubscribe();
+    this.realtimeSubscription.unsubscribe();
     if (this.searchDebounceId) clearTimeout(this.searchDebounceId);
   }
 

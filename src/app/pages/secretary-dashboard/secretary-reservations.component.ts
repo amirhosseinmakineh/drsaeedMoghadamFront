@@ -30,6 +30,7 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
 import { formatReservationTime } from "../../utils/iran-datetime.util";
 import { SecretaryAnnouncementEditorComponent } from "./secretary-announcement-editor.component";
+import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 
 export type SecretaryReservationTab =
   | "queue"
@@ -58,6 +59,9 @@ export class SecretaryReservationsComponent
   notes: Record<number, string> = {};
   loading = false;
   savingId: number | null = null;
+  timeDialogItem: SecretaryReservation | null = null;
+  timeDialogValue = "";
+  timeSaving = false;
   feedback = "";
   feedbackType: "success" | "error" = "success";
   statusFilter: AttendanceConfirmationStatus | null = null;
@@ -80,6 +84,7 @@ export class SecretaryReservationsComponent
   private loadRequestId = 0;
   private pollId: ReturnType<typeof setInterval> | null = null;
   private loadSubscription: Subscription | null = null;
+  private readonly realtimeSubscription: Subscription;
   private destroyed = false;
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
@@ -87,12 +92,16 @@ export class SecretaryReservationsComponent
   constructor(
     private secretaryApi: SecretaryDashboardService,
     private toast: ToastService,
+    reservationSync: ReservationSyncService,
     private cdr: ChangeDetectorRef,
   ) {
     this.markDirty = createCoalescedMarkForCheck(
       this.cdr,
       () => this.destroyed,
     );
+    this.realtimeSubscription = reservationSync.refreshRequested$.subscribe(() => {
+      if (this.profileReady && !this.timeSaving) this.load();
+    });
   }
 
   ngOnInit(): void {
@@ -125,6 +134,7 @@ export class SecretaryReservationsComponent
     this.destroyed = true;
     this.stopPolling();
     this.loadSubscription?.unsubscribe();
+    this.realtimeSubscription.unsubscribe();
   }
 
   private filterPreset(
@@ -365,6 +375,64 @@ export class SecretaryReservationsComponent
       });
   }
 
+  openTimeDialog(item: SecretaryReservation): void {
+    if (!this.canChangeTime(item)) return;
+    const date = new Date(this.reservationAt(item));
+    if (!Number.isFinite(date.getTime())) return;
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    this.timeDialogValue = local.toISOString().slice(0, 16);
+    this.timeDialogItem = item;
+    this.markDirty();
+  }
+
+  closeTimeDialog(): void {
+    if (this.timeSaving) return;
+    this.timeDialogItem = null;
+    this.timeDialogValue = "";
+    this.markDirty();
+  }
+
+  saveReservationTime(): void {
+    const item = this.timeDialogItem;
+    const reservationId = item ? this.reservationId(item) : null;
+    const date = new Date(this.timeDialogValue);
+    if (!reservationId || !Number.isFinite(date.getTime())) {
+      this.showFeedback("زمان مراجعه معتبر نیست", "error");
+      return;
+    }
+    if (date.getTime() <= Date.now()) {
+      this.showFeedback("زمان رزرو باید در آینده باشد", "error");
+      return;
+    }
+
+    this.timeSaving = true;
+    this.secretaryApi.updateReservationTime(reservationId, date.toISOString())
+      .pipe(finalize(() => {
+        this.timeSaving = false;
+        this.markDirty();
+      }))
+      .subscribe({
+        next: (response) => {
+          if (response.data) {
+            this.items = this.items.map((candidate) =>
+              this.reservationId(candidate) === reservationId ? response.data! : candidate,
+            );
+          }
+          this.timeDialogItem = null;
+          this.showFeedback(response.message || "رزرو با موفقیت ویرایش شد", "success");
+          this.load();
+        },
+        error: (error) => this.showFeedback(
+          error instanceof Error && error.message ? error.message : "خطا در ارتباط با سرور",
+          "error",
+        ),
+      });
+  }
+
+  canChangeTime(item: SecretaryReservation): boolean {
+    return this.canManage(item) && !(item.isCanceled ?? item.IsCanceled ?? false);
+  }
+
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
     this.pageNumber = page;
@@ -399,10 +467,6 @@ export class SecretaryReservationsComponent
 
   canManage(item: SecretaryReservation): boolean {
     return this.secretaryApi.canManageReservation(item);
-  }
-
-  canUpdateAnnouncement(item: SecretaryReservation): boolean {
-    return this.secretaryApi.canUpdateAnnouncement(item);
   }
 
   reservationId(item: SecretaryReservation): number | null {

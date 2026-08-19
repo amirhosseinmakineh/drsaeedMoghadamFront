@@ -29,7 +29,6 @@ import { formatIranDateTime } from "../../utils/iran-datetime.util";
 })
 export class SecretaryAnnouncementEditorComponent implements OnChanges {
   @Input({ required: true }) reservation!: SecretaryReservation;
-  @Input() canEdit = false;
   @Output() readonly saved = new EventEmitter<void>();
 
   announcement = "";
@@ -98,6 +97,10 @@ export class SecretaryAnnouncementEditorComponent implements OnChanges {
     return (
       (this.reservation.isCanceled ?? this.reservation.IsCanceled) === true
     );
+  }
+
+  get canEdit(): boolean {
+    return this.api.canUpdateAnnouncement(this.reservation);
   }
 
   get updatedAt(): string {
