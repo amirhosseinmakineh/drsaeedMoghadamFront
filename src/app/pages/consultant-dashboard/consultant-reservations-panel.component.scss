@@ -302,6 +302,31 @@ label {
   color: var(--muted);
   font-weight: 850;
 }
+.dental-services-field {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 4px 0;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line));
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--brand) 5%, var(--surface));
+}
+.dental-services-field legend { padding: 0 10px; color: var(--text); font-weight: 950; }
+.dental-services-field label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.dental-services-field label:hover { border-color: color-mix(in srgb, var(--brand) 48%, var(--line)); background: color-mix(in srgb, var(--brand) 8%, var(--surface)); }
+.dental-services-field input[type="checkbox"] { width: 19px; height: 19px; flex: 0 0 auto; accent-color: var(--brand); }
 textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -325,4 +350,5 @@ textarea {
   .reservation-filters .quick-search-field {
     grid-column: auto;
   }
+  .dental-services-field { grid-template-columns: 1fr; }
 }
