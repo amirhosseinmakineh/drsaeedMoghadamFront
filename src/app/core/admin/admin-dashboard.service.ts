@@ -448,7 +448,7 @@ export interface CompletePatientProfileRequest {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  passwordHash: string;
+  passwordHash: string; 
   avatarImageName?: string | null;
   gender: number;
   birthDate: string;
