@@ -11,6 +11,14 @@
   // Keep desktop dashboards dense and predictable; mobile navigation must not
   // leak into wide layouts.
   @media (min-width: 981px) {
+    .dashboard-layout,
+    .dashboard-layout.admin-mode {
+      width: calc(100% - clamp(32px, 3vw, 56px));
+      max-width: none;
+      grid-template-columns: clamp(250px, 18vw, 300px) minmax(0, 1fr);
+      margin-inline: auto;
+    }
+
     .dashboard-sidebar {
       max-height: calc(100vh - 36px);
       overflow-y: auto;
