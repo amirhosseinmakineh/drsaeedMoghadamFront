@@ -1,9 +1,9 @@
 <section class="daily-report" aria-labelledby="daily-report-title">
   <header class="panel-heading">
     <div>
-      <span>گزارش مدیریتی</span>
-      <h2 id="daily-report-title">رزروهای ثبت‌شده در روز کاری</h2>
-      <p>مبنای این گزارش زمان ثبت رزرو به وقت ایران است، نه زمان مراجعه بیمار.</p>
+      <span>رزروهای روزانه</span>
+      <h2 id="daily-report-title">رزروهای ثبت‌شده در روز انتخابی</h2>
+      <p>تاریخ انتخابی بر اساس «زمان ثبت رزرو» در پایگاه داده و به وقت ایران است؛ «زمان مراجعه بیمار» جداگانه در جدول نمایش داده می‌شود.</p>
     </div>
     <button class="export-button" type="button" [disabled]="downloading" (click)="download()">
       <span class="button-icon" aria-hidden="true">⇩</span>
@@ -53,19 +53,19 @@
       <article class="success"><small>تاییدشده</small><strong>{{ report.summary.confirmed }}</strong></article>
       <article><small>زمان‌بندی مجدد</small><strong>{{ report.summary.rescheduled }}</strong></article>
       <article class="danger"><small>ردشده</small><strong>{{ report.summary.rejected }}</strong></article>
-      <article><small>مشاور یکتا</small><strong>{{ report.summary.uniqueConsultants }}</strong></article>
+      <article><small>تعداد مشاوران</small><strong>{{ report.summary.uniqueConsultants }}</strong></article>
     </section>
 
     <div class="table-heading">
       <div><h3>جزئیات رزروها{{ report.datePersian ? " - " + report.datePersian : "" }}</h3><small>تولید گزارش: {{ report.generatedAtPersian || formatDateTime(report.generatedAt) }}</small></div>
-      <b>{{ report.items.length }} رکورد</b>
+      <b>{{ report.items.length }} رزرو</b>
     </div>
     @if (!report.items.length && !loading) {
       <div class="empty-state">رزروی با فیلترهای انتخاب‌شده ثبت نشده است.</div>
     } @else {
       <div class="table-scroll">
         <table>
-          <thead><tr><th>شناسه</th><th>مشاور</th><th>بیمار</th><th>موقعیت</th><th>زمان مراجعه</th><th>زمان ثبت</th><th>وضعیت درخواست</th><th>نتیجه مراجعه</th><th>احتمال حضور</th><th>لغو</th><th>توضیحات</th></tr></thead>
+          <thead><tr><th>شناسه رزرو</th><th>مشاور</th><th>بیمار</th><th>شهر و محدوده</th><th>زمان مراجعه بیمار</th><th>زمان ثبت رزرو</th><th>وضعیت بررسی رزرو</th><th>نتیجه مراجعه</th><th>احتمال حضور</th><th>وضعیت لغو</th><th>توضیحات</th></tr></thead>
           <tbody>
             <tr *ngFor="let item of report.items; trackBy: trackReservation" [class.canceled-row]="item.isCanceled">
               <td>#{{ item.reservationId }}</td>

@@ -52,8 +52,8 @@ type LeadTableMode = "system" | "consultant";
 export class AdminLeadsTableComponent implements OnChanges, OnInit {
   @Input() mode: LeadTableMode = "system";
   @Input() profileId: number | null = null;
-  @Input() title = "مدیریت لیدها";
-  @Input() description = "مشاهده و فیلتر لیدها بر اساس وضعیت و نوع تخصیص";
+  @Input() title = "مدیریت درخواست‌های مشاوره";
+  @Input() description = "مشاهده و فیلتر درخواست‌های مشاوره بر اساس وضعیت و نوع تخصیص";
 
   items: LeadAssignmentItem[] = [];
   loading = false;
@@ -89,7 +89,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     },
     {
       key: "createdAt",
-      label: "تاریخ ایجاد لید",
+      label: "تاریخ ثبت درخواست",
       value: (row) => this.formatDateTime(this.leadCreatedAt(row)),
     },
     {
@@ -247,7 +247,10 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
         },
         error: (error) => {
           if (requestId === this.loadRequestId) {
-            this.feedback = this.errorMessage(error, "دریافت لیدها انجام نشد");
+            this.feedback = this.errorMessage(
+              error,
+              "دریافت درخواست‌های مشاوره انجام نشد",
+            );
             this.cdr.markForCheck();
           }
         },

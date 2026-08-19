@@ -109,7 +109,7 @@
       <section class="admin-shell">
         @if (activeSection === "overview") {
           <header class="dashboard-hero admin-hero">
-            <span>داشبورد ادمین</span>
+            <span>داشبورد مدیر سیستم</span>
             <h2>مدیریت کلینیک، {{ displayName() }}</h2>
           </header>
         }
@@ -144,19 +144,15 @@
             </button>
             <button type="button" (click)="setSection('leads')">
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
-              <strong>مدیریت لیدهای سیستم</strong>
+              <strong>مدیریت درخواست‌های مشاوره</strong>
             </button>
             <button type="button" (click)="setSection('leadReports')">
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
-              <strong>گزارش تماس لیدها</strong>
+              <strong>گزارش تماس درخواست‌های مشاوره</strong>
             </button>
             <button type="button" (click)="setSection('dailyReservationsReport')">
               <span><app-fa-icon name="table"></app-fa-icon></span>
-              <strong>گزارش روزانه رزروها</strong>
-            </button>
-            <button type="button" (click)="setSection('reservations')">
-              <span><app-fa-icon name="calendar"></app-fa-icon></span>
-              <strong>رزروها و تایید حضور</strong>
+              <strong>رزروهای روزانه</strong>
             </button>
             <button type="button" (click)="setSection('presence')">
               <span><app-fa-icon name="clock"></app-fa-icon></span>
@@ -217,7 +213,7 @@
                   [ngModelOptions]="ngModelBlurOptions"
                   name="userRole"
                 >
-                  <option value="Admin">ادمین</option>
+                  <option value="Admin">مدیر سیستم</option>
                   <option value="Consultant">مشاور</option>
                   <option value="Secretary">منشی</option>
                   <option value="NormalUser">کاربر عادی</option>
@@ -331,7 +327,7 @@
             <header class="panel-heading consultants-heading">
               <div>
                 <span>مشاوران</span>
-                <h2>مدیریت مشاوران و لیدها</h2>
+                <h2>مدیریت مشاوران و درخواست‌های مشاوره</h2>
               </div>
             </header>
 
@@ -384,9 +380,7 @@
             </form>
 
             @if (
-              selectedAttendanceConsultant ||
-              selectedLeadsConsultant ||
-              selectedReservationsConsultant
+              selectedAttendanceConsultant || selectedLeadsConsultant
             ) {
               <div id="consultant-detail-panel" class="consultant-detail-panel">
                 @if (selectedAttendanceConsultant) {
@@ -406,20 +400,9 @@
                     mode="consultant"
                     [profileId]="selectedLeadsConsultant.profileId"
                     [title]="
-                      'لیدهای ' + fullName(selectedLeadsConsultant)
+                      'درخواست‌های مشاوره ' + fullName(selectedLeadsConsultant)
                     "
                   ></app-admin-leads-table>
-                }
-
-                @if (selectedReservationsConsultant) {
-                  <app-admin-reservations-table
-                    mode="consultant"
-                    [profileId]="selectedReservationsConsultant.profileId"
-                    [title]="
-                      'رزروهای ' +
-                      fullName(selectedReservationsConsultant)
-                    "
-                  ></app-admin-reservations-table>
                 }
               </div>
             }
@@ -437,14 +420,14 @@
               [pageSize]="consultantFilters.pageSize"
               [totalCount]="consultantsTotalCount"
               [totalPages]="consultantsTotalPages"
-              emptyText="چیزی نیست"
+              emptyText="مشاوری با فیلترهای انتخاب‌شده یافت نشد"
               (actionClick)="handleConsultantAction($event)"
               (pageChange)="changeConsultantsPage($event)"
             ></app-base-table>
 
             <app-admin-leads-table
               mode="system"
-              title="گزارش لیدهای تخصیص‌یافته به مشاوران"
+              title="درخواست‌های مشاوره تخصیص‌یافته به مشاوران"
             ></app-admin-leads-table>
           </section>
         }
@@ -458,7 +441,7 @@
         @if (activeSection === "leads") {
           <app-admin-leads-table
             mode="system"
-            title="مدیریت کامل لیدهای سیستم"
+            title="مدیریت همه درخواست‌های مشاوره"
           ></app-admin-leads-table>
         }
 
@@ -468,13 +451,6 @@
 
         @if (activeSection === "dailyReservationsReport") {
           <app-admin-daily-reservations-report></app-admin-daily-reservations-report>
-        }
-
-        @if (activeSection === "reservations") {
-          <app-admin-reservations-table
-            mode="system"
-            title="مدیریت رزروها و تایید حضور مشاوران"
-          ></app-admin-reservations-table>
         }
 
         @if (activeSection === "presence") {
@@ -584,7 +560,7 @@
               name="dialogRole"
               (ngModelChange)="onUserRoleChange($event)"
             >
-              <option value="Admin">ادمین</option>
+              <option value="Admin">مدیر سیستم</option>
               <option value="Consultant">مشاور</option>
               <option value="Secretary">منشی</option>
               <option value="NormalUser">کاربر عادی</option>
