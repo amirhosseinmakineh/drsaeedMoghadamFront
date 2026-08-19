@@ -459,10 +459,6 @@ export class SecretaryReservationsComponent
     return this.secretaryApi.canManageReservation(item);
   }
 
-  canUpdateAnnouncement(item: SecretaryReservation): boolean {
-    return this.secretaryApi.canUpdateAnnouncement(item);
-  }
-
   reservationId(item: SecretaryReservation): number | null {
     const value = item.id ?? item.Id;
     const numeric = Number(value);
