@@ -33,7 +33,6 @@ import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendan
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
 import { AdminDailyReservationsReportComponent } from "../admin-dashboard/admin-daily-reservations-report.component";
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
-import { AdminPresenceDashboardComponent } from "../admin-dashboard/admin-presence-dashboard.component";
 import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consultant-profile.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
@@ -65,8 +64,7 @@ type DashboardSection =
   | "consultantProfile"
   | "leads"
   | "leadReports"
-  | "dailyReservationsReport"
-  | "presence";
+  | "dailyReservationsReport";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -103,7 +101,6 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "leads",
   "leadReports",
   "dailyReservationsReport",
-  "presence",
 ];
 
 @Component({
@@ -120,7 +117,6 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminLeadCallReportsComponent,
     AdminDailyReservationsReportComponent,
     AdminAttendanceTableComponent,
-    AdminPresenceDashboardComponent,
     AdminConsultantProfileComponent,
     FaIconComponent,
   ],
@@ -141,7 +137,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "leads", label: "درخواست‌های مشاوره", icon: "clipboard" },
     { id: "leadReports", label: "گزارش تماس درخواست‌ها", icon: "clipboard" },
     { id: "dailyReservationsReport", label: "رزروهای روزانه", icon: "calendar" },
-    { id: "presence", label: "وضعیت مشاوران", icon: "clock" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
