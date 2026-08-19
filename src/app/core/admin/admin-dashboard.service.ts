@@ -401,7 +401,9 @@ export interface DailyReservationReportItem {
   businessName: string | null;
   attendanceProbabilityPercent: number | null;
   reservationAt: string;
+  appointmentDateTimePersian?: string | null;
   createdAt: string;
+  createdAtPersian?: string | null;
   requestStatus: number;
   requestStatusTitle: string;
   visitResultStatus: number;
@@ -414,7 +416,9 @@ export interface DailyReservationReportItem {
 
 export interface DailyReservationsReport {
   date: string;
+  datePersian?: string | null;
   generatedAt: string;
+  generatedAtPersian?: string | null;
   summary: DailyReservationsSummary;
   items: DailyReservationReportItem[];
 }
