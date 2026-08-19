@@ -459,6 +459,16 @@ input[readonly] {
   border-radius: 24px;
   background: linear-gradient(145deg, color-mix(in srgb, var(--brand) 5%, var(--surface)), var(--surface-muted));
 }
+@media (min-width: 1400px) {
+  .lead-filters {
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+  }
+}
+@media (min-width: 981px) and (max-width: 1399px) {
+  .lead-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 .lead-filters .quick-search-field {
   grid-column: 1 / -1;
   padding-bottom: 14px;
