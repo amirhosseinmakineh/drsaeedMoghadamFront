@@ -10,7 +10,6 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
-import { AuthService } from "../../core/auth/auth.service";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 import {
   SecretaryDashboardService,
@@ -37,7 +36,6 @@ export class SecretaryAnnouncementEditorComponent implements OnChanges {
 
   constructor(
     private api: SecretaryDashboardService,
-    private auth: AuthService,
     private reservationSync: ReservationSyncService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
@@ -46,6 +44,8 @@ export class SecretaryAnnouncementEditorComponent implements OnChanges {
   ngOnChanges(): void {
     if (this.dirty || this.saving) return;
     this.announcement =
+      this.reservation.secretaryAnnouncementDescription ??
+      this.reservation.SecretaryAnnouncementDescription ??
       this.reservation.secretaryAnnouncement ??
       this.reservation.SecretaryAnnouncement ??
       "";
@@ -57,9 +57,8 @@ export class SecretaryAnnouncementEditorComponent implements OnChanges {
 
   save(): void {
     const reservationId = Number(this.reservation.id ?? this.reservation.Id);
-    const secretaryUserId = this.auth.user()?.userId;
-    if (!Number.isFinite(reservationId) || !secretaryUserId) {
-      this.toast.error("شناسه رزرو یا شناسه کاربر منشی در دسترس نیست");
+    if (!Number.isFinite(reservationId)) {
+      this.toast.error("شناسه رزرو در دسترس نیست");
       return;
     }
     if (!this.canEdit || this.canceled || this.saving) return;
@@ -68,8 +67,11 @@ export class SecretaryAnnouncementEditorComponent implements OnChanges {
     this.api
       .updateSecretaryAnnouncement({
         reservationId,
-        secretaryUserId,
-        secretaryAnnouncement: this.announcement.trim() || null,
+        status:
+          this.reservation.secretaryAnnouncementStatus ??
+          this.reservation.SecretaryAnnouncementStatus ??
+          "NotCalled",
+        description: this.announcement.trim() || null,
       })
       .pipe(
         finalize(() => {

@@ -246,12 +246,6 @@ export interface SecretaryPatientOption {
   Consultant?: Record<string, unknown> | null;
 }
 
-export interface UpdateSecretaryAnnouncementRequest {
-  reservationId: number;
-  secretaryUserId: string;
-  secretaryAnnouncement: string | null;
-}
-
 export interface SecretaryReservationActivity {
   activityId: number;
   activityType: string;
@@ -469,9 +463,7 @@ export class SecretaryDashboardService {
   }
 
   updateSecretaryAnnouncement(
-    payload:
-      | SecretaryAnnouncementRequest
-      | UpdateSecretaryAnnouncementRequest,
+    payload: SecretaryAnnouncementRequest,
   ): Observable<ApiCommandResponse> {
     return this.http
       .put<ApiCommandResponse>(

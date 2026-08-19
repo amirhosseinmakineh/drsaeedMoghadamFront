@@ -338,6 +338,12 @@ export interface DailyReservationReportItem {
   isCanceled: boolean;
   cancellationReason: string | null;
   description: string | null;
+  secretaryAnnouncement?: string | null;
+  SecretaryAnnouncement?: string | null;
+  secretaryAnnouncementDescription?: string | null;
+  SecretaryAnnouncementDescription?: string | null;
+  secretaryAnnouncementStatus?: string | null;
+  SecretaryAnnouncementStatus?: string | null;
   dentalServices?: number[] | null;
   DentalServices?: number[] | null;
 }
