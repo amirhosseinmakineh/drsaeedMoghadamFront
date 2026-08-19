@@ -11,7 +11,6 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Subscription, finalize, forkJoin, map } from "rxjs";
-import { AuthService } from "../../core/auth/auth.service";
 import {
   AttendanceConfirmationStatus,
   attendanceScoreLabel,
@@ -23,6 +22,7 @@ import {
 import {
   SecretaryReservation,
   SecretaryDashboardService,
+  ReservationType,
 } from "../../core/secretary/secretary-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
@@ -32,7 +32,12 @@ import { formatReservationTime } from "../../utils/iran-datetime.util";
 import { SecretaryAnnouncementEditorComponent } from "./secretary-announcement-editor.component";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 
-export type SecretaryReservationTab = "queue" | "all" | "completed";
+export type SecretaryReservationTab =
+  | "queue"
+  | "all"
+  | "regular"
+  | "after-sales"
+  | "completed";
 
 @Component({
   selector: "app-secretary-reservations",
@@ -85,7 +90,6 @@ export class SecretaryReservationsComponent
 
   constructor(
     private secretaryApi: SecretaryDashboardService,
-    private auth: AuthService,
     private toast: ToastService,
     reservationSync: ReservationSyncService,
     private cdr: ChangeDetectorRef,
@@ -305,6 +309,13 @@ export class SecretaryReservationsComponent
         includeCanceled: this.includeCanceled,
         attendanceConfirmationStatus: this.statusFilter,
         searchText: this.searchText.trim() || undefined,
+        reservationType:
+          this.activeTab === "regular"
+            ? ReservationType.Regular
+            : this.activeTab === "after-sales"
+              ? ReservationType.AfterSalesService
+              : null,
+        sortDirection: "asc",
       })
       .pipe(
         finalize(() => {
@@ -326,15 +337,11 @@ export class SecretaryReservationsComponent
       });
   }
 
-  review(item: SecretaryReservation, approved: boolean): void {
+  review(item: SecretaryReservation, patientReceivedService: boolean): void {
     if (!this.canManage(item)) return;
     const reservationId = this.reservationId(item);
-    const secretaryUserId = this.auth.user()?.userId;
-    if (!reservationId || !secretaryUserId) {
-      this.showFeedback(
-        "شناسه رزرو یا شناسه کاربر منشی در دسترس نیست",
-        "error",
-      );
+    if (!reservationId) {
+      this.showFeedback("شناسه رزرو در دسترس نیست", "error");
       return;
     }
 
@@ -342,18 +349,17 @@ export class SecretaryReservationsComponent
     this.secretaryApi
       .reviewAttendance({
         reservationId,
-        secretaryUserId,
-        approved,
-        note: null,
+        patientReceivedService,
+        note: (this.notes[reservationId] || "").trim() || null,
       })
       .pipe(finalize(() => (this.savingId = null)))
       .subscribe({
         next: (response) => {
           this.showFeedback(
             response.message ||
-              (approved
-                ? "ادعای مشاور تایید شد (+۱۰ امتیاز)"
-                : "ادعای مشاور رد شد (-۱۰ امتیاز)"),
+              (patientReceivedService
+                ? "انجام خدمت برای بیمار ثبت شد"
+                : "انجام نشدن خدمت برای بیمار ثبت شد"),
             "success",
           );
           this.load();
@@ -436,6 +442,9 @@ export class SecretaryReservationsComponent
     if (this.activeTab === "queue") {
       return "موردی در صف بررسی تایید حضور وجود ندارد.";
     }
+    if (this.activeTab === "after-sales")
+      return "رزرو خدمات پس از فروشی یافت نشد.";
+    if (this.activeTab === "regular") return "رزرو عادی یافت نشد.";
     if (this.activeTab === "completed") {
       return "رزروی با بررسی نهایی منشی یافت نشد.";
     }
@@ -561,6 +570,23 @@ export class SecretaryReservationsComponent
 
   formatAppointmentTime(value: string): string {
     return formatReservationTime(value);
+  }
+
+  displayReservationAt(item: SecretaryReservation): string {
+    return (
+      item.reservationAtPersian ??
+      item.ReservationAtPersian ??
+      this.formatAppointmentTime(this.reservationAt(item))
+    );
+  }
+
+  serviceResult(item: SecretaryReservation): string {
+    const result = item.patientReceivedService ?? item.PatientReceivedService;
+    return result === true
+      ? "خدمت انجام شد"
+      : result === false
+        ? "خدمت انجام نشد"
+        : "هنوز بررسی نشده";
   }
 
   private handleLoadError(requestId: number, error: unknown): void {
