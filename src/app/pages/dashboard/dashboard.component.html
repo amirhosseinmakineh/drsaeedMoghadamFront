@@ -154,10 +154,6 @@
               <span><app-fa-icon name="table"></app-fa-icon></span>
               <strong>رزروهای روزانه</strong>
             </button>
-            <button type="button" (click)="setSection('presence')">
-              <span><app-fa-icon name="clock"></app-fa-icon></span>
-              <strong>وضعیت مشاوران</strong>
-            </button>
           </section>
         }
 
@@ -442,9 +438,6 @@
           <app-admin-daily-reservations-report></app-admin-daily-reservations-report>
         }
 
-        @if (activeSection === "presence") {
-          <app-admin-presence-dashboard></app-admin-presence-dashboard>
-        }
       </section>
     } @else {
       <div class="dashboard-hero">
