@@ -29,7 +29,6 @@ import {
 import { AuthService } from "../../core/auth/auth.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
 import { ToastService } from "../../core/toast/toast.service";
-import { AdminReservationsTableComponent } from "../admin-dashboard/admin-reservations-table.component";
 import { AdminAttendanceTableComponent } from "../admin-dashboard/admin-attendance-table.component";
 import { AdminLeadCallReportsComponent } from "../admin-dashboard/admin-lead-call-reports.component";
 import { AdminDailyReservationsReportComponent } from "../admin-dashboard/admin-daily-reservations-report.component";
@@ -67,7 +66,6 @@ type DashboardSection =
   | "leads"
   | "leadReports"
   | "dailyReservationsReport"
-  | "reservations"
   | "presence";
 type UserDialogMode = "add" | "edit";
 
@@ -105,7 +103,6 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "leads",
   "leadReports",
   "dailyReservationsReport",
-  "reservations",
   "presence",
 ];
 
@@ -123,7 +120,6 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminLeadCallReportsComponent,
     AdminDailyReservationsReportComponent,
     AdminAttendanceTableComponent,
-    AdminReservationsTableComponent,
     AdminPresenceDashboardComponent,
     AdminConsultantProfileComponent,
     FaIconComponent,
@@ -142,10 +138,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "secretaries", label: "منشی‌ها", icon: "user" },
     { id: "consultants", label: "مشاوران", icon: "doctor" },
     { id: "consultantProfile", label: "پروفایل مشاور", icon: "user" },
-    { id: "leads", label: "لیدها", icon: "clipboard" },
-    { id: "leadReports", label: "گزارش تماس", icon: "clipboard" },
-    { id: "dailyReservationsReport", label: "گزارش روزانه رزروها", icon: "table" },
-    { id: "reservations", label: "رزروها", icon: "calendar" },
+    { id: "leads", label: "درخواست‌های مشاوره", icon: "clipboard" },
+    { id: "leadReports", label: "گزارش تماس درخواست‌ها", icon: "clipboard" },
+    { id: "dailyReservationsReport", label: "رزروهای روزانه", icon: "calendar" },
     { id: "presence", label: "وضعیت مشاوران", icon: "clock" },
   ];
   readonly regularLinks: DashboardLink[] = [
@@ -237,7 +232,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   selectedAttendanceConsultant: Consultant | null = null;
   selectedLeadsConsultant: Consultant | null = null;
-  selectedReservationsConsultant: Consultant | null = null;
   selectedProfileConsultantId: number | null = null;
   mobileSidebarOpen = false;
 
@@ -340,8 +334,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly consultantActions = [
     { action: "profile", label: "پروفایل", icon: "user" },
     { action: "attendance", label: "حضور", icon: "calendar" },
-    { action: "leads", label: "لیدها", icon: "clipboard" },
-    { action: "reservations", label: "رزروها", icon: "calendar" },
+    { action: "leads", label: "درخواست‌های مشاوره", icon: "clipboard" },
   ];
 
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
@@ -932,7 +925,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const profileId = event.row.profileId ?? event.row.ProfileId ?? 0;
     if (!profileId) {
       this.showFeedback(
-        "شناسه پروفایل مشاور یافت نشد. لطفاً صفحه را بروزرسانی کنید.",
+        "شناسه پرونده مشاور یافت نشد. لطفاً صفحه را به‌روزرسانی کنید.",
         "error",
       );
       return;
@@ -942,7 +935,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.selectedProfileConsultantId = profileId;
       this.selectedAttendanceConsultant = null;
       this.selectedLeadsConsultant = null;
-      this.selectedReservationsConsultant = null;
       this.setSection("consultantProfile");
       return;
     }
@@ -950,7 +942,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (event.action === "attendance") {
       this.selectedAttendanceConsultant = event.row;
       this.selectedLeadsConsultant = null;
-      this.selectedReservationsConsultant = null;
       this.markDirty();
       this.scrollToConsultantDetail();
       return;
@@ -959,18 +950,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (event.action === "leads") {
       this.selectedLeadsConsultant = event.row;
       this.selectedAttendanceConsultant = null;
-      this.selectedReservationsConsultant = null;
       this.markDirty();
       this.scrollToConsultantDetail();
       return;
-    }
-
-    if (event.action === "reservations") {
-      this.selectedReservationsConsultant = event.row;
-      this.selectedAttendanceConsultant = null;
-      this.selectedLeadsConsultant = null;
-      this.markDirty();
-      this.scrollToConsultantDetail();
     }
   }
 
@@ -1043,7 +1025,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   roleNameLabel(roleName: string): string {
     const labels: Record<string, string> = {
-      Admin: "ادمین",
+      Admin: "مدیر سیستم",
       Consultant: "مشاور",
       Secretary: "منشی",
       NormalUser: "کاربر عادی",
