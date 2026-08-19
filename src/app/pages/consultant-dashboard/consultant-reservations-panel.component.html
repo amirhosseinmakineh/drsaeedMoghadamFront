@@ -41,6 +41,46 @@
     </button>
   </nav>
 
+  @if (activeTab !== "pending") {
+    <form class="reservation-filters" (ngSubmit)="applyFilters()">
+      <label class="quick-search-field">
+        جست‌وجوی سریع
+        <input
+          [(ngModel)]="searchText"
+          name="reservationSearch"
+          type="search"
+          placeholder="نام یا شماره بیمار"
+          (ngModelChange)="onSearchChange()"
+        />
+      </label>
+      <label>
+        نام بیمار
+        <input [(ngModel)]="patientNameFilter" name="reservationPatientName" />
+      </label>
+      <label>
+        شماره تلفن
+        <input [(ngModel)]="patientPhoneFilter" name="reservationPatientPhone" inputmode="tel" />
+      </label>
+      <label>
+        شهر بیمار
+        <input [(ngModel)]="patientCityFilter" name="reservationPatientCity" />
+      </label>
+      <label>
+        وضعیت حضور
+        <select [(ngModel)]="attendanceStatusFilter" name="reservationAttendanceStatus">
+          <option value="">همه</option>
+          @for (option of attendanceStatusOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      <button class="primary-action compact" type="submit" [disabled]="loading">
+        اعمال فیلترها
+      </button>
+    </form>
+    <p class="results-count">{{ totalCount }} رزرو یافت شد</p>
+  }
+
   @if (feedback) {
     <p
       class="feedback"

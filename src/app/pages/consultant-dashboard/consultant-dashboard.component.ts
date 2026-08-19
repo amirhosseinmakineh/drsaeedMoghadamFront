@@ -227,6 +227,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   leads: ConsultantLead[] = [];
   leadsLoading = false;
+  leadSearchText = "";
+  leadNameFilter = "";
+  leadPhoneFilter = "";
+  leadCityFilter = "";
   leadStateFilter: number | null = null;
   leadTypeFilter: number | null = null;
   leadFromDate: Date | null = null;
@@ -250,6 +254,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reportEditTotalCount = 0;
   private reportEditRequestId = 0;
   private reportEditLoadSubscription?: Subscription;
+  private leadSearchDebounceId: ReturnType<typeof setTimeout> | null = null;
 
   patientLeads: ConsultantLead[] = [];
   patientLeadsLoading = false;
@@ -547,6 +552,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.timerId) clearInterval(this.timerId);
     if (this.pollId) clearInterval(this.pollId);
     if (this.autoAbsenceId) clearInterval(this.autoAbsenceId);
+    if (this.leadSearchDebounceId) clearTimeout(this.leadSearchDebounceId);
     this.leadLoadSubscription?.unsubscribe();
     this.reportEditLoadSubscription?.unsubscribe();
     this.reservationLoadSubscription?.unsubscribe();
@@ -1207,6 +1213,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     this.leadPageNumber = 1;
     this.loadLeads();
+  }
+
+  onLeadSearchChange(): void {
+    if (this.leadSearchDebounceId) clearTimeout(this.leadSearchDebounceId);
+    this.leadSearchDebounceId = setTimeout(() => {
+      this.leadPageNumber = 1;
+      this.loadLeads();
+    }, 400);
+  }
+
+  private trimmedFilter(value: string): string | undefined {
+    return value.trim() || undefined;
   }
 
   private validateLeadDateFilters(): string | null {
@@ -3046,6 +3064,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.leadLoadSubscription = this.consultantApi
       .getLeads({
         profileId,
+        searchText: this.trimmedFilter(this.leadSearchText),
+        userName: this.trimmedFilter(this.leadNameFilter),
+        phoneNumber: this.trimmedFilter(this.leadPhoneFilter),
+        patientCity: this.trimmedFilter(this.leadCityFilter),
         leadAssignmentState: this.effectiveLeadStateFilter(),
         leadAssignmentType: this.leadTypeFilter,
         from: this.formatFilterDate(this.leadFromDate),

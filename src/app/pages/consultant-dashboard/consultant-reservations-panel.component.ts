@@ -17,6 +17,7 @@ import {
   ConsultantDashboardService,
   ConsultantReservation,
   ConfirmAttendanceRequest,
+  AttendanceConfirmationStatusFilter,
   UpdateReservationRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import {
@@ -74,6 +75,22 @@ export class ConsultantReservationsPanelComponent
   pageNumber = 1;
   pageSize = 20;
   totalPages = 1;
+  totalCount = 0;
+  searchText = "";
+  patientNameFilter = "";
+  patientPhoneFilter = "";
+  patientCityFilter = "";
+  attendanceStatusFilter: AttendanceConfirmationStatusFilter | "" = "";
+  readonly attendanceStatusOptions: ReadonlyArray<{
+    value: AttendanceConfirmationStatusFilter;
+    label: string;
+  }> = [
+    { value: "PendingConsultantConfirmation", label: "در انتظار تأیید مشاور" },
+    { value: "ConsultantConfirmedPresent", label: "حضور تأییدشده توسط مشاور" },
+    { value: "ConsultantConfirmedAbsent", label: "عدم حضور تأییدشده توسط مشاور" },
+    { value: "SecretaryApproved", label: "تأیید منشی" },
+    { value: "SecretaryRejected", label: "رد منشی" },
+  ];
   pendingCount = 0;
   editDialogOpen = false;
   editSaving = false;
@@ -96,6 +113,7 @@ export class ConsultantReservationsPanelComponent
   private loadRequestId = 0;
   private pollId: ReturnType<typeof setInterval> | null = null;
   private loadSubscription: Subscription | null = null;
+  private searchDebounceId: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
@@ -132,6 +150,7 @@ export class ConsultantReservationsPanelComponent
     this.destroyed = true;
     this.stopPolling();
     this.loadSubscription?.unsubscribe();
+    if (this.searchDebounceId) clearTimeout(this.searchDebounceId);
   }
 
   setTab(tab: ConsultantReservationTab): void {
@@ -184,6 +203,11 @@ export class ConsultantReservationsPanelComponent
     this.loadSubscription = this.consultantApi
       .getReservations({
         consultantProfileId: this.profileId,
+        searchText: this.cleanFilter(this.searchText),
+        patientName: this.cleanFilter(this.patientNameFilter),
+        patientPhoneNumber: this.cleanFilter(this.patientPhoneFilter),
+        patientCity: this.cleanFilter(this.patientCityFilter),
+        attendanceConfirmationStatus: this.attendanceStatusFilter || undefined,
         includeCanceled: false,
         onlySecretaryReviewed:
           this.activeTab === "completed" ? true : undefined,
@@ -204,6 +228,7 @@ export class ConsultantReservationsPanelComponent
           this.items = response.items ?? [];
           this.pageNumber = response.pageNumber;
           this.totalPages = response.totalPages;
+          this.totalCount = response.totalCount;
           this.markDirty();
         },
         error: (error) => {
@@ -218,6 +243,20 @@ export class ConsultantReservationsPanelComponent
     if (page < 1 || page > this.totalPages) return;
     this.pageNumber = page;
     this.load();
+  }
+
+  applyFilters(): void {
+    this.pageNumber = 1;
+    this.load();
+  }
+
+  onSearchChange(): void {
+    if (this.searchDebounceId) clearTimeout(this.searchDebounceId);
+    this.searchDebounceId = setTimeout(() => this.applyFilters(), 400);
+  }
+
+  private cleanFilter(value: string): string | undefined {
+    return value.trim() || undefined;
   }
 
   confirm(reservation: ConsultantReservation, patientAttended: boolean): void {

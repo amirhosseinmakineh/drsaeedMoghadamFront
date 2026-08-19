@@ -154,6 +154,10 @@ export interface ConsultantLead {
 
 export interface LeadFilters {
   profileId: number;
+  searchText?: string;
+  userName?: string;
+  phoneNumber?: string;
+  patientCity?: string;
   leadAssignmentState?: number | null;
   leadAssignmentType?: number | null;
   hasSubmittedReport?: boolean | null;
@@ -349,6 +353,11 @@ export interface AddPatientLeadResponse {
 
 export interface ReservationFilters {
   consultantProfileId: number;
+  searchText?: string;
+  patientName?: string;
+  patientPhoneNumber?: string;
+  patientCity?: string;
+  attendanceConfirmationStatus?: AttendanceConfirmationStatusFilter;
   from?: string;
   to?: string;
   includeCanceled?: boolean;
@@ -356,6 +365,13 @@ export interface ReservationFilters {
   pageNumber: number;
   pageSize: number;
 }
+
+export type AttendanceConfirmationStatusFilter =
+  | "PendingConsultantConfirmation"
+  | "ConsultantConfirmedPresent"
+  | "ConsultantConfirmedAbsent"
+  | "SecretaryApproved"
+  | "SecretaryRejected";
 
 export interface UpdateReservationRequest {
   reservationAt: string;

@@ -59,6 +59,31 @@
   color: #fff;
   font-size: 0.75rem;
 }
+.reservation-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.reservation-filters .quick-search-field {
+  grid-column: span 2;
+}
+.reservation-filters input,
+.reservation-filters select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 9px 12px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font: inherit;
+}
+.results-count {
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-weight: 850;
+}
 .secondary-action,
 .primary-action {
   display: inline-flex;
@@ -293,5 +318,11 @@ textarea {
   }
   dl {
     grid-template-columns: 1fr;
+  }
+  .reservation-filters {
+    grid-template-columns: 1fr;
+  }
+  .reservation-filters .quick-search-field {
+    grid-column: auto;
   }
 }

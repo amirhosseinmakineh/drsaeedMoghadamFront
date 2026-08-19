@@ -451,9 +451,23 @@ input[readonly] {
 }
 .lead-filters {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   align-items: end;
+}
+.lead-filters .quick-search-field {
+  grid-column: span 2;
+}
+.lead-filters input,
+.lead-filters select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 9px 12px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font: inherit;
 }
 .lead-filters.patient-filters {
   grid-template-columns: 1fr auto;
