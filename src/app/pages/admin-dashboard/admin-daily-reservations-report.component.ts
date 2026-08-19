@@ -111,6 +111,28 @@ export class AdminDailyReservationsReportComponent implements OnInit {
     return formatReservationTime(value);
   }
 
+  secretaryAnnouncement(item: DailyReservationReportItem): string {
+    return (
+      item.secretaryAnnouncement?.trim() ||
+      item.SecretaryAnnouncement?.trim() ||
+      item.secretaryAnnouncementDescription?.trim() ||
+      item.SecretaryAnnouncementDescription?.trim() ||
+      this.secretaryAnnouncementStatusLabel(
+        item.secretaryAnnouncementStatus ?? item.SecretaryAnnouncementStatus,
+      )
+    );
+  }
+
+  private secretaryAnnouncementStatusLabel(status: string | null | undefined): string {
+    if (status === "Confirmed") return "تایید شده";
+    if (status === "NoAnswer") return "پاسخ نداد";
+    if (status === "CancelledByPatient") return "لغو توسط بیمار";
+    if (status === "RescheduleRequested") return "درخواست تغییر زمان";
+    if (status === "CallAgain") return "تماس مجدد";
+    if (status === "NotCalled") return "تماس نشده";
+    return status?.trim() || "-";
+  }
+
   trackReservation(_: number, item: DailyReservationReportItem): number {
     return item.reservationId;
   }

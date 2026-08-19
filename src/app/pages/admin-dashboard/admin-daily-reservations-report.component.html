@@ -65,7 +65,7 @@
     } @else {
       <div class="table-scroll">
         <table>
-          <thead><tr><th>شناسه رزرو</th><th>مشاور</th><th>بیمار</th><th>خدمات</th><th>شهر و محدوده</th><th>زمان مراجعه بیمار</th><th>زمان ثبت رزرو</th><th>وضعیت بررسی رزرو</th><th>نتیجه مراجعه</th><th>احتمال حضور</th><th>وضعیت لغو</th><th>توضیحات</th></tr></thead>
+          <thead><tr><th>شناسه رزرو</th><th>مشاور</th><th>بیمار</th><th>خدمات</th><th>شهر و محدوده</th><th>زمان مراجعه بیمار</th><th>زمان ثبت رزرو</th><th>وضعیت بررسی رزرو</th><th>نتیجه مراجعه</th><th>احتمال حضور</th><th>وضعیت لغو</th><th>اعلام منشی</th><th>توضیحات</th></tr></thead>
           <tbody>
             <tr *ngFor="let item of report.items; trackBy: trackReservation" [class.canceled-row]="item.isCanceled">
               <td>#{{ item.reservationId }}</td>
@@ -78,6 +78,7 @@
               <td><span class="badge visit">{{ item.visitResultStatusTitle }}</span></td>
               <td>{{ item.attendanceProbabilityPercent === null ? "-" : item.attendanceProbabilityPercent + "٪" }}</td>
               <td><span class="badge" [class.badge-danger]="item.isCanceled" [class.badge-success]="!item.isCanceled">{{ item.isCanceled ? "لغو شده" : "خیر" }}</span><small *ngIf="item.cancellationReason">{{ item.cancellationReason }}</small></td>
+              <td class="description">{{ secretaryAnnouncement(item) }}</td>
               <td class="description">{{ item.description || "-" }}</td>
             </tr>
           </tbody>

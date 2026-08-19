@@ -173,6 +173,7 @@ export enum ReservationType {
 
 export interface SecretaryAnnouncementRequest {
   reservationId: number;
+  secretaryUserId: string;
   status: SecretaryAnnouncementStatus;
   description: string | null;
 }
