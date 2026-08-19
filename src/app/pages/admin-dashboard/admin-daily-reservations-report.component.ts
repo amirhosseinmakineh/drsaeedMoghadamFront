@@ -12,6 +12,7 @@ import {
 import { ToastService } from "../../core/toast/toast.service";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { downloadBlob } from "../../utils/file-download.util";
+import { formatDentalServices } from "../../core/reservation/dental-services";
 import {
   formatIranDateTime,
   formatReservationTime,
@@ -28,6 +29,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminDailyReservationsReportComponent implements OnInit {
+  readonly dentalServicesLabel = formatDentalServices;
   selectedDate = nowInIran();
   consultantProfileId: number | null = null;
   requestStatus: number | null = null;

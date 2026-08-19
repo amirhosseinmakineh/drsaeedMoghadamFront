@@ -65,12 +65,13 @@
     } @else {
       <div class="table-scroll">
         <table>
-          <thead><tr><th>شناسه رزرو</th><th>مشاور</th><th>بیمار</th><th>شهر و محدوده</th><th>زمان مراجعه بیمار</th><th>زمان ثبت رزرو</th><th>وضعیت بررسی رزرو</th><th>نتیجه مراجعه</th><th>احتمال حضور</th><th>وضعیت لغو</th><th>توضیحات</th></tr></thead>
+          <thead><tr><th>شناسه رزرو</th><th>مشاور</th><th>بیمار</th><th>خدمات</th><th>شهر و محدوده</th><th>زمان مراجعه بیمار</th><th>زمان ثبت رزرو</th><th>وضعیت بررسی رزرو</th><th>نتیجه مراجعه</th><th>احتمال حضور</th><th>وضعیت لغو</th><th>توضیحات</th></tr></thead>
           <tbody>
             <tr *ngFor="let item of report.items; trackBy: trackReservation" [class.canceled-row]="item.isCanceled">
               <td>#{{ item.reservationId }}</td>
               <td><strong>{{ item.consultantFullName || "-" }}</strong><small>{{ item.consultantPhoneNumber || "-" }}</small></td>
               <td><strong>{{ item.patientName || "-" }}</strong><small>{{ item.patientPhoneNumber || "-" }}</small><small *ngIf="item.secondaryPhoneNumber">{{ item.secondaryPhoneNumber }}</small></td>
+              <td>{{ dentalServicesLabel(item) }}</td>
               <td>{{ item.patientCity || "-" }}<small>{{ item.patientRegion || item.businessName || "" }}</small></td>
               <td>{{ item.appointmentDateTimePersian || formatAppointmentTime(item.reservationAt) }}</td><td>{{ item.createdAtPersian || formatDateTime(item.createdAt) }}</td>
               <td><span class="badge status">{{ item.requestStatusTitle }}</span></td>

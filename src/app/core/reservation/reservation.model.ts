@@ -6,4 +6,6 @@ export interface ReservationDto {
   PatientName?: string | null;
   reservationAt?: string | null;
   ReservationAt?: string | null;
+  dentalServices?: number[] | null;
+  DentalServices?: number[] | null;
 }

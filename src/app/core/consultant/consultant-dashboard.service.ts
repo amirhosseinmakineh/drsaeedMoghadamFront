@@ -233,6 +233,7 @@ export interface CreateReservationRequest {
   attendancePrediction: string;
   secondaryPhoneNumber?: string | null;
   description?: string | null;
+  dentalServices: number[];
 }
 
 export interface ConfirmAttendanceRequest {
@@ -243,6 +244,8 @@ export interface ConfirmAttendanceRequest {
 }
 
 export interface ConsultantReservation {
+  dentalServices?: number[] | null;
+  DentalServices?: number[] | null;
   id?: number;
   Id?: number;
   reservationId?: number;
@@ -381,6 +384,7 @@ export interface UpdateReservationRequest {
   attendancePrediction?: string;
   secondaryPhoneNumber?: string | null;
   description?: string | null;
+  dentalServices?: number[] | null;
 }
 
 export interface ConsultantPatientProfile {
