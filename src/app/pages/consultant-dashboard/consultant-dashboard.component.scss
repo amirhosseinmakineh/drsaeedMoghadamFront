@@ -2,9 +2,9 @@
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
   gap: 18px;
-  width: min(1180px, calc(100% - 36px));
+  width: min(1800px, calc(100% - 48px));
   margin: 0 auto;
   padding: 36px 0 86px;
 }
@@ -452,11 +452,17 @@ input[readonly] {
 .lead-filters {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 14px;
   align-items: end;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--brand) 20%, var(--line));
+  border-radius: 24px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--brand) 5%, var(--surface)), var(--surface-muted));
 }
 .lead-filters .quick-search-field {
-  grid-column: span 2;
+  grid-column: 1 / -1;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--line);
 }
 .lead-filters input,
 .lead-filters select {
@@ -468,6 +474,60 @@ input[readonly] {
   background: var(--surface-muted);
   color: var(--text);
   font: inherit;
+}
+.lead-filters label {
+  min-width: 0;
+  font-size: 0.82rem;
+}
+.lead-filters input:focus,
+.lead-filters select:focus {
+  outline: 3px solid color-mix(in srgb, var(--brand) 18%, transparent);
+  border-color: var(--brand);
+  background: var(--surface);
+}
+.lead-filters > .primary-action {
+  min-height: 44px;
+  border-radius: 16px;
+}
+
+.dental-services-field {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 4px 0;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line));
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--brand) 5%, var(--surface));
+}
+.dental-services-field legend {
+  padding: 0 10px;
+  color: var(--text);
+  font-weight: 950;
+}
+.dental-services-field label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+.dental-services-field label:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--brand) 48%, var(--line));
+  background: color-mix(in srgb, var(--brand) 8%, var(--surface));
+}
+.dental-services-field input[type="checkbox"] {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  accent-color: var(--brand);
 }
 .lead-filters.patient-filters {
   grid-template-columns: 1fr auto;
@@ -726,6 +786,7 @@ input[readonly] {
   }
   .lead-filters {
     grid-template-columns: 1fr 1fr auto;
+    padding: 14px;
   }
   .locked-panel {
     grid-template-columns: 1fr;
@@ -775,6 +836,9 @@ input[readonly] {
     border-radius: 18px;
   }
   .dialog-actions {
+    grid-template-columns: 1fr;
+  }
+  .dental-services-field {
     grid-template-columns: 1fr;
   }
 }
