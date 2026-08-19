@@ -530,6 +530,44 @@
           </select>
         </label>
       </div>
+      @if (userForm.roleName === "Secretary") {
+        <section class="secretary-access-editor">
+          <header>
+            <div>
+              <strong>نوع منشی</strong>
+              <small>منشی اصلی دسترسی کامل دارد؛ دسترسی منشی کمکی برای هر روز جداگانه ثبت می‌شود.</small>
+            </div>
+            <select [(ngModel)]="userForm.secretaryType" name="dialogSecretaryType">
+              <option [ngValue]="secretaryTypes.Main">منشی اصلی</option>
+              <option [ngValue]="secretaryTypes.Assistant">منشی کمکی</option>
+            </select>
+          </header>
+
+          @if (userForm.secretaryType === secretaryTypes.Assistant) {
+            <div class="secretary-access-days">
+              @for (day of secretaryDays; track day.value) {
+                <article [class.enabled]="userForm.secretaryAccess[day.value].enabled">
+                  <label class="day-toggle">
+                    <input type="checkbox" [(ngModel)]="userForm.secretaryAccess[day.value].enabled" [name]="'secretaryDay' + day.value" />
+                    <strong>{{ day.label }}</strong>
+                  </label>
+                  <div class="permission-grid">
+                    @for (permission of secretaryPermissionOptions; track permission.value) {
+                      <label>
+                        <input type="checkbox"
+                          [checked]="hasSecretaryPermission(day.value, permission.value)"
+                          [disabled]="!userForm.secretaryAccess[day.value].enabled"
+                          (change)="toggleSecretaryPermission(day.value, permission.value, $any($event.target).checked)" />
+                        {{ permission.label }}
+                      </label>
+                    }
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        </section>
+      }
       <label
         >نام فایل آواتار<input
           [(ngModel)]="userForm.avatarImageName"

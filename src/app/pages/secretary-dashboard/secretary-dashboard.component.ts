@@ -19,7 +19,7 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
 import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-route-history";
-import { SecretaryDashboardService } from "../../core/secretary/secretary-dashboard.service";
+import { SecretaryAccessResult, SecretaryDashboardService, SecretaryPermission } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
 import { SecretaryReservationRequestsComponent } from "./secretary-reservation-requests.component";
@@ -124,6 +124,8 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
   reservationPreset: SecretaryDashboardPreset | null = null;
+  accessLoading = true;
+  access: SecretaryAccessResult | null = null;
 
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
@@ -160,7 +162,11 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
       );
     }
 
-    return this.dashboardLinks;
+    return this.dashboardLinks.filter((item) => {
+      if (item.id === "profile") return true;
+      if (item.id === "reviews") return this.hasPermission("ConfirmAttendance");
+      return this.hasPermission("ViewReservations");
+    });
   }
 
   ngOnInit(): void {
@@ -174,6 +180,27 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
       (params) => this.applySectionRouteParams(params),
     );
     this.syncSectionQueryParam(this.activeSection);
+    this.secretaryApi.getAccess().subscribe({
+      next: (access) => {
+        this.access = access;
+        this.accessLoading = false;
+        if (!this.visibleDashboardLinks.some((item) => item.id === this.activeSection)) this.setSection("profile");
+        this.markDirty();
+      },
+      error: () => {
+        this.accessLoading = false;
+        this.feedbackType = "error";
+        this.feedbackMessage = "دریافت سطح دسترسی منشی انجام نشد. دوباره تلاش کنید.";
+        this.markDirty();
+      },
+    });
+  }
+
+  hasPermission(permission: SecretaryPermission): boolean {
+    if (this.access?.hasFullAccess) return true;
+    if (!this.access && this.user()?.secretaryType?.toLowerCase() === "main") return true;
+    return this.access?.permissions.includes(permission) ??
+      this.user()?.secretaryPermissions?.includes(permission) ?? false;
   }
 
   ngOnDestroy(): void {
@@ -213,6 +240,9 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     ) {
       return "profile";
     }
+
+    if (section === "reviews" && !this.hasPermission("ConfirmAttendance")) return "profile";
+    if ((section === "overview" || section === "reservations") && !this.hasPermission("ViewReservations")) return "profile";
 
     return section;
   }

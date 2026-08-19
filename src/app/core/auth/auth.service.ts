@@ -19,6 +19,7 @@ export interface AuthUser {
   isCompleteProfile?: boolean;
   secretaryType?: string;
   allowedDays?: string[];
+  secretaryPermissions?: string[];
 }
 
 export interface RegisterRequest {
@@ -70,6 +71,8 @@ type TokenResponseData =
       SecretaryType?: string;
       allowedDays?: string[] | string;
       AllowedDays?: string[] | string;
+      permissions?: string[] | string;
+      Permissions?: string[] | string;
     };
 
 interface StoredSession {
@@ -459,6 +462,12 @@ export class AuthService {
           claims["AllowedDays"] ??
           data["allowedDays"] ??
           data["AllowedDays"],
+      ),
+      secretaryPermissions: this.stringList(
+        claims["permissions"] ??
+          claims["Permissions"] ??
+          data["permissions"] ??
+          data["Permissions"],
       ),
       roleName,
       role: roles[0] ?? this.normalizeRole(roleName),
