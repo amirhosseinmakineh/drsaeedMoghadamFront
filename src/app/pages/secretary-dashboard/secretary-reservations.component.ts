@@ -51,7 +51,6 @@ export class SecretaryReservationsComponent
 
   activeTab: SecretaryReservationTab = "queue";
   items: SecretaryReservation[] = [];
-  notes: Record<number, string> = {};
   loading = false;
   savingId: number | null = null;
   timeDialogItem: SecretaryReservation | null = null;
@@ -345,7 +344,7 @@ export class SecretaryReservationsComponent
         reservationId,
         secretaryUserId,
         approved,
-        note: (this.notes[reservationId] || "").trim() || null,
+        note: null,
       })
       .pipe(finalize(() => (this.savingId = null)))
       .subscribe({
