@@ -173,7 +173,11 @@ export enum ReservationType {
 
 export interface SecretaryAnnouncementRequest {
   reservationId: number;
-  secretaryUserId: string;
+  /**
+   * Kept optional for compatibility with older API typings. The backend command
+   * ignores this JSON field and resolves the acting secretary from JWT claims.
+   */
+  secretaryUserId?: string;
   status: SecretaryAnnouncementStatus;
   description: string | null;
 }
