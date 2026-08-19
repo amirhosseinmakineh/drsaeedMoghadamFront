@@ -15,7 +15,6 @@ import { Subscription, finalize, forkJoin } from "rxjs";
 import {
   SecretaryDashboardService,
   SecretaryReservation,
-  SecretaryReservationActivity,
   SecretaryAnnouncementStatus,
   ReservationType,
   SecretaryConsultantOption,
@@ -57,7 +56,6 @@ type DialogMode =
   | "reschedule"
   | "reject"
   | "contact"
-  | "note"
   | "followup"
   | "visit";
 
@@ -155,8 +153,6 @@ export class SecretaryReservationRequestsComponent
 
   selected: SecretaryReservation | null = null;
   dialogMode: DialogMode | null = null;
-  history: SecretaryReservationActivity[] = [];
-  historyLoading = false;
   note = "";
   reasonCode: number | null = null;
   rejectionText = "";
@@ -168,6 +164,7 @@ export class SecretaryReservationRequestsComponent
   visitResult = 2;
 
   private loadSubscription: Subscription | null = null;
+  private readonly realtimeSubscription: Subscription;
   private requestId = 0;
 
   constructor(
@@ -177,7 +174,13 @@ export class SecretaryReservationRequestsComponent
     private toast: ToastService,
     private reservationSync: ReservationSyncService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.realtimeSubscription = this.reservationSync.refreshRequested$.subscribe(
+      () => {
+        if (this.profileReady && !this.saving) this.load();
+      },
+    );
+  }
 
   ngOnInit(): void {
     this.restoreFromUrl();
@@ -193,6 +196,7 @@ export class SecretaryReservationRequestsComponent
 
   ngOnDestroy(): void {
     this.loadSubscription?.unsubscribe();
+    this.realtimeSubscription.unsubscribe();
   }
 
   setQuickFilter(value: QuickFilter): void {
@@ -345,14 +349,76 @@ export class SecretaryReservationRequestsComponent
     this.followUpDate = null;
     this.followUpTime = "";
     this.contactResult = this.secretaryAnnouncementStatus(item);
-    if (mode === "details") this.loadHistory(item);
   }
 
   closeDialog(): void {
     if (this.saving) return;
     this.dialogMode = null;
     this.selected = null;
-    this.history = [];
+  }
+
+  openCreateDialog(
+    type: ReservationType = ReservationType.AfterSalesService,
+  ): void {
+    if (!this.canCreate) return;
+    this.createReservationType = type;
+    this.createLeadAssignmentId = null;
+    this.createConsultantProfileId = null;
+    this.createDate = null;
+    this.createTime = "";
+    this.createDescription = "";
+    this.createDialogOpen = true;
+  }
+
+  closeCreateDialog(): void {
+    if (!this.saving) this.createDialogOpen = false;
+  }
+
+  createReservation(): void {
+    if (!this.canCreate || this.saving) return;
+    if (!this.createLeadAssignmentId || !this.createConsultantProfileId) {
+      this.toast.error("انتخاب بیمار/لید و مشاور الزامی است");
+      return;
+    }
+    if (!this.createDate || !this.createTime) {
+      this.toast.error("تاریخ و ساعت مراجعه الزامی است");
+      return;
+    }
+
+    const reservationAt = this.combineDateTime(
+      this.createDate,
+      this.createTime,
+    );
+    if (new Date(reservationAt).getTime() <= Date.now()) {
+      this.toast.error("زمان مراجعه باید در آینده باشد");
+      return;
+    }
+
+    this.saving = true;
+    this.api
+      .createReservation({
+        leadAssignmentId: this.createLeadAssignmentId,
+        consultantProfileId: this.createConsultantProfileId,
+        reservationAt,
+        description: this.createDescription.trim() || null,
+        reservationType: this.createReservationType,
+      })
+      .pipe(
+        finalize(() => {
+          this.saving = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          this.toast.success(response.message || "رزرو با موفقیت ثبت شد");
+          this.createDialogOpen = false;
+          this.reservationSync.requestRefresh();
+          this.load();
+        },
+        error: (error) =>
+          this.toast.error(this.errorText(error, "ثبت رزرو انجام نشد")),
+      });
   }
 
   openCreateDialog(type = ReservationType.AfterSalesService): void {
@@ -514,11 +580,10 @@ export class SecretaryReservationRequestsComponent
     if (this.dialogMode === "confirm") {
       request = this.api.confirmReservation(id, this.note.trim() || null);
     } else if (this.dialogMode === "reschedule") {
-      request = this.api.rescheduleReservation(id, {
-        reservationAt: this.combineDateTime(this.newDate!, this.newTime),
-        reason: this.rejectionText.trim() || null,
-        note: this.note.trim() || null,
-      });
+      request = this.api.updateReservationTime(
+        id,
+        this.combineDateTime(this.newDate!, this.newTime),
+      );
     } else if (this.dialogMode === "reject") {
       request = this.api.rejectReservation(id, {
         reasonCode: this.reasonCode!,
@@ -530,8 +595,6 @@ export class SecretaryReservationRequestsComponent
         status: this.contactResult,
         description: this.note.trim() || null,
       });
-    } else if (this.dialogMode === "note") {
-      request = this.api.addReservationNote(id, this.note.trim());
     } else if (this.dialogMode === "followup") {
       request = this.api.createFollowUp(
         id,
@@ -576,6 +639,13 @@ export class SecretaryReservationRequestsComponent
 
   hasManagementAccess(item: SecretaryReservation): boolean {
     return this.api.canManageReservation(item);
+  }
+
+  canChangeTime(item: SecretaryReservation): boolean {
+    return (
+      this.hasManagementAccess(item) &&
+      !(item.isCanceled ?? item.IsCanceled ?? false)
+    );
   }
 
   canRecordVisit(item: SecretaryReservation): boolean {
@@ -695,30 +765,6 @@ export class SecretaryReservationRequestsComponent
     return readAttendanceStatus(item, "attendanceConfirmationStatus");
   }
 
-  private loadHistory(item: SecretaryReservation): void {
-    const id = this.reservationId(item);
-    if (!id) return;
-    this.historyLoading = true;
-    this.api
-      .getReservationHistory(id)
-      .pipe(
-        finalize(() => {
-          this.historyLoading = false;
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: (history) => {
-          this.history = history;
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.history = [];
-          this.cdr.markForCheck();
-        },
-      });
-  }
-
   private validateDialog(item: SecretaryReservation): string | null {
     if (this.dialogMode === "reschedule") {
       if (!this.newDate || !this.newTime) return "تاریخ و ساعت جدید الزامی است";
@@ -735,8 +781,6 @@ export class SecretaryReservationRequestsComponent
       if (this.reasonCode === 4 && !this.rejectionText.trim())
         return "توضیحات دلیل سایر الزامی است";
     }
-    if (this.dialogMode === "note" && !this.note.trim())
-      return "متن یادداشت الزامی است";
     if (this.dialogMode === "followup") {
       if (!this.followUpDate || !this.followUpTime || !this.note.trim())
         return "تاریخ، ساعت و دلیل پیگیری الزامی است";

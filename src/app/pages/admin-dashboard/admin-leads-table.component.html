@@ -12,7 +12,7 @@
       [disabled]="loading"
       (click)="load()"
     >
-      بروزرسانی
+      به‌روزرسانی
     </button>
   </header>
 
@@ -27,7 +27,7 @@
         {{
           exporting
             ? "در حال آماده‌سازی..."
-            : "دانلود گزارش اکسل لیدها"
+            : "دانلود گزارش اکسل درخواست‌های مشاوره"
         }}
       </button>
     </div>
@@ -35,7 +35,7 @@
 
   <form class="filter-grid" (ngSubmit)="applyFilters()">
     <label>
-      وضعیت لید
+      وضعیت درخواست مشاوره
       <select
         [(ngModel)]="filters.leadAssignmentState"
         [ngModelOptions]="ngModelBlurOptions"
@@ -89,7 +89,7 @@
     [pageSize]="filters.pageSize"
     [totalCount]="totalCount"
     [totalPages]="totalPages"
-    emptyText="لیدی برای نمایش وجود ندارد"
+    emptyText="درخواست مشاوره‌ای برای نمایش وجود ندارد"
     (pageChange)="changePage($event)"
   ></app-base-table>
 </section>
