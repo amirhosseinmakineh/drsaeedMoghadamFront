@@ -514,6 +514,28 @@
 
 
             <form class="lead-filters" (ngSubmit)="applyLeadFilters()">
+              <label class="quick-search-field">
+                جست‌وجوی سریع
+                <input
+                  [(ngModel)]="leadSearchText"
+                  name="consultantLeadSearch"
+                  type="search"
+                  placeholder="نام، شماره اصلی یا شماره دوم"
+                  (ngModelChange)="onLeadSearchChange()"
+                />
+              </label>
+              <label>
+                نام لید
+                <input [(ngModel)]="leadNameFilter" name="consultantLeadName" />
+              </label>
+              <label>
+                شماره تلفن
+                <input [(ngModel)]="leadPhoneFilter" name="consultantLeadPhone" inputmode="tel" />
+              </label>
+              <label>
+                شهر
+                <input [(ngModel)]="leadCityFilter" name="consultantLeadCity" />
+              </label>
               <label>
                 از تاریخ
                 <app-base-datepicker
