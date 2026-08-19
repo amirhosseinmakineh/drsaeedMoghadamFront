@@ -10,8 +10,9 @@ import {
   inject,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { finalize, Subscription } from "rxjs";
+import { debounceTime, distinctUntilChanged, finalize, map, Subject, Subscription, switchMap, throwError } from "rxjs";
 import {
   AdminDashboardService,
   AdminUser,
@@ -19,7 +20,9 @@ import {
   ConsultantDailySummaryItem,
   ConsultantFilters,
   SaveUserRequest,
+  SecretaryFilters,
   SecretaryPermissionType,
+  SecretarySchedule,
   SecretaryType,
   UserFilters,
 } from "../../core/admin/admin-dashboard.service";
@@ -58,6 +61,7 @@ import {
 type DashboardSection =
   | "overview"
   | "users"
+  | "secretaries"
   | "consultants"
   | "consultantProfile"
   | "leads"
@@ -95,6 +99,7 @@ interface SecretaryPermissionOption { value: SecretaryPermissionType; label: str
 const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "overview",
   "users",
+  "secretaries",
   "consultants",
   "consultantProfile",
   "leads",
@@ -134,6 +139,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly adminLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "users", label: "کاربران", icon: "users" },
+    { id: "secretaries", label: "منشی‌ها", icon: "user" },
     { id: "consultants", label: "مشاوران", icon: "doctor" },
     { id: "consultantProfile", label: "پروفایل مشاور", icon: "user" },
     { id: "leads", label: "لیدها", icon: "clipboard" },
@@ -171,6 +177,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     phoneNumber: "",
     gender: null,
     isActive: null,
+    pageNumber: 1,
+    pageSize: 10,
+  };
+
+  secretaries: AdminUser[] = [];
+  secretariesLoading = false;
+  secretariesTotalCount = 0;
+  secretariesTotalPages = 1;
+  secretaryFilters: SecretaryFilters = {
+    search: "",
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
+    gender: null,
+    isActive: null,
+    isCompleteName: null,
+    secretaryType: null,
     pageNumber: 1,
     pageSize: 10,
   };
@@ -228,7 +251,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   consultantsDailySummaryDate = "";
   consultantsTodayReservationsTotal = 0;
   private usersLoadRequestId = 0;
+  private secretariesLoadRequestId = 0;
   private consultantsLoadRequestId = 0;
+  private readonly secretarySearchChanges = new Subject<string>();
 
   readonly userColumns: TableColumn<AdminUser>[] = [
     { key: "firstName", label: "نام کامل", value: (row) => this.fullName(row) },
@@ -254,6 +279,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
       label: "آخرین بازدید",
       value: (row) => this.formatDateTime(row.lastSeenAt ?? row.LastSeenAt),
     },
+  ];
+
+  readonly secretaryColumns: TableColumn<AdminUser>[] = [
+    { key: "firstName", label: "نام کامل", value: (row) => this.fullName(row) },
+    { key: "phoneNumber", label: "موبایل", value: (row) => row.phoneNumber || "-" },
+    {
+      key: "secretaryType",
+      label: "نوع منشی",
+      value: (row) => this.parseSecretaryType(row.secretaryType) === SecretaryType.Assistant ? "کمکی" : "اصلی",
+      badge: (row) => this.parseSecretaryType(row.secretaryType) === SecretaryType.Assistant ? "info" : "success",
+    },
+    {
+      key: "isActive",
+      label: "وضعیت",
+      value: (row) => row.isActive ? "فعال" : "غیرفعال",
+      badge: (row) => row.isActive ? "success" : "danger",
+    },
+    { key: "createdAt", label: "تاریخ ایجاد", value: (row) => this.formatDateTime(row.createdAt) },
   ];
 
   readonly consultantColumns: TableColumn<Consultant>[] = [
@@ -335,6 +378,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.closeMobileSidebar();
     if (this.isAdmin()) {
+      this.secretarySearchChanges
+        .pipe(
+          debounceTime(400),
+          distinctUntilChanged(),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe(() => {
+          this.secretaryFilters.pageNumber = 1;
+          this.loadSecretaries();
+        });
       this.loadUsers();
       this.loadConsultants();
       this.applySectionRouteParams(this.route.snapshot.queryParamMap);
@@ -435,6 +488,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.markDirty();
 
     if (section === "users" && !this.users.length) this.loadUsers();
+    if (section === "secretaries" && !this.secretaries.length) this.loadSecretaries();
     if (section === "consultants" && !this.consultants.length)
       this.loadConsultants();
   }
@@ -471,6 +525,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.markDirty();
 
     if (section === "users" && !this.users.length) this.loadUsers();
+    if (section === "secretaries" && !this.secretaries.length) this.loadSecretaries();
     if (section === "consultants" && !this.consultants.length)
       this.loadConsultants();
   }
@@ -558,6 +613,90 @@ export class DashboardComponent implements OnInit, OnDestroy {
           );
           this.markDirty();
         },
+      });
+  }
+
+  onSecretarySearchChange(value: string): void {
+    this.secretaryFilters.search = value;
+    this.secretarySearchChanges.next(value.trim());
+  }
+
+  applySecretaryFilters(): void {
+    this.secretaryFilters.pageNumber = 1;
+    this.loadSecretaries();
+  }
+
+  changeSecretariesPage(page: number): void {
+    this.secretaryFilters.pageNumber = page;
+    this.loadSecretaries();
+  }
+
+  loadSecretaries(): void {
+    const requestId = ++this.secretariesLoadRequestId;
+    this.secretariesLoading = true;
+    this.clearFeedback();
+    this.markDirty();
+
+    this.adminApi.getSecretaries(this.secretaryFilters)
+      .pipe(finalize(() => {
+        if (requestId === this.secretariesLoadRequestId) {
+          this.secretariesLoading = false;
+          this.markDirty();
+        }
+      }))
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this.secretariesLoadRequestId) return;
+          this.secretaries = (response.items ?? []).map((user) => this.normalizeUser(user));
+          this.secretariesTotalCount = response.totalCount ?? this.secretaries.length;
+          this.secretariesTotalPages = Math.max(
+            1,
+            response.totalPages || Math.ceil(this.secretariesTotalCount / this.secretaryFilters.pageSize),
+          );
+          this.markDirty();
+        },
+        error: (error) => this.showFeedback(
+          this.errorMessage(error, "دریافت فهرست منشی‌ها انجام نشد"),
+          "error",
+        ),
+      });
+  }
+
+  handleSecretaryAction(event: TableActionClick<AdminUser>): void {
+    if (event.action === "edit") {
+      this.openEditSecretaryDialog(event.row);
+      return;
+    }
+    if (event.action === "delete") {
+      this.userToDelete = event.row;
+      this.deleteDialogOpen = true;
+      this.markDirty();
+    }
+  }
+
+  openAddSecretaryDialog(): void {
+    this.openAddUserDialog();
+    this.userForm.roleName = "Secretary";
+  }
+
+  openEditSecretaryDialog(user: AdminUser): void {
+    this.openEditUserDialog(user);
+    this.userForm.roleName = "Secretary";
+    this.userSaving = true;
+    this.adminApi.getSecretarySchedule(user.id)
+      .pipe(finalize(() => {
+        this.userSaving = false;
+        this.markDirty();
+      }))
+      .subscribe({
+        next: (schedule) => {
+          this.applySecretarySchedule(schedule);
+          this.markDirty();
+        },
+        error: (error) => this.showFeedback(
+          this.errorMessage(error, "دریافت برنامه منشی انجام نشد"),
+          "error",
+        ),
       });
   }
 
@@ -649,10 +788,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.userSaving = true;
     this.clearFeedback();
 
+    const createRequest = this.adminApi.addUser(this.buildUserPayload()).pipe(
+      switchMap((response) => {
+        if (
+          this.userForm.roleName !== "Secretary" ||
+          this.userForm.secretaryType !== SecretaryType.Assistant
+        ) return [response];
+
+        return this.adminApi.getSecretaries({
+          phoneNumber: this.userForm.phoneNumber.trim(),
+          pageNumber: 1,
+          pageSize: 10,
+        }).pipe(
+          switchMap((result) => {
+            const secretary = result.items.find((item) =>
+              (item.phoneNumber || item.PhoneNumber) === this.userForm.phoneNumber.trim(),
+            );
+            if (!secretary) {
+              return throwError(() => new Error("منشی ایجاد شد اما شناسه آن برای ثبت برنامه پیدا نشد"));
+            }
+            return this.adminApi.updateSecretarySchedule(
+              secretary.id || secretary.Id || "",
+              this.buildSecretarySchedulePayload(),
+            ).pipe(map(() => response));
+          }),
+        );
+      }),
+    );
     const request =
       this.userDialogMode === "add"
-        ? this.adminApi.addUser(this.buildUserPayload())
-        : this.adminApi.updateUser(this.buildUserPayload());
+        ? createRequest
+        : this.adminApi.updateUser(this.buildUserPayload()).pipe(
+            switchMap((response) =>
+              this.userForm.roleName === "Secretary"
+                ? this.adminApi.updateSecretarySchedule(
+                    this.userForm.id,
+                    this.buildSecretarySchedulePayload(),
+                  ).pipe(map(() => response))
+                : [response],
+            ),
+          );
 
     request
       .pipe(
@@ -669,6 +844,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           "success",
         );
         this.loadUsers();
+        if (this.userForm.roleName === "Secretary") this.loadSecretaries();
         this.loadConsultants();
       },
       error: (error) =>
@@ -687,6 +863,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.closeDeleteDialog();
         this.showFeedback(response.message || "کاربر حذف شد", "success");
         this.loadUsers();
+        this.loadSecretaries();
         this.loadConsultants();
       },
       error: (error) =>
@@ -928,21 +1105,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     if (roleName === "Secretary") {
       payload.secretaryType = this.userForm.secretaryType;
-      if (this.userForm.secretaryType === SecretaryType.Assistant) {
-        payload.secretaryAccessSchedules = this.secretaryDays.map(({ value }) => ({
-          dayOfWeek: value,
-          isActive: this.userForm.secretaryAccess[value].enabled,
-        }));
-        payload.secretaryAccessPermissions = this.secretaryDays.flatMap(({ value }) =>
-          this.userForm.secretaryAccess[value].permissions.map((permissionType) => ({
-            dayOfWeek: value, permissionType,
-            isActive: this.userForm.secretaryAccess[value].enabled,
-          })),
-        );
-      } else {
-        payload.secretaryAccessSchedules = [];
-        payload.secretaryAccessPermissions = [];
-      }
     }
 
     if (this.userDialogMode === "add") {
@@ -976,6 +1138,53 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private emptySecretaryAccess(): UserFormModel["secretaryAccess"] {
     return Object.fromEntries([6, 0, 1, 2, 3, 4, 5].map((value) => [value, { enabled: false, permissions: [] }])) as UserFormModel["secretaryAccess"];
+  }
+
+  private buildSecretarySchedulePayload(): SecretarySchedule {
+    if (this.userForm.secretaryType === SecretaryType.Main) {
+      return { secretaryType: SecretaryType.Main, dayPermissions: [] };
+    }
+
+    const dayNames: Record<number, string> = {
+      6: "Saturday", 0: "Sunday", 1: "Monday", 2: "Tuesday",
+      3: "Wednesday", 4: "Thursday", 5: "Friday",
+    };
+    return {
+      secretaryType: SecretaryType.Assistant,
+      dayPermissions: this.secretaryDays
+        .filter(({ value }) => this.userForm.secretaryAccess[value].enabled)
+        .map(({ value }) => ({
+          day: dayNames[value],
+          permissions: this.userForm.secretaryAccess[value].permissions,
+        })),
+    };
+  }
+
+  private applySecretarySchedule(schedule: SecretarySchedule): void {
+    const raw = schedule as SecretarySchedule & {
+      SecretaryType?: SecretaryType;
+      DayPermissions?: Array<{ Day?: string; Permissions?: SecretaryPermissionType[] }>;
+    };
+    this.userForm.secretaryType = this.parseSecretaryType(
+      schedule.secretaryType ?? raw.SecretaryType,
+    );
+    this.userForm.secretaryAccess = this.emptySecretaryAccess();
+    const dayNumbers: Record<string, number> = {
+      saturday: 6, sunday: 0, monday: 1, tuesday: 2,
+      wednesday: 3, thursday: 4, friday: 5,
+    };
+    for (const item of schedule.dayPermissions ?? raw.DayPermissions ?? []) {
+      const normalizedItem = item as typeof item & {
+        Day?: string;
+        Permissions?: SecretaryPermissionType[];
+      };
+      const day = dayNumbers[String(item.day ?? normalizedItem.Day ?? "").toLowerCase()];
+      if (day === undefined) continue;
+      this.userForm.secretaryAccess[day] = {
+        enabled: true,
+        permissions: (item.permissions ?? normalizedItem.Permissions ?? []).map(Number) as SecretaryPermissionType[],
+      };
+    }
   }
 
   private parseSecretaryType(value: number | string | null | undefined): SecretaryType {
