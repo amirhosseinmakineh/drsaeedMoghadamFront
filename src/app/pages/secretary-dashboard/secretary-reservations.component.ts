@@ -349,8 +349,9 @@ export class SecretaryReservationsComponent
     this.secretaryApi
       .reviewAttendance({
         reservationId,
-        patientReceivedService,
-        note: (this.notes[reservationId] || "").trim() || null,
+        secretaryUserId,
+        approved,
+        note: null,
       })
       .pipe(finalize(() => (this.savingId = null)))
       .subscribe({

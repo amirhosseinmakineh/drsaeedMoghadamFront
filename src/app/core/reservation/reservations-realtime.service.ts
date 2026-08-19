@@ -59,7 +59,7 @@ export class ReservationsRealtimeService implements OnDestroy {
       const connectionToken = negotiation.connectionToken ?? negotiation.connectionId;
       if (!connectionToken) throw new Error("SignalR connection token was not returned");
 
-      const websocketUrl = new URL(hubUrl, window.location.origin);
+      const websocketUrl = new URL(hubUrl);
       websocketUrl.protocol = websocketUrl.protocol === "https:" ? "wss:" : "ws:";
       websocketUrl.searchParams.set("id", connectionToken);
       websocketUrl.searchParams.set("access_token", token);

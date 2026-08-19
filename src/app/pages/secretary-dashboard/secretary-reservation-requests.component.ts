@@ -348,55 +348,6 @@ export class SecretaryReservationRequestsComponent
     this.selected = null;
   }
 
-  openCreateDialog(type = ReservationType.AfterSalesService): void {
-    if (!this.canCreate) return;
-    this.createReservationType = type;
-    this.createLeadAssignmentId = null;
-    this.createConsultantProfileId = null;
-    this.createDate = null;
-    this.createTime = "";
-    this.createDescription = "";
-    this.createDialogOpen = true;
-  }
-
-  closeCreateDialog(): void {
-    if (!this.saving) this.createDialogOpen = false;
-  }
-
-  createReservation(): void {
-    if (!this.canCreate || this.saving) return;
-    if (!this.createLeadAssignmentId || !this.createConsultantProfileId) {
-      this.toast.error("انتخاب بیمار/لید و مشاور الزامی است");
-      return;
-    }
-    if (!this.createDate || !this.createTime) {
-      this.toast.error("تاریخ و ساعت مراجعه الزامی است");
-      return;
-    }
-    const reservationAt = this.combineDateTime(this.createDate, this.createTime);
-    if (new Date(reservationAt).getTime() <= Date.now()) {
-      this.toast.error("زمان مراجعه باید در آینده باشد");
-      return;
-    }
-    this.saving = true;
-    this.api.createReservation({
-      leadAssignmentId: this.createLeadAssignmentId,
-      consultantProfileId: this.createConsultantProfileId,
-      reservationAt,
-      description: this.createDescription.trim() || null,
-      reservationType: this.createReservationType,
-    }).pipe(finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
-      .subscribe({
-        next: (response) => {
-          this.toast.success(response.message || "رزرو با موفقیت ثبت شد");
-          this.createDialogOpen = false;
-          this.reservationSync.requestRefresh();
-          this.load();
-        },
-        error: (error) => this.toast.error(this.errorText(error, "ثبت رزرو انجام نشد")),
-      });
-  }
-
   submitDialog(): void {
     const item = this.selected;
     const id = item ? this.reservationId(item) : null;
