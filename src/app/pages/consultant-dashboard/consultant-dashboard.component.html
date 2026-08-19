@@ -539,6 +539,7 @@
               <label>
                 از تاریخ
                 <app-base-datepicker
+                  [compact]="true"
                   [label]="leadFromDatePickerLabel"
                   [selectedDate]="leadFromDate ?? undefined"
                   [maxDate]="leadToDate ?? undefined"
@@ -549,6 +550,7 @@
               <label>
                 تا تاریخ
                 <app-base-datepicker
+                  [compact]="true"
                   [label]="leadToDatePickerLabel"
                   [selectedDate]="leadToDate ?? undefined"
                   [minDate]="leadFromDate ?? undefined"

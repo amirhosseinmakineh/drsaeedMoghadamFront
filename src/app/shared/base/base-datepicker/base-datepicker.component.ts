@@ -46,7 +46,11 @@ export class BaseDatepickerComponent implements OnChanges {
   @Input() allowFutureDates: boolean | null = null;
   /** Report/filter calendars: all past and future dates stay selectable. */
   @Input() unrestrictedDates = false;
+  /** Renders the calendar as a compact popover for dense filter toolbars. */
+  @Input() compact = false;
   @Output() dateChange = new EventEmitter<Date>();
+
+  calendarOpen = false;
 
   private activeMonthAnchor = new Date();
   private cachedDays: DatePickerDay[] = [];
@@ -142,8 +146,14 @@ export class BaseDatepickerComponent implements OnChanges {
     const selected = this.fromIsoDate(isoValue);
     this.selectedDate = selected;
     this.dateChange.emit(selected);
+    if (this.compact) this.calendarOpen = false;
     this.rebuildDaysCache();
     this.cdr.markForCheck();
+  }
+
+  toggleCalendar(): void {
+    if (!this.compact) return;
+    this.calendarOpen = !this.calendarOpen;
   }
 
   private rebuildDaysCache(): void {

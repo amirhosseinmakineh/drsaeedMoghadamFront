@@ -1,7 +1,22 @@
 <section
   class="base-datepicker"
+  [class.compact]="compact"
+  [class.calendar-open]="calendarOpen"
   [attr.dir]="language === 'fa' ? 'rtl' : 'ltr'"
 >
+  <button
+    *ngIf="compact"
+    class="compact-trigger"
+    type="button"
+    [attr.aria-expanded]="calendarOpen"
+    (click)="toggleCalendar()"
+  >
+    <span>{{ labelText }}</span>
+    <strong>{{ selectedDate ? selectedDateLabel : "انتخاب تاریخ" }}</strong>
+    <b aria-hidden="true">⌄</b>
+  </button>
+
+  <div class="calendar-content">
   <header>
     <div>
       <span>{{ labelText }}</span>
@@ -61,4 +76,5 @@
       (change)="select($any($event.target).value)"
     />
   </label>
+  </div>
 </section>
