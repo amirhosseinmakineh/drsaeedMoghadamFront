@@ -297,6 +297,8 @@ export interface ConsultantReservation {
   Description?: string | null;
   isCanceled?: boolean;
   IsCanceled?: boolean;
+  canEdit?: boolean;
+  CanEdit?: boolean;
 }
 
 export interface CompletePatientProfileRequest {
@@ -356,13 +358,11 @@ export interface ReservationFilters {
 }
 
 export interface UpdateReservationRequest {
-  reservationId: number;
-  consultantProfileId: number;
   reservationAt: string;
-  patientCity: string;
-  patientRegion: string;
-  attendanceProbabilityPercent: number;
-  attendancePrediction: string;
+  patientCity?: string;
+  patientRegion?: string;
+  attendanceProbabilityPercent?: number;
+  attendancePrediction?: string;
   secondaryPhoneNumber?: string | null;
   description?: string | null;
 }
@@ -697,11 +697,12 @@ export class ConsultantDashboardService {
   }
 
   updateReservation(
+    reservationId: number,
     payload: UpdateReservationRequest,
   ): Observable<ApiCommandResponse<ConsultantReservation>> {
     return this.http
       .put<ApiCommandResponse<ConsultantReservation>>(
-        `${this.apiBaseUrl}/Reservation`,
+        `${this.apiBaseUrl}/Reservation/ConsultantReservations/${reservationId}`,
         payload,
         {
           headers: this.authHeaders(),
