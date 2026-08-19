@@ -216,6 +216,40 @@ export interface CreateSecretaryReservationRequest {
   reservationType: ReservationType;
 }
 
+export interface SecretaryConsultantOption {
+  profileId?: number;
+  ProfileId?: number;
+  consultantProfileId?: number;
+  ConsultantProfileId?: number;
+  firstName?: string | null;
+  FirstName?: string | null;
+  lastName?: string | null;
+  LastName?: string | null;
+  phoneNumber?: string | null;
+  PhoneNumber?: string | null;
+}
+
+export interface SecretaryPatientOption {
+  id?: number;
+  Id?: number;
+  leadAssignmentId?: number;
+  LeadAssignmentId?: number;
+  fullName?: string | null;
+  FullName?: string | null;
+  firstName?: string | null;
+  FirstName?: string | null;
+  lastName?: string | null;
+  LastName?: string | null;
+  phoneNumber?: string | null;
+  PhoneNumber?: string | null;
+  userName?: string | null;
+  UserName?: string | null;
+  user?: Record<string, unknown> | null;
+  User?: Record<string, unknown> | null;
+  lead?: Record<string, unknown> | null;
+  Lead?: Record<string, unknown> | null;
+}
+
 export interface UpdateSecretaryAnnouncementRequest {
   reservationId: number;
   secretaryUserId: string;
@@ -413,6 +447,50 @@ export class SecretaryDashboardService {
         { headers: this.authHeaders() },
       )
       .pipe(this.ensureCommandSucceeded("ثبت رزرو انجام نشد"));
+  }
+
+  getConsultantOptions(): Observable<SecretaryConsultantOption[]> {
+    const filters = { pageNumber: 1, pageSize: 500 };
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<SecretaryConsultantOption>(
+            response,
+            filters,
+          ).items,
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت فهرست مشاوران انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  getPatientOptions(): Observable<SecretaryPatientOption[]> {
+    const filters = { pageNumber: 1, pageSize: 500 };
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/LeadAssignment`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<SecretaryPatientOption>(
+            response,
+            filters,
+          ).items,
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت فهرست بیماران انجام نشد"),
+          ),
+        ),
+      );
   }
 
   updateSecretaryAnnouncement(

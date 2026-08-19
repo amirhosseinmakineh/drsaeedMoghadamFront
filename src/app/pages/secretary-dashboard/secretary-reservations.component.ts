@@ -350,7 +350,7 @@ export class SecretaryReservationsComponent
       .reviewAttendance({
         reservationId,
         patientReceivedService,
-        note: null,
+        note: (this.notes[reservationId] || "").trim() || null,
       })
       .pipe(finalize(() => (this.savingId = null)))
       .subscribe({

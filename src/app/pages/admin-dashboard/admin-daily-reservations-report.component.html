@@ -58,7 +58,7 @@
 
     <div class="table-heading">
       <div><h3>جزئیات رزروها{{ report.datePersian ? " - " + report.datePersian : "" }}</h3><small>تولید گزارش: {{ report.generatedAtPersian || formatDateTime(report.generatedAt) }}</small></div>
-      <b>{{ report.items.length }} رزرو</b>
+      <b>{{ report.items.length }} رکورد</b>
     </div>
     @if (!report.items.length && !loading) {
       <div class="empty-state">رزروی با فیلترهای انتخاب‌شده ثبت نشده است.</div>
