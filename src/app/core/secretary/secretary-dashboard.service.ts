@@ -46,13 +46,6 @@ export interface SecretaryAccessResult {
   permissions: SecretaryPermission[];
 }
 
-export interface CompleteSecretaryProfileRequest {
-  userId: string;
-  nationalityCode: string;
-  address: string;
-  isCompleteProfile: boolean;
-}
-
 export interface SecretaryReservation extends ReservationDto {
   canManage?: boolean;
   CanManage?: boolean;
@@ -270,16 +263,6 @@ export class SecretaryDashboardService {
         reservation.canEdit ??
         reservation.CanEdit,
     );
-  }
-
-  completeProfile(
-    payload: CompleteSecretaryProfileRequest,
-  ): Observable<ApiCommandResponse<string>> {
-    return this.http
-      .post<
-        ApiCommandResponse<string>
-      >(`${this.apiBaseUrl}/Secretary`, payload, { headers: this.authHeaders() })
-      .pipe(this.ensureCommandSucceeded("تکمیل پروفایل منشی انجام نشد"));
   }
 
   getReservations(

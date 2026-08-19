@@ -9,13 +9,10 @@ import {
   computed,
   inject,
 } from "@angular/core";
-import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { finalize, Subscription } from "rxjs";
+import { Subscription } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
-import { ToastService } from "../../core/toast/toast.service";
-import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
 import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-route-history";
@@ -28,14 +25,8 @@ import {
   SecretaryOverviewComponent,
 } from "./secretary-overview.component";
 
-interface SecretaryProfileForm {
-  nationalityCode: string;
-  address: string;
-}
-
 type SecretaryDashboardSection =
   | "overview"
-  | "profile"
   | "reservations"
   | "reviews";
 
@@ -47,7 +38,6 @@ interface SecretaryDashboardLink {
 
 const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
-  "profile",
   "reservations",
   "reviews",
 ];
@@ -57,7 +47,6 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     RouterLink,
     FaIconComponent,
     SecretaryReservationsComponent,
@@ -75,7 +64,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
 
   readonly dashboardLinks: SecretaryDashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
-    { id: "profile", label: "پروفایل", icon: "shield" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
   ];
@@ -94,40 +82,12 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     return user ? this.auth.roleLabel(user.role, "fa") : "منشی";
   });
 
-  readonly secretaryTypeLabel = computed(() => {
-    const type = this.user()?.secretaryType?.toLowerCase();
-    if (type === "assistant") return "منشی کمکی";
-    if (type === "main") return "منشی اصلی";
-    return "منشی";
-  });
-
-  readonly secretaryAllowedDayLabels = computed(() =>
-    (this.user()?.allowedDays ?? []).map(
-      (day) =>
-        ({
-          Saturday: "شنبه",
-          Sunday: "یکشنبه",
-          Monday: "دوشنبه",
-          Tuesday: "سه‌شنبه",
-          Wednesday: "چهارشنبه",
-          Thursday: "پنجشنبه",
-          Friday: "جمعه",
-        })[day] ?? day,
-    ),
-  );
-
-  profileForm: SecretaryProfileForm = {
-    nationalityCode: "",
-    address: "",
-  };
-  profileSaving = false;
   feedbackMessage = "";
   feedbackType: "success" | "error" = "success";
   reservationPreset: SecretaryDashboardPreset | null = null;
   accessLoading = true;
   access: SecretaryAccessResult | null = null;
 
-  readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
   private readonly destroyRef = inject(DestroyRef);
   private routeQueryParamsSubscription: Subscription | null = null;
@@ -143,7 +103,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private secretaryApi: SecretaryDashboardService,
     private pushNotifications: PushNotificationService,
-    private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {
     this.markDirty = createCoalescedMarkForCheck(this.cdr, () => false);
@@ -156,14 +115,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   }
 
   get visibleDashboardLinks(): SecretaryDashboardLink[] {
-    if (!this.isProfileReady()) {
-      return this.dashboardLinks.filter(
-        (item) => item.id !== "reservations" && item.id !== "reviews",
-      );
-    }
-
     return this.dashboardLinks.filter((item) => {
-      if (item.id === "profile") return true;
       if (item.id === "reviews") return this.hasPermission("ConfirmAttendance");
       return this.hasPermission("ViewReservations");
     });
@@ -171,10 +123,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.closeMobileSidebar();
-    if (!this.isProfileReady()) {
-      this.activeSection = "profile";
-    }
-
     this.applySectionRouteParams(this.route.snapshot.queryParamMap);
     this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
       (params) => this.applySectionRouteParams(params),
@@ -184,7 +132,9 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
       next: (access) => {
         this.access = access;
         this.accessLoading = false;
-        if (!this.visibleDashboardLinks.some((item) => item.id === this.activeSection)) this.setSection("profile");
+        if (!this.visibleDashboardLinks.some((item) => item.id === this.activeSection)) {
+          this.setSection(this.visibleDashboardLinks[0]?.id ?? "overview");
+        }
         this.markDirty();
       },
       error: () => {
@@ -205,10 +155,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routeQueryParamsSubscription?.unsubscribe();
-  }
-
-  isProfileReady(): boolean {
-    return this.auth.isRoleProfileComplete(this.user());
   }
 
   setSection(section: SecretaryDashboardSection): void {
@@ -232,17 +178,10 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   private resolveSection(
     section: SecretaryDashboardSection,
   ): SecretaryDashboardSection {
-    if (
-      (section === "overview" ||
-        section === "reservations" ||
-        section === "reviews") &&
-      !this.isProfileReady()
-    ) {
-      return "profile";
+    if (section === "reviews" && !this.hasPermission("ConfirmAttendance")) return "overview";
+    if ((section === "overview" || section === "reservations") && !this.hasPermission("ViewReservations")) {
+      return this.hasPermission("ConfirmAttendance") ? "reviews" : "overview";
     }
-
-    if (section === "reviews" && !this.hasPermission("ConfirmAttendance")) return "profile";
-    if ((section === "overview" || section === "reservations") && !this.hasPermission("ViewReservations")) return "profile";
 
     return section;
   }
@@ -280,9 +219,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.activateSectionFromRoute(
-      this.isProfileReady() ? "overview" : "profile",
-    );
+    this.activateSectionFromRoute("overview");
   }
 
   toggleMobileSidebar(): void {
@@ -291,66 +228,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
 
   closeMobileSidebar(): void {
     this.mobileSidebar.closeMobileSidebar();
-  }
-
-  submitProfile(): void {
-    const validationError = this.validateProfileForm();
-    if (validationError) {
-      this.showFeedback(validationError, "error");
-      return;
-    }
-
-    const userId = this.user()?.userId;
-    if (!userId) {
-      this.showFeedback("شناسه کاربر منشی در دسترس نیست", "error");
-      return;
-    }
-
-    this.profileSaving = true;
-    this.clearFeedback();
-
-    this.secretaryApi
-      .completeProfile({
-        userId,
-        nationalityCode: this.profileForm.nationalityCode.trim(),
-        address: this.profileForm.address.trim(),
-        isCompleteProfile: true,
-      })
-      .pipe(
-        finalize(() => {
-          this.profileSaving = false;
-          this.markDirty();
-        }),
-      )
-      .subscribe({
-        next: (response) => {
-          this.auth.updateSecretaryProfile(true);
-          this.showFeedback(
-            response.message || "پروفایل منشی کامل شد",
-            "success",
-          );
-          this.activeSection = "overview";
-        },
-        error: (error) =>
-          this.showFeedback(
-            error instanceof Error && error.message
-              ? error.message
-              : "تکمیل پروفایل انجام نشد",
-            "error",
-          ),
-      });
-  }
-
-  validateProfileForm(): string | null {
-    const code = this.profileForm.nationalityCode.trim();
-    if (!/^\d{10}$/.test(code)) return "کد ملی باید ۱۰ رقم باشد";
-    if (
-      !this.profileForm.address.trim() ||
-      this.profileForm.address.trim().length < 5
-    ) {
-      return "آدرس منشی الزامی است";
-    }
-    return null;
   }
 
   trackDashboardLink(
@@ -366,19 +243,4 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl("/");
   }
 
-  private showFeedback(message: string, type: "success" | "error"): void {
-    this.feedbackMessage = message;
-    this.feedbackType = type;
-    if (type === "success") {
-      this.toast.success(message);
-      return;
-    }
-    this.toast.error(message);
-    this.markDirty();
-  }
-
-  private clearFeedback(): void {
-    this.feedbackMessage = "";
-    this.markDirty();
-  }
 }

@@ -115,6 +115,26 @@ export interface UserFilters {
   pageSize: number;
 }
 
+export interface SecretaryFilters {
+  search?: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  secretaryType?: SecretaryType | null;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface SecretaryDayPermissions {
+  day: string;
+  permissions: SecretaryPermissionType[];
+}
+
+export interface SecretarySchedule {
+  secretaryType: SecretaryType;
+  dayPermissions: SecretaryDayPermissions[];
+}
+
 export interface Consultant {
   id: string;
   Id?: string;
@@ -584,6 +604,40 @@ export class AdminDashboardService {
       );
   }
 
+  getSecretaries(
+    filters: SecretaryFilters,
+  ): Observable<PaginatedResponse<AdminUser>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/admin/secretaries`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<AdminUser>(response, filters),
+        ),
+      );
+  }
+
+  getSecretarySchedule(userId: string): Observable<SecretarySchedule> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/admin/secretaries/${userId}/schedule`, {
+        headers: this.authHeaders(),
+      })
+      .pipe(map((response) => this.unwrapResponseData(response) as SecretarySchedule));
+  }
+
+  updateSecretarySchedule(
+    userId: string,
+    payload: SecretarySchedule,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiBaseUrl}/admin/secretaries/${userId}/schedule`,
+      payload,
+      { headers: this.authHeaders() },
+    );
+  }
+
   addUser(payload: SaveUserRequest): Observable<ApiCommandResponse> {
     return this.http
       .post<ApiCommandResponse>(`${this.apiBaseUrl}/User`, payload, {
@@ -604,7 +658,7 @@ export class AdminDashboardService {
     return this.http
       .delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User`, {
         headers: this.authHeaders(),
-        params: this.toParams({ userId }),
+        params: this.toParams({ Id: userId }),
       })
       .pipe(this.ensureCommandSucceeded("حذف کاربر انجام نشد"));
   }
