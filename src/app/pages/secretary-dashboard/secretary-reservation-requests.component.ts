@@ -32,6 +32,7 @@ import {
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 import { formatReservationTime } from "../../utils/iran-datetime.util";
+import { DENTAL_SERVICE_OPTIONS, dentalServicesOf, formatDentalServices } from "../../core/reservation/dental-services";
 
 // This workflow status is returned for display/actions and is deliberately not
 // used by the attendance filter sent to SecretaryReservations.
@@ -143,6 +144,9 @@ export class SecretaryReservationRequestsComponent
   createDescription = "";
   createServiceTitle = "";
   createReservationType = ReservationType.AfterSalesService;
+  createDentalServices: number[] = [];
+  readonly dentalServiceOptions = DENTAL_SERVICE_OPTIONS;
+  readonly dentalServicesLabel = formatDentalServices;
   createOptionsLoading = false;
   createOptionsError = "";
   patientSearch = "";
@@ -155,6 +159,7 @@ export class SecretaryReservationRequestsComponent
   rejectionText = "";
   newDate: Date | null = null;
   newTime = "";
+  editDentalServices: number[] = [];
   contactResult: SecretaryAnnouncementStatus = "NotCalled";
   followUpDate: Date | null = null;
   followUpTime = "";
@@ -343,6 +348,7 @@ export class SecretaryReservationRequestsComponent
     this.rejectionText = "";
     this.newDate = null;
     this.newTime = "";
+    this.editDentalServices = dentalServicesOf(item);
     this.followUpDate = null;
     this.followUpTime = "";
     this.contactResult = this.secretaryAnnouncementStatus(item);
@@ -363,6 +369,7 @@ export class SecretaryReservationRequestsComponent
     this.createTime = "";
     this.createDescription = "";
     this.createServiceTitle = "";
+    this.createDentalServices = [];
     this.patientSearch = "";
     this.createDialogOpen = true;
     this.loadCreateOptions();
@@ -380,6 +387,10 @@ export class SecretaryReservationRequestsComponent
     }
     if (!this.createDate || !this.createTime) {
       this.toast.error("تاریخ و ساعت مراجعه الزامی است");
+      return;
+    }
+    if (!this.createDentalServices.length) {
+      this.toast.error("انتخاب حداقل یک خدمت معتبر الزامی است");
       return;
     }
     if (!this.createServiceTitle.trim()) {
@@ -401,6 +412,7 @@ export class SecretaryReservationRequestsComponent
         this.createDescription.trim(),
       ].filter(Boolean).join("\n"),
       reservationType: this.createReservationType,
+      dentalServices: this.createDentalServices,
     }).pipe(finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: (response) => {
@@ -411,6 +423,12 @@ export class SecretaryReservationRequestsComponent
         },
         error: (error) => this.toast.error(this.errorText(error, "ثبت رزرو انجام نشد")),
       });
+  }
+
+  toggleCreateDentalService(service: number, checked: boolean): void {
+    const selected = new Set(this.createDentalServices);
+    checked ? selected.add(service) : selected.delete(service);
+    this.createDentalServices = [...selected];
   }
 
   loadCreateOptions(): void {
@@ -541,6 +559,7 @@ export class SecretaryReservationRequestsComponent
       request = this.api.updateReservationTime(
         id,
         this.combineDateTime(this.newDate!, this.newTime),
+        this.editDentalServices,
       );
     } else if (this.dialogMode === "reject") {
       request = this.api.rejectReservation(id, {
@@ -725,6 +744,8 @@ export class SecretaryReservationRequestsComponent
 
   private validateDialog(item: SecretaryReservation): string | null {
     if (this.dialogMode === "reschedule") {
+      if (!this.editDentalServices.length)
+        return "انتخاب حداقل یک خدمت معتبر الزامی است";
       if (!this.newDate || !this.newTime) return "تاریخ و ساعت جدید الزامی است";
       const next = new Date(
         this.combineDateTime(this.newDate, this.newTime),
@@ -750,6 +771,12 @@ export class SecretaryReservationRequestsComponent
         return "زمان پیگیری باید در آینده باشد";
     }
     return null;
+  }
+
+  toggleEditDentalService(service: number, checked: boolean): void {
+    const selected = new Set(this.editDentalServices);
+    checked ? selected.add(service) : selected.delete(service);
+    this.editDentalServices = [...selected];
   }
 
   private resolvedRejectionReason(): string {

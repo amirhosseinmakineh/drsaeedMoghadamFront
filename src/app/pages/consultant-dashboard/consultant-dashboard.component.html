@@ -1406,6 +1406,19 @@
           rows="3"
         ></textarea>
       </label>
+      <fieldset class="dental-services-field">
+        <legend>خدمات دندانپزشکی</legend>
+        @for (option of dentalServiceOptions; track option.value) {
+          <label>
+            <input
+              type="checkbox"
+              [checked]="reservationForm.dentalServices.includes(option.value)"
+              (change)="toggleDentalService(option.value, $any($event.target).checked)"
+            />
+            {{ option.label }}
+          </label>
+        }
+      </fieldset>
       <div class="dialog-actions">
         <button
           class="secondary-action"
