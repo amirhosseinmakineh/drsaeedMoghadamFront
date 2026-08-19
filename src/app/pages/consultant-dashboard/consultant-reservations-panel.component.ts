@@ -35,6 +35,7 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
+import { DENTAL_SERVICE_OPTIONS, dentalServicesOf, formatDentalServices } from "../../core/reservation/dental-services";
 import {
   combineIranDateAndTime,
   formatIranDateTime,
@@ -105,7 +106,10 @@ export class ConsultantReservationsPanelComponent
     attendancePrediction: "",
     secondaryPhoneNumber: "",
     description: "",
+    dentalServices: [] as number[],
   };
+  readonly dentalServiceOptions = DENTAL_SERVICE_OPTIONS;
+  readonly dentalServicesLabel = formatDentalServices;
   readonly reservationDatePickerLabel = {
     fa: "تاریخ رزرو",
     en: "Reservation date",
@@ -460,6 +464,7 @@ export class ConsultantReservationsPanelComponent
         reservation.SecondaryPhoneNumber ||
         "",
       description: reservation.description || reservation.Description || "",
+      dentalServices: dentalServicesOf(reservation),
     };
     this.editDialogOpen = true;
     this.markDirty();
@@ -476,6 +481,12 @@ export class ConsultantReservationsPanelComponent
     this.editForm.reservationDate = date;
   }
 
+  toggleDentalService(service: number, checked: boolean): void {
+    const selected = new Set(this.editForm.dentalServices);
+    checked ? selected.add(service) : selected.delete(service);
+    this.editForm.dentalServices = [...selected];
+  }
+
   submitEdit(): void {
     const reservationId = this.editingReservation
       ? this.reservationId(this.editingReservation)
@@ -484,6 +495,10 @@ export class ConsultantReservationsPanelComponent
 
     if (!this.editForm.reservationDate) {
       this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
+      return;
+    }
+    if (!this.editForm.dentalServices.length) {
+      this.showFeedback("انتخاب حداقل یک خدمت معتبر الزامی است", "error");
       return;
     }
 
@@ -513,6 +528,7 @@ export class ConsultantReservationsPanelComponent
       attendancePrediction: this.editForm.attendancePrediction.trim(),
       secondaryPhoneNumber: this.editForm.secondaryPhoneNumber.trim() || null,
       description: this.editForm.description.trim() || null,
+      dentalServices: this.editForm.dentalServices,
     };
 
     this.editSaving = true;

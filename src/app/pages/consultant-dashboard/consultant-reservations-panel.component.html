@@ -123,6 +123,10 @@
               <dt>احتمال حضور</dt>
               <dd>{{ probability(reservation) }}٪</dd>
             </div>
+            <div>
+              <dt>خدمات</dt>
+              <dd>{{ dentalServicesLabel(reservation) }}</dd>
+            </div>
             @if (activeTab !== "pending") {
               <div>
                 <dt>پیش‌بینی حضور</dt>
@@ -252,6 +256,15 @@
         type="time"
       />
     </label>
+    <fieldset class="dental-services-field">
+      <legend>خدمات دندانپزشکی</legend>
+      @for (option of dentalServiceOptions; track option.value) {
+        <label>
+          <input type="checkbox" [checked]="editForm.dentalServices.includes(option.value)" (change)="toggleDentalService(option.value, $any($event.target).checked)" />
+          {{ option.label }}
+        </label>
+      }
+    </fieldset>
     <div class="two-col">
       <label>
         شهر بیمار

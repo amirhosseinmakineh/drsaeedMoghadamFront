@@ -412,6 +412,8 @@ export interface DailyReservationReportItem {
   isCanceled: boolean;
   cancellationReason: string | null;
   description: string | null;
+  dentalServices?: number[] | null;
+  DentalServices?: number[] | null;
 }
 
 export interface DailyReservationsReport {

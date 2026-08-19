@@ -214,6 +214,7 @@ export interface CreateSecretaryReservationRequest {
   reservationAt: string;
   description: string | null;
   reservationType: ReservationType;
+  dentalServices: number[];
 }
 
 export interface SecretaryPatientOption {
@@ -270,6 +271,7 @@ export interface RescheduleReservationRequest {
 export interface UpdateSecretaryReservationTimeRequest {
   reservationAt: string;
   appointmentDateTime?: string;
+  dentalServices?: number[] | null;
 }
 
 export interface RejectReservationRequest {
@@ -507,8 +509,9 @@ export class SecretaryDashboardService {
   updateReservationTime(
     reservationId: number,
     reservationAt: string,
+    dentalServices?: number[] | null,
   ): Observable<ApiCommandResponse<SecretaryReservation>> {
-    const payload: UpdateSecretaryReservationTimeRequest = { reservationAt };
+    const payload: UpdateSecretaryReservationTimeRequest = { reservationAt, dentalServices };
     return this.http
       .patch<ApiCommandResponse<SecretaryReservation>>(
         `${this.apiBaseUrl}/Reservation/SecretaryReservations/${reservationId}/time`,

@@ -61,6 +61,7 @@ import {
   resolveLeadAssignmentType,
 } from "../../core/lead/lead-enums";
 import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
+import { DENTAL_SERVICE_OPTIONS, dentalServicesOf } from "../../core/reservation/dental-services";
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
 const PENDING_REPORT_PATCH_TTL_MS = 60_000;
@@ -110,6 +111,7 @@ interface ReservationForm {
   patientRegion: string;
   attendanceProbabilityPercent: number;
   attendancePrediction: string;
+  dentalServices: number[];
 }
 
 interface PatientProfileForm {
@@ -297,6 +299,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     patientRegion: "",
     attendanceProbabilityPercent: 8,
     attendancePrediction: "",
+    dentalServices: [],
   };
   reservations: ConsultantReservation[] = [];
   reservationsLoading = false;
@@ -2136,6 +2139,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  readonly dentalServiceOptions = DENTAL_SERVICE_OPTIONS;
+
+  toggleDentalService(service: number, checked: boolean): void {
+    const selected = new Set(this.reservationForm.dentalServices);
+    checked ? selected.add(service) : selected.delete(service);
+    this.reservationForm.dentalServices = [...selected];
+  }
+
   reservationAttendanceStatusLabel(reservation: ConsultantReservation): string {
     switch (
       reservation.attendanceConfirmationStatus ??
@@ -2208,6 +2219,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       secondaryPhoneNumber:
         this.reservationForm.secondaryPhoneNumber.trim() || null,
       description: this.reservationForm.description.trim() || null,
+      dentalServices: this.reservationForm.dentalServices,
     };
 
     this.reservationSaving = true;
@@ -2290,6 +2302,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       secondaryPhoneNumber:
         this.reservationForm.secondaryPhoneNumber.trim() || null,
       description: this.reservationForm.description.trim() || null,
+      dentalServices: this.reservationForm.dentalServices,
     };
 
     this.reservationSaving = true;
@@ -3662,6 +3675,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.reportForm.attendanceProbabilityPercent,
         ) ?? 80,
       attendancePrediction: this.defaultAttendancePrediction(),
+      dentalServices: [],
     };
     this.reservationDialogOpen = true;
   }
@@ -3738,6 +3752,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             reservation.AttendanceProbabilityPercent ??
             8,
         ),
+      dentalServices: dentalServicesOf(reservation),
       attendancePrediction:
         this.reservationAttendancePrediction(reservation) ||
         this.defaultAttendancePrediction(),
@@ -4116,6 +4131,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   validateReservationForm(): string | null {
     if (!this.reservationForm.reservationDate) return "تاریخ رزرو الزامی است";
     if (!this.reservationForm.reservationTime) return "ساعت رزرو الزامی است";
+    if (!this.reservationForm.dentalServices.length)
+      return "انتخاب حداقل یک خدمت معتبر الزامی است";
 
     const reservationAt = this.selectedReservationDateTime();
     const reservationTimeChanged = this.isReservationTimeChanged(reservationAt);
