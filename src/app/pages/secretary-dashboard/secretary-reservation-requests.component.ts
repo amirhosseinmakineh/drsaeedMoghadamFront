@@ -31,6 +31,7 @@ import {
 } from "../../shared/base";
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
+import { AuthService } from "../../core/auth/auth.service";
 import { formatReservationTime } from "../../utils/iran-datetime.util";
 import { DENTAL_SERVICE_OPTIONS, dentalServicesOf, formatDentalServices } from "../../core/reservation/dental-services";
 
@@ -171,6 +172,7 @@ export class SecretaryReservationRequestsComponent
 
   constructor(
     private api: SecretaryDashboardService,
+    private auth: AuthService,
     private route: ActivatedRoute,
     private router: Router,
     private toast: ToastService,
@@ -567,8 +569,14 @@ export class SecretaryReservationRequestsComponent
         reason: this.resolvedRejectionReason(),
       });
     } else if (this.dialogMode === "contact") {
+      const secretaryUserId = this.auth.user()?.userId;
+      if (!secretaryUserId) {
+        this.toast.error("شناسه کاربر منشی در دسترس نیست؛ لطفاً دوباره وارد شوید");
+        return;
+      }
       request = this.api.updateSecretaryAnnouncement({
         reservationId: id,
+        secretaryUserId,
         status: this.contactResult,
         description: this.note.trim() || null,
       });
