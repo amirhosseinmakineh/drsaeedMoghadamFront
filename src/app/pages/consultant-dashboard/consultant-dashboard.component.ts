@@ -62,6 +62,7 @@ import {
 } from "../../core/lead/lead-enums";
 import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
 import { DENTAL_SERVICE_OPTIONS, dentalServicesOf } from "../../core/reservation/dental-services";
+import { canConsultantEditReservation } from "../../core/reservation/reservation-attendance";
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
 const PENDING_REPORT_PATCH_TTL_MS = 60_000;
@@ -2061,7 +2062,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   canEditReservation(reservation: ConsultantReservation): boolean {
-    return (reservation.canEdit ?? reservation.CanEdit) === true;
+    return canConsultantEditReservation(reservation);
   }
 
   canEditReservationForLead(lead: ConsultantLead): boolean {
