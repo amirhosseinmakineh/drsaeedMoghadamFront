@@ -43,12 +43,12 @@ if (remainingBindings.length > 0) {
   );
 }
 
-if (!template.includes("<app-secretary-announcement-editor")) {
-  throw new Error("Secretary reservations template must render the announcement editor");
+if (template.includes("<app-secretary-announcement-editor")) {
+  throw new Error("Attendance confirmations must not render the announcement editor");
 }
 
-if (!component.includes("SecretaryAnnouncementEditorComponent")) {
-  throw new Error("Secretary reservations component must import the announcement editor");
+if (component.includes("SecretaryAnnouncementEditorComponent")) {
+  throw new Error("Attendance confirmations must not import the announcement editor");
 }
 
 if (!/^  notes: Record<number, string> = \{\};$/m.test(component)) {

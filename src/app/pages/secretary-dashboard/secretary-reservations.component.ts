@@ -29,7 +29,6 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
 import { formatReservationTime } from "../../utils/iran-datetime.util";
-import { SecretaryAnnouncementEditorComponent } from "./secretary-announcement-editor.component";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 
 export type SecretaryReservationTab =
@@ -42,7 +41,7 @@ export type SecretaryReservationTab =
 @Component({
   selector: "app-secretary-reservations",
   standalone: true,
-  imports: [CommonModule, FormsModule, SecretaryAnnouncementEditorComponent],
+  imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-reservations.component.html",
   styleUrl: "./secretary-reservations.component.scss",
@@ -59,9 +58,6 @@ export class SecretaryReservationsComponent
   notes: Record<number, string> = {};
   loading = false;
   savingId: number | null = null;
-  timeDialogItem: SecretaryReservation | null = null;
-  timeDialogValue = "";
-  timeSaving = false;
   feedback = "";
   feedbackType: "success" | "error" = "success";
   statusFilter: AttendanceConfirmationStatus | null = null;
@@ -100,7 +96,7 @@ export class SecretaryReservationsComponent
       () => this.destroyed,
     );
     this.realtimeSubscription = reservationSync.refreshRequested$.subscribe(() => {
-      if (this.profileReady && !this.timeSaving) this.load();
+      if (this.profileReady) this.load();
     });
   }
 
@@ -182,10 +178,6 @@ export class SecretaryReservationsComponent
     this.load();
   }
 
-  onAnnouncementSaved(): void {
-    this.load();
-  }
-
   load(): void {
     if (!this.profileReady) return;
 
@@ -225,7 +217,13 @@ export class SecretaryReservationsComponent
 
     if (this.activeTab === "queue") {
       this.loadSubscription = this.secretaryApi
-        .getAttendanceReviews(this.pageNumber, this.pageSize)
+        .getReservations({
+          includeCanceled: false,
+          pageNumber: this.pageNumber,
+          pageSize: this.pageSize,
+          search: this.searchText.trim() || undefined,
+          attendanceStatus: this.statusFilter,
+        })
         .pipe(
           finalize(() => {
             if (requestId === this.loadRequestId) {
@@ -368,64 +366,6 @@ export class SecretaryReservationsComponent
             "error",
           ),
       });
-  }
-
-  openTimeDialog(item: SecretaryReservation): void {
-    if (!this.canChangeTime(item)) return;
-    const date = new Date(this.reservationAt(item));
-    if (!Number.isFinite(date.getTime())) return;
-    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-    this.timeDialogValue = local.toISOString().slice(0, 16);
-    this.timeDialogItem = item;
-    this.markDirty();
-  }
-
-  closeTimeDialog(): void {
-    if (this.timeSaving) return;
-    this.timeDialogItem = null;
-    this.timeDialogValue = "";
-    this.markDirty();
-  }
-
-  saveReservationTime(): void {
-    const item = this.timeDialogItem;
-    const reservationId = item ? this.reservationId(item) : null;
-    const date = new Date(this.timeDialogValue);
-    if (!reservationId || !Number.isFinite(date.getTime())) {
-      this.showFeedback("زمان مراجعه معتبر نیست", "error");
-      return;
-    }
-    if (date.getTime() <= Date.now()) {
-      this.showFeedback("زمان رزرو باید در آینده باشد", "error");
-      return;
-    }
-
-    this.timeSaving = true;
-    this.secretaryApi.updateReservationTime(reservationId, date.toISOString())
-      .pipe(finalize(() => {
-        this.timeSaving = false;
-        this.markDirty();
-      }))
-      .subscribe({
-        next: (response) => {
-          if (response.data) {
-            this.items = this.items.map((candidate) =>
-              this.reservationId(candidate) === reservationId ? response.data! : candidate,
-            );
-          }
-          this.timeDialogItem = null;
-          this.showFeedback(response.message || "رزرو با موفقیت ویرایش شد", "success");
-          this.load();
-        },
-        error: (error) => this.showFeedback(
-          error instanceof Error && error.message ? error.message : "خطا در ارتباط با سرور",
-          "error",
-        ),
-      });
-  }
-
-  canChangeTime(item: SecretaryReservation): boolean {
-    return this.canManage(item) && !(item.isCanceled ?? item.IsCanceled ?? false);
   }
 
   goToPage(page: number): void {
