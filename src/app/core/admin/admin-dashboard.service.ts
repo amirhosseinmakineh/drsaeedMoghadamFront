@@ -298,7 +298,9 @@ export interface LeadCallReportExportFilters {
 
 export interface DailyReservationsReportFilters {
   date?: string;
+  reservationOwnerType?: "Consultant" | "Secretary";
   consultantProfileId?: number;
+  secretaryUserId?: string;
   requestStatus?: number;
   includeAll?: boolean;
 }

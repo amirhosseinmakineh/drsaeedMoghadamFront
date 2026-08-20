@@ -18,7 +18,7 @@
         (ngModelChange)="setIncludeAllReservations($event)" />
       <span>
         نمایش همه رزروها
-        <small>با فعال‌کردن این گزینه، تاریخ، مشاور و وضعیت نادیده گرفته می‌شوند و خروجی اکسل نیز شامل همه رزروها خواهد بود.</small>
+        <small>با فعال‌کردن این گزینه، تاریخ، نوع ثبت‌کننده، شخص و وضعیت نادیده گرفته می‌شوند و خروجی اکسل نیز شامل همه رزروها خواهد بود.</small>
       </span>
     </label>
     <label class="date-filter" [class.filter-disabled]="includeAllReservations">
@@ -27,7 +27,16 @@
         [unrestrictedDates]="true"
         (dateChange)="setDate($event)"></app-base-datepicker>
     </label>
-    <label class="select-filter consultant-filter">
+    <label class="select-filter owner-type-filter">
+      نوع رزرو
+      <select [ngModel]="reservationOwnerType" (ngModelChange)="setReservationOwnerType($event)"
+        name="reservationOwnerType" [disabled]="includeAllReservations">
+        <option value="Consultant">رزروهای مشاوران</option>
+        <option value="Secretary">رزروهای منشی‌ها</option>
+      </select>
+    </label>
+    @if (reservationOwnerType === "Consultant") {
+    <label class="select-filter person-filter">
       مشاور
       <select [(ngModel)]="consultantProfileId" name="consultantProfileId"
         [disabled]="consultantsLoading || includeAllReservations" (focus)="loadConsultants()" (pointerdown)="loadConsultants()">
@@ -40,6 +49,21 @@
         <button class="retry-consultants" type="button" (click)="loadConsultants(true)">دریافت دوباره فهرست مشاوران</button>
       }
     </label>
+    } @else {
+    <label class="select-filter person-filter">
+      منشی
+      <select [(ngModel)]="secretaryUserId" name="secretaryUserId"
+        [disabled]="secretariesLoading || includeAllReservations" (focus)="loadSecretaries()" (pointerdown)="loadSecretaries()">
+        <option [ngValue]="null">{{ secretariesLoading ? "در حال دریافت منشی‌ها..." : secretariesLoadError ? "تلاش دوباره برای دریافت منشی‌ها" : "همه منشی‌ها" }}</option>
+        <option *ngFor="let secretary of secretaries" [ngValue]="secretaryId(secretary)">
+          {{ secretaryName(secretary) }}
+        </option>
+      </select>
+      @if (secretariesLoadError) {
+        <button class="retry-consultants" type="button" (click)="loadSecretaries(true)">دریافت دوباره فهرست منشی‌ها</button>
+      }
+    </label>
+    }
     <label class="select-filter status-filter">
       وضعیت درخواست
       <select [(ngModel)]="requestStatus" name="requestStatus" [disabled]="includeAllReservations">
