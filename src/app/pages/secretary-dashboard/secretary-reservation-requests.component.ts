@@ -32,7 +32,10 @@ import {
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 import { AuthService } from "../../core/auth/auth.service";
-import { formatReservationTime } from "../../utils/iran-datetime.util";
+import {
+  formatReservationTime,
+  toIranTimeInputValue,
+} from "../../utils/iran-datetime.util";
 import { DENTAL_SERVICE_OPTIONS, dentalServicesOf, formatDentalServices } from "../../core/reservation/dental-services";
 
 // This workflow status is returned for display/actions and is deliberately not
@@ -370,6 +373,13 @@ this.loadSubscription = this.api
     this.rejectionText = "";
     this.newDate = null;
     this.newTime = "";
+    if (mode === "reschedule") {
+      const reservationDate = new Date(this.reservationAt(item));
+      if (Number.isFinite(reservationDate.getTime())) {
+        this.newDate = reservationDate;
+        this.newTime = toIranTimeInputValue(reservationDate);
+      }
+    }
     this.editDentalServices = dentalServicesOf(item);
     this.followUpDate = null;
     this.followUpTime = "";
