@@ -11,27 +11,43 @@ button:disabled { opacity: .6; cursor: wait; }
 .filters {
   display: grid;
   grid-template-columns: minmax(520px, 2fr) minmax(230px, 1fr);
-  grid-template-rows: repeat(3, auto);
+  grid-template-rows: repeat(4, auto);
   align-items: stretch;
   gap: 16px;
   padding: 18px;
   border-radius: 20px;
   background: var(--surface-muted);
 }
+.all-reservations-filter {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--brand) 7%, var(--surface));
+  color: var(--text);
+  cursor: pointer;
+}
+.all-reservations-filter input { width: 20px; height: 20px; accent-color: var(--brand); cursor: pointer; }
+.all-reservations-filter span { display: grid; gap: 3px; }
+.all-reservations-filter small { color: var(--muted); font-weight: 600; }
 .date-filter {
-  grid-row: 1 / -1;
+  grid-row: 2 / -1;
   min-width: 0;
 }
 .date-filter app-base-datepicker {
   display: block;
   width: 100%;
 }
+.filter-disabled { opacity: .55; pointer-events: none; }
 .select-filter {
   align-content: end;
 }
-.consultant-filter { grid-column: 2; grid-row: 1; }
-.status-filter { grid-column: 2; grid-row: 2; }
-.apply-button { grid-column: 2; grid-row: 3; align-self: end; }
+.consultant-filter { grid-column: 2; grid-row: 2; }
+.status-filter { grid-column: 2; grid-row: 3; }
+.apply-button { grid-column: 2; grid-row: 4; align-self: end; }
 label { display: grid; gap: 8px; color: var(--muted); font-weight: 900; }
 select { min-height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; }
 .retry-consultants { border: 0; padding: 0; background: transparent; color: var(--danger); font: inherit; font-size: .78rem; font-weight: 800; text-align: right; cursor: pointer; }
@@ -46,12 +62,12 @@ th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-alig
 @media (max-width: 1180px) {
   .filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: auto auto;
+    grid-template-rows: repeat(4, auto);
   }
-  .date-filter { grid-column: 1 / -1; grid-row: 1; }
-  .consultant-filter { grid-column: 1; grid-row: 2; }
-  .status-filter { grid-column: 2; grid-row: 2; }
-  .apply-button { grid-column: 1 / -1; grid-row: 3; }
+  .date-filter { grid-column: 1 / -1; grid-row: 2; }
+  .consultant-filter { grid-column: 1; grid-row: 3; }
+  .status-filter { grid-column: 2; grid-row: 3; }
+  .apply-button { grid-column: 1 / -1; grid-row: 4; }
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 620px) {
@@ -61,10 +77,11 @@ th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-alig
   .consultant-filter,
   .status-filter,
   .apply-button { grid-column: 1; }
-  .date-filter { grid-row: 1; }
-  .consultant-filter { grid-row: 2; }
-  .status-filter { grid-row: 3; }
-  .apply-button { grid-row: 4; }
+  .all-reservations-filter { grid-column: 1; grid-row: 1; }
+  .date-filter { grid-row: 2; }
+  .consultant-filter { grid-row: 3; }
+  .status-filter { grid-row: 4; }
+  .apply-button { grid-row: 5; }
   .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .export-button { width: 100%; }
 }
