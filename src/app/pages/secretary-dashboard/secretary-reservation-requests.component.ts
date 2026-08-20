@@ -285,6 +285,7 @@ export class SecretaryReservationRequestsComponent
   load(): void {
     if (!this.profileReady) return;
     const currentRequest = ++this.requestId;
+    const exactDate = this.toDateParam(this.reservationDate);
     this.loading = true;
     this.errorMessage = "";
     this.loadSubscription?.unsubscribe();
@@ -298,9 +299,11 @@ export class SecretaryReservationRequestsComponent
         attendanceConfirmationStatus: this.statusFilter,
         reservationStatus: this.reservationStatus || null,
         secretaryAnnouncementStatus: this.secretaryAnnouncementFilter,
-        reservationDate: this.toDateParam(this.reservationDate),
-        from: this.toDateParam(this.fromDate),
-        to: this.toDateParam(this.toDate),
+        // Some deployed API versions only apply the range parameters. Send an
+        // exact date as a one-day range as well so both contracts filter it.
+        reservationDate: exactDate,
+        from: exactDate ?? this.toDateParam(this.fromDate),
+        to: exactDate ?? this.toDateParam(this.toDate),
         followUpDueOn:
           this.quickFilter === "followup" ? this.todayParam() : undefined,
         visitResultStatus: null,
@@ -887,7 +890,14 @@ export class SecretaryReservationRequestsComponent
   }
 
   private toDateParam(value: Date | null): string | undefined {
-    return value ? value.toISOString().slice(0, 10) : undefined;
+    if (!value) return undefined;
+
+    // A calendar date has no timezone. Using toISOString() here converted the
+    // user's local midnight to UTC and could send the previous day to the API.
+    const year = value.getFullYear();
+    const month = `${value.getMonth() + 1}`.padStart(2, "0");
+    const day = `${value.getDate()}`.padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
   private readDateParam(value: string | null): Date | null {
     if (!value) return null;
