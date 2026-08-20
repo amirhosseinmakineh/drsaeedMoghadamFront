@@ -193,12 +193,12 @@
               [disabled]="!canEdit(reservation)"
               [attr.title]="
                 canEdit(reservation)
-                  ? 'تغییر تاریخ و ساعت رزرو'
-                  : 'رزرو نهایی یا لغو شده و قابل تغییر نیست'
+                  ? 'ویرایش رزرو'
+                  : 'پس از تایید یا رد منشی، ویرایش رزرو با منشی است'
               "
               (click)="openEditDialog(reservation)"
             >
-              تغییر زمان مراجعه بیمار
+              ویرایش رزرو
             </button>
           </div>
         </article>
@@ -232,7 +232,7 @@
 <app-base-dialog
   [open]="editDialogOpen"
   [showFooter]="false"
-  title="تغییر زمان مراجعه بیمار"
+  title="ویرایش رزرو"
   [closable]="!editSaving"
   (closed)="closeEditDialog()"
 >

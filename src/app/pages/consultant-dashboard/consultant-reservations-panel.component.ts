@@ -23,6 +23,7 @@ import {
 import {
   attendanceScoreLabel,
   attendanceStatusPresentation,
+  canConsultantEditReservation,
   canConsultantConfirmDueReservation,
   isAwaitingConsultantAttendanceConfirmation,
   isPendingConsultantConfirmationNotYetDue,
@@ -432,7 +433,7 @@ export class ConsultantReservationsPanelComponent
   }
 
   canEdit(reservation: ConsultantReservation): boolean {
-    return (reservation.canEdit ?? reservation.CanEdit) === true;
+    return canConsultantEditReservation(reservation);
   }
 
   openEditDialog(reservation: ConsultantReservation): void {

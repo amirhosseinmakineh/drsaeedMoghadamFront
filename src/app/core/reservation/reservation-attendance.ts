@@ -210,6 +210,36 @@ export function isSecretaryReviewCompleted(
   );
 }
 
+export function canConsultantEditReservation(reservation: {
+  isCanceled?: boolean | null;
+  IsCanceled?: boolean | null;
+  attendanceConfirmationStatus?: number | null;
+  AttendanceConfirmationStatus?: number | null;
+  secretaryReviewedAt?: string | null;
+  SecretaryReviewedAt?: string | null;
+  secretaryApprovedConsultantConfirmation?: boolean | null;
+  SecretaryApprovedConsultantConfirmation?: boolean | null;
+}): boolean {
+  const isCanceled =
+    (reservation.isCanceled ?? reservation.IsCanceled) === true;
+  if (isCanceled) return false;
+
+  const status = readAttendanceStatus(
+    reservation,
+    "attendanceConfirmationStatus",
+    "AttendanceConfirmationStatus",
+  );
+  if (isSecretaryReviewCompleted(status)) return false;
+
+  const secretaryReviewedAt =
+    reservation.secretaryReviewedAt ?? reservation.SecretaryReviewedAt;
+  const secretaryDecision =
+    reservation.secretaryApprovedConsultantConfirmation ??
+    reservation.SecretaryApprovedConsultantConfirmation;
+
+  return !secretaryReviewedAt && secretaryDecision == null;
+}
+
 export function consultantAttendanceClaimLabel(
   attended: boolean | null | undefined,
 ): string {
