@@ -1,5 +1,5 @@
 [build]
-command = "npm run build -- --configuration stage"
+command = "npm run build"
 publish = "dist/demo/browser"
 
 [build.environment]
@@ -8,13 +8,13 @@ REQUIRE_WEBPUSH_CONFIG = "true"
 
 [[redirects]]
   from = "/api/*"
-  to = "https://drmoghdamatest-10b-drsaeedtest2.runflare.cloud/api/:splat" 
+  to = "https://api.drsaeedmoghadam.com/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/hubs/*"
-  to = "https://drmoghdamatest-10b-drsaeedtest2.runflare.cloud/hubs/:splat"
+  to = "https://api.drsaeedmoghadam.com/hubs/:splat"
   status = 200
   force = true
 
