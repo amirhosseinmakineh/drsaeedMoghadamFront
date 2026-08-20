@@ -33,6 +33,7 @@ export class AdminDailyReservationsReportComponent implements OnInit {
   selectedDate = nowInIran();
   consultantProfileId: number | null = null;
   requestStatus: number | null = null;
+  includeAllReservations = false;
   consultants: Consultant[] = [];
   consultantsLoading = false;
   consultantsLoadError = "";
@@ -68,6 +69,12 @@ export class AdminDailyReservationsReportComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  setIncludeAllReservations(includeAll: boolean): void {
+    this.includeAllReservations = includeAll;
+    this.cdr.markForCheck();
+    this.loadReport();
+  }
+
   loadReport(): void {
     if (this.loading) return;
     this.loading = true;
@@ -96,7 +103,10 @@ export class AdminDailyReservationsReportComponent implements OnInit {
       .pipe(finalize(() => { this.downloading = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: (blob) => {
-          downloadBlob(blob, `daily-reservations-${filters.date!.replaceAll("-", "")}.csv`);
+          const suffix = filters.includeAll
+            ? "all"
+            : filters.date!.replaceAll("-", "");
+          downloadBlob(blob, `daily-reservations-${suffix}.csv`);
           this.toast.success("فایل گزارش روزانه رزروها دانلود شد");
         },
         error: (error) => this.toast.error(this.errorText(error)),
@@ -150,6 +160,10 @@ export class AdminDailyReservationsReportComponent implements OnInit {
   }
 
   private filters(): DailyReservationsReportFilters {
+    if (this.includeAllReservations) {
+      return { includeAll: true };
+    }
+
     return {
       date: toIranDateInputValue(this.selectedDate),
       ...(this.consultantProfileId !== null
