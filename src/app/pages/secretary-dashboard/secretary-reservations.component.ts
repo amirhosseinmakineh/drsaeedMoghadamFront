@@ -250,15 +250,11 @@ export class SecretaryReservationsComponent
     if (this.activeTab === "completed") {
       this.loadSubscription = forkJoin({
         approved: this.secretaryApi.getReservations({
-          attendanceConfirmationStatus:
-            AttendanceConfirmationStatus.SecretaryApproved,
           includeCanceled: false,
           pageNumber: this.pageNumber,
           pageSize: this.pageSize,
         }),
         rejected: this.secretaryApi.getReservations({
-          attendanceConfirmationStatus:
-            AttendanceConfirmationStatus.SecretaryRejected,
           includeCanceled: false,
           pageNumber: this.pageNumber,
           pageSize: this.pageSize,
@@ -308,8 +304,7 @@ export class SecretaryReservationsComponent
         pageNumber: this.pageNumber,
         pageSize: this.pageSize,
         includeCanceled: this.includeCanceled,
-        attendanceConfirmationStatus: this.statusFilter,
-        searchText: this.searchText.trim() || undefined,
+        search: this.searchText.trim() || undefined,
         reservationType:
           this.activeTab === "regular"
             ? ReservationType.Regular

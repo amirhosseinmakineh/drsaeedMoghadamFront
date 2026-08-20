@@ -107,13 +107,7 @@ export class SecretaryReservationRequestsComponent
   @Input() canCreate = false;
 
   readonly statusOptions = STATUS_OPTIONS;
-  readonly quickFilters: { value: QuickFilter; label: string }[] = [
-    { value: "all", label: "همه درخواست‌ها" },
-    { value: "pending", label: "منتظر تایید مشاور" },
-    { value: "confirmed", label: "تایید نهایی منشی" },
-    { value: "followup", label: "نیاز به پیگیری" },
-    { value: "rejected", label: "رد نهایی منشی" },
-  ];
+
   readonly secretaryAnnouncementOptions = SECRETARY_ANNOUNCEMENT_OPTIONS;
 
   items: SecretaryReservation[] = [];
@@ -225,6 +219,17 @@ export class SecretaryReservationRequestsComponent
     this.consultantName = this.consultantName.trim();
     this.applyFilters();
   }
+  onReservationStatusChange(event: Event): void {
+  const value = (event.target as HTMLSelectElement).value;
+
+  console.log("SELECT VALUE:", value);
+
+  this.reservationStatus = value;
+
+  console.log("reservationStatus:", this.reservationStatus);
+
+  this.applyFilters();
+}
 
   clearFilters(): void {
     this.quickFilter = "all";
@@ -282,67 +287,79 @@ export class SecretaryReservationRequestsComponent
     this.load();
   }
 
-  load(): void {
-    if (!this.profileReady) return;
-    const currentRequest = ++this.requestId;
-    const exactDate = this.toDateParam(this.reservationDate);
-    this.loading = true;
-    this.errorMessage = "";
-    this.loadSubscription?.unsubscribe();
-    this.loadSubscription = this.api
-      .getReservations({
-        pageNumber: this.pageNumber,
-        pageSize: this.pageSize,
-        includeCanceled: true,
-        searchText: this.searchText.trim() || undefined,
-        consultantName: this.consultantName.trim() || undefined,
-        attendanceConfirmationStatus: this.statusFilter,
-        reservationStatus: this.reservationStatus || null,
-        secretaryAnnouncementStatus: this.secretaryAnnouncementFilter,
-        // Some deployed API versions only apply the range parameters. Send an
-        // exact date as a one-day range as well so both contracts filter it.
-        reservationDate: exactDate,
-        from: exactDate ?? this.toDateParam(this.fromDate),
-        to: exactDate ?? this.toDateParam(this.toDate),
-        followUpDueOn:
-          this.quickFilter === "followup" ? this.todayParam() : undefined,
-        visitResultStatus: null,
-        sortDirection: this.sortDirection,
-        reservationType:
-          this.reservationTypeFilter === "regular"
-            ? ReservationType.Regular
-            : this.reservationTypeFilter === "after-sales"
-              ? ReservationType.AfterSalesService
-              : null,
-      })
-      .pipe(
-        finalize(() => {
-          if (currentRequest !== this.requestId) return;
-          this.loading = false;
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: (response) => {
-          if (currentRequest !== this.requestId) return;
-          this.items = response.items ?? [];
-          this.totalCount = response.totalCount ?? 0;
-          this.pageNumber = response.pageNumber || 1;
-          this.totalPages = Math.max(1, response.totalPages || 1);
-          this.cdr.markForCheck();
-        },
-        error: (error) => {
-          if (currentRequest !== this.requestId) return;
-          this.items = [];
-          this.totalCount = 0;
-          this.errorMessage = this.errorText(
-            error,
-            "دریافت درخواست‌های رزرو انجام نشد",
-          );
-          this.cdr.markForCheck();
-        },
-      });
-  }
+load(): void {
+  if (!this.profileReady) return;
+
+  const currentRequest = ++this.requestId;
+
+  this.loading = true;
+  this.errorMessage = "";
+
+  this.loadSubscription?.unsubscribe();
+
+  const exactDate = this.toDateParam(this.reservationDate);
+
+this.loadSubscription = this.api
+  .getReservations({
+    pageNumber: this.pageNumber,
+    pageSize: this.pageSize,
+    includeCanceled: true,
+
+    search: this.searchText.trim() || undefined,
+    consultantName: this.consultantName.trim() || undefined,
+
+    reservationStatus: this.reservationStatus || null,
+
+    secretaryAnnouncementStatus:
+      this.secretaryAnnouncementFilter,
+
+    attendanceStatus:
+      this.statusFilter,
+
+    sortDirection: this.sortDirection,
+
+    reservationType:
+      this.reservationTypeFilter === "regular"
+        ? ReservationType.Regular
+        : this.reservationTypeFilter === "after-sales"
+          ? ReservationType.AfterSalesService
+          : null,
+  })
+    .pipe(
+      finalize(() => {
+        if (currentRequest !== this.requestId) return;
+
+        this.loading = false;
+        this.cdr.markForCheck();
+      }),
+    )
+    .subscribe({
+      next: (response) => {
+        if (currentRequest !== this.requestId) return;
+
+        this.items = response.items ?? [];
+        this.totalCount = response.totalCount ?? 0;
+        this.pageNumber = response.pageNumber || 1;
+        this.totalPages = Math.max(1, response.totalPages || 1);
+
+        this.cdr.markForCheck();
+      },
+
+      error: (error) => {
+        if (currentRequest !== this.requestId) return;
+
+        this.items = [];
+        this.totalCount = 0;
+
+        this.errorMessage = this.errorText(
+          error,
+          "دریافت درخواست‌های رزرو انجام نشد",
+        );
+
+        this.cdr.markForCheck();
+      },
+    });
+}
 
   openDialog(item: SecretaryReservation, mode: DialogMode): void {
     if (mode !== "details" && !this.hasManagementAccess(item)) return;
@@ -836,8 +853,6 @@ export class SecretaryReservationRequestsComponent
   private restoreFromUrl(): void {
     const params = this.route.snapshot.queryParamMap;
     const filter = params.get("requestFilter") as QuickFilter | null;
-    if (filter && this.quickFilters.some((item) => item.value === filter))
-      this.quickFilter = filter;
     const restoredStatus = Number(params.get("attendanceStatus"));
     this.statusFilter =
       params.has("attendanceStatus") &&

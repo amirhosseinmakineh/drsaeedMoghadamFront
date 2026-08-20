@@ -185,24 +185,16 @@ export interface SecretaryAnnouncementRequest {
 
 export interface SecretaryReservationFilters {
   consultantProfileId?: number | null;
-  from?: string;
-  to?: string;
-  searchText?: string;
-  attendanceConfirmationStatus?: AttendanceConfirmationStatus | null;
-  onlyWaitingForSecretaryReview?: boolean;
-  onlyPendingReservationReview?: boolean;
-  reservationReviewStatus?: number | null;
-  visitResultStatus?: number | null;
-  reservationStatus?: string | null;
-  secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
-  reservationDate?: string;
-  followUpDueOn?: string;
-  isConfirmedWithPatient?: boolean | null;
+  search?: string;
   consultantName?: string;
-  sortDirection?: "asc" | "desc";
+  fromDate?: string;
+  toDate?: string;
+  attendanceStatus?: AttendanceConfirmationStatus | null;
+  secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
+  reservationStatus?: string | null;
   reservationType?: ReservationType | null;
-  onlyDue?: boolean;
   includeCanceled?: boolean;
+  sortDirection?: "asc" | "desc";
   pageNumber: number;
   pageSize: number;
 }
@@ -354,8 +346,6 @@ export class SecretaryDashboardService {
     pageSize = 50,
   ): Observable<PaginatedResponse<SecretaryReservation>> {
     return this.getReservations({
-      onlyWaitingForSecretaryReview: true,
-      onlyDue: true,
       includeCanceled: false,
       pageNumber,
       pageSize,
@@ -510,7 +500,7 @@ export class SecretaryDashboardService {
   ): Observable<ApiCommandResponse<SecretaryReservation>> {
     const payload: UpdateSecretaryReservationTimeRequest = { reservationAt, dentalServices };
     return this.http
-      .patch<ApiCommandResponse<SecretaryReservation>>(
+      .post<ApiCommandResponse<SecretaryReservation>>(
         `${this.apiBaseUrl}/Reservation/SecretaryReservations/${reservationId}/time`,
         payload,
         { headers: this.authHeaders() },
