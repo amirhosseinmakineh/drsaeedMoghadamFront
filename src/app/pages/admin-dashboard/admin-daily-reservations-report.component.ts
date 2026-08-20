@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
 import {
   AdminDashboardService,
+  AdminUser,
   Consultant,
   DailyReservationReportItem,
   DailyReservationsReport,
@@ -32,11 +33,16 @@ export class AdminDailyReservationsReportComponent implements OnInit {
   readonly dentalServicesLabel = formatDentalServices;
   selectedDate = nowInIran();
   consultantProfileId: number | null = null;
+  reservationOwnerType: "Consultant" | "Secretary" = "Consultant";
+  secretaryUserId: string | null = null;
   requestStatus: number | null = null;
   includeAllReservations = false;
   consultants: Consultant[] = [];
   consultantsLoading = false;
   consultantsLoadError = "";
+  secretaries: AdminUser[] = [];
+  secretariesLoading = false;
+  secretariesLoadError = "";
   report: DailyReservationsReport | null = null;
   loading = false;
   downloading = false;
@@ -61,11 +67,24 @@ export class AdminDailyReservationsReportComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadConsultants(true);
+    this.loadSecretaries(true);
     this.loadReport();
   }
 
   setDate(date: Date): void {
     this.selectedDate = date;
+    this.cdr.markForCheck();
+  }
+
+  setReservationOwnerType(type: "Consultant" | "Secretary"): void {
+    this.reservationOwnerType = type;
+    this.consultantProfileId = null;
+    this.secretaryUserId = null;
+    if (type === "Consultant") {
+      this.loadConsultants();
+    } else {
+      this.loadSecretaries();
+    }
     this.cdr.markForCheck();
   }
 
@@ -159,6 +178,18 @@ export class AdminDailyReservationsReportComponent implements OnInit {
     return fullName || `مشاور ${this.consultantId(consultant)}`;
   }
 
+  secretaryId(secretary: AdminUser): string {
+    return secretary.id || secretary.Id || "";
+  }
+
+  secretaryName(secretary: AdminUser): string {
+    const fullName = [
+      secretary.firstName || secretary.FirstName,
+      secretary.lastName || secretary.LastName,
+    ].filter(Boolean).join(" ");
+    return fullName || secretary.phoneNumber || secretary.PhoneNumber || "منشی";
+  }
+
   private filters(): DailyReservationsReportFilters {
     if (this.includeAllReservations) {
       return { includeAll: true };
@@ -166,8 +197,13 @@ export class AdminDailyReservationsReportComponent implements OnInit {
 
     return {
       date: toIranDateInputValue(this.selectedDate),
-      ...(this.consultantProfileId !== null
+      reservationOwnerType: this.reservationOwnerType,
+      ...(this.reservationOwnerType === "Consultant" &&
+      this.consultantProfileId !== null
         ? { consultantProfileId: this.consultantProfileId }
+        : {}),
+      ...(this.reservationOwnerType === "Secretary" && this.secretaryUserId
+        ? { secretaryUserId: this.secretaryUserId }
         : {}),
       ...(this.requestStatus ? { requestStatus: this.requestStatus } : {}),
     };
@@ -196,6 +232,31 @@ export class AdminDailyReservationsReportComponent implements OnInit {
         error: (error) => {
           this.consultantsLoadError = this.errorText(error);
           this.toast.error(this.consultantsLoadError);
+          this.cdr.markForCheck();
+        },
+      });
+  }
+  loadSecretaries(force = false): void {
+    if (this.secretariesLoading) return;
+    if (!force && this.secretaries.length) return;
+
+    this.secretariesLoading = true;
+    this.secretariesLoadError = "";
+    this.cdr.markForCheck();
+    this.adminApi
+      .getSecretaries({ pageNumber: 1, pageSize: 500 })
+      .pipe(finalize(() => {
+        this.secretariesLoading = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: ({ items }) => {
+          this.secretaries = items.filter((item) => !!this.secretaryId(item));
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.secretariesLoadError = this.errorText(error);
+          this.toast.error(this.secretariesLoadError);
           this.cdr.markForCheck();
         },
       });

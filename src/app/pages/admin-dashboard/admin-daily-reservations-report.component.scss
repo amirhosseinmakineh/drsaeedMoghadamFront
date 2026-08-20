@@ -11,7 +11,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .filters {
   display: grid;
   grid-template-columns: minmax(520px, 2fr) minmax(230px, 1fr);
-  grid-template-rows: repeat(4, auto);
+  grid-template-rows: repeat(5, auto);
   align-items: stretch;
   gap: 16px;
   padding: 18px;
@@ -45,9 +45,10 @@ button:disabled { opacity: .6; cursor: wait; }
 .select-filter {
   align-content: end;
 }
-.consultant-filter { grid-column: 2; grid-row: 2; }
-.status-filter { grid-column: 2; grid-row: 3; }
-.apply-button { grid-column: 2; grid-row: 4; align-self: end; }
+.owner-type-filter { grid-column: 2; grid-row: 2; }
+.person-filter { grid-column: 2; grid-row: 3; }
+.status-filter { grid-column: 2; grid-row: 4; }
+.apply-button { grid-column: 2; grid-row: 5; align-self: end; }
 label { display: grid; gap: 8px; color: var(--muted); font-weight: 900; }
 select { min-height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; }
 .retry-consultants { border: 0; padding: 0; background: transparent; color: var(--danger); font: inherit; font-size: .78rem; font-weight: 800; text-align: right; cursor: pointer; }
@@ -62,26 +63,29 @@ th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-alig
 @media (max-width: 1180px) {
   .filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(4, auto);
+    grid-template-rows: repeat(5, auto);
   }
   .date-filter { grid-column: 1 / -1; grid-row: 2; }
-  .consultant-filter { grid-column: 1; grid-row: 3; }
-  .status-filter { grid-column: 2; grid-row: 3; }
-  .apply-button { grid-column: 1 / -1; grid-row: 4; }
+  .owner-type-filter { grid-column: 1; grid-row: 3; }
+  .person-filter { grid-column: 2; grid-row: 3; }
+  .status-filter { grid-column: 1 / -1; grid-row: 4; }
+  .apply-button { grid-column: 1 / -1; grid-row: 5; }
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 620px) {
   .daily-report { padding: 14px; border-radius: 22px; }
   .filters { grid-template-columns: 1fr; padding: 12px; }
   .date-filter,
-  .consultant-filter,
+  .owner-type-filter,
+  .person-filter,
   .status-filter,
   .apply-button { grid-column: 1; }
   .all-reservations-filter { grid-column: 1; grid-row: 1; }
   .date-filter { grid-row: 2; }
-  .consultant-filter { grid-row: 3; }
-  .status-filter { grid-row: 4; }
-  .apply-button { grid-row: 5; }
+  .owner-type-filter { grid-row: 3; }
+  .person-filter { grid-row: 4; }
+  .status-filter { grid-row: 5; }
+  .apply-button { grid-row: 6; }
   .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .export-button { width: 100%; }
 }
