@@ -300,6 +300,7 @@ export interface DailyReservationsReportFilters {
   date?: string;
   consultantProfileId?: number;
   requestStatus?: number;
+  includeAll?: boolean;
 }
 
 export interface DailyReservationsSummary {

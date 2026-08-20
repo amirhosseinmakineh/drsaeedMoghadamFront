@@ -2,7 +2,7 @@
   <header class="panel-heading">
     <div>
       <span>رزروهای روزانه</span>
-      <h2 id="daily-report-title">رزروهای ثبت‌شده در روز انتخابی</h2>
+      <h2 id="daily-report-title">{{ includeAllReservations ? "همه رزروهای ثبت‌شده" : "رزروهای ثبت‌شده در روز انتخابی" }}</h2>
       <p>تاریخ انتخابی بر اساس «زمان ثبت رزرو» در پایگاه داده و به وقت ایران است؛ «زمان مراجعه بیمار» جداگانه در جدول نمایش داده می‌شود.</p>
     </div>
     <button class="export-button" type="button" [disabled]="downloading" (click)="download()">
@@ -12,15 +12,25 @@
   </header>
 
   <form class="filters" (ngSubmit)="loadReport()">
-    <label class="date-filter">
+    <label class="all-reservations-filter">
+      <input type="checkbox" name="includeAllReservations" [disabled]="loading"
+        [ngModel]="includeAllReservations"
+        (ngModelChange)="setIncludeAllReservations($event)" />
+      <span>
+        نمایش همه رزروها
+        <small>با فعال‌کردن این گزینه، تاریخ، مشاور و وضعیت نادیده گرفته می‌شوند و خروجی اکسل نیز شامل همه رزروها خواهد بود.</small>
+      </span>
+    </label>
+    <label class="date-filter" [class.filter-disabled]="includeAllReservations">
       تاریخ ثبت رزرو
       <app-base-datepicker [label]="datePickerLabel" [selectedDate]="selectedDate"
-        [unrestrictedDates]="true" (dateChange)="setDate($event)"></app-base-datepicker>
+        [unrestrictedDates]="true"
+        (dateChange)="setDate($event)"></app-base-datepicker>
     </label>
     <label class="select-filter consultant-filter">
       مشاور
       <select [(ngModel)]="consultantProfileId" name="consultantProfileId"
-        [disabled]="consultantsLoading" (focus)="loadConsultants()" (pointerdown)="loadConsultants()">
+        [disabled]="consultantsLoading || includeAllReservations" (focus)="loadConsultants()" (pointerdown)="loadConsultants()">
         <option [ngValue]="null">{{ consultantsLoading ? "در حال دریافت مشاوران..." : consultantsLoadError ? "تلاش دوباره برای دریافت مشاوران" : "همه مشاوران" }}</option>
         <option *ngFor="let consultant of consultants" [ngValue]="consultantId(consultant)">
           {{ consultantName(consultant) }}
@@ -32,7 +42,7 @@
     </label>
     <label class="select-filter status-filter">
       وضعیت درخواست
-      <select [(ngModel)]="requestStatus" name="requestStatus">
+      <select [(ngModel)]="requestStatus" name="requestStatus" [disabled]="includeAllReservations">
         <option [ngValue]="null">همه وضعیت‌ها</option>
         <option *ngFor="let status of requestStatuses" [ngValue]="status.value">{{ status.label }}</option>
       </select>
@@ -57,7 +67,7 @@
     </section>
 
     <div class="table-heading">
-      <div><h3>جزئیات رزروها{{ report.datePersian ? " - " + report.datePersian : "" }}</h3><small>تولید گزارش: {{ report.generatedAtPersian || formatDateTime(report.generatedAt) }}</small></div>
+      <div><h3>جزئیات رزروها{{ !includeAllReservations && report.datePersian ? " - " + report.datePersian : "" }}</h3><small>تولید گزارش: {{ report.generatedAtPersian || formatDateTime(report.generatedAt) }}</small></div>
       <b>{{ report.items.length }} رکورد</b>
     </div>
     @if (!report.items.length && !loading) {
