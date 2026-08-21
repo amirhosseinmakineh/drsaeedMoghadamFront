@@ -549,19 +549,28 @@
                   (ngModelChange)="onLeadFilterChange()"
                 />
               </label>
-              <details #leadDateFilterMenu class="lead-date-filter-menu">
-                <summary>
+              <button
+                class="lead-date-filter-trigger"
+                type="button"
+                (click)="leadDateFilterDialog.showModal()"
+              >
                   <span class="lead-date-filter-icon" aria-hidden="true">◫</span>
                   <span>
                     <strong>{{ leadDateFilterLabel() }}</strong>
                     <small>از تاریخ تا تاریخ</small>
                   </span>
-                  <span class="lead-date-filter-chevron" aria-hidden="true">⌄</span>
-                </summary>
+                  <span class="lead-date-filter-chevron" aria-hidden="true">‹</span>
+              </button>
+              <dialog
+                #leadDateFilterDialog
+                class="lead-date-filter-dialog"
+                dir="rtl"
+                aria-labelledby="lead-date-filter-title"
+              >
                 <div class="lead-date-filter-panel">
                   <header>
                     <div>
-                      <strong>انتخاب بازه تاریخ</strong>
+                      <strong id="lead-date-filter-title">انتخاب بازه تاریخ</strong>
                       <small>تاریخ شروع و پایان لیدها را انتخاب کنید.</small>
                     </div>
                     <div class="lead-date-filter-actions">
@@ -574,7 +583,7 @@
                         class="lead-date-filter-close"
                         type="button"
                         aria-label="بستن فیلتر تاریخ"
-                        (click)="leadDateFilterMenu.open = false"
+                        (click)="leadDateFilterDialog.close()"
                       >
                         <span aria-hidden="true">×</span>
                       </button>
@@ -599,7 +608,7 @@
                     ></app-base-datepicker>
                   </div>
                 </div>
-              </details>
+              </dialog>
               <label>
                 وضعیت
                 <select
@@ -612,17 +621,6 @@
                   <option [ngValue]="2">تخصیص‌یافته</option>
                   <option [ngValue]="4">پیگیری</option>
                   <option [ngValue]="7">رد شده</option>
-                </select>
-              </label>
-              <label>
-                نوع
-                <select
-                  [(ngModel)]="leadTypeFilter"
-                  name="consultantLeadType"
-                  (ngModelChange)="onLeadFilterChange(true)"
-                >
-                  <option [ngValue]="null">همه</option>
-                  <option [ngValue]="1">آنی</option>
                 </select>
               </label>
             </form>
