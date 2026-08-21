@@ -924,6 +924,10 @@ input[readonly] {
     contain: paint;
     overflow: hidden;
   }
+  .lead-panel:has(.lead-date-filter-menu[open]) {
+    overflow: visible;
+    contain: none;
+  }
   .status-summary div,
   .lead-card,
   .reservation-list article,

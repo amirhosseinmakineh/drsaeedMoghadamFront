@@ -314,12 +314,19 @@ this.loadSubscription = this.api
     reservationStatus: this.reservationStatus || null,
 
     secretaryAnnouncementStatus:
-      this.secretaryAnnouncementFilter,
+      this.secretaryAnnouncementFilter ?? null,
 
     attendanceStatus:
-      this.statusFilter,
+      this.statusFilter ?? null,
 
-    sortDirection: this.sortDirection,
+    fromDate:
+      this.toDateParam(this.fromDate),
+
+    toDate:
+      this.toDateParam(this.toDate),
+
+    sortDirection:
+      this.sortDirection,
 
     reservationType:
       this.reservationTypeFilter === "regular"
