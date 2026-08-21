@@ -8,11 +8,13 @@ import {
 } from "../../core/admin/admin-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { downloadBlob } from "../../utils/file-download.util";
+import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import { toIranDateInputValue } from "../../utils/iran-datetime.util";
 
 @Component({
   selector: "app-admin-leads-report",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent],
   templateUrl: "./admin-leads-report.component.html",
   styleUrl: "./admin-leads-report.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +26,10 @@ export class AdminLeadsReportComponent implements OnInit {
   loading = false;
   downloading = false;
   errorMessage = "";
+  fromDate?: Date;
+  toDate?: Date;
+  readonly fromDateLabel = { fa: "از تاریخ ایجاد لید", en: "From date" };
+  readonly toDateLabel = { fa: "تا تاریخ ایجاد لید", en: "To date" };
 
   readonly assignmentStates = [
     [1, "جدید"], [2, "تخصیص داده شده"], [3, "تماس گرفته شده"],
@@ -50,6 +56,7 @@ export class AdminLeadsReportComponent implements OnInit {
   }
 
   applyFilters(): void {
+    if (this.loading) return;
     if (this.filters.from && this.filters.to && this.filters.from > this.filters.to) {
       this.toast.error("تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد");
       return;
@@ -59,8 +66,21 @@ export class AdminLeadsReportComponent implements OnInit {
   }
 
   resetFilters(): void {
+    if (this.loading) return;
     this.filters = { pageNumber: 1, pageSize: 25 };
+    this.fromDate = undefined;
+    this.toDate = undefined;
     this.load();
+  }
+
+  setFromDate(date: Date): void {
+    this.fromDate = date;
+    this.filters.from = toIranDateInputValue(date);
+  }
+
+  setToDate(date: Date): void {
+    this.toDate = date;
+    this.filters.to = toIranDateInputValue(date);
   }
 
   changePage(page: number): void {
@@ -70,10 +90,11 @@ export class AdminLeadsReportComponent implements OnInit {
   }
 
   load(): void {
+    if (this.loading) return;
     this.loading = true;
     this.errorMessage = "";
     this.cdr.markForCheck();
-    this.api.getLeadsReport({ ...this.filters, searchText: this.filters.searchText?.trim() || undefined })
+    this.api.getLeadsReport(this.filters)
       .pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: (report) => { this.report = report; this.cdr.markForCheck(); },

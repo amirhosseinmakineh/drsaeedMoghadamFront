@@ -1,27 +1,26 @@
-<section class="leads-report" dir="rtl">
-  <header class="report-header">
-    <div><span>گزارش‌های مدیریتی</span><h2>گزارش لیدهای سیستم</h2></div>
-    <button class="download" type="button" (click)="download()" [disabled]="downloading">
-      {{ downloading ? "در حال آماده‌سازی..." : "دانلود خروجی Excel" }}
+<section class="leads-report" aria-labelledby="leads-report-title">
+  <header class="panel-heading">
+    <div><span>گزارش‌های مدیریتی</span><h2 id="leads-report-title">گزارش لیدهای سیستم</h2><p>آمار و جزئیات لیدها را بر اساس فیلترهای انتخابی مشاهده یا به‌صورت اکسل دریافت کنید.</p></div>
+    <button class="export-button" type="button" (click)="download()" [disabled]="downloading">
+      <span class="button-icon" aria-hidden="true">⇩</span>{{ downloading ? "در حال آماده‌سازی..." : "خروجی اکسل" }}
     </button>
   </header>
 
   <form class="filters" (ngSubmit)="applyFilters()">
-    <label>از تاریخ<input type="date" [(ngModel)]="filters.from" name="from" /></label>
-    <label>تا تاریخ<input type="date" [(ngModel)]="filters.to" name="to" /></label>
-    <label>مشاور<select [(ngModel)]="filters.consultantProfileId" name="consultant"><option [ngValue]="undefined">همه مشاوران</option><option *ngFor="let item of consultants" [ngValue]="consultantId(item)">{{ consultantName(item) }}</option></select></label>
-    <label>وضعیت لید<select [(ngModel)]="filters.leadAssignmentState" name="state"><option [ngValue]="undefined">همه</option><option *ngFor="let item of assignmentStates" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
-    <label>نوع تخصیص<select [(ngModel)]="filters.assignmentType" name="type"><option [ngValue]="undefined">همه</option><option *ngFor="let item of assignmentTypes" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
-    <label>نتیجه تماس<select [(ngModel)]="filters.callResult" name="result"><option [ngValue]="undefined">همه</option><option *ngFor="let item of callResults" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
-    <label>تخصیص<select [(ngModel)]="filters.isAssigned" name="assigned"><option [ngValue]="undefined">همه</option><option [ngValue]="true">تخصیص داده شده</option><option [ngValue]="false">تخصیص داده نشده</option></select></label>
-    <label>تماس<select [(ngModel)]="filters.hasCalled" name="called"><option [ngValue]="undefined">همه</option><option [ngValue]="true">تماس گرفته شده</option><option [ngValue]="false">تماس گرفته نشده</option></select></label>
-    <label>گزارش مشاور<select [(ngModel)]="filters.hasSubmittedReport" name="submitted"><option [ngValue]="undefined">همه</option><option [ngValue]="true">دارای گزارش</option><option [ngValue]="false">بدون گزارش</option></select></label>
-    <label class="search">جست‌وجو<input [(ngModel)]="filters.searchText" name="search" placeholder="نام، موبایل یا نام بیزینس" /></label>
-    <div class="filter-actions"><button type="submit">اعمال فیلترها</button><button class="reset" type="button" (click)="resetFilters()">پاک کردن</button></div>
+    <div class="date-filter"><app-base-datepicker [label]="fromDateLabel" [selectedDate]="fromDate" [unrestrictedDates]="true" [compact]="true" (dateChange)="setFromDate($event)"></app-base-datepicker></div>
+    <div class="date-filter"><app-base-datepicker [label]="toDateLabel" [selectedDate]="toDate" [unrestrictedDates]="true" [compact]="true" (dateChange)="setToDate($event)"></app-base-datepicker></div>
+    <label>مشاور<select [(ngModel)]="filters.consultantProfileId" name="consultant" [disabled]="loading"><option [ngValue]="undefined">همه مشاوران</option><option *ngFor="let item of consultants" [ngValue]="consultantId(item)">{{ consultantName(item) }}</option></select></label>
+    <label>وضعیت لید<select [(ngModel)]="filters.leadAssignmentState" name="state" [disabled]="loading"><option [ngValue]="undefined">همه</option><option *ngFor="let item of assignmentStates" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
+    <label>نوع تخصیص<select [(ngModel)]="filters.assignmentType" name="type" [disabled]="loading"><option [ngValue]="undefined">همه</option><option *ngFor="let item of assignmentTypes" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
+    <label>نتیجه تماس<select [(ngModel)]="filters.callResult" name="result" [disabled]="loading"><option [ngValue]="undefined">همه</option><option *ngFor="let item of callResults" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
+    <label>تخصیص<select [(ngModel)]="filters.isAssigned" name="assigned" [disabled]="loading"><option [ngValue]="undefined">همه</option><option [ngValue]="true">تخصیص داده شده</option><option [ngValue]="false">تخصیص داده نشده</option></select></label>
+    <label>تماس<select [(ngModel)]="filters.hasCalled" name="called" [disabled]="loading"><option [ngValue]="undefined">همه</option><option [ngValue]="true">تماس گرفته شده</option><option [ngValue]="false">تماس گرفته نشده</option></select></label>
+    <label>گزارش مشاور<select [(ngModel)]="filters.hasSubmittedReport" name="submitted" [disabled]="loading"><option [ngValue]="undefined">همه</option><option [ngValue]="true">دارای گزارش</option><option [ngValue]="false">بدون گزارش</option></select></label>
+    <div class="filter-actions"><button class="apply-button" type="submit" [disabled]="loading">{{ loading ? "در حال دریافت..." : "نمایش گزارش" }}</button><button class="reset-button" type="button" (click)="resetFilters()" [disabled]="loading">پاک کردن فیلترها</button></div>
   </form>
 
   @if (report?.summary; as summary) {
-    <div class="summary">
+    <div class="summary-grid">
       <article><strong>{{ summary.total }}</strong><span>کل لیدها</span></article>
       <article><strong>{{ summary.assigned }}</strong><span>تخصیص یافته</span></article>
       <article><strong>{{ summary.unassigned }}</strong><span>بدون تخصیص</span></article>
@@ -32,8 +31,8 @@
     </div>
   }
 
-  @if (errorMessage) { <p class="error">{{ errorMessage }}</p> }
-  <div class="table-wrap">
+  @if (errorMessage) { <p class="feedback error">{{ errorMessage }}</p> }
+  <div class="table-scroll">
     <table>
       <thead><tr><th>لید</th><th>مشاور</th><th>وضعیت</th><th>تماس و گزارش</th><th>اطلاعات تکمیلی</th><th>تاریخ ایجاد</th></tr></thead>
       <tbody>

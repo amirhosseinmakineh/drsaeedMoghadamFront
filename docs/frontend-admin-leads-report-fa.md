@@ -24,12 +24,11 @@ Authorization: Bearer <admin-token>
 | `isAssigned` | `boolean` | فقط لیدهای اساین‌شده/نشده |
 | `hasCalled` | `boolean` | فقط لیدهای تماس‌گرفته/نگرفته |
 | `hasSubmittedReport` | `boolean` | فقط لیدهای دارای/فاقد گزارش مشاور |
-| `searchText` | `string` | جستجو در نام، موبایل، شماره دوم و نام بیزینس |
 | `pageNumber` | `number` | پیش‌فرض `1` |
 | `pageSize` | `number` | پیش‌فرض `25` و حداکثر `200` |
 
 فیلترها اختیاری‌اند و ترکیب آن‌ها با منطق **AND** انجام می‌شود. اگر `from` بعد از
-`to` باشد پاسخ `400` برمی‌گردد. فاصله ابتدا و انتهای `searchText` حذف می‌شود.
+`to` باشد پاسخ `400` برمی‌گردد.
 
 ### enumها
 
@@ -42,7 +41,7 @@ Authorization: Bearer <admin-token>
 ### نمونه درخواست کامل
 
 ```http
-GET /api/admin/reports/leads?from=2026-08-01&to=2026-08-21&consultantProfileId=12&assignmentType=1&hasCalled=true&hasSubmittedReport=true&searchText=0912&pageNumber=1&pageSize=25
+GET /api/admin/reports/leads?from=2026-08-01&to=2026-08-21&consultantProfileId=12&assignmentType=1&hasCalled=true&hasSubmittedReport=true&pageNumber=1&pageSize=25
 ```
 
 ### ساختار پاسخ

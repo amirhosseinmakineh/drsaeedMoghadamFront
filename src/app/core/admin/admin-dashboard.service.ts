@@ -306,7 +306,6 @@ export interface LeadsReportFilters {
   isAssigned?: boolean;
   hasCalled?: boolean;
   hasSubmittedReport?: boolean;
-  searchText?: string;
   pageNumber: number;
   pageSize: number;
 }
