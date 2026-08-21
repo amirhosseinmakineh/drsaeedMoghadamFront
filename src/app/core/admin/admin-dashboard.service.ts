@@ -296,6 +296,66 @@ export interface LeadCallReportExportFilters {
   to?: string;
 }
 
+export interface LeadsReportFilters {
+  from?: string;
+  to?: string;
+  consultantProfileId?: number;
+  leadAssignmentState?: number;
+  assignmentType?: number;
+  callResult?: number;
+  isAssigned?: boolean;
+  hasCalled?: boolean;
+  hasSubmittedReport?: boolean;
+  searchText?: string;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface LeadsReportSummary {
+  total: number;
+  assigned: number;
+  unassigned: number;
+  called: number;
+  notCalled: number;
+  converted: number;
+  withSubmittedReport: number;
+}
+
+export interface LeadsReportItem {
+  leadId: number;
+  leadName: string;
+  leadPhoneNumber: string;
+  secondaryPhoneNumber: string | null;
+  leadAssignmentState: number;
+  leadAssignmentStateTitle: string;
+  assignmentType: number | null;
+  assignmentTypeTitle: string | null;
+  consultantProfileId: number | null;
+  consultantFullName: string | null;
+  consultantPhoneNumber: string | null;
+  isAssigned: boolean;
+  hasCalled: boolean;
+  callResult: number | null;
+  callResultTitle: string | null;
+  reportDescription: string | null;
+  assignedAt: string | null;
+  assignedAtPersian: string | null;
+  contactedAt: string | null;
+  contactedAtPersian: string | null;
+  reportSubmittedAt: string | null;
+  reportSubmittedAtPersian: string | null;
+  createdAt: string;
+  createdAtPersian: string | null;
+  patientCity: string | null;
+  patientRegion: string | null;
+  businessName: string | null;
+  attendanceProbabilityPercent: number | null;
+}
+
+export interface LeadsReportResponse extends PaginatedResponse<LeadsReportItem> {
+  summary: LeadsReportSummary;
+}
+
 export interface DailyReservationsReportFilters {
   date?: string;
   reservationOwnerType?: "Consultant" | "Secretary";
@@ -871,6 +931,22 @@ export class AdminDashboardService {
     filters: LeadCallReportExportFilters,
   ): Observable<Blob> {
     return this.exportCsvReport("lead-call-reports/export", filters);
+  }
+
+  getLeadsReport(filters: LeadsReportFilters): Observable<LeadsReportResponse> {
+    return this.http.get<LeadsReportResponse>(
+      `${this.apiBaseUrl}/admin/reports/leads`,
+      { headers: this.authHeaders(), params: this.toParams(filters) },
+    ).pipe(
+      catchError((error) => throwError(() =>
+        this.toUserFacingError(error, "دریافت گزارش لیدها انجام نشد"),
+      )),
+    );
+  }
+
+  exportFilteredLeadsReport(filters: LeadsReportFilters): Observable<Blob> {
+    const { pageNumber: _pageNumber, pageSize: _pageSize, ...exportFilters } = filters;
+    return this.exportCsvReport("leads/export", exportFilters);
   }
 
   getDailyReservationsReport(
