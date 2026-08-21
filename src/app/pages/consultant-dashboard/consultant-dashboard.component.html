@@ -785,18 +785,14 @@
 
           <form class="lead-filters patient-filters" (ngSubmit)="applyPatientFilters()">
             <label>
-              وضعیت
-              <select
-                [(ngModel)]="patientStateFilter"
+              جستجو
+              <input
+                type="search"
+                [(ngModel)]="patientSearchTerm"
                 [ngModelOptions]="ngModelBlurOptions"
-                name="consultantPatientState"
-              >
-                <option [ngValue]="null">همه</option>
-                <option [ngValue]="2">تخصیص داده شده</option>
-                <option [ngValue]="3">تماس برقرار شد</option>
-                <option [ngValue]="5">تبدیل شده</option>
-                <option [ngValue]="7">رد شده</option>
-              </select>
+                name="consultantPatientSearch"
+                placeholder="نام، موبایل، شهر یا توضیحات"
+              />
             </label>
             <button
               class="primary-action compact"
@@ -1079,18 +1075,76 @@
               </select>
             </label>
             <label>
-              نوع
-              <select
-                [(ngModel)]="reportEditTypeFilter"
+              شماره تلفن
+              <input
+                type="tel"
+                inputmode="tel"
+                [(ngModel)]="reportEditPhoneFilter"
                 [ngModelOptions]="ngModelBlurOptions"
-                name="reportEditType"
-              >
-                <option [ngValue]="null">همه</option>
-                <option [ngValue]="1">آنی</option>
-                <option [ngValue]="2">صف آفلاین</option>
-                <option [ngValue]="3">بیمار مشاور</option>
-              </select>
+                name="reportEditPhone"
+                placeholder="شماره اصلی یا شماره دوم"
+              />
             </label>
+            <button
+              class="lead-date-filter-trigger"
+              type="button"
+              (click)="reportEditDateFilterDialog.showModal()"
+            >
+              <span class="lead-date-filter-icon" aria-hidden="true">◫</span>
+              <span>
+                <strong>{{ reportEditDateFilterLabel() }}</strong>
+                <small>از تاریخ تا تاریخ</small>
+              </span>
+              <span class="lead-date-filter-chevron" aria-hidden="true">‹</span>
+            </button>
+            <dialog
+              #reportEditDateFilterDialog
+              class="lead-date-filter-dialog"
+              dir="rtl"
+              aria-labelledby="report-edit-date-filter-title"
+            >
+              <div class="lead-date-filter-panel">
+                <header>
+                  <div>
+                    <strong id="report-edit-date-filter-title">انتخاب بازه تاریخ</strong>
+                    <small>تاریخ شروع و پایان گزارش‌ها را انتخاب کنید.</small>
+                  </div>
+                  <div class="lead-date-filter-actions">
+                    @if (reportEditFromDate || reportEditToDate) {
+                      <button type="button" (click)="clearReportEditDateFilters()">
+                        پاک کردن
+                      </button>
+                    }
+                    <button
+                      class="lead-date-filter-close"
+                      type="button"
+                      aria-label="بستن فیلتر تاریخ"
+                      (click)="reportEditDateFilterDialog.close()"
+                    >
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </div>
+                </header>
+                <div class="lead-date-range-grid">
+                  <app-base-datepicker
+                    [compact]="true"
+                    [label]="reportEditFromDatePickerLabel"
+                    [selectedDate]="reportEditFromDate ?? undefined"
+                    [maxDate]="reportEditToDate ?? undefined"
+                    [unrestrictedDates]="true"
+                    (dateChange)="setReportEditFromDate($event)"
+                  ></app-base-datepicker>
+                  <app-base-datepicker
+                    [compact]="true"
+                    [label]="reportEditToDatePickerLabel"
+                    [selectedDate]="reportEditToDate ?? undefined"
+                    [minDate]="reportEditFromDate ?? undefined"
+                    [unrestrictedDates]="true"
+                    (dateChange)="setReportEditToDate($event)"
+                  ></app-base-datepicker>
+                </div>
+              </div>
+            </dialog>
             <button
               class="primary-action compact"
               type="submit"

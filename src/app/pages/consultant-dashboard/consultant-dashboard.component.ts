@@ -249,8 +249,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reportEditLeads: ConsultantLead[] = [];
   reportEditLeadsLoading = false;
   reportEditSearchTerm = "";
+  reportEditPhoneFilter = "";
   reportEditStateFilter: number | null = null;
-  reportEditTypeFilter: number | null = null;
+  reportEditFromDate: Date | null = null;
+  reportEditToDate: Date | null = null;
+  readonly reportEditFromDatePickerLabel = { fa: "از تاریخ", en: "From date" };
+  readonly reportEditToDatePickerLabel = { fa: "تا تاریخ", en: "To date" };
   reportEditPageNumber = 1;
   reportEditPageSize = 25;
   reportEditTotalPages = 1;
@@ -261,7 +265,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   patientLeads: ConsultantLead[] = [];
   patientLeadsLoading = false;
-  patientStateFilter: number | null = null;
+  patientSearchTerm = "";
   patientPageNumber = 1;
   patientPageSize = 10;
   patientTotalPages = 1;
@@ -1393,7 +1397,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.consultantApi
       .getLeads({
         profileId,
-        leadAssignmentState: this.patientStateFilter,
+        ...(this.patientSearchTerm.trim()
+          ? { searchText: this.patientSearchTerm.trim() }
+          : {}),
         leadAssignmentType: LEAD_TYPE.ConsultantPatient,
         pageNumber: this.patientPageNumber,
         pageSize: this.patientPageSize,
@@ -1676,6 +1682,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.selectedLead = null;
     this.reportEditOriginalSecondaryPhone = null;
     this.suppressLeadCardActionsUntil = Date.now() + 500;
+    this.markViewDirty();
 
     if (
       releaseReportLock &&
@@ -1939,7 +1946,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.updateLeadInCollections(leadAssignmentId, reportPatch);
           this.releaseLeadReportSession(leadAssignmentId);
           this.applyConsultantStatusFrom(response, response.data);
-          this.closeReportDialog({ releaseReportLock: true });
+          this.closeReportDialog({ releaseReportLock: true, force: true });
           this.showFeedback("گزارش ویرایش شد", "success");
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
@@ -2256,7 +2263,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const reservation =
             this.extractReservation(response.data) ??
             this.extractReservation(response);
-          if (leadAssignmentId) this.reservedLeadIds.add(leadAssignmentId);
+          if (leadAssignmentId) {
+            this.reservedLeadIds.add(leadAssignmentId);
+            this.updateLeadInCollections(leadAssignmentId, {
+              hasActiveReservation: true,
+              HasActiveReservation: true,
+            });
+          }
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           const shouldOpenPatientProfile =
@@ -2467,7 +2480,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   leadId(lead: ConsultantLead): number | null {
     const value =
-      lead.id ?? lead.Id ?? lead.leadAssignmentId ?? lead.LeadAssignmentId;
+      lead.leadAssignmentId ?? lead.LeadAssignmentId ?? lead.id ?? lead.Id;
     const numeric = this.numberOrNull(value);
     return numeric && numeric > 0 ? numeric : null;
   }
@@ -2749,8 +2762,41 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   applyReportEditFilters(): void {
+    if (
+      this.reportEditFromDate &&
+      this.reportEditToDate &&
+      this.startOfDay(this.reportEditFromDate).getTime() >
+        this.startOfDay(this.reportEditToDate).getTime()
+    ) {
+      this.showFeedback("تاریخ شروع نباید بعد از تاریخ پایان باشد", "error");
+      return;
+    }
     this.reportEditPageNumber = 1;
     this.loadReportEditLeads();
+  }
+
+  setReportEditFromDate(date: Date): void {
+    this.reportEditFromDate = date;
+    this.markViewDirty();
+  }
+
+  setReportEditToDate(date: Date): void {
+    this.reportEditToDate = date;
+    this.markViewDirty();
+  }
+
+  clearReportEditDateFilters(): void {
+    this.reportEditFromDate = null;
+    this.reportEditToDate = null;
+    this.markViewDirty();
+  }
+
+  reportEditDateFilterLabel(): string {
+    if (this.reportEditFromDate && this.reportEditToDate)
+      return "بازه تاریخ انتخاب شده";
+    if (this.reportEditFromDate || this.reportEditToDate)
+      return "یک تاریخ انتخاب شده";
+    return "فیلتر تاریخ";
   }
 
   leadCallResult(lead: ConsultantLead): number | null {
@@ -3167,11 +3213,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .getLeads({
         profileId,
         hasSubmittedReport: true,
+        phoneNumber: this.trimmedFilter(this.reportEditPhoneFilter),
+        from: this.formatFilterDate(this.reportEditFromDate),
+        to: this.formatFilterDate(
+          this.reportEditToDate ?? this.reportEditFromDate,
+        ),
         ...(this.reportEditStateFilter !== null
           ? { leadAssignmentState: this.reportEditStateFilter }
-          : {}),
-        ...(this.reportEditTypeFilter !== null
-          ? { leadAssignmentType: this.reportEditTypeFilter }
           : {}),
         pageNumber: this.reportEditPageNumber,
         pageSize: this.reportEditPageSize,
@@ -3671,6 +3719,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId || this.isReservationDisabled(lead)) {
+      this.showFeedback(
+        this.reservationDisabledReason(lead) ?? "امکان رزرو وجود ندارد",
+        "error",
+      );
+      return;
+    }
     const minimumReservationAt = this.minimumReservationDateTime();
     const reservationSecondaryPhone =
       secondaryPhoneNumber.trim() ||
