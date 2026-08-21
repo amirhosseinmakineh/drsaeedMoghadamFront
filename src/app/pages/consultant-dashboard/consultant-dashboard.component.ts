@@ -352,6 +352,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   private reservationRequestId = 0;
   private visibleLeadLoadingRequestId = 0;
   private leadLoadSubscription: Subscription | null = null;
+  private newLeadsRequestInFlight = false;
+  private pendingNewLeadsLoad = false;
+  private pendingNewLeadsLoadIsQuiet = true;
+  private readonly pendingNewLeadsLoadCallbacks: Array<() => void> = [];
   private reservationLoadSubscription: Subscription | null = null;
   private dashboardStatusSubscription: Subscription | null = null;
   private routeQueryParamsSubscription: Subscription | null = null;
@@ -1166,39 +1170,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           },
         });
 
-      const requestId = ++this.leadRequestId;
-      this.consultantApi
-        .getNewLeads({
-          profileId,
-          leadAssignmentState: this.effectiveLeadStateFilter(),
-          leadAssignmentType: this.leadTypeFilter,
-          pageNumber: this.leadPageNumber,
-          pageSize: this.leadPageSize,
-        })
-        .pipe(finalize(() => this.markViewDirty()))
-        .subscribe({
-          next: (response) => {
-            if (requestId !== this.leadRequestId) return;
-            this.applyConsultantStatusFrom(response.source, response.raw);
-            const items = (response.items ?? []).filter(
-              (lead) => this.leadType(lead) !== LEAD_TYPE.ConsultantPatient,
-            );
-            this.commitLeadsFromApi(items);
-            this.leadTotalCount = response.totalCount ?? this.leads.length;
-            this.leadTotalPages = Math.max(
-              1,
-              response.totalPages ||
-                Math.ceil(this.leadTotalCount / this.leadPageSize),
-            );
-            this.hydrateRealtimeTimers();
-            leadsLoaded = true;
-            maybeFinish();
-          },
-          error: () => {
-            leadsLoaded = true;
-            maybeFinish();
-          },
-        });
+      this.loadLeads(false, () => {
+        leadsLoaded = true;
+        maybeFinish();
+      });
     });
   }
 
@@ -3123,14 +3098,24 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.syncRealtimeLeadPolling();
   }
 
-  private loadLeads(quiet = false): void {
+  private loadLeads(quiet = false, afterLoad?: () => void): void {
     const profileId = this.currentProfileId();
-    if (!profileId) return;
-    if (quiet && this.leadLoadSubscription && !this.leadLoadSubscription.closed)
+    if (!profileId || this.destroyed) {
+      afterLoad?.();
       return;
+    }
+
+    if (this.newLeadsRequestInFlight) {
+      this.pendingNewLeadsLoad = true;
+      // Any visible refresh upgrades the queued quiet polling refresh.
+      this.pendingNewLeadsLoadIsQuiet =
+        this.pendingNewLeadsLoadIsQuiet && quiet;
+      if (afterLoad) this.pendingNewLeadsLoadCallbacks.push(afterLoad);
+      return;
+    }
 
     const requestId = ++this.leadRequestId;
-    this.leadLoadSubscription?.unsubscribe();
+    this.newLeadsRequestInFlight = true;
 
     if (!quiet) {
       this.visibleLeadLoadingRequestId = requestId;
@@ -3154,9 +3139,21 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       })
       .pipe(
         finalize(() => {
+          this.newLeadsRequestInFlight = false;
           if (!quiet && requestId === this.visibleLeadLoadingRequestId)
             this.leadsLoading = false;
           this.markViewDirty();
+
+          afterLoad?.();
+          if (this.destroyed || !this.pendingNewLeadsLoad) return;
+
+          const nextLoadIsQuiet = this.pendingNewLeadsLoadIsQuiet;
+          const callbacks = this.pendingNewLeadsLoadCallbacks.splice(0);
+          this.pendingNewLeadsLoad = false;
+          this.pendingNewLeadsLoadIsQuiet = true;
+          this.loadLeads(nextLoadIsQuiet, () => {
+            callbacks.forEach((callback) => callback());
+          });
         }),
       )
       .subscribe({
