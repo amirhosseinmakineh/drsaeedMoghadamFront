@@ -261,7 +261,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   patientLeads: ConsultantLead[] = [];
   patientLeadsLoading = false;
-  patientStateFilter: number | null = null;
+  patientSearchTerm = "";
   patientPageNumber = 1;
   patientPageSize = 10;
   patientTotalPages = 1;
@@ -1393,7 +1393,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.consultantApi
       .getLeads({
         profileId,
-        leadAssignmentState: this.patientStateFilter,
+        ...(this.patientSearchTerm.trim()
+          ? { searchText: this.patientSearchTerm.trim() }
+          : {}),
         leadAssignmentType: LEAD_TYPE.ConsultantPatient,
         pageNumber: this.patientPageNumber,
         pageSize: this.patientPageSize,
@@ -1676,6 +1678,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.selectedLead = null;
     this.reportEditOriginalSecondaryPhone = null;
     this.suppressLeadCardActionsUntil = Date.now() + 500;
+    this.markViewDirty();
 
     if (
       releaseReportLock &&
@@ -1939,7 +1942,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.updateLeadInCollections(leadAssignmentId, reportPatch);
           this.releaseLeadReportSession(leadAssignmentId);
           this.applyConsultantStatusFrom(response, response.data);
-          this.closeReportDialog({ releaseReportLock: true });
+          this.closeReportDialog({ releaseReportLock: true, force: true });
           this.showFeedback("گزارش ویرایش شد", "success");
           if (this.activeSection === "report-edits") {
             this.loadReportEditLeads();
@@ -2256,7 +2259,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           const reservation =
             this.extractReservation(response.data) ??
             this.extractReservation(response);
-          if (leadAssignmentId) this.reservedLeadIds.add(leadAssignmentId);
+          if (leadAssignmentId) {
+            this.reservedLeadIds.add(leadAssignmentId);
+            this.updateLeadInCollections(leadAssignmentId, {
+              hasActiveReservation: true,
+              HasActiveReservation: true,
+            });
+          }
           this.reservationDialogOpen = false;
           this.selectedReservationLead = null;
           const shouldOpenPatientProfile =
@@ -2467,7 +2476,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   leadId(lead: ConsultantLead): number | null {
     const value =
-      lead.id ?? lead.Id ?? lead.leadAssignmentId ?? lead.LeadAssignmentId;
+      lead.leadAssignmentId ?? lead.LeadAssignmentId ?? lead.id ?? lead.Id;
     const numeric = this.numberOrNull(value);
     return numeric && numeric > 0 ? numeric : null;
   }
@@ -3671,6 +3680,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     const leadAssignmentId = this.leadId(lead);
+    if (!leadAssignmentId || this.isReservationDisabled(lead)) {
+      this.showFeedback(
+        this.reservationDisabledReason(lead) ?? "امکان رزرو وجود ندارد",
+        "error",
+      );
+      return;
+    }
     const minimumReservationAt = this.minimumReservationDateTime();
     const reservationSecondaryPhone =
       secondaryPhoneNumber.trim() ||
