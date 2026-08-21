@@ -513,7 +513,7 @@
             </header>
 
 
-            <form class="lead-filters" (ngSubmit)="applyLeadFilters()">
+            <form class="lead-filters">
               <label class="quick-search-field">
                 جست‌وجوی سریع
                 <input
@@ -521,49 +521,91 @@
                   name="consultantLeadSearch"
                   type="search"
                   placeholder="نام، شماره اصلی یا شماره دوم"
-                  (ngModelChange)="onLeadSearchChange()"
+                  (ngModelChange)="onLeadFilterChange()"
                 />
               </label>
               <label>
                 نام لید
-                <input [(ngModel)]="leadNameFilter" name="consultantLeadName" />
+                <input
+                  [(ngModel)]="leadNameFilter"
+                  name="consultantLeadName"
+                  (ngModelChange)="onLeadFilterChange()"
+                />
               </label>
               <label>
                 شماره تلفن
-                <input [(ngModel)]="leadPhoneFilter" name="consultantLeadPhone" inputmode="tel" />
+                <input
+                  [(ngModel)]="leadPhoneFilter"
+                  name="consultantLeadPhone"
+                  inputmode="tel"
+                  (ngModelChange)="onLeadFilterChange()"
+                />
               </label>
               <label>
                 شهر
-                <input [(ngModel)]="leadCityFilter" name="consultantLeadCity" />
+                <input
+                  [(ngModel)]="leadCityFilter"
+                  name="consultantLeadCity"
+                  (ngModelChange)="onLeadFilterChange()"
+                />
               </label>
-              <label>
-                از تاریخ
-                <app-base-datepicker
-                  [compact]="true"
-                  [label]="leadFromDatePickerLabel"
-                  [selectedDate]="leadFromDate ?? undefined"
-                  [maxDate]="leadToDate ?? undefined"
-                  [unrestrictedDates]="true"
-                  (dateChange)="setLeadFromDate($event)"
-                ></app-base-datepicker>
-              </label>
-              <label>
-                تا تاریخ
-                <app-base-datepicker
-                  [compact]="true"
-                  [label]="leadToDatePickerLabel"
-                  [selectedDate]="leadToDate ?? undefined"
-                  [minDate]="leadFromDate ?? undefined"
-                  [unrestrictedDates]="true"
-                  (dateChange)="setLeadToDate($event)"
-                ></app-base-datepicker>
-              </label>
+              <details #leadDateFilterMenu class="lead-date-filter-menu">
+                <summary>
+                  <span class="lead-date-filter-icon" aria-hidden="true">◫</span>
+                  <span>
+                    <strong>{{ leadDateFilterLabel() }}</strong>
+                    <small>از تاریخ تا تاریخ</small>
+                  </span>
+                  <span class="lead-date-filter-chevron" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="lead-date-filter-panel">
+                  <header>
+                    <div>
+                      <strong>انتخاب بازه تاریخ</strong>
+                      <small>تاریخ شروع و پایان لیدها را انتخاب کنید.</small>
+                    </div>
+                    <div class="lead-date-filter-actions">
+                      @if (leadFromDate || leadToDate) {
+                        <button type="button" (click)="clearLeadDateFilters()">
+                          پاک کردن
+                        </button>
+                      }
+                      <button
+                        class="lead-date-filter-close"
+                        type="button"
+                        aria-label="بستن فیلتر تاریخ"
+                        (click)="leadDateFilterMenu.open = false"
+                      >
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    </div>
+                  </header>
+                  <div class="lead-date-range-grid">
+                    <app-base-datepicker
+                      [compact]="true"
+                      [label]="leadFromDatePickerLabel"
+                      [selectedDate]="leadFromDate ?? undefined"
+                      [maxDate]="leadToDate ?? undefined"
+                      [unrestrictedDates]="true"
+                      (dateChange)="setLeadFromDate($event)"
+                    ></app-base-datepicker>
+                    <app-base-datepicker
+                      [compact]="true"
+                      [label]="leadToDatePickerLabel"
+                      [selectedDate]="leadToDate ?? undefined"
+                      [minDate]="leadFromDate ?? undefined"
+                      [unrestrictedDates]="true"
+                      (dateChange)="setLeadToDate($event)"
+                    ></app-base-datepicker>
+                  </div>
+                </div>
+              </details>
               <label>
                 وضعیت
                 <select
                   [(ngModel)]="leadStateFilter"
-                  [ngModelOptions]="ngModelBlurOptions"
                   name="consultantLeadState"
+                  (ngModelChange)="onLeadFilterChange(true)"
                 >
                   <option [ngValue]="null">همه</option>
                   <option [ngValue]="1">جدید</option>
@@ -576,20 +618,13 @@
                 نوع
                 <select
                   [(ngModel)]="leadTypeFilter"
-                  [ngModelOptions]="ngModelBlurOptions"
                   name="consultantLeadType"
+                  (ngModelChange)="onLeadFilterChange(true)"
                 >
                   <option [ngValue]="null">همه</option>
                   <option [ngValue]="1">آنی</option>
                 </select>
               </label>
-              <button
-                class="primary-action compact"
-                type="submit"
-                [disabled]="leadsLoading"
-              >
-                {{ leadsLoading ? "در حال اعمال..." : "اعمال" }}
-              </button>
             </form>
 
             @if (leadsLoading) {
