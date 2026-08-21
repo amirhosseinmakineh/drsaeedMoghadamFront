@@ -249,8 +249,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reportEditLeads: ConsultantLead[] = [];
   reportEditLeadsLoading = false;
   reportEditSearchTerm = "";
+  reportEditPhoneFilter = "";
   reportEditStateFilter: number | null = null;
-  reportEditTypeFilter: number | null = null;
+  reportEditFromDate: Date | null = null;
+  reportEditToDate: Date | null = null;
+  readonly reportEditFromDatePickerLabel = { fa: "از تاریخ", en: "From date" };
+  readonly reportEditToDatePickerLabel = { fa: "تا تاریخ", en: "To date" };
   reportEditPageNumber = 1;
   reportEditPageSize = 25;
   reportEditTotalPages = 1;
@@ -2758,8 +2762,41 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   applyReportEditFilters(): void {
+    if (
+      this.reportEditFromDate &&
+      this.reportEditToDate &&
+      this.startOfDay(this.reportEditFromDate).getTime() >
+        this.startOfDay(this.reportEditToDate).getTime()
+    ) {
+      this.showFeedback("تاریخ شروع نباید بعد از تاریخ پایان باشد", "error");
+      return;
+    }
     this.reportEditPageNumber = 1;
     this.loadReportEditLeads();
+  }
+
+  setReportEditFromDate(date: Date): void {
+    this.reportEditFromDate = date;
+    this.markViewDirty();
+  }
+
+  setReportEditToDate(date: Date): void {
+    this.reportEditToDate = date;
+    this.markViewDirty();
+  }
+
+  clearReportEditDateFilters(): void {
+    this.reportEditFromDate = null;
+    this.reportEditToDate = null;
+    this.markViewDirty();
+  }
+
+  reportEditDateFilterLabel(): string {
+    if (this.reportEditFromDate && this.reportEditToDate)
+      return "بازه تاریخ انتخاب شده";
+    if (this.reportEditFromDate || this.reportEditToDate)
+      return "یک تاریخ انتخاب شده";
+    return "فیلتر تاریخ";
   }
 
   leadCallResult(lead: ConsultantLead): number | null {
@@ -3176,11 +3213,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .getLeads({
         profileId,
         hasSubmittedReport: true,
+        phoneNumber: this.trimmedFilter(this.reportEditPhoneFilter),
+        from: this.formatFilterDate(this.reportEditFromDate),
+        to: this.formatFilterDate(
+          this.reportEditToDate ?? this.reportEditFromDate,
+        ),
         ...(this.reportEditStateFilter !== null
           ? { leadAssignmentState: this.reportEditStateFilter }
-          : {}),
-        ...(this.reportEditTypeFilter !== null
-          ? { leadAssignmentType: this.reportEditTypeFilter }
           : {}),
         pageNumber: this.reportEditPageNumber,
         pageSize: this.reportEditPageSize,
