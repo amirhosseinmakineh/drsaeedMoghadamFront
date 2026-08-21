@@ -785,18 +785,14 @@
 
           <form class="lead-filters patient-filters" (ngSubmit)="applyPatientFilters()">
             <label>
-              وضعیت
-              <select
-                [(ngModel)]="patientStateFilter"
+              جستجو
+              <input
+                type="search"
+                [(ngModel)]="patientSearchTerm"
                 [ngModelOptions]="ngModelBlurOptions"
-                name="consultantPatientState"
-              >
-                <option [ngValue]="null">همه</option>
-                <option [ngValue]="2">تخصیص داده شده</option>
-                <option [ngValue]="3">تماس برقرار شد</option>
-                <option [ngValue]="5">تبدیل شده</option>
-                <option [ngValue]="7">رد شده</option>
-              </select>
+                name="consultantPatientSearch"
+                placeholder="نام، موبایل، شهر یا توضیحات"
+              />
             </label>
             <button
               class="primary-action compact"
