@@ -573,6 +573,29 @@ export class ConsultantDashboardService {
       );
   }
 
+  getNewLeads(
+    filters: LeadFilters,
+  ): Observable<PaginatedResponse<ConsultantLead>> {
+    const { hasSubmittedReport: _hasSubmittedReport, ...newLeadFilters } =
+      filters;
+
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetNewLeads`, {
+        headers: this.authHeaders(),
+        params: this.toParams(newLeadFilters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<ConsultantLead>(response, filters),
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت لیدهای جدید انجام نشد"),
+          ),
+        ),
+      );
+  }
+
   createConsultantPatientLead(
     payload: AddPatientLeadRequest,
   ): Observable<ApiCommandResponse<AddPatientLeadResponse>> {

@@ -1164,7 +1164,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
       const requestId = ++this.leadRequestId;
       this.consultantApi
-        .getLeads({
+        .getNewLeads({
           profileId,
           leadAssignmentState: this.effectiveLeadStateFilter(),
           leadAssignmentType: this.leadTypeFilter,
@@ -3102,7 +3102,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (!quiet) this.clearFeedback();
 
     this.leadLoadSubscription = this.consultantApi
-      .getLeads({
+      .getNewLeads({
         profileId,
         searchText: this.trimmedFilter(this.leadSearchText),
         userName: this.trimmedFilter(this.leadNameFilter),
