@@ -1201,11 +1201,25 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   setLeadFromDate(date: Date): void {
     this.leadFromDate = date;
     this.markViewDirty();
+    this.onLeadFilterChange(true);
   }
 
   setLeadToDate(date: Date): void {
     this.leadToDate = date;
     this.markViewDirty();
+    this.onLeadFilterChange(true);
+  }
+
+  clearLeadDateFilters(): void {
+    this.leadFromDate = null;
+    this.leadToDate = null;
+    this.onLeadFilterChange(true);
+  }
+
+  leadDateFilterLabel(): string {
+    if (this.leadFromDate && this.leadToDate) return "بازه تاریخ انتخاب شده";
+    if (this.leadFromDate || this.leadToDate) return "یک تاریخ انتخاب شده";
+    return "فیلتر تاریخ";
   }
 
   applyLeadFilters(): void {
@@ -1219,11 +1233,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.loadLeads();
   }
 
-  onLeadSearchChange(): void {
+  onLeadFilterChange(immediate = false): void {
     if (this.leadSearchDebounceId) clearTimeout(this.leadSearchDebounceId);
+    if (immediate) {
+      this.applyLeadFilters();
+      return;
+    }
     this.leadSearchDebounceId = setTimeout(() => {
-      this.leadPageNumber = 1;
-      this.loadLeads();
+      this.applyLeadFilters();
     }, 400);
   }
 

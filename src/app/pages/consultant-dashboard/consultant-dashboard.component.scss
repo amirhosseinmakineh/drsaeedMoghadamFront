@@ -461,7 +461,7 @@ input[readonly] {
 }
 @media (min-width: 1400px) {
   .lead-filters {
-    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    grid-template-columns: repeat(5, minmax(150px, 1fr));
   }
 }
 @media (min-width: 981px) and (max-width: 1399px) {
@@ -498,6 +498,116 @@ input[readonly] {
 .lead-filters > .primary-action {
   min-height: 44px;
   border-radius: 16px;
+}
+.lead-date-filter-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  min-width: 0;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-muted);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  text-align: right;
+}
+.lead-date-filter-trigger > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+  gap: 1px;
+}
+.lead-date-filter-trigger small,
+.lead-date-filter-panel small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+.lead-date-filter-icon {
+  display: grid;
+  flex: 0 0 32px;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand) 14%, transparent);
+  color: var(--brand);
+}
+.lead-date-filter-chevron {
+  color: var(--muted);
+  font-size: 1.2rem;
+}
+.lead-date-filter-dialog {
+  width: min(620px, calc(100vw - 40px));
+  max-width: none;
+  max-height: calc(100dvh - 40px);
+  margin: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 22px;
+  background: transparent;
+  color: var(--text);
+}
+.lead-date-filter-dialog::backdrop {
+  background: rgba(32, 24, 16, 0.5);
+  backdrop-filter: blur(3px);
+}
+.lead-date-filter-panel {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: visible;
+}
+.lead-date-filter-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lead-date-filter-panel > header > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+.lead-date-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lead-date-filter-actions > button {
+  padding: 7px 10px;
+  color: var(--danger);
+  font: inherit;
+  font-size: 0.76rem;
+}
+.lead-date-filter-actions > .lead-date-filter-close {
+  display: grid;
+  flex: 0 0 38px;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--text);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.lead-date-range-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-muted);
 }
 
 .dental-services-field {
@@ -841,6 +951,21 @@ input[readonly] {
   }
 }
 @media (max-width: 560px) {
+  .lead-date-filter-dialog {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow: visible;
+  }
+  .lead-date-filter-panel {
+    max-height: calc(100dvh - 24px);
+    overflow: visible;
+  }
+  .lead-date-filter-panel > header {
+    align-items: flex-start;
+  }
+  .lead-date-range-grid {
+    grid-template-columns: 1fr;
+  }
   .form-section {
     padding: 12px;
     border-radius: 18px;
