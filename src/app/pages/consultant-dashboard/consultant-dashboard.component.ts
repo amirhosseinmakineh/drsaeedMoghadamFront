@@ -36,6 +36,7 @@ import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.c
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ConsultantReservationsPanelComponent } from "./consultant-reservations-panel.component";
+import { ConsultantFollowUpsComponent } from "./consultant-follow-ups.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
@@ -146,7 +147,8 @@ type ConsultantDashboardSection =
   | "report-edits"
   | "patients"
   | "patient-profiles"
-  | "reservations";
+  | "reservations"
+  | "follow-ups";
 
 type ReportDialogMode = "create" | "edit";
 type ReservationDialogMode = "create" | "edit";
@@ -168,6 +170,7 @@ interface ConsultantDashboardLink {
     BaseDatepickerComponent,
     FaIconComponent,
     ConsultantReservationsPanelComponent,
+    ConsultantFollowUpsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./consultant-dashboard.component.html",
@@ -186,6 +189,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     { id: "patients", label: "بیماران", icon: "doctor" },
     { id: "patient-profiles", label: "پرونده‌ها", icon: "clipboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
+    { id: "follow-ups", label: "پیگیری‌های منشی", icon: "clipboard" },
   ];
 
   readonly displayName = computed(() => {
@@ -657,7 +661,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         section === "report-edits" ||
         section === "patients" ||
         section === "patient-profiles" ||
-        section === "reservations") &&
+        section === "reservations" ||
+        section === "follow-ups") &&
       !this.isProfileReady()
     ) {
       return "profile";
@@ -1257,6 +1262,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         "patients",
         "patient-profiles",
         "reservations",
+        "follow-ups",
       ].includes(section)
     ) {
       this.activateSectionFromRoute(section);
