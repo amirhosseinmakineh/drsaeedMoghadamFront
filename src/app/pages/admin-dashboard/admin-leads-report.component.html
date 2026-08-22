@@ -1,0 +1,57 @@
+<section class="leads-report" aria-labelledby="leads-report-title">
+  <header class="panel-heading">
+    <div><span>گزارش‌های مدیریتی</span><h2 id="leads-report-title">گزارش لیدهای سیستم</h2><p>آمار و جزئیات لیدها را بر اساس فیلترهای انتخابی مشاهده یا به‌صورت اکسل دریافت کنید.</p></div>
+    <button class="export-button" type="button" (click)="download()" [disabled]="downloading">
+      <span class="button-icon" aria-hidden="true">⇩</span>{{ downloading ? "در حال آماده‌سازی..." : "خروجی اکسل" }}
+    </button>
+  </header>
+
+  <form class="filters" (ngSubmit)="applyFilters()">
+    <div class="date-filter"><app-base-datepicker [label]="fromDateLabel" [selectedDate]="fromDate" [unrestrictedDates]="true" [compact]="true" (dateChange)="setFromDate($event)"></app-base-datepicker></div>
+    <div class="date-filter"><app-base-datepicker [label]="toDateLabel" [selectedDate]="toDate" [unrestrictedDates]="true" [compact]="true" (dateChange)="setToDate($event)"></app-base-datepicker></div>
+    <label>مشاور<select [(ngModel)]="filters.consultantProfileId" name="consultant" [disabled]="loading"><option [ngValue]="undefined">همه مشاوران</option><option *ngFor="let item of consultants" [ngValue]="consultantId(item)">{{ consultantName(item) }}</option></select></label>
+    <label>وضعیت لید<select [(ngModel)]="filters.leadAssignmentState" name="state" [disabled]="loading"><option [ngValue]="undefined">همه</option><option *ngFor="let item of assignmentStates" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
+    <label>نوع تخصیص<select [(ngModel)]="filters.assignmentType" name="type" [disabled]="loading"><option [ngValue]="undefined">همه</option><option *ngFor="let item of assignmentTypes" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
+    <label>نتیجه تماس<select [(ngModel)]="filters.callResult" name="result" [disabled]="loading"><option [ngValue]="undefined">همه</option><option *ngFor="let item of callResults" [ngValue]="item[0]">{{ item[1] }}</option></select></label>
+    <label>تخصیص<select [(ngModel)]="filters.isAssigned" name="assigned" [disabled]="loading"><option [ngValue]="undefined">همه</option><option [ngValue]="true">تخصیص داده شده</option><option [ngValue]="false">تخصیص داده نشده</option></select></label>
+    <label>تماس<select [(ngModel)]="filters.hasCalled" name="called" [disabled]="loading"><option [ngValue]="undefined">همه</option><option [ngValue]="true">تماس گرفته شده</option><option [ngValue]="false">تماس گرفته نشده</option></select></label>
+    <label>گزارش مشاور<select [(ngModel)]="filters.hasSubmittedReport" name="submitted" [disabled]="loading"><option [ngValue]="undefined">همه</option><option [ngValue]="true">دارای گزارش</option><option [ngValue]="false">بدون گزارش</option></select></label>
+    <div class="filter-actions"><button class="apply-button" type="submit" [disabled]="loading">{{ loading ? "در حال دریافت..." : "نمایش گزارش" }}</button><button class="reset-button" type="button" (click)="resetFilters()" [disabled]="loading">پاک کردن فیلترها</button></div>
+  </form>
+
+  @if (report?.summary; as summary) {
+    <div class="summary-grid">
+      <article><strong>{{ summary.total }}</strong><span>کل لیدها</span></article>
+      <article><strong>{{ summary.assigned }}</strong><span>تخصیص یافته</span></article>
+      <article><strong>{{ summary.unassigned }}</strong><span>بدون تخصیص</span></article>
+      <article><strong>{{ summary.called }}</strong><span>تماس گرفته شده</span></article>
+      <article><strong>{{ summary.notCalled }}</strong><span>بدون تماس</span></article>
+      <article><strong>{{ summary.converted }}</strong><span>تبدیل شده</span></article>
+      <article><strong>{{ summary.withSubmittedReport }}</strong><span>دارای گزارش</span></article>
+    </div>
+  }
+
+  @if (errorMessage) { <p class="feedback error">{{ errorMessage }}</p> }
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>لید</th><th>مشاور</th><th>وضعیت</th><th>تماس و گزارش</th><th>اطلاعات تکمیلی</th><th>تاریخ ایجاد</th></tr></thead>
+      <tbody>
+        @if (loading) { <tr><td colspan="6" class="empty">در حال دریافت گزارش...</td></tr> }
+        @for (item of report?.items || []; track item.leadId) {
+          <tr>
+            <td><strong>{{ item.leadName || "-" }}</strong><small>{{ item.leadPhoneNumber }}</small><small *ngIf="item.secondaryPhoneNumber">شماره دوم: {{ item.secondaryPhoneNumber }}</small></td>
+            <td><strong>{{ item.consultantFullName || "تخصیص داده نشده" }}</strong><small>{{ item.consultantPhoneNumber || "-" }}</small><small>{{ item.assignmentTypeTitle || "-" }}</small></td>
+            <td><span class="badge" [class.success]="item.leadAssignmentState === 5">{{ item.leadAssignmentStateTitle }}</span><small>{{ item.assignedAtPersian || "-" }}</small></td>
+            <td><strong>{{ item.hasCalled ? (item.callResultTitle || "تماس گرفته شده") : "تماس گرفته نشده" }}</strong><small>{{ item.contactedAtPersian || "-" }}</small><p>{{ item.reportDescription || "بدون گزارش" }}</p></td>
+            <td><strong>{{ item.businessName || "-" }}</strong><small>{{ item.patientCity || "-" }} {{ item.patientRegion || "" }}</small><small>احتمال حضور: {{ item.attendanceProbabilityPercent === null ? "-" : item.attendanceProbabilityPercent + "%" }}</small></td>
+            <td>{{ item.createdAtPersian || item.createdAt }}</td>
+          </tr>
+        }
+        @if (!loading && !report?.items?.length) { <tr><td colspan="6" class="empty">لیدی مطابق فیلترها پیدا نشد.</td></tr> }
+      </tbody>
+    </table>
+  </div>
+  @if (report && report.totalPages > 1) {
+    <footer class="pagination"><button type="button" (click)="changePage(report.pageNumber - 1)" [disabled]="report.pageNumber === 1">قبلی</button><span>صفحه {{ report.pageNumber }} از {{ report.totalPages }} — {{ report.totalCount }} نتیجه</span><button type="button" (click)="changePage(report.pageNumber + 1)" [disabled]="report.pageNumber === report.totalPages">بعدی</button></footer>
+  }
+</section>

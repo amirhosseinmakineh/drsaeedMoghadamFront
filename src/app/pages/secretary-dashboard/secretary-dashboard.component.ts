@@ -20,6 +20,7 @@ import { SecretaryAccessResult, SecretaryDashboardService, SecretaryPermission }
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
 import { SecretaryReservationRequestsComponent } from "./secretary-reservation-requests.component";
+import { SecretaryReservationNotebookComponent } from "./secretary-reservation-notebook.component";
 import {
   SecretaryDashboardPreset,
   SecretaryOverviewComponent,
@@ -28,6 +29,7 @@ import {
 type SecretaryDashboardSection =
   | "overview"
   | "reservations"
+  | "notebook"
   | "reviews";
 
 interface SecretaryDashboardLink {
@@ -39,6 +41,7 @@ interface SecretaryDashboardLink {
 const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
   "reservations",
+  "notebook",
   "reviews",
 ];
 
@@ -51,6 +54,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     FaIconComponent,
     SecretaryReservationsComponent,
     SecretaryReservationRequestsComponent,
+    SecretaryReservationNotebookComponent,
     SecretaryOverviewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -65,6 +69,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   readonly dashboardLinks: SecretaryDashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
+    { id: "notebook", label: "دفترچه رزروها", icon: "clipboard" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
   ];
 
@@ -179,7 +184,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     section: SecretaryDashboardSection,
   ): SecretaryDashboardSection {
     if (section === "reviews" && !this.hasPermission("ConfirmAttendance")) return "overview";
-    if ((section === "overview" || section === "reservations") && !this.hasPermission("ViewReservations")) {
+    if ((section === "overview" || section === "reservations" || section === "notebook") && !this.hasPermission("ViewReservations")) {
       return this.hasPermission("ConfirmAttendance") ? "reviews" : "overview";
     }
 
