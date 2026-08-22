@@ -19,6 +19,7 @@ import { bindDashboardRouteHistory } from "../../shared/dashboard/dashboard-rout
 import { SecretaryAccessResult, SecretaryDashboardService, SecretaryPermission } from "../../core/secretary/secretary-dashboard.service";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
+import { SecretaryFollowUpsComponent } from "./secretary-follow-ups.component";
 import { SecretaryReservationRequestsComponent } from "./secretary-reservation-requests.component";
 import {
   SecretaryDashboardPreset,
@@ -28,7 +29,8 @@ import {
 type SecretaryDashboardSection =
   | "overview"
   | "reservations"
-  | "reviews";
+  | "reviews"
+  | "follow-ups";
 
 interface SecretaryDashboardLink {
   id: SecretaryDashboardSection;
@@ -40,6 +42,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
   "reservations",
   "reviews",
+  "follow-ups",
 ];
 
 @Component({
@@ -50,6 +53,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     RouterLink,
     FaIconComponent,
     SecretaryReservationsComponent,
+    SecretaryFollowUpsComponent,
     SecretaryReservationRequestsComponent,
     SecretaryOverviewComponent,
   ],
@@ -66,6 +70,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
+    { id: "follow-ups", label: "دفترچه پیگیری", icon: "clipboard" },
   ];
 
   readonly displayName = computed(() => {
@@ -116,6 +121,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
 
   get visibleDashboardLinks(): SecretaryDashboardLink[] {
     return this.dashboardLinks.filter((item) => {
+      if (item.id === "follow-ups") return true;
       if (item.id === "reviews") return this.hasPermission("ConfirmAttendance");
       return this.hasPermission("ViewReservations");
     });
@@ -179,6 +185,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     section: SecretaryDashboardSection,
   ): SecretaryDashboardSection {
     if (section === "reviews" && !this.hasPermission("ConfirmAttendance")) return "overview";
+    if (section === "follow-ups") return section;
     if ((section === "overview" || section === "reservations") && !this.hasPermission("ViewReservations")) {
       return this.hasPermission("ConfirmAttendance") ? "reviews" : "overview";
     }

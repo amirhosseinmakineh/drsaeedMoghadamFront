@@ -1162,6 +1162,10 @@
           ></app-consultant-reservations-panel>
         }
       }
+
+      @if (activeSection === "follow-ups" && isProfileReady()) {
+        <app-consultant-follow-ups></app-consultant-follow-ups>
+      }
     </section>
   </main>
 
