@@ -36,6 +36,7 @@ import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.c
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ConsultantReservationsPanelComponent } from "./consultant-reservations-panel.component";
+import { SecretaryFollowUpsListComponent } from "./secretary-follow-ups-list.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
@@ -146,6 +147,7 @@ type ConsultantDashboardSection =
   | "report-edits"
   | "patients"
   | "patient-profiles"
+  | "secretary-follow-ups"
   | "reservations";
 
 type ReportDialogMode = "create" | "edit";
@@ -168,6 +170,7 @@ interface ConsultantDashboardLink {
     BaseDatepickerComponent,
     FaIconComponent,
     ConsultantReservationsPanelComponent,
+    SecretaryFollowUpsListComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./consultant-dashboard.component.html",
@@ -186,6 +189,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     { id: "patients", label: "بیماران", icon: "doctor" },
     { id: "patient-profiles", label: "پرونده‌ها", icon: "clipboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
+    { id: "secretary-follow-ups", label: "پیگیری‌های منشی", icon: "clipboard" },
   ];
 
   readonly displayName = computed(() => {
@@ -657,6 +661,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         section === "report-edits" ||
         section === "patients" ||
         section === "patient-profiles" ||
+        section === "secretary-follow-ups" ||
         section === "reservations") &&
       !this.isProfileReady()
     ) {
@@ -1256,6 +1261,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         "report-edits",
         "patients",
         "patient-profiles",
+        "secretary-follow-ups",
         "reservations",
       ].includes(section)
     ) {
