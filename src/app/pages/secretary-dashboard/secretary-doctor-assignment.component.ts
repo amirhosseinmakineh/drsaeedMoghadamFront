@@ -23,9 +23,8 @@ import { BaseDatepickerComponent } from "../../shared/base";
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SecretaryDoctorAssignmentComponent implements OnDestroy {
-  reservationDate: Date | null = null;
-  fromTime = "";
-  toTime = "";
+  fromDate: Date | null = null;
+  toDate: Date | null = null;
   reservations: SecretaryReservation[] = [];
   selectedReservationId: number | null = null;
   selectedReservation: SecretaryReservation | null = null;
@@ -49,12 +48,12 @@ export class SecretaryDoctorAssignmentComponent implements OnDestroy {
   }
 
   applyFilters(): void {
-    if (!this.reservationDate || !this.fromTime || !this.toTime) {
-      this.errorMessage = "تاریخ، ساعت شروع و ساعت پایان را وارد کنید.";
+    if (!this.fromDate || !this.toDate) {
+      this.errorMessage = "تاریخ شروع و تاریخ پایان را انتخاب کنید.";
       return;
     }
-    if (this.fromTime >= this.toTime) {
-      this.errorMessage = "ساعت پایان باید بعد از ساعت شروع باشد.";
+    if (this.fromDate.getTime() > this.toDate.getTime()) {
+      this.errorMessage = "تاریخ پایان باید برابر یا بعد از تاریخ شروع باشد.";
       return;
     }
 
@@ -64,23 +63,20 @@ export class SecretaryDoctorAssignmentComponent implements OnDestroy {
     this.errorMessage = "";
     this.clearSelection();
     this.requestSubscription = this.api
-      .getReservations({
-        fromDate: this.dateParam(this.reservationDate),
-        toDate: this.dateParam(this.reservationDate),
-        fromTime: this.fromTime,
-        toTime: this.toTime,
+      .getAllReservations({
+        fromDate: this.dateParam(this.fromDate),
+        toDate: this.dateParam(this.toDate),
         includeCanceled: false,
         sortDirection: "asc",
-        pageNumber: 1,
-        pageSize: 200,
+        pageSize: 100,
       })
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.markForCheck();
       }))
       .subscribe({
-        next: (response) => {
-          this.reservations = response.items;
+        next: (reservations) => {
+          this.reservations = reservations;
         },
         error: (error: Error) => {
           this.reservations = [];

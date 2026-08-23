@@ -190,8 +190,6 @@ export interface SecretaryReservationFilters {
   consultantName?: string;
   fromDate?: string;
   toDate?: string;
-  fromTime?: string;
-  toTime?: string;
   attendanceStatus?: AttendanceConfirmationStatus | null;
   secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
   reservationStatus?: string | null;
@@ -362,6 +360,36 @@ export class SecretaryDashboardService {
           ),
         ),
       );
+  }
+
+  getAllReservations(
+    filters: Omit<SecretaryReservationFilters, "pageNumber">,
+  ): Observable<SecretaryReservation[]> {
+    const firstPageFilters: SecretaryReservationFilters = {
+      ...filters,
+      pageNumber: 1,
+    };
+
+    return this.getReservations(firstPageFilters).pipe(
+      switchMap((firstPage) => {
+        if (firstPage.totalPages <= 1) return of(firstPage.items);
+
+        const remainingPages = Array.from(
+          { length: firstPage.totalPages - 1 },
+          (_, index) => this.getReservations({
+            ...firstPageFilters,
+            pageNumber: index + 2,
+          }),
+        );
+
+        return forkJoin(remainingPages).pipe(
+          map((pages) => [
+            ...firstPage.items,
+            ...pages.flatMap((page) => page.items),
+          ]),
+        );
+      }),
+    );
   }
 
   assignDoctor(
