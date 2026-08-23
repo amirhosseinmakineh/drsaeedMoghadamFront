@@ -141,6 +141,7 @@ export interface SecretaryReservation extends ReservationDto {
   visitResultStatus?: number | null;
   initialReservationAt?: string | null;
   doctorName?: string | null;
+  DoctorName?: string | null;
   roomName?: string | null;
   lastFollowUpAt?: string | null;
   lastContactResult?: string | null;
@@ -189,6 +190,8 @@ export interface SecretaryReservationFilters {
   consultantName?: string;
   fromDate?: string;
   toDate?: string;
+  fromTime?: string;
+  toTime?: string;
   attendanceStatus?: AttendanceConfirmationStatus | null;
   secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
   reservationStatus?: string | null;
@@ -339,6 +342,39 @@ export class SecretaryDashboardService {
           ),
         ),
       );
+  }
+
+  getReservationDetails(
+    reservationId: number,
+  ): Observable<SecretaryReservation> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Reservation/${reservationId}`, {
+        headers: this.authHeaders(),
+      })
+      .pipe(
+        map((response) => {
+          const envelope = response as { data?: unknown; Data?: unknown };
+          return (envelope.data ?? envelope.Data ?? response) as SecretaryReservation;
+        }),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت جزئیات رزرو انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  assignDoctor(
+    reservationId: number,
+    doctorName: string,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .post<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Reservation/${reservationId}/assign-doctor`,
+        { doctorName },
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت نام دکتر انجام نشد"));
   }
 
   getAttendanceReviews(

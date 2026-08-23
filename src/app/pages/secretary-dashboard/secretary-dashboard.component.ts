@@ -21,6 +21,7 @@ import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
 import { SecretaryReservationRequestsComponent } from "./secretary-reservation-requests.component";
 import { SecretaryFollowUpsComponent } from "./secretary-follow-ups.component";
+import { SecretaryDoctorAssignmentComponent } from "./secretary-doctor-assignment.component";
 import {
   SecretaryDashboardPreset,
   SecretaryOverviewComponent,
@@ -30,6 +31,7 @@ type SecretaryDashboardSection =
   | "overview"
   | "reservations"
   | "follow-ups"
+  | "doctor-assignment"
   | "reviews";
 
 interface SecretaryDashboardLink {
@@ -42,6 +44,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
   "reservations",
   "follow-ups",
+  "doctor-assignment",
   "reviews",
 ];
 
@@ -56,6 +59,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     SecretaryReservationRequestsComponent,
     SecretaryOverviewComponent,
     SecretaryFollowUpsComponent,
+    SecretaryDoctorAssignmentComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-dashboard.component.html",
@@ -70,6 +74,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "follow-ups", label: "دفترچه پیگیری", icon: "clipboard" },
+    { id: "doctor-assignment", label: "تخصیص دکتر", icon: "user" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
   ];
 
@@ -123,6 +128,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     return this.dashboardLinks.filter((item) => {
       if (item.id === "reviews") return this.hasPermission("ConfirmAttendance");
       if (item.id === "follow-ups") return true;
+      if (item.id === "doctor-assignment") return this.hasPermission("ViewReservations");
       return this.hasPermission("ViewReservations");
     });
   }
