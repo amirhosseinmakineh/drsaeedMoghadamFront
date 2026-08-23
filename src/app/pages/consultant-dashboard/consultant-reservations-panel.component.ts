@@ -336,6 +336,12 @@ export class ConsultantReservationsPanelComponent
     return reservation.patientCity || reservation.PatientCity || "شهر ثبت نشده";
   }
 
+  doctorName(reservation: ConsultantReservation): string {
+    return (
+      reservation.doctorName?.trim() || reservation.DoctorName?.trim() || "-"
+    );
+  }
+
   reservationAt(reservation: ConsultantReservation): string {
     return reservation.reservationAt || reservation.ReservationAt || "";
   }
