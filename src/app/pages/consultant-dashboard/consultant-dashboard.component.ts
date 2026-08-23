@@ -943,11 +943,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.isAvailable = true;
           }
           if (!options.silent) {
-            this.showFeedback(
+            const message =
               response.message ||
-                (isOnline ? "شما آنلاین شدید" : "شما آفلاین شدید"),
-              onlineWasRejected ? "error" : "success",
-            );
+              (isOnline ? "شما آنلاین شدید" : "شما آفلاین شدید");
+            if (isOnline) {
+              this.showOnlineAttemptToast(message, onlineWasRejected);
+            } else {
+              this.showFeedback(message, "success");
+            }
           }
           if (isOnline && !onlineWasRejected) {
             void this.ensureLeadPushRegistration(true);
@@ -964,17 +967,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         error: (error) => {
           // A failed online command must never leave the toggle in an optimistic
           // online state. The backend message is surfaced as the immediate UI
-          // feedback; push notifications continue through the existing channel.
+          // toast; push notifications continue through the existing channel.
           if (isOnline) this.isOnline = false;
           if (!options.silent) {
             const message = this.errorMessage(
               error,
               "تغییر وضعیت آنلاین انجام نشد",
             );
-            this.showFeedback(message, "error");
             if (isOnline) {
+              this.showOnlineAttemptToast(message, true);
               this.setSection("leads");
               this.refreshDashboard();
+            } else {
+              this.showFeedback(message, "error");
             }
           }
         },
@@ -985,6 +990,20 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const profileId = this.currentProfileId();
     if (!profileId || !this.isOnline) return;
     this.performSetOnlineStatus(profileId, false, { silent: true });
+  }
+
+  private showOnlineAttemptToast(message: string, rejected: boolean): void {
+    if (rejected) {
+      this.toast.action(
+        message,
+        { label: "مشاهده لیدها", handler: () => this.setSection("leads") },
+        "error",
+        null,
+      );
+      return;
+    }
+
+    this.toast.success(message);
   }
 
   private forceConsultantOnlineAfterReportSubmit(
