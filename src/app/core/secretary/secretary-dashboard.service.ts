@@ -141,6 +141,7 @@ export interface SecretaryReservation extends ReservationDto {
   visitResultStatus?: number | null;
   initialReservationAt?: string | null;
   doctorName?: string | null;
+  DoctorName?: string | null;
   roomName?: string | null;
   lastFollowUpAt?: string | null;
   lastContactResult?: string | null;
@@ -339,6 +340,69 @@ export class SecretaryDashboardService {
           ),
         ),
       );
+  }
+
+  getReservationDetails(
+    reservationId: number,
+  ): Observable<SecretaryReservation> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Reservation/${reservationId}`, {
+        headers: this.authHeaders(),
+      })
+      .pipe(
+        map((response) => {
+          const envelope = response as { data?: unknown; Data?: unknown };
+          return (envelope.data ?? envelope.Data ?? response) as SecretaryReservation;
+        }),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت جزئیات رزرو انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  getAllReservations(
+    filters: Omit<SecretaryReservationFilters, "pageNumber">,
+  ): Observable<SecretaryReservation[]> {
+    const firstPageFilters: SecretaryReservationFilters = {
+      ...filters,
+      pageNumber: 1,
+    };
+
+    return this.getReservations(firstPageFilters).pipe(
+      switchMap((firstPage) => {
+        if (firstPage.totalPages <= 1) return of(firstPage.items);
+
+        const remainingPages = Array.from(
+          { length: firstPage.totalPages - 1 },
+          (_, index) => this.getReservations({
+            ...firstPageFilters,
+            pageNumber: index + 2,
+          }),
+        );
+
+        return forkJoin(remainingPages).pipe(
+          map((pages) => [
+            ...firstPage.items,
+            ...pages.flatMap((page) => page.items),
+          ]),
+        );
+      }),
+    );
+  }
+
+  assignDoctor(
+    reservationId: number,
+    doctorName: string,
+  ): Observable<ApiCommandResponse> {
+    return this.http
+      .post<ApiCommandResponse>(
+        `${this.apiBaseUrl}/Reservation/${reservationId}/assign-doctor`,
+        { doctorName },
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("ثبت نام دکتر انجام نشد"));
   }
 
   getAttendanceReviews(
