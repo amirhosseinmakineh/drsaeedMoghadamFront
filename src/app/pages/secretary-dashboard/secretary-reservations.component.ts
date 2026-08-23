@@ -434,6 +434,10 @@ export class SecretaryReservationsComponent
     );
   }
 
+  doctorName(item: SecretaryReservation): string {
+    return item.doctorName?.trim() || item.DoctorName?.trim() || "-";
+  }
+
   reservationAt(item: SecretaryReservation): string {
     return item.reservationAt || item.ReservationAt || "";
   }

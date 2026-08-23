@@ -300,6 +300,8 @@ export interface ConsultantReservation {
   IsDueForConsultantConfirmation?: boolean | null;
   consultantName?: string | null;
   ConsultantName?: string | null;
+  doctorName?: string | null;
+  DoctorName?: string | null;
   description?: string | null;
   Description?: string | null;
   isCanceled?: boolean;
