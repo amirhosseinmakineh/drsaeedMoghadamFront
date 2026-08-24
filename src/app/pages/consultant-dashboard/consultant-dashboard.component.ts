@@ -63,6 +63,7 @@ import {
 } from "../../core/lead/lead-enums";
 import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
 import { DENTAL_SERVICE_OPTIONS, dentalServicesOf } from "../../core/reservation/dental-services";
+import { reservationPatientCount, validatePatientCount } from "../../core/reservation/reservation.model";
 import { canConsultantEditReservation } from "../../core/reservation/reservation-attendance";
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
@@ -3866,7 +3867,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
       reservationTime: this.toTimeValue(date),
-      patientCount: this.reservationPatientCount(reservation),
+      patientCount: reservationPatientCount(reservation),
       secondaryPhoneNumber:
         reservation.secondaryPhoneNumber ||
         reservation.SecondaryPhoneNumber ||
@@ -4261,6 +4262,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   validateReservationForm(): string | null {
+    const patientCountError = validatePatientCount(this.reservationForm.patientCount);
+    if (patientCountError) return patientCountError;
     if (!this.reservationForm.reservationDate) return "تاریخ رزرو الزامی است";
     if (!this.reservationForm.reservationTime) return "ساعت رزرو الزامی است";
     if (

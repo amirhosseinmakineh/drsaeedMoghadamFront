@@ -37,6 +37,7 @@ import {
   toIranTimeInputValue,
 } from "../../utils/iran-datetime.util";
 import { DENTAL_SERVICE_OPTIONS, dentalServicesOf, formatDentalServices } from "../../core/reservation/dental-services";
+import { reservationPatientCount, validatePatientCount } from "../../core/reservation/reservation.model";
 
 // This workflow status is returned for display/actions and is deliberately not
 // used by the attendance filter sent to SecretaryReservations.
@@ -158,6 +159,7 @@ export class SecretaryReservationRequestsComponent
   newDate: Date | null = null;
   newTime = "";
   editDentalServices: number[] = [];
+  editPatientCount = 1;
   contactResult: SecretaryAnnouncementStatus = "NotCalled";
   followUpDate: Date | null = null;
   followUpTime = "";
@@ -388,6 +390,7 @@ this.loadSubscription = this.api
       }
     }
     this.editDentalServices = dentalServicesOf(item);
+    this.editPatientCount = reservationPatientCount(item);
     this.followUpDate = null;
     this.followUpTime = "";
     this.contactResult = this.secretaryAnnouncementStatus(item);
@@ -599,6 +602,7 @@ this.loadSubscription = this.api
         id,
         this.combineDateTime(this.newDate!, this.newTime),
         this.editDentalServices,
+        this.editPatientCount,
       );
     } else if (this.dialogMode === "reject") {
       request = this.api.rejectReservation(id, {
@@ -789,6 +793,8 @@ this.loadSubscription = this.api
 
   private validateDialog(item: SecretaryReservation): string | null {
     if (this.dialogMode === "reschedule") {
+      const patientCountError = validatePatientCount(this.editPatientCount);
+      if (patientCountError) return patientCountError;
       if (!this.editDentalServices.length)
         return "انتخاب حداقل یک خدمت معتبر الزامی است";
       if (!this.newDate || !this.newTime) return "تاریخ و ساعت جدید الزامی است";

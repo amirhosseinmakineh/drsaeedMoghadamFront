@@ -1347,17 +1347,7 @@
 
       <label>
         تعداد بیماران
-        <input
-          [(ngModel)]="reservationForm.patientCount"
-          [ngModelOptions]="ngModelBlurOptions"
-          name="reservationPatientCount"
-          type="number"
-          inputmode="numeric"
-          min="1"
-          max="10"
-          step="1"
-          required
-        />
+        <input [(ngModel)]="reservationForm.patientCount" name="reservationPatientCount" type="number" min="1" max="10" step="1" />
       </label>
 
       <div class="two-col">

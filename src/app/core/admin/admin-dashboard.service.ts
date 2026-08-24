@@ -382,6 +382,7 @@ export interface DailyReservationReportItem {
   consultantFullName: string;
   consultantPhoneNumber: string;
   patientName: string;
+  patientCount?: number | null;
   patientPhoneNumber: string;
   secondaryPhoneNumber: string | null;
   patientCity: string | null;
