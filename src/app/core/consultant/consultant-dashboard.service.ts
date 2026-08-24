@@ -257,6 +257,8 @@ export interface ConsultantReservation {
   Id?: number;
   reservationId?: number;
   ReservationId?: number;
+  patientCount?: number;
+  PatientCount?: number;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   consultantProfileId?: number;

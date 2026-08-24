@@ -2161,6 +2161,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  reservationPatientCount(reservation: ConsultantReservation): number {
+    return reservation.patientCount ?? reservation.PatientCount ?? 1;
+  }
+
   reservationDateTime(reservation: ConsultantReservation): string {
     return reservation.reservationAt || reservation.ReservationAt || "";
   }
@@ -4262,6 +4266,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (patientCountError) return patientCountError;
     if (!this.reservationForm.reservationDate) return "تاریخ رزرو الزامی است";
     if (!this.reservationForm.reservationTime) return "ساعت رزرو الزامی است";
+    if (
+      !Number.isInteger(Number(this.reservationForm.patientCount)) ||
+      Number(this.reservationForm.patientCount) < 1 ||
+      Number(this.reservationForm.patientCount) > 10
+    )
+      return "تعداد بیماران باید بین ۱ تا ۱۰ نفر باشد";
     if (!this.reservationForm.dentalServices.length)
       return "انتخاب حداقل یک خدمت معتبر الزامی است";
 

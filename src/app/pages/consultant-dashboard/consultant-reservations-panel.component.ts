@@ -338,6 +338,10 @@ export class ConsultantReservationsPanelComponent
     return reservation.patientCity || reservation.PatientCity || "شهر ثبت نشده";
   }
 
+  patientCount(reservation: ConsultantReservation): number {
+    return reservation.patientCount ?? reservation.PatientCount ?? 1;
+  }
+
   doctorName(reservation: ConsultantReservation): string {
     return (
       reservation.doctorName?.trim() || reservation.DoctorName?.trim() || "-"
@@ -547,6 +551,7 @@ export class ConsultantReservationsPanelComponent
       reservationAt: reservationAt.toISOString(),
       patientCount: this.editForm.patientCount,
       patientCity: this.editForm.patientCity.trim(),
+      patientCount: this.editForm.patientCount,
       patientRegion: this.editForm.patientRegion.trim(),
       attendanceProbabilityPercent: this.editForm.attendanceProbabilityPercent,
       attendancePrediction: this.editForm.attendancePrediction.trim(),
