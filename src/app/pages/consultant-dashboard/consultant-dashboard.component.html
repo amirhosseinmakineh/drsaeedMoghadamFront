@@ -225,6 +225,28 @@
                 <strong>{{ todayReservationsCount }}</strong>
               </div>
             </div>
+            <div class="daily-capacity-summary">
+              <article>
+                <span>تماس‌های امروز</span>
+                <strong>{{ todayCallsCount }}</strong>
+              </article>
+              <article class="capacity-card">
+                <span>ظرفیت روزانه</span>
+                <strong>
+                  {{ remainingDailyCapacity }} از {{ dailyLimit }} باقی‌مانده
+                </strong>
+                <div
+                  class="capacity-progress"
+                  role="progressbar"
+                  aria-label="ظرفیت مصرف‌شده امروز"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-valuenow]="usedCapacityPercent"
+                >
+                  <span [style.width.%]="usedCapacityPercent"></span>
+                </div>
+              </article>
+            </div>
             @if (shouldShowPushSetupBanner) {
               <div class="push-setup-banner">
                 <strong>برای دریافت لید لحظه‌ای، نوتیفیکیشن را فعال کنید</strong>

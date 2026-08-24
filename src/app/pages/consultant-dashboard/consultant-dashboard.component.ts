@@ -222,6 +222,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   canGoOnlineFromStatus = false;
   dashboardStatusLoaded = false;
   todayReservationsCount = 0;
+  todayCallsCount = 0;
+  dailyLimit = 0;
+  todayPickupCount = 0;
+  remainingDailyCapacity = 0;
   onlineStatusBlockReason: string | null = null;
   pendingReportCount = 0;
   uncalledWithoutReportCount = 0;
@@ -370,7 +374,22 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly onPushStateSync = (): void => {
     void this.syncPushRegistrationState();
+    if (
+      this.isProfileReady() &&
+      (typeof document === "undefined" || document.visibilityState === "visible")
+    ) {
+      this.loadDashboardStatus();
+    }
   };
+
+  get usedCapacityPercent(): number {
+    return this.dailyLimit > 0
+      ? Math.min(
+          100,
+          Math.round((this.todayPickupCount / this.dailyLimit) * 100),
+        )
+      : 100;
+  }
 
   get browserNotificationPermission(): NotificationPermission | "unsupported" {
     if (typeof window === "undefined" || !("Notification" in window)) {
@@ -2018,6 +2037,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             callInitiatedAt: initiatedAt,
             CallInitiatedAt: initiatedAt,
           });
+          this.loadDashboardStatus();
         },
         error: () => {
           // local timer stop still keeps report actions enabled
@@ -3093,6 +3113,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.isOnline = status.isOnline;
     this.canGoOnlineFromStatus = status.canGoOnline;
     this.todayReservationsCount = status.todayReservationsCount ?? 0;
+    this.todayCallsCount = status.todayCallsCount ?? 0;
+    this.dailyLimit = status.dailyLimit ?? 0;
+    this.todayPickupCount = status.todayPickupCount ?? 0;
+    this.remainingDailyCapacity = Math.max(
+      0,
+      status.remainingDailyCapacity ?? 0,
+    );
     this.dashboardStatusLoaded = true;
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.pendingReportCount = status.pendingReportCount;
