@@ -348,9 +348,9 @@ export class ConsultantReservationsPanelComponent
 
   reservationAtPersian(reservation: ConsultantReservation): string {
     return (
-      reservation.reservationAtPersian ??
-      reservation.ReservationAtPersian ??
-      this.formatAppointmentTime(this.reservationAt(reservation))
+      reservation.reservationAtPersian?.trim() ||
+      reservation.ReservationAtPersian?.trim() ||
+      this.formatDateTime(this.reservationAt(reservation))
     );
   }
 
