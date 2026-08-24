@@ -260,6 +260,8 @@ export interface ConsultantReservation {
   RequiresPatientProfile?: boolean;
   reservationAt?: string;
   ReservationAt?: string;
+  reservationAtPersian?: string | null;
+  ReservationAtPersian?: string | null;
   patientName?: string;
   PatientName?: string;
   patientPhoneNumber?: string;
