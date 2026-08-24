@@ -231,6 +231,7 @@ export interface CreateReservationRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
   reservationAt: string;
+  patientCount: number;
   patientCity: string;
   patientRegion: string;
   attendanceProbabilityPercent: number;
@@ -254,6 +255,8 @@ export interface ConsultantReservation {
   Id?: number;
   reservationId?: number;
   ReservationId?: number;
+  patientCount?: number;
+  PatientCount?: number;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   consultantProfileId?: number;
@@ -386,6 +389,7 @@ export type AttendanceConfirmationStatusFilter =
 
 export interface UpdateReservationRequest {
   reservationAt: string;
+  patientCount?: number | null;
   patientCity?: string;
   patientRegion?: string;
   attendanceProbabilityPercent?: number;

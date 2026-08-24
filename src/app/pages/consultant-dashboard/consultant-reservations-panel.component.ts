@@ -101,6 +101,7 @@ export class ConsultantReservationsPanelComponent
   editForm = {
     reservationDate: null as Date | null,
     reservationTime: "",
+    patientCount: 1,
     patientCity: "",
     patientRegion: "",
     attendanceProbabilityPercent: 8,
@@ -336,6 +337,10 @@ export class ConsultantReservationsPanelComponent
     return reservation.patientCity || reservation.PatientCity || "شهر ثبت نشده";
   }
 
+  patientCount(reservation: ConsultantReservation): number {
+    return reservation.patientCount ?? reservation.PatientCount ?? 1;
+  }
+
   doctorName(reservation: ConsultantReservation): string {
     return (
       reservation.doctorName?.trim() || reservation.DoctorName?.trim() || "-"
@@ -459,6 +464,7 @@ export class ConsultantReservationsPanelComponent
     this.editForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
       reservationTime: toIranTimeInputValue(date),
+      patientCount: this.patientCount(reservation),
       patientCity:
         this.patientCity(reservation) === "شهر ثبت نشده"
           ? ""
@@ -512,6 +518,14 @@ export class ConsultantReservationsPanelComponent
       this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
       return;
     }
+    if (
+      !Number.isInteger(Number(this.editForm.patientCount)) ||
+      Number(this.editForm.patientCount) < 1 ||
+      Number(this.editForm.patientCount) > 10
+    ) {
+      this.showFeedback("تعداد بیماران باید بین ۱ تا ۱۰ نفر باشد", "error");
+      return;
+    }
     if (!this.editForm.dentalServices.length) {
       this.showFeedback("انتخاب حداقل یک خدمت معتبر الزامی است", "error");
       return;
@@ -538,6 +552,7 @@ export class ConsultantReservationsPanelComponent
     const payload: UpdateReservationRequest = {
       reservationAt: reservationAt.toISOString(),
       patientCity: this.editForm.patientCity.trim(),
+      patientCount: this.editForm.patientCount,
       patientRegion: this.editForm.patientRegion.trim(),
       attendanceProbabilityPercent: this.editForm.attendanceProbabilityPercent,
       attendancePrediction: this.editForm.attendancePrediction.trim(),
