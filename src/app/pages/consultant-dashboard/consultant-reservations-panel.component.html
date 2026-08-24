@@ -128,6 +128,10 @@
               <dd>{{ probability(reservation) }}٪</dd>
             </div>
             <div>
+              <dt>تعداد بیماران</dt>
+              <dd>{{ patientCount(reservation) }} نفر</dd>
+            </div>
+            <div>
               <dt>خدمات</dt>
               <dd>{{ dentalServicesLabel(reservation) }}</dd>
             </div>
@@ -258,6 +262,20 @@
         [ngModelOptions]="ngModelBlurOptions"
         name="editReservationTime"
         type="time"
+      />
+    </label>
+    <label>
+      تعداد بیماران
+      <input
+        [(ngModel)]="editForm.patientCount"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="editReservationPatientCount"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="10"
+        step="1"
+        required
       />
     </label>
     <fieldset class="dental-services-field">
