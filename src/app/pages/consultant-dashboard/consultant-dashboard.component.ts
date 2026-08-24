@@ -63,6 +63,7 @@ import {
 } from "../../core/lead/lead-enums";
 import { RealtimeLeadAlertService } from "../../core/lead/realtime-lead-alert.service";
 import { DENTAL_SERVICE_OPTIONS, dentalServicesOf } from "../../core/reservation/dental-services";
+import { reservationPatientCount, validatePatientCount } from "../../core/reservation/reservation.model";
 import { canConsultantEditReservation } from "../../core/reservation/reservation-attendance";
 const REALTIME_CALL_WINDOW_MS = 20 * 60 * 1000;
 const REALTIME_CALL_WINDOW_MINUTES = 20;
@@ -107,6 +108,7 @@ interface LeadReportForm {
 interface ReservationForm {
   reservationDate: Date | null;
   reservationTime: string;
+  patientCount: number;
   secondaryPhoneNumber: string;
   description: string;
   patientCity: string;
@@ -222,6 +224,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   canGoOnlineFromStatus = false;
   dashboardStatusLoaded = false;
   todayReservationsCount = 0;
+  todayCallsCount = 0;
+  dailyLimit = 0;
+  todayPickupCount = 0;
+  remainingDailyCapacity = 0;
   onlineStatusBlockReason: string | null = null;
   pendingReportCount = 0;
   uncalledWithoutReportCount = 0;
@@ -302,6 +308,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reservationForm: ReservationForm = {
     reservationDate: null,
     reservationTime: "",
+    patientCount: 1,
     secondaryPhoneNumber: "",
     description: "",
     patientCity: "",
@@ -370,7 +377,22 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly onPushStateSync = (): void => {
     void this.syncPushRegistrationState();
+    if (
+      this.isProfileReady() &&
+      (typeof document === "undefined" || document.visibilityState === "visible")
+    ) {
+      this.loadDashboardStatus();
+    }
   };
+
+  get usedCapacityPercent(): number {
+    return this.dailyLimit > 0
+      ? Math.min(
+          100,
+          Math.round((this.todayPickupCount / this.dailyLimit) * 100),
+        )
+      : 100;
+  }
 
   get browserNotificationPermission(): NotificationPermission | "unsupported" {
     if (typeof window === "undefined" || !("Notification" in window)) {
@@ -2018,6 +2040,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             callInitiatedAt: initiatedAt,
             CallInitiatedAt: initiatedAt,
           });
+          this.loadDashboardStatus();
         },
         error: () => {
           // local timer stop still keeps report actions enabled
@@ -2236,6 +2259,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentId,
       consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
+      patientCount: this.reservationForm.patientCount,
       patientCity: this.reservationForm.patientCity.trim(),
       patientRegion: this.reservationForm.patientRegion.trim(),
       attendanceProbabilityPercent:
@@ -2325,6 +2349,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     const payload: UpdateReservationRequest = {
       reservationAt: reservationAt.toISOString(),
+      patientCount: this.reservationForm.patientCount,
       patientCity: this.reservationForm.patientCity.trim(),
       patientRegion: this.reservationForm.patientRegion.trim(),
       attendanceProbabilityPercent:
@@ -3093,6 +3118,13 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.isOnline = status.isOnline;
     this.canGoOnlineFromStatus = status.canGoOnline;
     this.todayReservationsCount = status.todayReservationsCount ?? 0;
+    this.todayCallsCount = status.todayCallsCount ?? 0;
+    this.dailyLimit = status.dailyLimit ?? 0;
+    this.todayPickupCount = status.todayPickupCount ?? 0;
+    this.remainingDailyCapacity = Math.max(
+      0,
+      status.remainingDailyCapacity ?? 0,
+    );
     this.dashboardStatusLoaded = true;
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.pendingReportCount = status.pendingReportCount;
@@ -3761,6 +3793,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
+      patientCount: 1,
       secondaryPhoneNumber: reservationSecondaryPhone,
       description: "",
       patientCity: this.reportForm.patientCity.trim(),
@@ -3830,6 +3863,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
       reservationTime: this.toTimeValue(date),
+      patientCount: reservationPatientCount(reservation),
       secondaryPhoneNumber:
         reservation.secondaryPhoneNumber ||
         reservation.SecondaryPhoneNumber ||
@@ -4224,6 +4258,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   validateReservationForm(): string | null {
+    const patientCountError = validatePatientCount(this.reservationForm.patientCount);
+    if (patientCountError) return patientCountError;
     if (!this.reservationForm.reservationDate) return "تاریخ رزرو الزامی است";
     if (!this.reservationForm.reservationTime) return "ساعت رزرو الزامی است";
     if (!this.reservationForm.dentalServices.length)

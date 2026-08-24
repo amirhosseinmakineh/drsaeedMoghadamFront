@@ -124,6 +124,10 @@
               <dd>{{ reservationAtPersian(reservation) }}</dd>
             </div>
             <div>
+              <dt>تعداد بیماران</dt>
+              <dd>{{ reservation.patientCount ?? reservation.PatientCount ?? 1 }} نفر</dd>
+            </div>
+            <div>
               <dt>احتمال حضور</dt>
               <dd>{{ probability(reservation) }}٪</dd>
             </div>
@@ -259,6 +263,10 @@
         name="editReservationTime"
         type="time"
       />
+    </label>
+    <label>
+      تعداد بیماران
+      <input [(ngModel)]="editForm.patientCount" name="editPatientCount" type="number" min="1" max="10" step="1" />
     </label>
     <fieldset class="dental-services-field">
       <legend>خدمات دندانپزشکی</legend>

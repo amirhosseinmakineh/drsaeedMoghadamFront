@@ -37,6 +37,7 @@ import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.c
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 import { DENTAL_SERVICE_OPTIONS, dentalServicesOf, formatDentalServices } from "../../core/reservation/dental-services";
+import { reservationPatientCount, validatePatientCount } from "../../core/reservation/reservation.model";
 import {
   combineIranDateAndTime,
   formatIranDateTime,
@@ -101,6 +102,7 @@ export class ConsultantReservationsPanelComponent
   editForm = {
     reservationDate: null as Date | null,
     reservationTime: "",
+    patientCount: 1,
     patientCity: "",
     patientRegion: "",
     attendanceProbabilityPercent: 8,
@@ -459,6 +461,7 @@ export class ConsultantReservationsPanelComponent
     this.editForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
       reservationTime: toIranTimeInputValue(date),
+      patientCount: reservationPatientCount(reservation),
       patientCity:
         this.patientCity(reservation) === "شهر ثبت نشده"
           ? ""
@@ -512,6 +515,11 @@ export class ConsultantReservationsPanelComponent
       this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
       return;
     }
+    const patientCountError = validatePatientCount(this.editForm.patientCount);
+    if (patientCountError) {
+      this.showFeedback(patientCountError, "error");
+      return;
+    }
     if (!this.editForm.dentalServices.length) {
       this.showFeedback("انتخاب حداقل یک خدمت معتبر الزامی است", "error");
       return;
@@ -537,6 +545,7 @@ export class ConsultantReservationsPanelComponent
 
     const payload: UpdateReservationRequest = {
       reservationAt: reservationAt.toISOString(),
+      patientCount: this.editForm.patientCount,
       patientCity: this.editForm.patientCity.trim(),
       patientRegion: this.editForm.patientRegion.trim(),
       attendanceProbabilityPercent: this.editForm.attendanceProbabilityPercent,

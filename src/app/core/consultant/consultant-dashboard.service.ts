@@ -53,6 +53,10 @@ export interface ConsultantDashboardStatus {
   canGoOnline: boolean;
   onlineStatusBlockReason: string | null;
   todayReservationsCount: number;
+  todayCallsCount: number;
+  dailyLimit: number;
+  todayPickupCount: number;
+  remainingDailyCapacity: number;
   pendingReportCount: number;
   uncalledWithoutReportCount: number;
   followUpCount: number;
@@ -227,6 +231,7 @@ export interface CreateReservationRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
   reservationAt: string;
+  patientCount: number;
   patientCity: string;
   patientRegion: string;
   attendanceProbabilityPercent: number;
@@ -244,6 +249,8 @@ export interface ConfirmAttendanceRequest {
 }
 
 export interface ConsultantReservation {
+  patientCount?: number | null;
+  PatientCount?: number | null;
   dentalServices?: number[] | null;
   DentalServices?: number[] | null;
   id?: number;
@@ -382,6 +389,7 @@ export type AttendanceConfirmationStatusFilter =
 
 export interface UpdateReservationRequest {
   reservationAt: string;
+  patientCount?: number | null;
   patientCity?: string;
   patientRegion?: string;
   attendanceProbabilityPercent?: number;
@@ -877,6 +885,17 @@ export class ConsultantDashboardService {
           source,
           "todayReservationsCount",
           "TodayReservationsCount",
+        ) ?? 0,
+      todayCallsCount:
+        this.readNumber(source, "todayCallsCount", "TodayCallsCount") ?? 0,
+      dailyLimit: this.readNumber(source, "dailyLimit", "DailyLimit") ?? 0,
+      todayPickupCount:
+        this.readNumber(source, "todayPickupCount", "TodayPickupCount") ?? 0,
+      remainingDailyCapacity:
+        this.readNumber(
+          source,
+          "remainingDailyCapacity",
+          "RemainingDailyCapacity",
         ) ?? 0,
       pendingReportCount:
         this.readNumber(source, "pendingReportCount", "PendingReportCount") ?? 0,

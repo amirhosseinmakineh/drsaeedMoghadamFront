@@ -262,7 +262,8 @@ export interface RescheduleReservationRequest {
 
 export interface UpdateSecretaryReservationTimeRequest {
   reservationAt: string;
-  appointmentDateTime?: string;
+  appointmentDateTime?: string | null;
+  patientCount?: number | null;
   dentalServices?: number[] | null;
 }
 
@@ -561,8 +562,13 @@ export class SecretaryDashboardService {
     reservationId: number,
     reservationAt: string,
     dentalServices?: number[] | null,
+    patientCount?: number | null,
   ): Observable<ApiCommandResponse<SecretaryReservation>> {
-    const payload: UpdateSecretaryReservationTimeRequest = { reservationAt, dentalServices };
+    const payload: UpdateSecretaryReservationTimeRequest = {
+      reservationAt,
+      dentalServices,
+      patientCount,
+    };
     return this.http
       .post<ApiCommandResponse<SecretaryReservation>>(
         `${this.apiBaseUrl}/Reservation/SecretaryReservations/${reservationId}/time`,
