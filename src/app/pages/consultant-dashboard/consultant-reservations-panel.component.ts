@@ -346,6 +346,14 @@ export class ConsultantReservationsPanelComponent
     return reservation.reservationAt || reservation.ReservationAt || "";
   }
 
+  reservationAtPersian(reservation: ConsultantReservation): string {
+    return (
+      reservation.reservationAtPersian?.trim() ||
+      reservation.ReservationAtPersian?.trim() ||
+      this.formatDateTime(this.reservationAt(reservation))
+    );
+  }
+
   probability(reservation: ConsultantReservation): number | string {
     return (
       reservation.attendanceProbabilityPercent ??
