@@ -12,7 +12,7 @@ import {formatIranDateTime} from "../../utils/iran-datetime.util";
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: "./secretary-follow-ups-list.component.html",
-  styleUrl: "../secretary-dashboard/secretary-follow-ups.component.scss",
+  styleUrl: "./secretary-follow-ups-list.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SecretaryFollowUpsListComponent implements OnInit {
