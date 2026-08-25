@@ -554,7 +554,6 @@ export class ConsultantReservationsPanelComponent
       reservationAt: reservationAt.toISOString(),
       patientCount: this.editForm.patientCount,
       patientCity: this.editForm.patientCity.trim(),
-      patientCount: this.editForm.patientCount,
       patientRegion: this.editForm.patientRegion.trim(),
       attendanceProbabilityPercent: this.editForm.attendanceProbabilityPercent,
       attendancePrediction: this.editForm.attendancePrediction.trim(),
