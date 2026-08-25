@@ -992,6 +992,15 @@ input[readonly] {
   }
 }
 @media (max-width: 560px) {
+  .patient-count-field {
+    margin-inline: -4px;
+    padding: 12px;
+    border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line));
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: 0 8px 20px rgba(93, 64, 32, 0.08);
+  }
+
   .lead-date-filter-dialog {
     width: calc(100vw - 24px);
     max-height: calc(100dvh - 24px);

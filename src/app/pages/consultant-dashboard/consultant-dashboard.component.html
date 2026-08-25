@@ -1345,6 +1345,21 @@
         />
       </label>
 
+      <label class="patient-count-field">
+        تعداد بیماران
+        <input
+          [(ngModel)]="reservationForm.patientCount"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="reservationPatientCount"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="10"
+          step="1"
+          required
+        />
+      </label>
+
       <div class="two-col">
         <label>
           شهر بیمار
@@ -1632,7 +1647,7 @@
 
   <nav class="mobile-primary-nav" aria-label="دسترسی سریع داشبورد">
     <button
-      *ngFor="let item of visibleDashboardLinks.slice(0, 4); trackBy: trackDashboardLink"
+      *ngFor="let item of mobileDashboardLinks; trackBy: trackDashboardLink"
       type="button"
       [class.active]="activeSection === item.id"
       [attr.aria-current]="activeSection === item.id ? 'page' : null"

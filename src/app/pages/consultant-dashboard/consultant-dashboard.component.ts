@@ -107,6 +107,7 @@ interface LeadReportForm {
 interface ReservationForm {
   reservationDate: Date | null;
   reservationTime: string;
+  patientCount: number;
   secondaryPhoneNumber: string;
   description: string;
   patientCity: string;
@@ -306,6 +307,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reservationForm: ReservationForm = {
     reservationDate: null,
     reservationTime: "",
+    patientCount: 1,
     secondaryPhoneNumber: "",
     description: "",
     patientCity: "",
@@ -512,6 +514,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     }
 
     return this.dashboardLinks.filter((item) => item.id !== "profile");
+  }
+
+  get mobileDashboardLinks(): ConsultantDashboardLink[] {
+    const primarySections: ConsultantDashboardSection[] = [
+      "overview",
+      "leads",
+      "patients",
+      "reservations",
+    ];
+    return primarySections
+      .map((section) => this.visibleDashboardLinks.find((item) => item.id === section))
+      .filter((item): item is ConsultantDashboardLink => Boolean(item));
   }
 
   trackDashboardLink(
@@ -2158,6 +2172,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  reservationPatientCount(reservation: ConsultantReservation): number {
+    return reservation.patientCount ?? reservation.PatientCount ?? 1;
+  }
+
   reservationDateTime(reservation: ConsultantReservation): string {
     return reservation.reservationAt || reservation.ReservationAt || "";
   }
@@ -2256,6 +2274,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       leadAssignmentId,
       consultantProfileId: profileId,
       reservationAt: reservationAt.toISOString(),
+      patientCount: this.reservationForm.patientCount,
       patientCity: this.reservationForm.patientCity.trim(),
       patientRegion: this.reservationForm.patientRegion.trim(),
       attendanceProbabilityPercent:
@@ -2345,6 +2364,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     const payload: UpdateReservationRequest = {
       reservationAt: reservationAt.toISOString(),
+      patientCount: this.reservationForm.patientCount,
       patientCity: this.reservationForm.patientCity.trim(),
       patientRegion: this.reservationForm.patientRegion.trim(),
       attendanceProbabilityPercent:
@@ -3788,6 +3808,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: minimumReservationAt,
       reservationTime: this.toTimeValue(minimumReservationAt),
+      patientCount: 1,
       secondaryPhoneNumber: reservationSecondaryPhone,
       description: "",
       patientCity: this.reportForm.patientCity.trim(),
@@ -3857,6 +3878,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
       reservationTime: this.toTimeValue(date),
+      patientCount: this.reservationPatientCount(reservation),
       secondaryPhoneNumber:
         reservation.secondaryPhoneNumber ||
         reservation.SecondaryPhoneNumber ||
@@ -4253,6 +4275,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   validateReservationForm(): string | null {
     if (!this.reservationForm.reservationDate) return "تاریخ رزرو الزامی است";
     if (!this.reservationForm.reservationTime) return "ساعت رزرو الزامی است";
+    if (
+      !Number.isInteger(Number(this.reservationForm.patientCount)) ||
+      Number(this.reservationForm.patientCount) < 1 ||
+      Number(this.reservationForm.patientCount) > 10
+    )
+      return "تعداد بیماران باید بین ۱ تا ۱۰ نفر باشد";
     if (!this.reservationForm.dentalServices.length)
       return "انتخاب حداقل یک خدمت معتبر الزامی است";
 
