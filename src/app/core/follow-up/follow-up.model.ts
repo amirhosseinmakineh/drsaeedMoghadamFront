@@ -5,41 +5,16 @@ export interface PaginatedResponse<T> {
   totalCount: number;
 }
 
-export interface PatientSearchItem {
+export interface ConsultantFollowUp {
+  id: number;
   patientId: number;
   patientName: string;
   phoneNumber: string;
-}
-
-export interface PatientFollowUpInfo extends PatientSearchItem {
-  consultantId: number;
-  consultantName: string;
-  reservationId: number;
-  reservationDate: string;
-  reservationTime: string;
-}
-
-export interface SecretaryFollowUp extends PatientSearchItem {
-  id: number;
   consultantName: string;
   reservationDate: string;
   reservationTime: string;
   contacted: boolean;
   contactResult: string;
   createdAt: string;
-}
-
-export interface ConsultantFollowUp extends SecretaryFollowUp {
   secretaryName: string;
-}
-
-export interface CreateSecretaryFollowUpRequest {
-  patientId: number;
-  contacted: boolean;
-  contactResult: string;
-}
-
-export interface UpdateSecretaryFollowUpRequest {
-  contacted: boolean;
-  contactResult: string;
 }

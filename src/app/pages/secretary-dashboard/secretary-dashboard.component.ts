@@ -20,7 +20,6 @@ import { SecretaryAccessResult, SecretaryDashboardService, SecretaryPermission }
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
 import { SecretaryReservationRequestsComponent } from "./secretary-reservation-requests.component";
-import { SecretaryFollowUpsComponent } from "./secretary-follow-ups.component";
 import {
   SecretaryDashboardPreset,
   SecretaryOverviewComponent,
@@ -29,7 +28,6 @@ import {
 type SecretaryDashboardSection =
   | "overview"
   | "reservations"
-  | "follow-ups"
   | "reviews";
 
 interface SecretaryDashboardLink {
@@ -41,7 +39,6 @@ interface SecretaryDashboardLink {
 const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
   "reservations",
-  "follow-ups",
   "reviews",
 ];
 
@@ -55,7 +52,6 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     SecretaryReservationsComponent,
     SecretaryReservationRequestsComponent,
     SecretaryOverviewComponent,
-    SecretaryFollowUpsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-dashboard.component.html",
@@ -69,7 +65,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   readonly dashboardLinks: SecretaryDashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
-    { id: "follow-ups", label: "پیگیری", icon: "clipboard" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
   ];
 
@@ -122,7 +117,6 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   get visibleDashboardLinks(): SecretaryDashboardLink[] {
     return this.dashboardLinks.filter((item) => {
       if (item.id === "reviews") return this.hasPermission("ConfirmAttendance");
-      if (item.id === "follow-ups") return true;
       return this.hasPermission("ViewReservations");
     });
   }
