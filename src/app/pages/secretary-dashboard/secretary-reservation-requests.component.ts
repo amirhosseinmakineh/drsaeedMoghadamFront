@@ -757,22 +757,6 @@ export class SecretaryReservationRequestsComponent
       "گزارشی ثبت نشده"
     );
   }
-  patientConfirmationLabel(item: SecretaryReservation): string {
-    const confirmed = item.isConfirmedWithPatient ?? item.IsConfirmedWithPatient;
-    return confirmed === true ? "تایید شده" : confirmed === false ? "تایید نشده" : "نامشخص";
-  }
-  lastFollowUpAt(item: SecretaryReservation): string | null {
-    return item.lastFollowUpAt ?? item.LastFollowUpAt ?? null;
-  }
-  lastContactResult(item: SecretaryReservation): string {
-    return item.lastContactResult ?? item.LastContactResult ?? "-";
-  }
-  rejectionReason(item: SecretaryReservation): string {
-    return item.rejectionReason ?? item.RejectionReason ?? "-";
-  }
-  cancellationReason(item: SecretaryReservation): string {
-    return item.cancellationReason ?? item.CancellationReason ?? "-";
-  }
   doctorRoom(item: SecretaryReservation): string | null {
     const doctor = item.doctorName ?? item.DoctorName;
     const room = item.roomName ?? item.RoomName;
