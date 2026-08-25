@@ -186,11 +186,12 @@ export interface SecretaryAnnouncementRequest {
 
 export interface SecretaryReservationFilters {
   consultantProfileId?: number | null;
-  search?: string;
+  searchText?: string;
   consultantName?: string;
-  fromDate?: string;
-  toDate?: string;
-  attendanceStatus?: AttendanceConfirmationStatus | null;
+  reservationDate?: string;
+  from?: string;
+  to?: string;
+  attendanceConfirmationStatus?: AttendanceConfirmationStatus | null;
   secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
   reservationStatus?: string | null;
   reservationType?: ReservationType | null;
