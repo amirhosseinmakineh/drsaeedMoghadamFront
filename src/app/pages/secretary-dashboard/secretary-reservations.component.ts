@@ -56,6 +56,7 @@ export class SecretaryReservationsComponent
   activeTab: SecretaryReservationTab = "queue";
   items: SecretaryReservation[] = [];
   notes: Record<number, string> = {};
+  doctorNames: Record<number, string> = {};
   loading = false;
   savingId: number | null = null;
   feedback = "";
@@ -338,12 +339,18 @@ export class SecretaryReservationsComponent
       this.showFeedback("شناسه رزرو در دسترس نیست", "error");
       return;
     }
+    const doctorName = (this.doctorNames[reservationId] || "").trim();
+    if (!doctorName) {
+      this.showFeedback("وارد کردن نام دکتر برای تایید حضور الزامی است", "error");
+      return;
+    }
 
     this.savingId = reservationId;
     this.secretaryApi
       .reviewAttendance({
         reservationId,
         patientReceivedService,
+        doctorName,
         note: (this.notes[reservationId] || "").trim() || null,
       })
       .pipe(finalize(() => (this.savingId = null)))
@@ -432,10 +439,6 @@ export class SecretaryReservationsComponent
     return (
       item.consultantFullName?.trim() || item.ConsultantFullName?.trim() || "-"
     );
-  }
-
-  doctorName(item: SecretaryReservation): string {
-    return item.doctorName?.trim() || item.DoctorName?.trim() || "-";
   }
 
   reservationAt(item: SecretaryReservation): string {
