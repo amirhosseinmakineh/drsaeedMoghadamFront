@@ -249,6 +249,8 @@ export interface ConfirmAttendanceRequest {
 }
 
 export interface ConsultantReservation {
+  patientCount?: number | null;
+  PatientCount?: number | null;
   dentalServices?: number[] | null;
   DentalServices?: number[] | null;
   id?: number;

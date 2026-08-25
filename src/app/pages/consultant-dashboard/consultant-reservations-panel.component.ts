@@ -37,6 +37,7 @@ import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.c
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
 import { DENTAL_SERVICE_OPTIONS, dentalServicesOf, formatDentalServices } from "../../core/reservation/dental-services";
+import { reservationPatientCount, validatePatientCount } from "../../core/reservation/reservation.model";
 import {
   combineIranDateAndTime,
   formatIranDateTime,
@@ -551,6 +552,7 @@ export class ConsultantReservationsPanelComponent
 
     const payload: UpdateReservationRequest = {
       reservationAt: reservationAt.toISOString(),
+      patientCount: this.editForm.patientCount,
       patientCity: this.editForm.patientCity.trim(),
       patientCount: this.editForm.patientCount,
       patientRegion: this.editForm.patientRegion.trim(),
