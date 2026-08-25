@@ -203,6 +203,7 @@ export interface SecretaryReservationFilters {
 export interface ReviewAttendanceRequest {
   reservationId: number;
   patientReceivedService: boolean;
+  doctorName: string;
   note: string | null;
 }
 
@@ -391,19 +392,6 @@ export class SecretaryDashboardService {
         );
       }),
     );
-  }
-
-  assignDoctor(
-    reservationId: number,
-    doctorName: string,
-  ): Observable<ApiCommandResponse> {
-    return this.http
-      .post<ApiCommandResponse>(
-        `${this.apiBaseUrl}/Reservation/${reservationId}/assign-doctor`,
-        { doctorName },
-        { headers: this.authHeaders() },
-      )
-      .pipe(this.ensureCommandSucceeded("ثبت نام دکتر انجام نشد"));
   }
 
   getAttendanceReviews(
