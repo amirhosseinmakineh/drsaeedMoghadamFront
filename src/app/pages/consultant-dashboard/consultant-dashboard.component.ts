@@ -517,6 +517,18 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     return this.dashboardLinks.filter((item) => item.id !== "profile");
   }
 
+  get mobileDashboardLinks(): ConsultantDashboardLink[] {
+    const primarySections: ConsultantDashboardSection[] = [
+      "overview",
+      "leads",
+      "patients",
+      "reservations",
+    ];
+    return primarySections
+      .map((section) => this.visibleDashboardLinks.find((item) => item.id === section))
+      .filter((item): item is ConsultantDashboardLink => Boolean(item));
+  }
+
   trackDashboardLink(
     _: number,
     item: ConsultantDashboardLink,
@@ -3867,7 +3879,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reservationForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
       reservationTime: this.toTimeValue(date),
-      patientCount: reservationPatientCount(reservation),
+      patientCount: this.reservationPatientCount(reservation),
       secondaryPhoneNumber:
         reservation.secondaryPhoneNumber ||
         reservation.SecondaryPhoneNumber ||

@@ -465,7 +465,7 @@ export class ConsultantReservationsPanelComponent
     this.editForm = {
       reservationDate: Number.isFinite(date.getTime()) ? date : new Date(),
       reservationTime: toIranTimeInputValue(date),
-      patientCount: reservationPatientCount(reservation),
+      patientCount: this.patientCount(reservation),
       patientCity:
         this.patientCity(reservation) === "شهر ثبت نشده"
           ? ""
@@ -519,9 +519,12 @@ export class ConsultantReservationsPanelComponent
       this.showFeedback("تاریخ و ساعت رزرو را وارد کنید", "error");
       return;
     }
-    const patientCountError = validatePatientCount(this.editForm.patientCount);
-    if (patientCountError) {
-      this.showFeedback(patientCountError, "error");
+    if (
+      !Number.isInteger(Number(this.editForm.patientCount)) ||
+      Number(this.editForm.patientCount) < 1 ||
+      Number(this.editForm.patientCount) > 10
+    ) {
+      this.showFeedback("تعداد بیماران باید بین ۱ تا ۱۰ نفر باشد", "error");
       return;
     }
     if (!this.editForm.dentalServices.length) {

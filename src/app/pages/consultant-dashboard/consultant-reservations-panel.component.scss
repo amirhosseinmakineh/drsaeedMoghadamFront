@@ -351,4 +351,19 @@ textarea {
     grid-column: auto;
   }
   .dental-services-field { grid-template-columns: 1fr; }
+
+  .patient-count-detail {
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--line));
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--brand) 8%, var(--surface));
+  }
+
+  .patient-count-field {
+    padding: 12px;
+    border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line));
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: 0 8px 20px rgba(93, 64, 32, 0.08);
+  }
 }

@@ -131,6 +131,10 @@
               <dt>احتمال حضور</dt>
               <dd>{{ probability(reservation) }}٪</dd>
             </div>
+            <div class="patient-count-detail">
+              <dt>تعداد بیماران</dt>
+              <dd>{{ patientCount(reservation) }} نفر</dd>
+            </div>
             <div>
               <dt>تعداد بیماران</dt>
               <dd>{{ patientCount(reservation) }} نفر</dd>
@@ -268,9 +272,19 @@
         type="time"
       />
     </label>
-    <label>
+    <label class="patient-count-field">
       تعداد بیماران
-      <input [(ngModel)]="editForm.patientCount" name="editPatientCount" type="number" min="1" max="10" step="1" />
+      <input
+        [(ngModel)]="editForm.patientCount"
+        [ngModelOptions]="ngModelBlurOptions"
+        name="editReservationPatientCount"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="10"
+        step="1"
+        required
+      />
     </label>
     <fieldset class="dental-services-field">
       <legend>خدمات دندانپزشکی</legend>
