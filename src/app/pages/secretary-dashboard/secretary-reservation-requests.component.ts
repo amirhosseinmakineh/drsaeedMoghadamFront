@@ -224,17 +224,11 @@ export class SecretaryReservationRequestsComponent
     this.consultantName = this.consultantName.trim();
     this.applyFilters();
   }
+
   onReservationStatusChange(event: Event): void {
-  const value = (event.target as HTMLSelectElement).value;
-
-  console.log("SELECT VALUE:", value);
-
-  this.reservationStatus = value;
-
-  console.log("reservationStatus:", this.reservationStatus);
-
-  this.applyFilters();
-}
+    this.reservationStatus = (event.target as HTMLSelectElement).value;
+    this.applyFilters();
+  }
 
   clearFilters(): void {
     this.quickFilter = "all";
@@ -292,86 +286,66 @@ export class SecretaryReservationRequestsComponent
     this.load();
   }
 
-load(): void {
-  if (!this.profileReady) return;
+  load(): void {
+    if (!this.profileReady) return;
 
-  const currentRequest = ++this.requestId;
+    const currentRequest = ++this.requestId;
+    const exactDate = this.toDateParam(this.reservationDate);
+    this.loading = true;
+    this.errorMessage = "";
+    this.loadSubscription?.unsubscribe();
 
-  this.loading = true;
-  this.errorMessage = "";
-
-  this.loadSubscription?.unsubscribe();
-
-  const exactDate = this.toDateParam(this.reservationDate);
-
-this.loadSubscription = this.api
-  .getReservations({
-    pageNumber: this.pageNumber,
-    pageSize: this.pageSize,
-    includeCanceled: true,
-
-    search: this.searchText.trim() || undefined,
-    consultantName: this.consultantName.trim() || undefined,
-
-    reservationStatus: this.reservationStatus || null,
-
-    secretaryAnnouncementStatus:
-      this.secretaryAnnouncementFilter ?? null,
-
-    attendanceStatus:
-      this.statusFilter ?? null,
-
-    fromDate:
-      this.toDateParam(this.fromDate),
-
-    toDate:
-      this.toDateParam(this.toDate),
-
-    sortDirection:
-      this.sortDirection,
-
-    reservationType:
-      this.reservationTypeFilter === "regular"
-        ? ReservationType.Regular
-        : this.reservationTypeFilter === "after-sales"
-          ? ReservationType.AfterSalesService
-          : null,
-  })
-    .pipe(
-      finalize(() => {
-        if (currentRequest !== this.requestId) return;
-
-        this.loading = false;
-        this.cdr.markForCheck();
-      }),
-    )
-    .subscribe({
-      next: (response) => {
-        if (currentRequest !== this.requestId) return;
-
-        this.items = response.items ?? [];
-        this.totalCount = response.totalCount ?? 0;
-        this.pageNumber = response.pageNumber || 1;
-        this.totalPages = Math.max(1, response.totalPages || 1);
-
-        this.cdr.markForCheck();
-      },
-
-      error: (error) => {
-        if (currentRequest !== this.requestId) return;
-
-        this.items = [];
-        this.totalCount = 0;
-
-        this.errorMessage = this.errorText(
-          error,
-          "دریافت درخواست‌های رزرو انجام نشد",
-        );
-
-        this.cdr.markForCheck();
-      },
-    });
-}
+    this.loadSubscription = this.api
+      .getReservations({
+        pageNumber: this.pageNumber,
+        pageSize: this.pageSize,
+        includeCanceled: true,
+        searchText: this.searchText.trim() || undefined,
+        consultantName: this.consultantName.trim() || undefined,
+        reservationStatus: this.reservationStatus || null,
+        secretaryAnnouncementStatus: this.secretaryAnnouncementFilter,
+        attendanceConfirmationStatus: this.statusFilter,
+        // The API accepts an exact reservation date separately from a range.
+        // Keep the range populated too for compatibility with older deployments.
+        reservationDate: exactDate,
+        from: exactDate ?? this.toDateParam(this.fromDate),
+        to: exactDate ?? this.toDateParam(this.toDate),
+        sortDirection: this.sortDirection,
+        reservationType:
+          this.reservationTypeFilter === "regular"
+            ? ReservationType.Regular
+            : this.reservationTypeFilter === "after-sales"
+              ? ReservationType.AfterSalesService
+              : null,
+      })
+      .pipe(
+        finalize(() => {
+          if (currentRequest !== this.requestId) return;
+          this.loading = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (currentRequest !== this.requestId) return;
+          this.items = response.items ?? [];
+          this.totalCount = response.totalCount ?? 0;
+          this.pageNumber = response.pageNumber || 1;
+          this.totalPages = Math.max(1, response.totalPages || 1);
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          if (currentRequest !== this.requestId) return;
+          this.items = [];
+          this.totalCount = 0;
+          this.errorMessage = this.errorText(
+            error,
+            "دریافت درخواست‌های رزرو انجام نشد",
+          );
+          this.cdr.markForCheck();
+        },
+      });
+  }
 
   openDialog(item: SecretaryReservation, mode: DialogMode): void {
     if (mode !== "details" && !this.hasManagementAccess(item)) return;
