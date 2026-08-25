@@ -131,20 +131,27 @@ export interface SecretaryReservation extends ReservationDto {
   LastActivityAt?: string | null;
   reservationRequestStatus?: number | null;
   requestedServiceName?: string | null;
+  RequestedServiceName?: string | null;
   consultantReport?: string | null;
+  ConsultantReport?: string | null;
   requestCreatedAt?: string | null;
   lastChangedByName?: string | null;
   priority?: number | null;
   callCount?: number | null;
   rejectionReason?: string | null;
+  RejectionReason?: string | null;
   cancellationReason?: string | null;
+  CancellationReason?: string | null;
   visitResultStatus?: number | null;
   initialReservationAt?: string | null;
   doctorName?: string | null;
   DoctorName?: string | null;
   roomName?: string | null;
+  RoomName?: string | null;
   lastFollowUpAt?: string | null;
+  LastFollowUpAt?: string | null;
   lastContactResult?: string | null;
+  LastContactResult?: string | null;
   secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
   SecretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
   secretaryAnnouncementDescription?: string | null;
@@ -186,11 +193,12 @@ export interface SecretaryAnnouncementRequest {
 
 export interface SecretaryReservationFilters {
   consultantProfileId?: number | null;
-  search?: string;
+  searchText?: string;
   consultantName?: string;
-  fromDate?: string;
-  toDate?: string;
-  attendanceStatus?: AttendanceConfirmationStatus | null;
+  reservationDate?: string;
+  from?: string;
+  to?: string;
+  attendanceConfirmationStatus?: AttendanceConfirmationStatus | null;
   secretaryAnnouncementStatus?: SecretaryAnnouncementStatus | null;
   reservationStatus?: string | null;
   reservationType?: ReservationType | null;

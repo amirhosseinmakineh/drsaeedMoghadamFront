@@ -222,8 +222,8 @@ export class SecretaryReservationsComponent
           includeCanceled: false,
           pageNumber: this.pageNumber,
           pageSize: this.pageSize,
-          search: this.searchText.trim() || undefined,
-          attendanceStatus: this.statusFilter,
+          searchText: this.searchText.trim() || undefined,
+          attendanceConfirmationStatus: this.statusFilter,
         })
         .pipe(
           finalize(() => {
@@ -303,7 +303,7 @@ export class SecretaryReservationsComponent
         pageNumber: this.pageNumber,
         pageSize: this.pageSize,
         includeCanceled: this.includeCanceled,
-        search: this.searchText.trim() || undefined,
+        searchText: this.searchText.trim() || undefined,
         reservationType:
           this.activeTab === "regular"
             ? ReservationType.Regular

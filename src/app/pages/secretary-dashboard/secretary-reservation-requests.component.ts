@@ -61,7 +61,6 @@ type DialogMode =
   | "reschedule"
   | "reject"
   | "contact"
-  | "followup"
   | "visit";
 
 const SECRETARY_ANNOUNCEMENT_OPTIONS: ReadonlyArray<{
@@ -153,6 +152,8 @@ export class SecretaryReservationRequestsComponent
 
   selected: SecretaryReservation | null = null;
   dialogMode: DialogMode | null = null;
+  detailsLoading = false;
+  detailsError = "";
   note = "";
   reasonCode: number | null = null;
   rejectionText = "";
@@ -161,11 +162,10 @@ export class SecretaryReservationRequestsComponent
   editDentalServices: number[] = [];
   editPatientCount = 1;
   contactResult: SecretaryAnnouncementStatus = "NotCalled";
-  followUpDate: Date | null = null;
-  followUpTime = "";
   visitResult = 2;
 
   private loadSubscription: Subscription | null = null;
+  private detailsSubscription: Subscription | null = null;
   private readonly realtimeSubscription: Subscription;
   private requestId = 0;
 
@@ -199,6 +199,7 @@ export class SecretaryReservationRequestsComponent
 
   ngOnDestroy(): void {
     this.loadSubscription?.unsubscribe();
+    this.detailsSubscription?.unsubscribe();
     this.realtimeSubscription.unsubscribe();
   }
 
@@ -224,17 +225,11 @@ export class SecretaryReservationRequestsComponent
     this.consultantName = this.consultantName.trim();
     this.applyFilters();
   }
+
   onReservationStatusChange(event: Event): void {
-  const value = (event.target as HTMLSelectElement).value;
-
-  console.log("SELECT VALUE:", value);
-
-  this.reservationStatus = value;
-
-  console.log("reservationStatus:", this.reservationStatus);
-
-  this.applyFilters();
-}
+    this.reservationStatus = (event.target as HTMLSelectElement).value;
+    this.applyFilters();
+  }
 
   clearFilters(): void {
     this.quickFilter = "all";
@@ -292,91 +287,72 @@ export class SecretaryReservationRequestsComponent
     this.load();
   }
 
-load(): void {
-  if (!this.profileReady) return;
+  load(): void {
+    if (!this.profileReady) return;
 
-  const currentRequest = ++this.requestId;
+    const currentRequest = ++this.requestId;
+    const exactDate = this.toDateParam(this.reservationDate);
+    this.loading = true;
+    this.errorMessage = "";
+    this.loadSubscription?.unsubscribe();
 
-  this.loading = true;
-  this.errorMessage = "";
-
-  this.loadSubscription?.unsubscribe();
-
-  const exactDate = this.toDateParam(this.reservationDate);
-
-this.loadSubscription = this.api
-  .getReservations({
-    pageNumber: this.pageNumber,
-    pageSize: this.pageSize,
-    includeCanceled: true,
-
-    search: this.searchText.trim() || undefined,
-    consultantName: this.consultantName.trim() || undefined,
-
-    reservationStatus: this.reservationStatus || null,
-
-    secretaryAnnouncementStatus:
-      this.secretaryAnnouncementFilter ?? null,
-
-    attendanceStatus:
-      this.statusFilter ?? null,
-
-    fromDate:
-      this.toDateParam(this.fromDate),
-
-    toDate:
-      this.toDateParam(this.toDate),
-
-    sortDirection:
-      this.sortDirection,
-
-    reservationType:
-      this.reservationTypeFilter === "regular"
-        ? ReservationType.Regular
-        : this.reservationTypeFilter === "after-sales"
-          ? ReservationType.AfterSalesService
-          : null,
-  })
-    .pipe(
-      finalize(() => {
-        if (currentRequest !== this.requestId) return;
-
-        this.loading = false;
-        this.cdr.markForCheck();
-      }),
-    )
-    .subscribe({
-      next: (response) => {
-        if (currentRequest !== this.requestId) return;
-
-        this.items = response.items ?? [];
-        this.totalCount = response.totalCount ?? 0;
-        this.pageNumber = response.pageNumber || 1;
-        this.totalPages = Math.max(1, response.totalPages || 1);
-
-        this.cdr.markForCheck();
-      },
-
-      error: (error) => {
-        if (currentRequest !== this.requestId) return;
-
-        this.items = [];
-        this.totalCount = 0;
-
-        this.errorMessage = this.errorText(
-          error,
-          "دریافت درخواست‌های رزرو انجام نشد",
-        );
-
-        this.cdr.markForCheck();
-      },
-    });
-}
+    this.loadSubscription = this.api
+      .getReservations({
+        pageNumber: this.pageNumber,
+        pageSize: this.pageSize,
+        includeCanceled: true,
+        searchText: this.searchText.trim() || undefined,
+        consultantName: this.consultantName.trim() || undefined,
+        reservationStatus: this.reservationStatus || null,
+        secretaryAnnouncementStatus: this.secretaryAnnouncementFilter,
+        attendanceConfirmationStatus: this.statusFilter,
+        // The API accepts an exact reservation date separately from a range.
+        // Keep the range populated too for compatibility with older deployments.
+        reservationDate: exactDate,
+        from: exactDate ?? this.toDateParam(this.fromDate),
+        to: exactDate ?? this.toDateParam(this.toDate),
+        sortDirection: this.sortDirection,
+        reservationType:
+          this.reservationTypeFilter === "regular"
+            ? ReservationType.Regular
+            : this.reservationTypeFilter === "after-sales"
+              ? ReservationType.AfterSalesService
+              : null,
+      })
+      .pipe(
+        finalize(() => {
+          if (currentRequest !== this.requestId) return;
+          this.loading = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (currentRequest !== this.requestId) return;
+          this.items = response.items ?? [];
+          this.totalCount = response.totalCount ?? 0;
+          this.pageNumber = response.pageNumber || 1;
+          this.totalPages = Math.max(1, response.totalPages || 1);
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          if (currentRequest !== this.requestId) return;
+          this.items = [];
+          this.totalCount = 0;
+          this.errorMessage = this.errorText(
+            error,
+            "دریافت درخواست‌های رزرو انجام نشد",
+          );
+          this.cdr.markForCheck();
+        },
+      });
+  }
 
   openDialog(item: SecretaryReservation, mode: DialogMode): void {
     if (mode !== "details" && !this.hasManagementAccess(item)) return;
     this.selected = item;
     this.dialogMode = mode;
+    this.detailsError = "";
     this.note = "";
     this.reasonCode = null;
     this.rejectionText = "";
@@ -391,15 +367,50 @@ this.loadSubscription = this.api
     }
     this.editDentalServices = dentalServicesOf(item);
     this.editPatientCount = reservationPatientCount(item);
-    this.followUpDate = null;
-    this.followUpTime = "";
     this.contactResult = this.secretaryAnnouncementStatus(item);
+
+    if (mode === "details") this.loadSelectedDetails(item);
   }
 
   closeDialog(): void {
     if (this.saving) return;
     this.dialogMode = null;
     this.selected = null;
+    this.detailsLoading = false;
+    this.detailsError = "";
+    this.detailsSubscription?.unsubscribe();
+    this.detailsSubscription = null;
+  }
+
+  private loadSelectedDetails(item: SecretaryReservation): void {
+    const id = this.reservationId(item);
+    if (!id) return;
+
+    this.detailsLoading = true;
+    this.detailsSubscription?.unsubscribe();
+    this.detailsSubscription = this.api.getReservationDetails(id)
+      .pipe(finalize(() => {
+        this.detailsLoading = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: (details) => {
+          if (
+            this.dialogMode !== "details" ||
+            !this.selected ||
+            this.reservationId(this.selected) !== id
+          ) return;
+          // List endpoints return a compact projection while the details endpoint
+          // contains the remaining workflow states. Preserve list values when a
+          // field is absent from the detailed projection.
+          this.selected = { ...item, ...details };
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.detailsError = this.errorText(error, "دریافت همه جزئیات رزرو انجام نشد");
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   openCreateDialog(type = ReservationType.AfterSalesService): void {
@@ -621,12 +632,6 @@ this.loadSubscription = this.api
         status: this.contactResult,
         description: this.note.trim() || null,
       });
-    } else if (this.dialogMode === "followup") {
-      request = this.api.createFollowUp(
-        id,
-        this.combineDateTime(this.followUpDate!, this.followUpTime),
-        this.note.trim(),
-      );
     } else {
       request = this.api.recordVisitResult(
         id,
@@ -737,6 +742,7 @@ this.loadSubscription = this.api
   serviceName(item: SecretaryReservation): string {
     return (
       item.requestedServiceName?.trim() ||
+      item.RequestedServiceName?.trim() ||
       item.businessName?.trim() ||
       item.BusinessName?.trim() ||
       "ثبت نشده"
@@ -745,10 +751,32 @@ this.loadSubscription = this.api
   consultantReport(item: SecretaryReservation): string {
     return (
       item.consultantReport?.trim() ||
+      item.ConsultantReport?.trim() ||
       item.description?.trim() ||
       item.Description?.trim() ||
       "گزارشی ثبت نشده"
     );
+  }
+  patientConfirmationLabel(item: SecretaryReservation): string {
+    const confirmed = item.isConfirmedWithPatient ?? item.IsConfirmedWithPatient;
+    return confirmed === true ? "تایید شده" : confirmed === false ? "تایید نشده" : "نامشخص";
+  }
+  lastFollowUpAt(item: SecretaryReservation): string | null {
+    return item.lastFollowUpAt ?? item.LastFollowUpAt ?? null;
+  }
+  lastContactResult(item: SecretaryReservation): string {
+    return item.lastContactResult ?? item.LastContactResult ?? "-";
+  }
+  rejectionReason(item: SecretaryReservation): string {
+    return item.rejectionReason ?? item.RejectionReason ?? "-";
+  }
+  cancellationReason(item: SecretaryReservation): string {
+    return item.cancellationReason ?? item.CancellationReason ?? "-";
+  }
+  doctorRoom(item: SecretaryReservation): string | null {
+    const doctor = item.doctorName ?? item.DoctorName;
+    const room = item.roomName ?? item.RoomName;
+    return doctor || room ? `${doctor ?? "-"} / ${room ?? "-"}` : null;
   }
   reservationAt(item: SecretaryReservation): string {
     return item.reservationAt || item.ReservationAt || "";
@@ -810,16 +838,6 @@ this.loadSubscription = this.api
       if (!this.reasonCode) return "انتخاب دلیل رد الزامی است";
       if (this.reasonCode === 4 && !this.rejectionText.trim())
         return "توضیحات دلیل سایر الزامی است";
-    }
-    if (this.dialogMode === "followup") {
-      if (!this.followUpDate || !this.followUpTime || !this.note.trim())
-        return "تاریخ، ساعت و دلیل پیگیری الزامی است";
-      if (
-        new Date(
-          this.combineDateTime(this.followUpDate, this.followUpTime),
-        ).getTime() <= Date.now()
-      )
-        return "زمان پیگیری باید در آینده باشد";
     }
     return null;
   }
