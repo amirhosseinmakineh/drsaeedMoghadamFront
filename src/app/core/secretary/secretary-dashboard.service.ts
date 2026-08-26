@@ -196,6 +196,10 @@ export interface SecretaryReservationFilters {
   searchText?: string;
   consultantName?: string;
   reservationDate?: string;
+  /** Current backend query-model names for the reservation range. */
+  fromDate?: string;
+  toDate?: string;
+  /** Legacy aliases kept while older API deployments are still in use. */
   from?: string;
   to?: string;
   attendanceConfirmationStatus?: AttendanceConfirmationStatus | null;

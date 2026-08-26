@@ -292,6 +292,8 @@ export class SecretaryReservationRequestsComponent
 
     const currentRequest = ++this.requestId;
     const exactDate = this.toDateParam(this.reservationDate);
+    const rangeFrom = exactDate ?? this.toDateParam(this.fromDate);
+    const rangeTo = exactDate ?? this.toDateParam(this.toDate);
     this.loading = true;
     this.errorMessage = "";
     this.loadSubscription?.unsubscribe();
@@ -306,11 +308,13 @@ export class SecretaryReservationRequestsComponent
         reservationStatus: this.reservationStatus || null,
         secretaryAnnouncementStatus: this.secretaryAnnouncementFilter,
         attendanceConfirmationStatus: this.statusFilter,
-        // The API accepts an exact reservation date separately from a range.
-        // Keep the range populated too for compatibility with older deployments.
+        // The current backend binds the range from fromDate/toDate. Keep the
+        // former from/to names too so this frontend remains safe during rollout.
         reservationDate: exactDate,
-        from: exactDate ?? this.toDateParam(this.fromDate),
-        to: exactDate ?? this.toDateParam(this.toDate),
+        fromDate: rangeFrom,
+        toDate: rangeTo,
+        from: rangeFrom,
+        to: rangeTo,
         sortDirection: this.sortDirection,
         reservationType:
           this.reservationTypeFilter === "regular"
