@@ -83,6 +83,11 @@ export class SecretaryReservationsComponent
   private loadSubscription: Subscription | null = null;
   private readonly realtimeSubscription: Subscription;
   private destroyed = false;
+  private loadPending = false;
+  private initialLoadStarted = false;
+  private readonly onVisibilityChange = (): void => {
+    if (document.visibilityState === "visible" && this.profileReady) this.load();
+  };
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
 
@@ -103,8 +108,9 @@ export class SecretaryReservationsComponent
 
   ngOnInit(): void {
     this.activeTab = this.initialTab;
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
     if (this.profileReady) {
-      this.load();
+      this.loadInitial();
       this.startPolling();
     }
   }
@@ -122,7 +128,7 @@ export class SecretaryReservationsComponent
       this.load();
     }
     if (changes["profileReady"]?.currentValue === true) {
-      this.load();
+      this.loadInitial();
       this.startPolling();
     }
   }
@@ -132,6 +138,7 @@ export class SecretaryReservationsComponent
     this.stopPolling();
     this.loadSubscription?.unsubscribe();
     this.realtimeSubscription.unsubscribe();
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
   }
 
   private filterPreset(
@@ -166,7 +173,6 @@ export class SecretaryReservationsComponent
     this.activeTab = tab;
     this.pageNumber = 1;
     this.load();
-    this.startPolling();
   }
 
   applySearch(): void {
@@ -181,6 +187,10 @@ export class SecretaryReservationsComponent
 
   load(): void {
     if (!this.profileReady) return;
+    if (this.loading) {
+      this.loadPending = true;
+      return;
+    }
 
     const requestId = ++this.loadRequestId;
     this.loading = true;
@@ -197,6 +207,7 @@ export class SecretaryReservationsComponent
             if (requestId === this.loadRequestId) {
               this.loading = false;
               this.markDirty();
+              this.runPendingLoad();
             }
           }),
         )
@@ -230,6 +241,7 @@ export class SecretaryReservationsComponent
             if (requestId === this.loadRequestId) {
               this.loading = false;
               this.markDirty();
+              this.runPendingLoad();
             }
           }),
         )
@@ -282,6 +294,7 @@ export class SecretaryReservationsComponent
             if (requestId === this.loadRequestId) {
               this.loading = false;
               this.markDirty();
+              this.runPendingLoad();
             }
           }),
         )
@@ -317,6 +330,7 @@ export class SecretaryReservationsComponent
           if (requestId === this.loadRequestId) {
             this.loading = false;
             this.markDirty();
+            this.runPendingLoad();
           }
         }),
       )
@@ -545,11 +559,30 @@ export class SecretaryReservationsComponent
 
   private startPolling(): void {
     this.stopPolling();
-    const intervalMs = this.activeTab === "queue" ? 15000 : 30000;
     this.pollId = setInterval(() => {
-      if (!this.profileReady || this.loading || this.savingId) return;
+      if (
+        !this.profileReady ||
+        this.loading ||
+        this.savingId ||
+        this.destroyed ||
+        document.visibilityState === "hidden"
+      ) {
+        return;
+      }
       this.load();
-    }, intervalMs);
+    }, 120000);
+  }
+
+  private loadInitial(): void {
+    if (this.initialLoadStarted) return;
+    this.initialLoadStarted = true;
+    this.load();
+  }
+
+  private runPendingLoad(): void {
+    if (!this.loadPending || this.destroyed) return;
+    this.loadPending = false;
+    queueMicrotask(() => this.load());
   }
 
   private stopPolling(): void {

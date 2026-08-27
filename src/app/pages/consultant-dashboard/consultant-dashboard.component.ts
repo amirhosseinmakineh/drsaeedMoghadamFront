@@ -3446,17 +3446,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   private configurePollTimer(): void {
-    const pushReady =
-      this.pushRegistrationReady ||
-      this.browserNotificationPermission === "granted";
-    let desiredInterval = 30000;
-    if (this.isProfileReady()) {
-      if (this.isOnline) {
-        desiredInterval = 10000;
-      } else {
-        desiredInterval = pushReady ? 30000 : 15000;
-      }
-    }
+    const desiredInterval = 120000;
 
     if (this.pollId && desiredInterval === this.pollIntervalMs) return;
 
@@ -3469,6 +3459,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.ngZone.runOutsideAngular(() => {
       this.pollId = setInterval(() => {
         if (!this.isProfileReady() || this.destroyed) return;
+        if (document.visibilityState === "hidden") return;
+        if (this.newLeadsRequestInFlight) return;
         if (this.reportDialogOpen || this.reservationDialogOpen) return;
         this.ngZone.run(() => {
           this.loadLeads(true);
