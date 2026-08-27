@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from "@angular/core";
-import { Subject } from "rxjs";
+import { Subject, debounceTime, share } from "rxjs";
 
 @Injectable({ providedIn: "root" })
 export class ReservationSyncService implements OnDestroy {
@@ -10,7 +10,10 @@ export class ReservationSyncService implements OnDestroy {
       ? null
       : new BroadcastChannel(ReservationSyncService.channelName);
 
-  readonly refreshRequested$ = this.refreshSubject.asObservable();
+  readonly refreshRequested$ = this.refreshSubject.pipe(
+    debounceTime(600),
+    share(),
+  );
 
   constructor() {
     if (this.channel) {

@@ -65,6 +65,12 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
   totalPages = 1;
   private readonly refreshSubscription: Subscription;
   private pollId: ReturnType<typeof setInterval> | null = null;
+  private loadPending = false;
+  private destroyed = false;
+  private initialLoadStarted = false;
+  private readonly onVisibilityChange = (): void => {
+    if (document.visibilityState === "visible") this.load();
+  };
 
   filters: SecretaryReservationFilters = {
     pageNumber: 1,
@@ -162,23 +168,33 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.refreshSubscription.unsubscribe();
     this.stopPolling();
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
   }
 
   ngOnInit(): void {
     this.syncProfileFilter();
     this.syncDateFilter();
     this.syncSelectedDatePersian();
-    this.load();
+    this.loadInitial();
     this.startPolling();
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["profileId"] || changes["mode"]) {
       this.syncProfileFilter();
       this.filters.pageNumber = 1;
-      this.load();
+      const isInitialChange =
+        (changes["profileId"]?.firstChange ?? true) &&
+        (changes["mode"]?.firstChange ?? true);
+      if (isInitialChange) {
+        this.loadInitial();
+      } else {
+        this.load();
+      }
     }
   }
 
@@ -209,6 +225,12 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
   }
 
   load(): void {
+    if (this.destroyed) return;
+    if (this.loading) {
+      this.loadPending = true;
+      return;
+    }
+
     this.loading = true;
     this.feedback = "";
 
@@ -222,6 +244,7 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
         finalize(() => {
           this.loading = false;
           this.cdr.markForCheck();
+          this.runPendingLoad();
         }),
       )
       .subscribe({
@@ -364,7 +387,19 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
     this.pollId = setInterval(() => {
       if (this.loading || document.visibilityState === "hidden") return;
       this.load();
-    }, 5000);
+    }, 120000);
+  }
+
+  private loadInitial(): void {
+    if (this.initialLoadStarted) return;
+    this.initialLoadStarted = true;
+    this.load();
+  }
+
+  private runPendingLoad(): void {
+    if (!this.loadPending || this.destroyed) return;
+    this.loadPending = false;
+    queueMicrotask(() => this.load());
   }
 
   private stopPolling(): void {

@@ -124,6 +124,11 @@ export class ConsultantReservationsPanelComponent
   private readonly realtimeSubscription: Subscription;
   private searchDebounceId: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
+  private loadPending = false;
+  private initialLoadStarted = false;
+  private readonly onVisibilityChange = (): void => {
+    if (document.visibilityState === "visible" && this.profileReady) this.load();
+  };
   readonly ngModelBlurOptions = NG_MODEL_UPDATE_ON_BLUR;
   private readonly markDirty: () => void;
 
@@ -143,18 +148,23 @@ export class ConsultantReservationsPanelComponent
   }
 
   ngOnInit(): void {
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
     if (this.profileReady) {
-      this.load();
+      this.loadInitial();
       this.startPolling();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["profileReady"]?.currentValue === true) {
-      this.load();
+      this.loadInitial();
       this.startPolling();
     }
-    if (changes["profileId"] && this.profileReady) {
+    if (
+      changes["profileId"] &&
+      !changes["profileId"].firstChange &&
+      this.profileReady
+    ) {
       this.load();
     }
   }
@@ -165,6 +175,7 @@ export class ConsultantReservationsPanelComponent
     this.loadSubscription?.unsubscribe();
     this.realtimeSubscription.unsubscribe();
     if (this.searchDebounceId) clearTimeout(this.searchDebounceId);
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
   }
 
   setTab(tab: ConsultantReservationTab): void {
@@ -172,11 +183,14 @@ export class ConsultantReservationsPanelComponent
     this.activeTab = tab;
     this.pageNumber = 1;
     this.load();
-    this.startPolling();
   }
 
   load(): void {
     if (!this.profileReady || !this.profileId) return;
+    if (this.loading) {
+      this.loadPending = true;
+      return;
+    }
 
     const requestId = ++this.loadRequestId;
     this.loading = true;
@@ -192,6 +206,7 @@ export class ConsultantReservationsPanelComponent
             if (requestId === this.loadRequestId) {
               this.loading = false;
               this.markDirty();
+              this.runPendingLoad();
             }
           }),
         )
@@ -233,6 +248,7 @@ export class ConsultantReservationsPanelComponent
           if (requestId === this.loadRequestId) {
             this.loading = false;
             this.markDirty();
+            this.runPendingLoad();
           }
         }),
       )
@@ -585,11 +601,30 @@ export class ConsultantReservationsPanelComponent
 
   private startPolling(): void {
     this.stopPolling();
-    const intervalMs = this.activeTab === "pending" ? 15000 : 30000;
     this.pollId = setInterval(() => {
-      if (!this.profileReady || this.loading || this.savingId) return;
+      if (
+        !this.profileReady ||
+        this.loading ||
+        this.savingId ||
+        this.destroyed ||
+        document.visibilityState === "hidden"
+      ) {
+        return;
+      }
       this.load();
-    }, intervalMs);
+    }, 120000);
+  }
+
+  private loadInitial(): void {
+    if (this.initialLoadStarted) return;
+    this.initialLoadStarted = true;
+    this.load();
+  }
+
+  private runPendingLoad(): void {
+    if (!this.loadPending || this.destroyed) return;
+    this.loadPending = false;
+    queueMicrotask(() => this.load());
   }
 
   private stopPolling(): void {
