@@ -91,6 +91,14 @@ export const routes: Routes = [
     pathMatch: "full",
   },
   {
+    path: "secretary/account",
+    canActivate: [authGuard, roleGuard(["secretary"])],
+    loadChildren: () =>
+      import("./features/secretary/account/secretary-account.routes").then(
+        (m) => m.SECRETARY_ACCOUNT_ROUTES,
+      ),
+  },
+  {
     path: "dashboard/patient",
     canActivate: [authGuard, roleGuard(["patient"])],
     loadComponent: () =>

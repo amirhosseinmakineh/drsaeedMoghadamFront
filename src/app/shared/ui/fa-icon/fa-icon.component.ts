@@ -42,6 +42,8 @@ const iconPaths: Record<string, string> = {
   menu: "M4 6h16M4 12h16M4 18h16",
   close: "M6 6l12 12M18 6 6 18",
   dashboard: "M4 13a8 8 0 1 1 16 0v6H4v-6zm8 1 4-5M7 16h10",
+  wallet:
+    "M4 6h15a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6zm0 0 13-3v3m0 6h4v4h-4a2 2 0 0 1 0-4z",
   logout: "M10 4H5v16h5m3-4 4-4-4-4m4 4H9",
   arrowLeft: "M19 12H5m6-6-6 6 6 6",
   arrowRight: "M5 12h14m-6-6 6 6-6 6",
