@@ -1,0 +1,27 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding-inline: 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #eee;
+  color: #555;
+}
+:host(.success) {
+  background: #e8f6ee;
+  color: #176b3a;
+}
+:host(.danger) {
+  background: #fdecec;
+  color: #a52a2a;
+}
+:host(.warning) {
+  background: #fff4d8;
+  color: #865e00;
+}
+:host(.info) {
+  background: #e8f2fc;
+  color: #235f91;
+}

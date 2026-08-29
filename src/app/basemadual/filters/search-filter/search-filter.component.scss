@@ -1,0 +1,31 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+  display: block;
+}
+label {
+  display: grid;
+  gap: var(--bm-space-1);
+  font-size: 0.875rem;
+  color: var(--bm-muted);
+}
+div {
+  position: relative;
+}
+input {
+  min-height: 44px;
+  padding-inline-end: 3rem;
+}
+button {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  min-width: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--bm-muted);
+}
+input:focus-visible,
+button:focus-visible {
+  @include foundation.focus-ring;
+}

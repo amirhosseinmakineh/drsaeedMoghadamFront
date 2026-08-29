@@ -1,0 +1,47 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+  display: block;
+  min-width: 0;
+}
+.shell {
+  display: grid;
+  gap: var(--bm-space-4);
+  width: min(100% - 1rem, 80rem);
+  margin-inline: auto;
+  padding-block: var(--bm-space-4) var(--bm-space-8);
+}
+header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bm-space-3);
+}
+h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+p {
+  margin: var(--bm-space-1) 0 0;
+  color: var(--bm-muted);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bm-space-2);
+}
+.breadcrumbs:empty,
+.filters:empty,
+.actions:empty {
+  display: none;
+}
+@media (min-width: 640px) {
+  .shell {
+    width: min(100% - 2rem, 80rem);
+    padding-block: var(--bm-space-6) var(--bm-space-12);
+  }
+  header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}

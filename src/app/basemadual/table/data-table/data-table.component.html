@@ -1,0 +1,59 @@
+<section [attr.aria-busy]="loading">
+  @if (loading) {
+    <div class="state">در حال دریافت اطلاعات…</div>
+  } @else if (rows.length === 0) {
+    <div class="state">{{ emptyTitle }}</div>
+  } @else {
+    <div class="desktop-table">
+      <table>
+        <thead>
+          <tr>
+            @for (column of columns; track column.key) {
+              <th scope="col">{{ column.label }}</th>
+            }
+            <th class="actions"><span class="sr-only">عملیات</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows; track row) {
+            <tr [class.clickable]="rowClickable" (click)="selectRow(row)">
+              @for (column of columns; track column.key) {
+                <td>{{ cellValue(row, column) }}</td>
+              }
+              <td class="actions">
+                <ng-container
+                  [ngTemplateOutlet]="rowActions"
+                  [ngTemplateOutletContext]="{ $implicit: row }"
+                />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="mobile-cards">
+      @for (row of rows; track row) {
+        <article [class.clickable]="rowClickable" (click)="selectRow(row)">
+          @for (column of columns; track column.key) {
+            <div [class.primary]="column.primaryOnMobile">
+              <span>{{ column.mobileLabel || column.label }}</span
+              ><strong>{{ cellValue(row, column) }}</strong>
+            </div>
+          }
+          <footer>
+            <ng-container
+              [ngTemplateOutlet]="rowActions"
+              [ngTemplateOutletContext]="{ $implicit: row }"
+            />
+          </footer>
+        </article>
+      }
+    </div>
+  }
+  <ng-template #rowActions let-row
+    ><ng-content select="[baseTableAction]"
+  /></ng-template>
+  <footer class="pagination">
+    <ng-content select="[baseTablePagination]" />
+  </footer>
+</section>

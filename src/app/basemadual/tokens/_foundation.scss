@@ -1,0 +1,30 @@
+@mixin host-tokens {
+  --bm-space-1: 0.25rem;
+  --bm-space-2: 0.5rem;
+  --bm-space-3: 0.75rem;
+  --bm-space-4: 1rem;
+  --bm-space-5: 1.25rem;
+  --bm-space-6: 1.5rem;
+  --bm-space-8: 2rem;
+  --bm-space-10: 2.5rem;
+  --bm-space-12: 3rem;
+  --bm-radius-sm: 0.5rem;
+  --bm-radius-md: 0.75rem;
+  --bm-radius-lg: 1rem;
+  --bm-radius-full: 999px;
+  --bm-surface: var(--surface, #fff);
+  --bm-surface-soft: var(--surface-soft, #f7f4ef);
+  --bm-text: var(--text, #25211c);
+  --bm-muted: var(--muted, #6b6258);
+  --bm-line: var(--line, #ddd6ce);
+  --bm-brand: var(--brand, #9b713f);
+  --bm-danger: var(--danger, #c63f3f);
+  box-sizing: border-box;
+  color: var(--bm-text);
+  direction: rtl;
+}
+
+@mixin focus-ring {
+  outline: 3px solid color-mix(in srgb, var(--bm-brand) 40%, transparent);
+  outline-offset: 2px;
+}
