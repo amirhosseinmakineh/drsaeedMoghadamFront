@@ -1,0 +1,56 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+  display: block;
+}
+section,
+.fields,
+.actions {
+  display: grid;
+  gap: var(--bm-space-3);
+}
+section {
+  padding: var(--bm-space-4);
+  border: 1px solid var(--bm-line);
+  border-radius: var(--bm-radius-lg);
+  background: var(--bm-surface);
+}
+button {
+  min-height: 44px;
+  border-radius: var(--bm-radius-md);
+  padding-inline: var(--bm-space-4);
+}
+.reset {
+  border: 1px solid var(--bm-line);
+  background: var(--bm-surface);
+}
+.apply {
+  border: 0;
+  background: var(--bm-brand);
+  color: white;
+}
+button:focus-visible {
+  @include foundation.focus-ring;
+}
+@media (min-width: 640px) {
+  .fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .actions {
+    grid-template-columns: repeat(2, max-content);
+    justify-content: end;
+  }
+}
+@media (min-width: 1024px) {
+  section:not(.compact) {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+  .fields {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .fields ::ng-deep > * {
+    flex: 1 1 10rem;
+  }
+}

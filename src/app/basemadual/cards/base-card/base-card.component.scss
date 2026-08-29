@@ -1,0 +1,28 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+  display: block;
+  min-width: 0;
+  padding: var(--bm-space-4);
+  border: 1px solid var(--bm-line);
+  border-radius: var(--bm-radius-lg);
+  background: var(--bm-surface);
+}
+:host(.variant-elevated) {
+  box-shadow: 0 0.75rem 2rem rgb(50 38 26 / 10%);
+}
+:host(.variant-interactive) {
+  cursor: pointer;
+}
+:host(.variant-interactive:focus-visible) {
+  @include foundation.focus-ring;
+}
+:host(.variant-flat) {
+  border-color: transparent;
+  background: var(--bm-surface-soft);
+}
+@media (min-width: 640px) {
+  :host {
+    padding: var(--bm-space-5);
+  }
+}

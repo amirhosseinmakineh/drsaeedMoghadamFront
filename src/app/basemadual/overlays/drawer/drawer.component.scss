@@ -1,0 +1,59 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+}
+.backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgb(0 0 0 / 45%);
+}
+aside {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  background: var(--bm-surface);
+}
+header,
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bm-space-3);
+  padding: var(--bm-space-4);
+  border-block-end: 1px solid var(--bm-line);
+}
+footer {
+  border-block: 1px 0;
+}
+footer:empty {
+  display: none;
+}
+h2 {
+  margin: 0;
+}
+button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  font-size: 1.5rem;
+}
+main {
+  min-height: 0;
+  padding: var(--bm-space-4);
+  overflow: auto;
+}
+.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+@media (min-width: 640px) {
+  aside {
+    width: min(28rem, 90vw);
+    box-shadow: 0 0 2rem rgb(0 0 0 / 20%);
+  }
+}

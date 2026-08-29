@@ -1,0 +1,98 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+  display: block;
+  min-width: 0;
+}
+section {
+  min-width: 0;
+  border: 1px solid var(--bm-line);
+  border-radius: var(--bm-radius-lg);
+  background: var(--bm-surface);
+  overflow: hidden;
+}
+.desktop-table {
+  display: none;
+}
+.mobile-cards {
+  display: grid;
+  gap: var(--bm-space-3);
+  padding: var(--bm-space-3);
+}
+article {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--bm-space-3);
+  padding: var(--bm-space-4);
+  border: 1px solid var(--bm-line);
+  border-radius: var(--bm-radius-md);
+}
+article div {
+  display: grid;
+  gap: var(--bm-space-1);
+  min-width: 0;
+}
+article span {
+  font-size: 0.75rem;
+  color: var(--bm-muted);
+}
+article strong {
+  overflow-wrap: anywhere;
+}
+.primary,
+article footer {
+  grid-column: 1/-1;
+}
+article footer:empty,
+.pagination:empty {
+  display: none;
+}
+.state {
+  padding: var(--bm-space-8);
+  text-align: center;
+  color: var(--bm-muted);
+}
+.pagination {
+  padding: var(--bm-space-3);
+  border-block-start: 1px solid var(--bm-line);
+}
+.clickable {
+  cursor: pointer;
+}
+.clickable:focus-visible {
+  @include foundation.focus-ring;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+@media (min-width: 768px) {
+  .mobile-cards {
+    display: none;
+  }
+  .desktop-table {
+    display: block;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th,
+  td {
+    padding: var(--bm-space-3);
+    text-align: start;
+    border-block-end: 1px solid var(--bm-line);
+    white-space: nowrap;
+  }
+  th {
+    background: var(--bm-surface-soft);
+    color: var(--bm-muted);
+  }
+  .actions {
+    width: 1%;
+  }
+}

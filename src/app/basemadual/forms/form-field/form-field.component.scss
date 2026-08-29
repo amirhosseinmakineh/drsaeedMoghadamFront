@@ -1,0 +1,25 @@
+:host {
+  display: block;
+}
+div {
+  display: grid;
+  gap: 0.25rem;
+}
+label {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.error {
+  color: var(--danger);
+}
+:host ::ng-deep input,
+:host ::ng-deep select,
+:host ::ng-deep textarea {
+  min-height: 44px;
+  width: 100%;
+}

@@ -1,0 +1,46 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+  display: block;
+}
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+legend {
+  margin-block-end: var(--bm-space-1);
+  font-size: 0.875rem;
+  color: var(--bm-muted);
+}
+fieldset > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--bm-space-2);
+}
+label {
+  display: grid;
+  gap: var(--bm-space-1);
+}
+label span {
+  font-size: 0.75rem;
+  color: var(--bm-muted);
+}
+select {
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: var(--bm-space-2);
+}
+small {
+  display: block;
+  margin-block-start: var(--bm-space-1);
+  color: var(--bm-danger);
+}
+select:focus-visible {
+  @include foundation.focus-ring;
+}
+@media (max-width: 359px) {
+  fieldset > div {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,33 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+  display: block;
+}
+div {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--bm-space-1);
+  padding: var(--bm-space-1);
+  border: 1px solid var(--bm-line);
+  border-radius: var(--bm-radius-lg);
+  background: var(--bm-surface-soft);
+  overflow-x: auto;
+}
+button {
+  min-height: 44px;
+  padding-inline: var(--bm-space-3);
+  border: 0;
+  border-radius: var(--bm-radius-md);
+  background: transparent;
+  color: var(--bm-muted);
+  white-space: nowrap;
+}
+.selected {
+  background: var(--bm-surface);
+  color: var(--bm-brand);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+button:focus-visible {
+  @include foundation.focus-ring;
+}

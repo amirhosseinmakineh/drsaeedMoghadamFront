@@ -1,0 +1,54 @@
+@use "../../tokens/foundation" as foundation;
+:host {
+  @include foundation.host-tokens;
+  display: inline-block;
+}
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--bm-space-2);
+  min-height: 44px;
+  padding-inline: var(--bm-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--bm-radius-md);
+  font: inherit;
+  font-weight: 700;
+}
+.primary {
+  background: var(--bm-brand);
+  color: white;
+}
+.secondary {
+  border-color: var(--bm-line);
+  background: var(--bm-surface);
+  color: var(--bm-text);
+}
+.danger {
+  background: var(--bm-danger);
+  color: white;
+}
+.ghost {
+  background: transparent;
+  color: var(--bm-brand);
+}
+button:focus-visible {
+  @include foundation.focus-ring;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
