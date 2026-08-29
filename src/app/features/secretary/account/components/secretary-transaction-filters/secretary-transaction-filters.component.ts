@@ -1,22 +1,67 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, Input, OnInit, Output, inject } from "@angular/core";
-import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
-import { debounceTime } from "rxjs";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { SEARCH_DEBOUNCE_TIME, TRANSACTION_TYPE_OPTIONS } from "../../constants/secretary-account.constants";
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from "@angular/core";
+import {
+  BaseFilterBarComponent,
+  BaseSearchFilterComponent,
+  BaseSelectFilterComponent,
+  PersianDatePickerComponent,
+} from "../../../../../basemadual/index";
+import { TRANSACTION_TYPE_OPTIONS } from "../../constants/secretary-account.constants";
 import { SecretaryExpenseCategoryDto, SecretaryTransactionFilters } from "../../models/secretary-account.models";
-
-@Component({ selector: "app-secretary-transaction-filters", standalone: true, imports: [ReactiveFormsModule], templateUrl: "./secretary-transaction-filters.component.html", styleUrl: "./secretary-transaction-filters.component.scss", changeDetection: ChangeDetectionStrategy.OnPush })
-export class SecretaryTransactionFiltersComponent implements OnInit {
-  @Input() categories: SecretaryExpenseCategoryDto[] = [];
-  @Output() filtersChanged = new EventEmitter<SecretaryTransactionFilters>();
-  private readonly formBuilder = inject(FormBuilder);
+@Component({
+  selector: "app-secretary-transaction-filters",
+  standalone: true,
+  imports: [BaseFilterBarComponent, BaseSearchFilterComponent, BaseSelectFilterComponent, PersianDatePickerComponent],
+  templateUrl: "./secretary-transaction-filters.component.html",
+  styleUrl: "./secretary-transaction-filters.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SecretaryTransactionFiltersComponent {
+  @Input()
+  categories: SecretaryExpenseCategoryDto[] = [];
+  @Output()
+  filtersChanged = new EventEmitter<SecretaryTransactionFilters>();
   readonly typeOptions = TRANSACTION_TYPE_OPTIONS;
-  readonly form = this.formBuilder.group({ type: this.formBuilder.control<number | null>(null), fromDate: this.formBuilder.control(""), toDate: this.formBuilder.control(""), expenseCategoryId: this.formBuilder.control<number | null>(null), search: this.formBuilder.control("") });
-  private readonly destroyRef = inject(DestroyRef);
-  ngOnInit(): void { this.form.valueChanges.pipe(debounceTime(SEARCH_DEBOUNCE_TIME), takeUntilDestroyed(this.destroyRef)).subscribe(() => this.emitFilters()); }
-  clear(): void { this.form.reset({ type: null, fromDate: "", toDate: "", expenseCategoryId: null, search: "" }); }
-  private emitFilters(): void {
-    const value = this.form.getRawValue();
-    this.filtersChanged.emit({ type: value.type ?? undefined, fromDate: value.fromDate || undefined, toDate: value.toDate || undefined, expenseCategoryId: value.expenseCategoryId ?? undefined, search: value.search?.trim() || undefined });
+  search = "";
+  type: number | null = null;
+  categoryId: number | null = null;
+  fromDate: Date | null = null;
+  toDate: Date | null = null;
+  get categoryOptions() {
+    return this.categories.map(({ id, title }) => ({ value: id, label: title }));
+  }
+  setSearch(value: string): void {
+    this.search = value;
+    this.apply();
+  }
+  setType(value: string): void {
+    this.type = value ? Number(value) : null;
+  }
+  setCategory(value: string): void {
+    this.categoryId = value ? Number(value) : null;
+  }
+  clear(): void {
+    this.search = "";
+    this.type = null;
+    this.categoryId = null;
+    this.fromDate = null;
+    this.toDate = null;
+    this.apply();
+  }
+  apply(): void {
+    this.filtersChanged.emit({
+      type: this.type ?? undefined,
+      expenseCategoryId: this.categoryId ?? undefined,
+      search: this.search.trim() || undefined,
+      fromDate: this.apiDate(this.fromDate),
+      toDate: this.apiDate(this.toDate),
+    });
+  }
+  private apiDate(value: Date | null): string | undefined {
+    if (!value)
+      return undefined;
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 }
