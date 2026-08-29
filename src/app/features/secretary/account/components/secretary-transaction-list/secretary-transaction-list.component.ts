@@ -9,7 +9,7 @@ import {
   BaseTablePaginationComponent,
   BaseTableColumn,
   PersianDateService,
-} from "../../../../../basemadual";
+} from "../../../../../basemadual/index";
 import { SecretaryFinancialTransactionDto } from "../../models/secretary-account.models";
 interface TransactionRow {
   type: string;

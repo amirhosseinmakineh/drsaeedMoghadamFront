@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { BaseBadgeComponent, BaseSkeletonComponent, PersianDatePipe } from "../../../../../basemadual";
+import {
+  BaseBadgeComponent,
+  BaseSkeletonComponent,
+  PersianDatePipe,
+} from "../../../../../basemadual/index";
 import { FinancialTransactionType } from "../../enums/financial-transaction-type.enum";
 import { SecretaryFinancialTransactionDto } from "../../models/secretary-account.models";
 @Component({

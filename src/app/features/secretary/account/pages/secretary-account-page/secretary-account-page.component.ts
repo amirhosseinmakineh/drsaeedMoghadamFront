@@ -3,7 +3,13 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnIn
 import { Router } from "@angular/router";
 import { finalize } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { BaseButtonComponent, BaseDrawerComponent, BasePageHeaderComponent, BasePageShellComponent, BaseSectionComponent } from "../../../../../basemadual";
+import {
+  BaseButtonComponent,
+  BaseDrawerComponent,
+  BasePageHeaderComponent,
+  BasePageShellComponent,
+  BaseSectionComponent,
+} from "../../../../../basemadual/index";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { SecretaryAccountSummaryComponent } from "../../components/secretary-account-summary/secretary-account-summary.component";
 import { SecretaryTransactionDetailsComponent } from "../../components/secretary-transaction-details/secretary-transaction-details.component";

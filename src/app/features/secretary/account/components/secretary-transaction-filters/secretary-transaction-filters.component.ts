@@ -4,7 +4,7 @@ import {
   BaseSearchFilterComponent,
   BaseSelectFilterComponent,
   PersianDatePickerComponent,
-} from "../../../../../basemadual";
+} from "../../../../../basemadual/index";
 import { TRANSACTION_TYPE_OPTIONS } from "../../constants/secretary-account.constants";
 import { SecretaryExpenseCategoryDto, SecretaryTransactionFilters } from "../../models/secretary-account.models";
 @Component({

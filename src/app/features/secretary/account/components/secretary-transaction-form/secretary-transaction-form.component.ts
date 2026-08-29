@@ -19,7 +19,7 @@ import {
   BaseTextInputComponent,
   BaseTextareaInputComponent,
   PersianDatePickerComponent,
-} from "../../../../../basemadual";
+} from "../../../../../basemadual/index";
 import { PAYMENT_METHOD_OPTIONS, TRANSACTION_TYPE_OPTIONS } from "../../constants/secretary-account.constants";
 import { FinancialTransactionType } from "../../enums/financial-transaction-type.enum";
 import { PaymentMethod } from "../../enums/payment-method.enum";
