@@ -99,6 +99,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "secretary/accounting/patient-files",
+    canActivate: [authGuard, roleGuard(["secretary"])],
+    loadComponent: () =>
+      import("./features/secretary/patient-files/patient-files-page.component").then(
+        (m) => m.PatientFilesPageComponent,
+      ),
+  },
+  {
     path: "secretary/account",
     canActivate: [authGuard, roleGuard(["secretary"])],
     loadChildren: () =>
