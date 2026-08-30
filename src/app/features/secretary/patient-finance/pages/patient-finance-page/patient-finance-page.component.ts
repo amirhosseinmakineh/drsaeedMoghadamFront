@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from "@angular/core";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { finalize, forkJoin, Observable, Subscription } from "rxjs";
@@ -31,7 +31,7 @@ function commitmentRequired(control: AbstractControl): ValidationErrors | null {
   styleUrl: "./patient-finance-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PatientFinancePageComponent implements OnInit {
+export class PatientFinancePageComponent implements OnInit, OnDestroy {
   readonly tabs: { id: FinanceTab; label: string }[] = [
     { id: "cases", label: "پرونده‌ها" }, { id: "create", label: "پرونده جدید" },
     { id: "cheques", label: "چک‌ها" }, { id: "notes", label: "سفته‌ها" },
@@ -74,33 +74,10 @@ export class PatientFinancePageComponent implements OnInit {
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
   private readonly destroyRef = inject(DestroyRef);
   constructor(private readonly fb: FormBuilder, private readonly api: PatientFinanceApiService, private readonly patientFilesApi: PatientFilesService, private readonly toast: ToastService, private readonly cdr: ChangeDetectorRef) {}
-  ngOnInit(): void {
-    this.patientSearchRequests.pipe(
-      debounce(({ immediate }) => timer(immediate ? 0 : 400)),
-      switchMap(({ searchText }) => defer(() => {
-        this.patientOptionsLoading = true;
-        this.cdr.markForCheck();
-        return this.patientFilesApi.getPatientFiles({ search: searchText, fileNumber: "", sourceType: "", page: 1, pageSize: 20 });
-      }).pipe(
-        catchError((error: HttpErrorResponse) => { this.showError(error); return EMPTY; }),
-        finalize(() => { this.patientOptionsLoading = false; this.cdr.markForCheck(); }),
-      )),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe(result => {
-      this.patientOptions = result.items
-        .filter(patient => typeof patient.patientId === "string" && GUID_PATTERN.test(patient.patientId))
-        .map(patient => ({
-          patientFileId: patient.id,
-          patientId: patient.patientId!,
-          fileNumber: patient.fileNumber,
-          firstName: patient.firstName,
-          lastName: patient.lastName,
-          phoneNumber: patient.phoneNumber,
-        }));
-      this.patientOptionsLoaded = true;
-      this.cdr.markForCheck();
-    });
-    this.load();
+  ngOnInit(): void { this.load(); }
+  ngOnDestroy(): void {
+    if (this.patientSearchTimer !== null) clearTimeout(this.patientSearchTimer);
+    this.patientSearchSubscription?.unsubscribe();
   }
   get cheques(): FormArray { return this.createForm.controls.cheques; }
   get notes(): FormArray { return this.createForm.controls.promissoryNotes; }
