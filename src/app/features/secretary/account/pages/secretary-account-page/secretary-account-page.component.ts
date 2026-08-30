@@ -1,10 +1,8 @@
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, ViewChild, inject } from "@angular/core";
-import { Router } from "@angular/router";
 import { finalize } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BaseButtonComponent } from "../../../../../basemadual/actions/base-button/base-button.component";
-import { BasePageHeaderComponent } from "../../../../../basemadual/layout/page-header/page-header.component";
 import { BasePageShellComponent } from "../../../../../basemadual/layout/page-shell/page-shell.component";
 import { BaseSectionComponent } from "../../../../../basemadual/layout/section/section.component";
 import { BaseDrawerComponent } from "../../../../../basemadual/overlays/drawer/drawer.component";
@@ -29,7 +27,6 @@ import { SecretaryAccountService } from "../../services/secretary-account.servic
   imports: [
     BaseButtonComponent,
     BaseDrawerComponent,
-    BasePageHeaderComponent,
     BasePageShellComponent,
     BaseSectionComponent,
     SecretaryAccountSummaryComponent,
@@ -61,14 +58,15 @@ export class SecretaryAccountPageComponent implements OnInit {
   createDrawerOpen = false;
   detailsDrawerOpen = false;
   private readonly destroyRef = inject(DestroyRef);
-  constructor(private readonly accountService: SecretaryAccountService, private readonly toast: ToastService, private readonly router: Router, private readonly cdr: ChangeDetectorRef) { }
+  constructor(
+    private readonly accountService: SecretaryAccountService,
+    private readonly toast: ToastService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
   ngOnInit(): void {
     this.loadCategories();
     this.loadTransactions();
     this.loadSummary();
-  }
-  goBack(): void {
-    void this.router.navigate(["/dashboard/secretary"]);
   }
   openCreateDrawer(): void {
     this.createDrawerOpen = true;

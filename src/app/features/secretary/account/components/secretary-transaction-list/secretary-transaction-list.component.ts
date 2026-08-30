@@ -1,7 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output } from "@angular/core";
-import { BaseButtonComponent } from "../../../../../basemadual/actions/base-button/base-button.component";
 import { PersianDateService } from "../../../../../basemadual/date/persian-date.service";
-import { BaseBadgeComponent } from "../../../../../basemadual/feedback/badge/badge.component";
 import { BaseEmptyStateComponent } from "../../../../../basemadual/feedback/empty-state/empty-state.component";
 import { BaseErrorStateComponent } from "../../../../../basemadual/feedback/error-state/error-state.component";
 import { BaseSkeletonComponent } from "../../../../../basemadual/feedback/skeleton/skeleton.component";
@@ -22,7 +20,13 @@ interface TransactionRow {
 @Component({
   selector: "app-secretary-transaction-list",
   standalone: true,
-  imports: [BaseBadgeComponent, BaseButtonComponent, BaseDataTableComponent, BaseEmptyStateComponent, BaseErrorStateComponent, BaseSkeletonComponent, BaseTablePaginationComponent],
+  imports: [
+    BaseDataTableComponent,
+    BaseEmptyStateComponent,
+    BaseErrorStateComponent,
+    BaseSkeletonComponent,
+    BaseTablePaginationComponent,
+  ],
   templateUrl: "./secretary-transaction-list.component.html",
   styleUrl: "./secretary-transaction-list.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,8 +50,6 @@ export class SecretaryTransactionListComponent implements OnChanges {
   pageChanged = new EventEmitter<number>();
   @Output()
   retry = new EventEmitter<void>();
-  @Output()
-  createRequested = new EventEmitter<void>();
   readonly columns: BaseTableColumn<TransactionRow>[] = [
     { key: "type", label: "نوع" },
     { key: "amount", label: "مبلغ", primaryOnMobile: true },
