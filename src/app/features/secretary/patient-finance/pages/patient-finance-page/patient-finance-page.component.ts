@@ -128,7 +128,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   applyFilters(): void {
     const { year, month } = this.filters.getRawValue();
-    if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک GUID معتبر باشد."); return; }
+    if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک عدد معتبر باشد."); return; }
     if (this.activeTab === "debts" && ((year && !month) || (!year && month))) { this.toast.error("سال و ماه شمسی باید با هم وارد شوند."); return; }
     this.page = 1; this.load();
   }
@@ -149,7 +149,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     if (this.createForm.invalid) { this.createForm.markAllAsTouched(); this.toast.error(this.createForm.hasError("commitmentRequired") ? "ثبت حداقل یک چک یا سفته الزامی است." : "لطفاً اطلاعات پرونده را کامل کنید."); return; }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: value.patientId!, serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: Number(value.patientId), serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: number): void {
