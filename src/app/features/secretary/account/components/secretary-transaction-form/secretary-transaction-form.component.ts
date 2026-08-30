@@ -63,9 +63,7 @@ export class SecretaryTransactionFormComponent implements OnInit {
     subject: this.formBuilder.control<string | null>(null, Validators.maxLength(200)),
     counterpartyName: this.formBuilder.control<string | null>(null, Validators.maxLength(200)),
     paymentMethod: this.formBuilder.control<PaymentMethod | null>(null, Validators.required),
-    trackingNumber: this.formBuilder.control<string | null>(null, Validators.maxLength(100)),
     description: this.formBuilder.control<string | null>(null, Validators.maxLength(1000)),
-    receiptUrl: this.formBuilder.control<string | null>(null, Validators.maxLength(500)),
     expenseCategoryId: this.formBuilder.control<number | null>({ value: null, disabled: true }),
   });
   ngOnInit(): void {

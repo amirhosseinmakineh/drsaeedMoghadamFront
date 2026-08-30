@@ -21,11 +21,18 @@ export class BaseDataTableComponent<T extends object> {
   @Input() loading = false;
   @Input() emptyTitle = "داده‌ای برای نمایش وجود ندارد";
   @Input() rowClickable = false;
+  @Input() actionLabel = "";
+  @Input() actionLoading: ((row: T) => boolean) | null = null;
   @Output() rowClick = new EventEmitter<T>();
+  @Output() actionClick = new EventEmitter<T>();
   selectRow(row: T): void {
     if (this.rowClickable) {
       this.rowClick.emit(row);
     }
+  }
+  runAction(event: Event, row: T): void {
+    event.stopPropagation();
+    if (!this.actionLoading?.(row)) this.actionClick.emit(row);
   }
   cellValue(row: T, column: BaseTableColumn<T>): unknown {
     return row[column.key];

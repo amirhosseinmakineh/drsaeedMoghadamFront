@@ -197,6 +197,11 @@ export class SecretaryReservationsComponent
     this.load();
   }
 
+  applyReservationTypeFilter(): void {
+    this.pageNumber = 1;
+    this.load();
+  }
+
   load(): void {
     if (!this.profileReady) return;
     if (this.loading) {
