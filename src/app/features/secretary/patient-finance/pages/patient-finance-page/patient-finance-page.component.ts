@@ -74,7 +74,34 @@ export class PatientFinancePageComponent implements OnInit {
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
   private readonly destroyRef = inject(DestroyRef);
   constructor(private readonly fb: FormBuilder, private readonly api: PatientFinanceApiService, private readonly patientFilesApi: PatientFilesService, private readonly toast: ToastService, private readonly cdr: ChangeDetectorRef) {}
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.patientSearchRequests.pipe(
+      debounce(({ immediate }) => timer(immediate ? 0 : 400)),
+      switchMap(({ searchText }) => defer(() => {
+        this.patientOptionsLoading = true;
+        this.cdr.markForCheck();
+        return this.patientFilesApi.getPatientFiles({ search: searchText, fileNumber: "", sourceType: "", page: 1, pageSize: 20 });
+      }).pipe(
+        catchError((error: HttpErrorResponse) => { this.showError(error); return EMPTY; }),
+        finalize(() => { this.patientOptionsLoading = false; this.cdr.markForCheck(); }),
+      )),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(result => {
+      this.patientOptions = result.items
+        .filter(patient => typeof patient.patientId === "string" && GUID_PATTERN.test(patient.patientId))
+        .map(patient => ({
+          patientFileId: patient.id,
+          patientId: patient.patientId!,
+          fileNumber: patient.fileNumber,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          phoneNumber: patient.phoneNumber,
+        }));
+      this.patientOptionsLoaded = true;
+      this.cdr.markForCheck();
+    });
+    this.load();
+  }
   get cheques(): FormArray { return this.createForm.controls.cheques; }
   get notes(): FormArray { return this.createForm.controls.promissoryNotes; }
   selectTab(tab: FinanceTab): void { this.activeTab = tab; this.page = 1; this.items = []; this.details = null; if (tab === "create") this.loadPatientOptions(); else this.load(); }
