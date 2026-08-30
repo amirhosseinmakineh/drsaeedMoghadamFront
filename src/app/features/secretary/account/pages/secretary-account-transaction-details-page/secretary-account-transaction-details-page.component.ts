@@ -7,11 +7,12 @@ import { finalize } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { SecretaryTransactionDetailsComponent } from "../../components/secretary-transaction-details/secretary-transaction-details.component";
+import { SecretaryAccountShellComponent } from "../../components/secretary-account-shell/secretary-account-shell.component";
 import { SECRETARY_ACCOUNT_ERROR_MESSAGE } from "../../constants/secretary-account.constants";
 import { SecretaryFinancialTransactionDto } from "../../models/secretary-account.models";
 import { SecretaryAccountService } from "../../services/secretary-account.service";
 
-@Component({ selector: "app-secretary-account-transaction-details-page", standalone: true, imports: [RouterLink, BaseCardComponent, BasePageShellComponent, SecretaryTransactionDetailsComponent], templateUrl: "./secretary-account-transaction-details-page.component.html", styleUrl: "./secretary-account-transaction-details-page.component.scss", changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: "app-secretary-account-transaction-details-page", standalone: true, imports: [RouterLink, BaseCardComponent, BasePageShellComponent, SecretaryAccountShellComponent, SecretaryTransactionDetailsComponent], templateUrl: "./secretary-account-transaction-details-page.component.html", styleUrl: "./secretary-account-transaction-details-page.component.scss", changeDetection: ChangeDetectionStrategy.OnPush })
 export class SecretaryAccountTransactionDetailsPageComponent implements OnInit {
   transaction: SecretaryFinancialTransactionDto | null = null;
   isLoadingDetails = false;
