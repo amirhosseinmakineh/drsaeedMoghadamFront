@@ -9,7 +9,7 @@ import {
   BasePageHeaderComponent,
   BasePageShellComponent,
   BaseSectionComponent,
-} from "../../../../../basemadual/index";
+} from "@basemadual";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { SecretaryAccountSummaryComponent } from "../../components/secretary-account-summary/secretary-account-summary.component";
 import { SecretaryTransactionDetailsComponent } from "../../components/secretary-transaction-details/secretary-transaction-details.component";

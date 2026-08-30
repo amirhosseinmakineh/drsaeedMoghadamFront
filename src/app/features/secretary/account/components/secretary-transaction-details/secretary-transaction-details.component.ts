@@ -3,7 +3,7 @@ import {
   BaseBadgeComponent,
   BaseSkeletonComponent,
   PersianDatePipe,
-} from "../../../../../basemadual/index";
+} from "@basemadual";
 import { FinancialTransactionType } from "../../enums/financial-transaction-type.enum";
 import { SecretaryFinancialTransactionDto } from "../../models/secretary-account.models";
 @Component({

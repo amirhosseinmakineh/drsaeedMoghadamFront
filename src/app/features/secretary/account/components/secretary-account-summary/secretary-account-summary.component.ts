@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { BaseStatCardComponent } from "../../../../../basemadual/index";
+import { BaseStatCardComponent } from "@basemadual";
 import { SecretaryFinancialSummaryDto } from "../../models/secretary-account.models";
 @Component({
   selector: "app-secretary-account-summary",
