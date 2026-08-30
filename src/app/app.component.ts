@@ -64,7 +64,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isDashboardRoute(): boolean {
     const url = this.router.url.split("?")[0];
-    return url.startsWith("/dashboard") || url.startsWith("/select-dashboard");
+    return (
+      url.startsWith("/dashboard") ||
+      url.startsWith("/select-dashboard") ||
+      url.startsWith("/secretary/") ||
+      url.startsWith("/consultant/")
+    );
   }
 
   displayName(user: AuthUser): string {
@@ -104,7 +109,11 @@ export class AppComponent implements OnInit, OnDestroy {
     window.addEventListener("open-auth-dialog", this.openAuthFromPage);
     this.routerSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => this.cdr.markForCheck());
+      .subscribe(() => {
+        this.applyRouteTheme();
+        this.cdr.markForCheck();
+      });
+    this.applyRouteTheme();
   }
 
   ngOnDestroy(): void {
@@ -127,7 +136,14 @@ export class AppComponent implements OnInit, OnDestroy {
   private applyDocumentState(): void {
     document.documentElement.lang = this.language();
     document.documentElement.dir = this.direction;
-    document.body.dataset["theme"] = "light";
+    this.applyRouteTheme();
+  }
+
+  /** Keeps the public website cyan/dark while every authenticated workspace is monochrome. */
+  private applyRouteTheme(): void {
+    document.body.dataset["theme"] = this.isDashboardRoute()
+      ? "dashboard"
+      : "clinic";
   }
 
   private readSetting<T extends string>(key: string, fallback: T): T {
