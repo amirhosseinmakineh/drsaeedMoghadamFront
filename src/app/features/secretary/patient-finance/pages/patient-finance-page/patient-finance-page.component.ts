@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { finalize, forkJoin, Observable } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
+import { SecretaryDashboardService, SecretaryPatientOption } from "../../../../../core/secretary/secretary-dashboard.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
 import { CommitmentStatus, CreateChequeRequest, CreatePromissoryNoteRequest, DebtStatus, FinancialAgreementType, FinancialCaseStatus, FinancialSourceType, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote } from "../../models/patient-finance.models";
@@ -49,6 +50,11 @@ export class PatientFinancePageComponent implements OnInit {
   actionId: number | null = null;
   details: PatientFinancialCaseDetails | null = null;
   summary: PatientFinancialCaseSummary | null = null;
+  patientOptions: SecretaryPatientOption[] = [];
+  patientSearch = "";
+  patientOptionsLoading = false;
+  patientOptionsLoaded = false;
+  patientDropdownOpen = false;
 
   readonly filters = this.fb.group({ search: [""], patientId: [null as number | null], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
   readonly createForm = this.fb.group({
@@ -62,11 +68,43 @@ export class PatientFinancePageComponent implements OnInit {
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
   private readonly destroyRef = inject(DestroyRef);
-  constructor(private readonly fb: FormBuilder, private readonly api: PatientFinanceApiService, private readonly toast: ToastService, private readonly cdr: ChangeDetectorRef) {}
+  constructor(private readonly fb: FormBuilder, private readonly api: PatientFinanceApiService, private readonly secretaryApi: SecretaryDashboardService, private readonly toast: ToastService, private readonly cdr: ChangeDetectorRef) {}
   ngOnInit(): void { this.load(); }
   get cheques(): FormArray { return this.createForm.controls.cheques; }
   get notes(): FormArray { return this.createForm.controls.promissoryNotes; }
-  selectTab(tab: FinanceTab): void { this.activeTab = tab; this.page = 1; this.items = []; this.details = null; if (tab !== "create") this.load(); }
+  selectTab(tab: FinanceTab): void { this.activeTab = tab; this.page = 1; this.items = []; this.details = null; if (tab === "create") this.loadPatientOptions(); else this.load(); }
+  loadPatientOptions(): void {
+    if (this.patientOptionsLoading || this.patientOptionsLoaded) return;
+    this.patientOptionsLoading = true;
+    this.secretaryApi.getPatientOptions().pipe(finalize(() => { this.patientOptionsLoading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: patients => { this.patientOptions = patients; this.patientOptionsLoaded = true; },
+      error: (error: HttpErrorResponse) => this.showError(error),
+    });
+  }
+  get filteredPatientOptions(): SecretaryPatientOption[] {
+    const query = this.normalizePatientText(this.patientSearch);
+    if (!query) return this.patientOptions;
+    return this.patientOptions.filter(patient => this.normalizePatientText(`${this.patientName(patient)} ${this.patientPhone(patient)}`).includes(query));
+  }
+  patientId(patient: SecretaryPatientOption): number { return Number(patient.patientId ?? patient.PatientId ?? patient.leadAssignmentId ?? patient.LeadAssignmentId ?? patient.id ?? patient.Id); }
+  patientName(patient: SecretaryPatientOption): string {
+    const person = patient.user ?? patient.User ?? patient.lead ?? patient.Lead ?? {};
+    const name = patient.fullName?.trim() || patient.FullName?.trim() || [patient.firstName ?? patient.FirstName ?? person["firstName"] ?? person["FirstName"], patient.lastName ?? patient.LastName ?? person["lastName"] ?? person["LastName"]].filter(Boolean).join(" ").trim();
+    return name || patient.userName || patient.UserName || "بیمار بدون نام";
+  }
+  patientPhone(patient: SecretaryPatientOption): string {
+    const person = patient.user ?? patient.User ?? patient.lead ?? patient.Lead ?? {};
+    return String(patient.phoneNumber ?? patient.PhoneNumber ?? person["phoneNumber"] ?? person["PhoneNumber"] ?? "");
+  }
+  selectPatient(patient: SecretaryPatientOption): void {
+    const id = this.patientId(patient);
+    if (!Number.isFinite(id) || id < 1) return;
+    this.createForm.controls.patientId.setValue(id);
+    this.patientSearch = this.patientName(patient);
+    this.patientDropdownOpen = false;
+  }
+  onPatientSearch(value: string): void { this.patientSearch = value; this.createForm.controls.patientId.setValue(null); this.patientDropdownOpen = true; }
+  closePatientDropdown(): void { setTimeout(() => { this.patientDropdownOpen = false; this.cdr.markForCheck(); }, 150); }
   addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
   addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
@@ -93,7 +131,7 @@ export class PatientFinancePageComponent implements OnInit {
     if (this.createForm.invalid) { this.createForm.markAllAsTouched(); this.toast.error(this.createForm.hasError("commitmentRequired") ? "ثبت حداقل یک چک یا سفته الزامی است." : "لطفاً اطلاعات پرونده را کامل کنید."); return; }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: Number(value.patientId), serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: Number(value.patientId), serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: number): void {
@@ -127,6 +165,7 @@ export class PatientFinancePageComponent implements OnInit {
     const day = String(value.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
+  private normalizePatientText(value: string): string { return value.trim().toLocaleLowerCase("fa-IR").replace(/[يى]/g, "ی").replace(/ك/g, "ک"); }
   private mutate(id: number, request: ReturnType<PatientFinanceApiService["payDebt"]>, success: string): void { if (this.actionId !== null) return; this.actionId = id; request.pipe(finalize(() => { this.actionId = null; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: r => { if (!r.isSuccess) { this.toast.error(r.message); return; } this.toast.success(r.message || success); this.load(); if (this.details) this.openDetails(this.details.case.id); }, error: e => this.showError(e) }); }
   private showError(error: HttpErrorResponse): void { this.toast.error(error.error?.message || error.message || "ارتباط با سرور انجام نشد."); }
 }
