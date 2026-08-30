@@ -21,8 +21,8 @@
           @if (patientDropdownOpen) {
             <span class="patient-options" role="listbox">
               @if (patientOptionsLoading) { <span class="patient-message">در حال دریافت فهرست بیماران…</span> }
-              @else if (!filteredPatientOptions.length) { <span class="patient-message">بیماری با این مشخصات پیدا نشد.</span> }
-              @else { @for (patient of filteredPatientOptions; track patientId(patient)) { <button type="button" role="option" (mousedown)="$event.preventDefault()" (click)="selectPatient(patient)"><strong>{{ patientName(patient) }}</strong><small>{{ patientPhone(patient) || 'بدون شماره تماس' }}</small></button> } }
+              @else if (!patientOptions.length) { <span class="patient-message">بیماری با این مشخصات پیدا نشد.</span> }
+              @else { @for (patient of patientOptions; track patientFileId(patient)) { <button type="button" role="option" (mousedown)="$event.preventDefault()" (click)="selectPatient(patient)"><strong>{{ patientName(patient) }}</strong><small>{{ patientPhone(patient) || 'بدون شماره تماس' }}</small><small>شماره پرونده: {{ patientFileNumber(patient) || '—' }}</small></button> } }
             </span>
           }
           @if (createForm.controls.patientId.touched && createForm.controls.patientId.invalid) { <small class="field-error">انتخاب بیمار الزامی است.</small> }
@@ -45,7 +45,7 @@
   } @else {
     <section class="card filters" [formGroup]="filters">
       <label>جست‌وجو<input formControlName="search" placeholder="نام یا تلفن بیمار"></label>
-      <label>شناسه بیمار<input type="text" formControlName="patientId" inputmode="text" autocomplete="off" placeholder="GUID بیمار"></label>
+      <label>شناسه بیمار<input type="number" min="1" formControlName="patientId" inputmode="numeric" autocomplete="off" placeholder="شناسه عددی بیمار"></label>
       @if (activeTab !== 'transactions' && activeTab !== 'due') { <label>وضعیت<select formControlName="status"><option [ngValue]="null">همه</option><option [ngValue]="1">در انتظار / فعال</option><option [ngValue]="2">پرداخت‌شده</option><option [ngValue]="3">پرداخت‌نشده / لغوشده</option>@if (activeTab === 'cheques' || activeTab === 'notes') { <option [ngValue]="4">لغوشده</option> }</select></label> }
       @if (activeTab === 'debts' || activeTab === 'transactions' || activeTab === 'due') { <label>نوع منبع<select formControlName="sourceType"><option [ngValue]="null">همه</option><option [ngValue]="1">چک</option><option [ngValue]="2">سفته</option></select></label> }
       <app-base-persian-date-picker label="از تاریخ" [value]="filters.controls.fromDate.value" (valueChange)="filters.controls.fromDate.setValue($event)" /><app-base-persian-date-picker label="تا تاریخ" [value]="filters.controls.toDate.value" (valueChange)="filters.controls.toDate.setValue($event)" />
