@@ -7,9 +7,10 @@ import {
   BaseErrorStateComponent,
   BaseSkeletonComponent,
   BaseTablePaginationComponent,
-  BaseTableColumn,
-  PersianDateService,
 } from "@basemadual";
+import { PersianDateService } from "../../../../../basemadual/date/persian-date.service";
+import {  BaseBadgeComponent} from "../../../../../basemadual/"
+import type { BaseTableColumn } from "@basemadual";
 import { SecretaryFinancialTransactionDto } from "../../models/secretary-account.models";
 interface TransactionRow {
   type: string;
@@ -61,7 +62,9 @@ export class SecretaryTransactionListComponent implements OnChanges {
   ];
   rows: TransactionRow[] = [];
   private readonly money = new Intl.NumberFormat("fa-IR");
-  constructor(private readonly persianDate: PersianDateService) {}
+constructor(
+  private readonly persianDate: PersianDateService,
+) {}
   ngOnChanges(): void {
     this.rows = this.items.map((item) => ({
       type: item.typeTitle,
