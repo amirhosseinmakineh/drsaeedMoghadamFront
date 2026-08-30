@@ -56,8 +56,10 @@
   position: absolute;
   inset-block-start: calc(100% + 8px);
   inset-inline-start: 0;
-  z-index: 30;
-  width: min(380px, calc(100vw - 40px));
+  z-index: 300;
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(620px, calc(100vh - 32px));
+  overflow-y: auto;
   display: none;
   gap: 14px;
   padding: 16px;
@@ -195,6 +197,12 @@ input {
   }
   .day-grid button {
     border-radius: clamp(14px, 1.4vw, 20px);
+  }
+}
+@media (min-width: 561px) {
+  .compact .calendar-content {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
   }
 }
 @media (max-width: 560px) {

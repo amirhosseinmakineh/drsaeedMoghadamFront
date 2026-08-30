@@ -13,11 +13,11 @@
   --bm-radius-lg: 1rem;
   --bm-radius-full: 999px;
   --bm-surface: var(--surface, #fff);
-  --bm-surface-soft: var(--surface-soft, #f7f4ef);
-  --bm-text: var(--text, #25211c);
-  --bm-muted: var(--muted, #6b6258);
-  --bm-line: var(--line, #ddd6ce);
-  --bm-brand: var(--brand, #9b713f);
+  --bm-surface-soft: var(--surface-soft, #f7f7f7);
+  --bm-text: var(--text, #111);
+  --bm-muted: var(--muted, #626262);
+  --bm-line: var(--line, #d8d8d8);
+  --bm-brand: var(--brand, #111);
   --bm-danger: var(--danger, #c63f3f);
   box-sizing: border-box;
   color: var(--bm-text);

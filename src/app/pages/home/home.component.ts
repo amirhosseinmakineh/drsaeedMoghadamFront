@@ -15,7 +15,6 @@ import {
   WORK_SAMPLES,
   pickText,
 } from "../../models/clinic.model";
-import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ToastService } from "../../core/toast/toast.service";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
@@ -29,7 +28,6 @@ import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
     FormsModule,
     RouterLink,
     FaIconComponent,
-    BaseDatepickerComponent,
   ],
   templateUrl: "./home.component.html",
   styleUrl: "./home.component.scss",
