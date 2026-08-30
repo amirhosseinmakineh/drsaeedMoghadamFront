@@ -73,6 +73,17 @@ export interface SecretaryExpenseCategoryDto {
   title: string;
 }
 
+export interface SecretaryExpenseCategoryManagementDto extends SecretaryExpenseCategoryDto {
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface SaveSecretaryExpenseCategoryRequest {
+  title: string;
+  isActive: boolean;
+}
+
 export interface CreatedTransactionDto {
   id: number;
 }
