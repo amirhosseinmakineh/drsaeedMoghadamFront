@@ -9,9 +9,7 @@ export function normalizeSecretaryTransaction(
     ...value,
     subject: normalizeText(value.subject),
     counterpartyName: normalizeText(value.counterpartyName),
-    trackingNumber: normalizeText(value.trackingNumber),
     description: normalizeText(value.description),
-    receiptUrl: normalizeText(value.receiptUrl),
   };
 }
 
