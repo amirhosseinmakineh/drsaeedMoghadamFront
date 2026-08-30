@@ -1,0 +1,14 @@
+:host { display: block; direction: rtl; }
+app-base-page-header { display: block; margin-block-end: 1rem; }
+.file-filter, .edit-form label, .import-box label { display: grid; gap: .3rem; color: var(--muted, #64748b); font-size: .875rem; }
+input, select { min-height: 44px; border: 1px solid #dbe2ea; border-radius: 10px; padding: .55rem .75rem; background: #fff; font: inherit; }
+.table-wrap { overflow-x: auto; } table { width: 100%; border-collapse: collapse; } th, td { padding: .85rem; text-align: right; border-bottom: 1px solid #e8edf2; white-space: nowrap; }
+th { color: #64748b; font-size: .85rem; background: #f8fafc; } .row-actions { display: flex; gap: .5rem; }
+.row-actions button { border: 0; border-radius: 8px; padding: .4rem .7rem; color: #075985; background: #e0f2fe; cursor: pointer; }.row-actions .danger { color: #b91c1c; background: #fee2e2; }
+.pagination { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem; }.pagination label { display: flex; align-items: center; gap: .5rem; }
+.load-error { text-align: center; padding: 2rem; color: #b91c1c; }.patient-list { display: grid; gap: .5rem; margin-block: 1rem; max-height: 300px; overflow: auto; }
+.patient-list button { display: flex; justify-content: space-between; border: 1px solid #dbe2ea; background: white; border-radius: 10px; padding: .8rem; cursor: pointer; }.patient-list button.selected { border-color: #0284c7; background: #f0f9ff; }
+.selected-summary { margin-top: 1rem; padding: 1rem; border-radius: 12px; background: #f8fafc; }.selected-summary h3 { margin-top: 0; }.selected-summary dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }.selected-summary dl div { display: grid; gap: .2rem; }.selected-summary dt { color: #64748b; font-size: .8rem; }.selected-summary dd { margin: 0; }.selected-summary p { color: #075985; }
+.edit-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }.edit-form label:last-child { grid-column: 1 / -1; }.edit-form input[readonly] { background: #f1f5f9; }
+.import-box { display: grid; gap: 1rem; }.import-errors { max-height: 260px; overflow: auto; padding: .8rem 1rem; border: 1px solid #fecaca; border-radius: 10px; background: #fef2f2; color: #991b1b; }.import-errors h3 { margin-top: 0; }
+@media (max-width: 700px) { app-base-page-header ::ng-deep .actions { width: 100%; } table, thead, tbody, tr, th, td { display: block; } thead { display: none; } tbody { display: grid; gap: .75rem; } tr { border: 1px solid #e2e8f0; border-radius: 12px; padding: .5rem; } td { display: flex; justify-content: space-between; white-space: normal; padding: .55rem; } td::before { content: attr(data-label); color: #64748b; } .pagination, .selected-summary dl { align-items: stretch; grid-template-columns: 1fr; flex-direction: column; } .edit-form { grid-template-columns: 1fr; }.edit-form label:last-child { grid-column: auto; } }
