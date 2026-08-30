@@ -14,9 +14,7 @@ export interface CreateSecretaryFinancialTransactionRequest {
   subject: string | null;
   counterpartyName: string | null;
   paymentMethod: PaymentMethod;
-  trackingNumber: string | null;
   description: string | null;
-  receiptUrl: string | null;
   expenseCategoryId: number | null;
 }
 
@@ -45,9 +43,7 @@ export interface SecretaryFinancialTransactionDto {
   counterpartyName: string | null;
   paymentMethod: PaymentMethod;
   paymentMethodTitle: string;
-  trackingNumber: string | null;
   description: string | null;
-  receiptUrl: string | null;
   expenseCategoryId: number | null;
   expenseCategoryTitle: string | null;
   createdAt: string;

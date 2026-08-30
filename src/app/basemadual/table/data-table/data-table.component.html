@@ -21,6 +21,11 @@
                 <td>{{ cellValue(row, column) }}</td>
               }
               <td class="actions">
+                @if (actionLabel) {
+                  <button type="button" [disabled]="actionLoading?.(row)" (click)="runAction($event, row)">
+                    {{ actionLoading?.(row) ? 'در حال دریافت…' : actionLabel }}
+                  </button>
+                }
                 <ng-container
                   [ngTemplateOutlet]="rowActions"
                   [ngTemplateOutletContext]="{ $implicit: row }"
@@ -41,6 +46,11 @@
             </div>
           }
           <footer>
+            @if (actionLabel) {
+              <button type="button" [disabled]="actionLoading?.(row)" (click)="runAction($event, row)">
+                {{ actionLoading?.(row) ? 'در حال دریافت…' : actionLabel }}
+              </button>
+            }
             <ng-container
               [ngTemplateOutlet]="rowActions"
               [ngTemplateOutletContext]="{ $implicit: row }"

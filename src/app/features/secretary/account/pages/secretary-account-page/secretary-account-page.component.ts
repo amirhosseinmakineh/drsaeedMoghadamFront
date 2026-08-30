@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, ViewChild, inject } from "@angular/core";
 import { RouterLink } from "@angular/router";
-import { finalize } from "rxjs";
+import { finalize, firstValueFrom } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BaseButtonComponent } from "../../../../../basemadual/actions/base-button/base-button.component";
 import { BasePageShellComponent } from "../../../../../basemadual/layout/page-shell/page-shell.component";
@@ -24,6 +24,7 @@ import {
   SecretaryTransactionFilters,
 } from "../../models/secretary-account.models";
 import { SecretaryAccountService } from "../../services/secretary-account.service";
+import { handleTransactionReceipt, ReceiptAction } from "../../utils/transaction-receipt.util";
 @Component({
   selector: "app-secretary-account-page",
   standalone: true,
@@ -63,6 +64,7 @@ export class SecretaryAccountPageComponent implements OnInit {
   transactionsLoadFailed = false;
   createDrawerOpen = false;
   detailsDrawerOpen = false;
+  receiptLoadingId: number | null = null;
   private readonly destroyRef = inject(DestroyRef);
   constructor(
     private readonly accountService: SecretaryAccountService,
@@ -137,6 +139,20 @@ export class SecretaryAccountPageComponent implements OnInit {
         error: (error: HttpErrorResponse) => this.showError(error),
       });
   }
+  async issueReceipt(id: number, action: ReceiptAction = "share"): Promise<void> {
+    if (this.receiptLoadingId !== null) return;
+    this.receiptLoadingId = id;
+    this.cdr.markForCheck();
+    try {
+      const response = await firstValueFrom(this.accountService.getTransactionReceipt(id));
+      await handleTransactionReceipt(response, id, action);
+    } catch (error) {
+      this.showReceiptError(error);
+    } finally {
+      this.receiptLoadingId = null;
+      this.cdr.markForCheck();
+    }
+  }
   loadTransactions(): void {
     this.isLoadingTransactions = true;
     this.transactionsLoadFailed = false;
@@ -205,5 +221,21 @@ export class SecretaryAccountPageComponent implements OnInit {
         ? apiMessage
         : SECRETARY_ACCOUNT_ERROR_MESSAGE;
     this.toast.error(message);
+  }
+  private showReceiptError(error: unknown): void {
+    if (error instanceof Error && error.message === "POPUP_BLOCKED") {
+      this.toast.error("مرورگر اجازه باز کردن پیش‌نمایش را نداد.");
+      return;
+    }
+    if (error instanceof HttpErrorResponse) {
+      const statusMessages: Record<number, string> = {
+        400: "شناسه تراکنش معتبر نیست.",
+        401: "برای دریافت رسید دوباره وارد حساب کاربری شوید.",
+        404: "تراکنش موردنظر پیدا نشد.",
+      };
+      this.toast.error(statusMessages[error.status] || SECRETARY_ACCOUNT_ERROR_MESSAGE);
+      return;
+    }
+    this.toast.error("دریافت رسید تراکنش ناموفق بود.");
   }
 }
