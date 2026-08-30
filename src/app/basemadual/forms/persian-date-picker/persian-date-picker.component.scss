@@ -6,4 +6,4 @@ div { position: relative; }
 small { display: block; margin-top: var(--bm-space-1); color: var(--bm-danger); }
 :host ::ng-deep .base-datepicker.compact { min-width: 0; }
 :host ::ng-deep .compact-trigger { min-height: 48px; border-radius: var(--bm-radius-md); background: var(--bm-surface); color: var(--bm-text); }
-:host ::ng-deep .calendar-content { z-index: 80; border-color: var(--bm-line); background: var(--bm-surface); color: var(--bm-text); }
+:host ::ng-deep .calendar-content { z-index: 300; border-color: var(--bm-line); background: #fff; color: #000; }

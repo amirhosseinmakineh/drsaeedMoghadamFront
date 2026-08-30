@@ -24,20 +24,20 @@
    Route-level tokens keep the clinic's public dark-cyan identity untouched. */
 body[data-theme="dashboard"] {
   color-scheme: light;
-  --bg: #f4f4f4;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-soft: #f7f7f7;
-  --surface-muted: #ededed;
-  --text: #111111;
-  --muted: #626262;
-  --line: #d8d8d8;
-  --brand: #111111;
-  --brand-2: #343434;
-  --cyan: #111111;
-  --cyan-soft: #343434;
+  --surface-soft: #ffffff;
+  --surface-muted: #ffffff;
+  --text: #000000;
+  --muted: #000000;
+  --line: #d4d4d4;
+  --brand: #000000;
+  --brand-2: #000000;
+  --cyan: #000000;
+  --cyan-soft: #000000;
   --danger: #b42318;
   --success: #18794e;
-  --shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 body[data-theme="dashboard"],
@@ -57,7 +57,8 @@ body[data-theme="dashboard"] textarea {
 
 body[data-theme="dashboard"] input::placeholder,
 body[data-theme="dashboard"] textarea::placeholder {
-  color: #858585;
+  color: #000000;
+  opacity: 0.65;
 }
 
 
