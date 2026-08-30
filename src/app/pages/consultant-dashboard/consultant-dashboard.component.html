@@ -21,6 +21,7 @@
     <button
       class="mobile-logout-btn"
       type="button"
+      [disabled]="loggingOut"
       (click)="logout()"
       aria-label="خروج از حساب کاربری"
     >
@@ -96,6 +97,7 @@
     <button
       class="secondary-btn logout-btn"
       type="button"
+      [disabled]="loggingOut"
       (click)="logout()"
     >
       <app-fa-icon name="logout"></app-fa-icon>
@@ -268,7 +270,7 @@
               <button
                 class="primary-action"
                 type="button"
-                [disabled]="availabilitySaving || isAvailable"
+                [disabled]="availabilitySaving || onlineSaving || isAvailable || isOnline"
                 (click)="setAvailability(true)"
               >
                 <app-fa-icon name="check"></app-fa-icon>
@@ -277,7 +279,7 @@
               <button
                 class="secondary-action danger"
                 type="button"
-                [disabled]="availabilitySaving || !isAvailable"
+                [disabled]="availabilitySaving || onlineSaving || !isAvailable"
                 (click)="setAvailability(false)"
               >
                 <app-fa-icon name="moon"></app-fa-icon>
@@ -286,7 +288,7 @@
               <button
                 class="primary-action"
                 type="button"
-                [disabled]="onlineSaving || isOnline || !canGoOnline() || isNewLeadBlocked"
+                [disabled]="availabilitySaving || onlineSaving || isOnline || !isAvailable || !canGoOnline() || isNewLeadBlocked"
                 (click)="setOnlineStatus(true)"
               >
                 <app-fa-icon name="mobile"></app-fa-icon>
@@ -295,7 +297,7 @@
               <button
                 class="secondary-action"
                 type="button"
-                [disabled]="onlineSaving || !isOnline"
+                [disabled]="availabilitySaving || onlineSaving || !isOnline"
                 (click)="setOnlineStatus(false)"
               >
                 <app-fa-icon name="close"></app-fa-icon>
@@ -431,7 +433,7 @@
               <button
                 class="primary-action"
                 type="button"
-                [disabled]="availabilitySaving || isAvailable"
+                [disabled]="availabilitySaving || onlineSaving || isAvailable || isOnline"
                 (click)="setAvailability(true)"
               >
                 <app-fa-icon name="check"></app-fa-icon>
@@ -440,7 +442,7 @@
               <button
                 class="secondary-action danger"
                 type="button"
-                [disabled]="availabilitySaving || !isAvailable"
+                [disabled]="availabilitySaving || onlineSaving || !isAvailable"
                 (click)="setAvailability(false)"
               >
                 <app-fa-icon name="moon"></app-fa-icon>
@@ -449,7 +451,7 @@
               <button
                 class="primary-action"
                 type="button"
-                [disabled]="onlineSaving || isOnline || !canGoOnline() || isNewLeadBlocked"
+                [disabled]="availabilitySaving || onlineSaving || isOnline || !isAvailable || !canGoOnline() || isNewLeadBlocked"
                 (click)="setOnlineStatus(true)"
               >
                 <app-fa-icon name="mobile"></app-fa-icon>
@@ -458,7 +460,7 @@
               <button
                 class="secondary-action"
                 type="button"
-                [disabled]="onlineSaving || !isOnline"
+                [disabled]="availabilitySaving || onlineSaving || !isOnline"
                 (click)="setOnlineStatus(false)"
               >
                 <app-fa-icon name="close"></app-fa-icon>

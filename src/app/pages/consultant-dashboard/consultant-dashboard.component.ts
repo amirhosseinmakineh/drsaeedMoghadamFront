@@ -218,6 +218,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   isOnline = false;
   availabilitySaving = false;
   onlineSaving = false;
+  loggingOut = false;
   testPushSaving = false;
   enablePushSaving = false;
   pushRegistrationReady = false;
@@ -637,6 +638,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   canGoOnline(): boolean {
     return (
+      this.isAvailable &&
       canConsultantGoOnline() &&
       !this.isNewLeadBlocked &&
       (!this.dashboardStatusLoaded || this.canGoOnlineFromStatus)
@@ -928,6 +930,11 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     if (!isOnline) {
       this.performSetOnlineStatus(profileId, false);
+      return;
+    }
+
+    if (!this.isAvailable) {
+      this.showFeedback("ابتدا حضور خود را ثبت کنید", "error");
       return;
     }
 
@@ -3100,9 +3107,28 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
+    if (this.loggingOut) return;
+
+    const profileId = this.currentProfileId();
     this.pushNotifications.resetRegisteredTokenCache();
-    this.auth.logout();
-    this.router.navigateByUrl("/");
+    this.realtimeLeadAlerts.stopPolling();
+
+    const finishLogout = (): void => {
+      this.isOnline = false;
+      this.auth.logout();
+      void this.router.navigateByUrl("/");
+    };
+
+    if (!profileId) {
+      finishLogout();
+      return;
+    }
+
+    this.loggingOut = true;
+    this.consultantApi
+      .setOnlineStatus({ profileId, isOnline: false, isOffline: true })
+      .pipe(finalize(finishLogout))
+      .subscribe({ error: () => undefined });
   }
 
   private loadDashboardStatus(afterLoad?: () => void): void {
