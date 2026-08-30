@@ -50,6 +50,9 @@ export class PatientFilesPageComponent implements OnInit {
   importFile: File | null = null;
   importing = false;
   importErrors: string[] = [];
+  financeFile: PatientFile | null = null;
+  financeRefreshing = false;
+  financeError = "";
   readonly sourceOptions = [{ value: "System", label: "جدید" }, { value: "Legacy", label: "قدیمی" }];
   readonly pageSizeOptions = [{ value: 10, label: "۱۰ ردیف" }, { value: 20, label: "۲۰ ردیف" }, { value: 50, label: "۵۰ ردیف" }];
 
@@ -59,6 +62,7 @@ export class PatientFilesPageComponent implements OnInit {
   ngOnInit(): void { this.loadFiles(); }
 
   loadFiles(): void {
+    this.closeFinance();
     this.loading = true; this.loadError = "";
     this.api.getPatientFiles(this.query).pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }))
       .subscribe({ next: (result) => { this.files = result.items; this.totalCount = result.totalCount; },
@@ -71,6 +75,23 @@ export class PatientFilesPageComponent implements OnInit {
   resetFilters(): void { this.query = { ...this.query, search: "", fileNumber: "", sourceType: "", page: 1 }; this.loadFiles(); }
   changePage(page: number): void { this.query = { ...this.query, page }; this.loadFiles(); }
   changePageSize(value: string): void { this.query = { ...this.query, pageSize: Number(value), page: 1 }; this.loadFiles(); }
+
+  openFinance(file: PatientFile): void { this.financeFile = file; this.financeError = ""; this.refreshFinance(); }
+  refreshFinance(): void {
+    if (!this.financeFile || this.financeRefreshing) return;
+    const id = this.financeFile.id; this.financeRefreshing = true; this.financeError = "";
+    this.api.getPatientFileById(id).pipe(finalize(() => { this.financeRefreshing = false; this.cdr.markForCheck(); }))
+      .subscribe({ next: (file) => { if (this.financeFile?.id === id) this.financeFile = file; },
+        error: (error) => this.financeError = this.errorMessage(error, "دریافت اطلاعات مالی انجام نشد.") });
+  }
+  closeFinance(): void { this.financeFile = null; this.financeError = ""; this.financeRefreshing = false; }
+  money(value: number): string { return `${new Intl.NumberFormat("fa-IR").format(value)} ریال`; }
+  date(value: string): string { const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? "—" : new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(parsed); }
+  agreementLabel(value: number): string { return ({ 1: "پیش‌پرداخت", 2: "بیعانه" } as Record<number, string>)[value] ?? "نامشخص"; }
+  caseStatusLabel(value: number): string { return ({ 1: "فعال", 2: "تکمیل‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
+  commitmentStatusLabel(value: number): string { return ({ 1: "در انتظار", 2: "وصول/پرداخت‌شده", 3: "برگشتی/پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
+  debtStatusLabel(value: number): string { return ({ 1: "پرداخت‌نشده", 2: "پرداخت‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
+  financialSourceLabel(value: number): string { return value === 1 ? "چک" : value === 2 ? "سفته" : "نامشخص"; }
 
   openCreate(): void { this.createOpen = true; this.selectedPatient = null; this.eligibleSearch = ""; this.eligiblePage = 1; this.loadEligible(); }
   closeCreate(): void { if (!this.creating) this.createOpen = false; }

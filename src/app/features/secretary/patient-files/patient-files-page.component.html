@@ -32,7 +32,7 @@
                 <td data-label="نام">{{ file.firstName }}</td><td data-label="نام خانوادگی">{{ file.lastName }}</td>
                 <td data-label="شماره تماس" dir="ltr">{{ file.phoneNumber }}</td>
                 <td data-label="نوع پرونده"><app-base-badge [variant]="file.sourceType === 'Legacy' ? 'warning' : 'success'">{{ sourceLabel(file.sourceType) }}</app-base-badge></td>
-                <td data-label="عملیات"><div class="row-actions"><button type="button" (click)="openEdit(file)">ویرایش</button><button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
+                <td data-label="عملیات"><div class="row-actions"><button class="finance-action" type="button" (click)="openFinance(file)">اطلاعات مالی</button><button type="button" (click)="openEdit(file)">ویرایش</button><button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
               </tr>
             }</tbody>
           </table>
@@ -59,6 +59,33 @@
 <app-base-modal [open]="editOpen" title="ویرایش پرونده" [closeOnBackdrop]="!updating" (close)="closeEdit()">
   @if (editing) { <form class="edit-form" (ngSubmit)="update()"><label>شماره پرونده<input readonly [value]="editing.fileNumber" /></label><label>نوع پرونده<input readonly [value]="sourceLabel(editing.sourceType)" /></label><label>نام<input required [(ngModel)]="editForm.firstName" name="firstName" /></label><label>نام خانوادگی<input required [(ngModel)]="editForm.lastName" name="lastName" /></label><label>شماره تماس<input required dir="ltr" [(ngModel)]="editForm.phoneNumber" name="phoneNumber" /></label></form> }
   <div baseModalFooter><app-base-button variant="secondary" [disabled]="updating" (pressed)="closeEdit()">انصراف</app-base-button><app-base-button [loading]="updating" (pressed)="update()">ذخیره تغییرات</app-base-button></div>
+</app-base-modal>
+
+<app-base-modal class="finance-modal" [open]="!!financeFile" [title]="'اطلاعات مالی ' + (financeFile?.firstName ?? '') + ' ' + (financeFile?.lastName ?? '')" (close)="closeFinance()">
+  @if (financeFile) {
+    <div class="finance-subtitle"><span>شماره پرونده: <b>{{ financeFile.fileNumber }}</b></span><span dir="ltr">{{ financeFile.phoneNumber }}</span></div>
+    @if (financeRefreshing) { <div class="refreshing" role="status">در حال به‌روزرسانی اطلاعات…</div> }
+    @if (financeError) { <div class="finance-error" role="alert"><p>{{ financeError }}</p><app-base-button (pressed)="refreshFinance()">تلاش دوباره</app-base-button></div> }
+    @if (!financeError && financeFile.finance === null) { <app-base-empty-state icon="💳" title="اطلاعات مالی ندارد" /> }
+    @else if (financeFile.finance; as finance) {
+      <section class="summary-grid" aria-label="خلاصه اطلاعات مالی">
+        <article><span>مبلغ کل درمان</span><strong>{{ money(finance.totalTreatmentAmount) }}</strong></article><article class="paid"><span>پرداخت‌شده</span><strong>{{ money(finance.totalPaidAmount) }}</strong></article><article><span>مانده</span><strong>{{ money(finance.remainingAmount) }}</strong></article><article class="debt"><span>بدهی</span><strong>{{ money(finance.totalDebtAmount) }}</strong></article><article><span>پرونده فعال</span><strong>{{ finance.activeFinancialCasesCount }}</strong></article><article><span>چک پرداخت‌نشده</span><strong>{{ finance.unpaidChequesCount }}</strong></article><article><span>سفته پرداخت‌نشده</span><strong>{{ finance.unpaidPromissoryNotesCount }}</strong></article>
+      </section>
+      <div class="financial-cases">
+        @if (!finance.cases.length) { <app-base-empty-state icon="📄" title="پرونده مالی ثبت نشده است" /> }
+        @for (financialCase of finance.cases; track financialCase.id) {
+          <details class="financial-case" open><summary><div><strong>{{ financialCase.serviceName }}</strong><small>پرونده مالی #{{ financialCase.id }} · {{ date(financialCase.createdAt) }}</small></div><div class="case-tags"><span>{{ caseStatusLabel(financialCase.status) }}</span><span>{{ agreementLabel(financialCase.agreementType) }}</span></div></summary>
+            <div class="case-body"><dl class="case-amounts"><div><dt>مبلغ کل</dt><dd>{{ money(financialCase.totalAmount) }}</dd></div><div><dt>پرداخت‌شده</dt><dd>{{ money(financialCase.totalPaidAmount) }}</dd></div><div><dt>مانده</dt><dd>{{ money(financialCase.remainingAmount) }}</dd></div><div><dt>بدهی</dt><dd>{{ money(financialCase.totalDebtAmount) }}</dd></div></dl>
+              <section class="finance-section"><h3>چک‌ها</h3>@if (!financialCase.cheques.length) { <p class="section-empty">چکی ثبت نشده است</p> } @for (item of financialCase.cheques; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>شماره صیاد</dt><dd class="copy-value" dir="ltr">{{ item.sayadNumber }}</dd></div><div><dt>صاحب چک</dt><dd>{{ item.ownerName }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ commitmentStatusLabel(item.status) }}</dd></div></dl></article> }</section>
+              <section class="finance-section"><h3>سفته‌ها</h3>@if (!financialCase.promissoryNotes.length) { <p class="section-empty">سفته‌ای ثبت نشده است</p> } @for (item of financialCase.promissoryNotes; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>شماره سریال</dt><dd class="copy-value" dir="ltr">{{ item.serialNumber }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ commitmentStatusLabel(item.status) }}</dd></div></dl></article> }</section>
+              <section class="finance-section"><h3>بدهی‌ها</h3>@if (!financialCase.debts.length) { <p class="section-empty">بدهی ثبت نشده است</p> } @for (item of financialCase.debts; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>منبع</dt><dd>{{ financialSourceLabel(item.sourceType) }} #{{ item.sourceId }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ debtStatusLabel(item.status) }}</dd></div></dl></article> }</section>
+              <section class="finance-section"><h3>تراکنش‌ها</h3>@if (!financialCase.transactions.length) { <p class="section-empty">تراکنشی ثبت نشده است</p> } @for (item of financialCase.transactions; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ پرداخت</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>منبع</dt><dd>{{ financialSourceLabel(item.sourceType) }} #{{ item.sourceId }}</dd></div><div><dt>تاریخ ثبت</dt><dd>{{ date(item.createdAt) }}</dd></div><div><dt>نوع</dt><dd>پرداخت</dd></div></dl></article> }</section>
+            </div></details>
+        }
+      </div>
+    }
+  }
+  <div baseModalFooter><app-base-button variant="secondary" (pressed)="closeFinance()">بستن</app-base-button></div>
 </app-base-modal>
 
 <app-base-confirm-dialog [open]="!!deleting" title="حذف پرونده" [message]="'آیا از حذف پرونده شماره ' + deleting?.fileNumber + ' اطمینان دارید؟'" variant="danger" confirmLabel="حذف پرونده" [loading]="deleteLoading" (cancel)="deleting = null" (confirm)="remove()" />
