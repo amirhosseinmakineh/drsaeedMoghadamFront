@@ -5,9 +5,10 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { finalize, forkJoin, Observable } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
-import { SecretaryDashboardService, SecretaryPatientOption } from "../../../../../core/secretary/secretary-dashboard.service";
+import { SecretaryPatientOption } from "../../../../../core/secretary/secretary-dashboard.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
+import { PatientFilesService } from "../../../patient-files/patient-files.service";
 import { CommitmentStatus, CreateChequeRequest, CreatePromissoryNoteRequest, DebtStatus, FinancialAgreementType, FinancialCaseStatus, FinancialSourceType, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote } from "../../models/patient-finance.models";
 import { PatientFinanceApiService } from "../../services/patient-finance-api.service";
 
@@ -68,7 +69,7 @@ export class PatientFinancePageComponent implements OnInit {
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
   private readonly destroyRef = inject(DestroyRef);
-  constructor(private readonly fb: FormBuilder, private readonly api: PatientFinanceApiService, private readonly secretaryApi: SecretaryDashboardService, private readonly toast: ToastService, private readonly cdr: ChangeDetectorRef) {}
+  constructor(private readonly fb: FormBuilder, private readonly api: PatientFinanceApiService, private readonly patientFilesApi: PatientFilesService, private readonly toast: ToastService, private readonly cdr: ChangeDetectorRef) {}
   ngOnInit(): void { this.load(); }
   get cheques(): FormArray { return this.createForm.controls.cheques; }
   get notes(): FormArray { return this.createForm.controls.promissoryNotes; }
@@ -76,8 +77,18 @@ export class PatientFinancePageComponent implements OnInit {
   loadPatientOptions(): void {
     if (this.patientOptionsLoading || this.patientOptionsLoaded) return;
     this.patientOptionsLoading = true;
-    this.secretaryApi.getPatientOptions().pipe(finalize(() => { this.patientOptionsLoading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: patients => { this.patientOptions = patients; this.patientOptionsLoaded = true; },
+    this.patientFilesApi.getPatientFiles({ search: "", fileNumber: "", sourceType: "System", page: 1, pageSize: 100 }).pipe(finalize(() => { this.patientOptionsLoading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: result => {
+        this.patientOptions = result.items
+          .filter(patient => Number.isFinite(Number(patient.patientId)) && Number(patient.patientId) > 0)
+          .map(patient => ({
+            patientId: Number(patient.patientId),
+            firstName: patient.firstName,
+            lastName: patient.lastName,
+            phoneNumber: patient.phoneNumber,
+          }));
+        this.patientOptionsLoaded = true;
+      },
       error: (error: HttpErrorResponse) => this.showError(error),
     });
   }
