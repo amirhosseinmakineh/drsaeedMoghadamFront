@@ -24,22 +24,33 @@
    Route-level tokens keep the clinic's public dark-cyan identity untouched. */
 body[data-theme="dashboard"] {
   color-scheme: light;
-  --bg: #ffffff;
+  --bg: #f4f7f7;
   --surface: #ffffff;
-  --surface-soft: #fafafa;
-  --surface-muted: #f5f5f5;
-  --text: #000000;
-  --muted: #000000;
-  --line: #e2e2e2;
-  --brand: #000000;
-  --brand-2: #000000;
-  --cyan: #000000;
-  --cyan-soft: #000000;
-  --danger: #b42318;
-  --success: #18794e;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.055);
+  --surface-soft: #ecf4f3;
+  --surface-muted: #ecf4f3;
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --primary-soft: #ccfbf1;
+  --sidebar: #123332;
+  --sidebar-hover: #194744;
+  --sidebar-text: #d9e8e6;
+  --sidebar-active: #14b8a6;
+  --text: #172b2a;
+  --text-secondary: #536967;
+  --muted: #829492;
+  --border: #dce7e5;
+  --line: var(--border);
+  --brand: var(--primary);
+  --brand-2: var(--sidebar-active);
+  --cyan: var(--primary);
+  --cyan-soft: var(--primary-soft);
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #0284c7;
+  --radius: 12px;
+  --shadow: 0 4px 18px rgba(15, 118, 110, 0.07);
 }
-
 body[data-theme="dashboard"] button,
 body[data-theme="dashboard"] a,
 body[data-theme="dashboard"] input,
@@ -53,7 +64,7 @@ body[data-theme="dashboard"] a:focus-visible,
 body[data-theme="dashboard"] input:focus-visible,
 body[data-theme="dashboard"] select:focus-visible,
 body[data-theme="dashboard"] textarea:focus-visible {
-  outline: 3px solid rgb(0 0 0 / 18%);
+  outline: 3px solid color-mix(in srgb, var(--primary) 32%, transparent);
   outline-offset: 2px;
 }
 
@@ -74,8 +85,8 @@ body[data-theme="dashboard"] textarea {
 
 body[data-theme="dashboard"] input::placeholder,
 body[data-theme="dashboard"] textarea::placeholder {
-  color: #000000;
-  opacity: 0.65;
+  color: var(--muted);
+  opacity: 1;
 }
 
 
@@ -1006,4 +1017,139 @@ main {
 
     font-size: 0.62rem;
   }
+}
+
+/* Clinical Cyan dashboard design system. Kept global so every encapsulated
+   dashboard view shares controls, tables, cards and responsive behaviour. */
+body[data-theme="dashboard"] :is(.dashboard-layout, .admin-shell, .secretary-shell, .consultant-shell) {
+  direction: rtl;
+}
+body[data-theme="dashboard"] .dashboard-layout {
+  gap: 20px;
+  background: var(--bg);
+}
+body[data-theme="dashboard"] .dashboard-sidebar {
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--sidebar);
+  color: var(--sidebar-text);
+  box-shadow: var(--shadow);
+}
+body[data-theme="dashboard"] .dashboard-sidebar :is(.dashboard-brand, h1, strong, small) {
+  color: var(--sidebar-text);
+}
+body[data-theme="dashboard"] .dashboard-sidebar .dashboard-user-card {
+  border-color: color-mix(in srgb, var(--sidebar-text) 14%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--sidebar-hover) 76%, transparent);
+}
+body[data-theme="dashboard"] .dashboard-sidebar .dashboard-nav {
+  gap: 6px;
+}
+body[data-theme="dashboard"] .dashboard-sidebar .dashboard-nav :is(button, a) {
+  min-height: 48px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sidebar-text);
+  cursor: pointer;
+}
+body[data-theme="dashboard"] .dashboard-sidebar .dashboard-nav :is(button, a):hover {
+  background: var(--sidebar-hover);
+}
+body[data-theme="dashboard"] .dashboard-sidebar .dashboard-nav :is(button, a).active {
+  background: color-mix(in srgb, var(--sidebar-active) 22%, var(--sidebar));
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 var(--sidebar-active);
+}
+body[data-theme="dashboard"] :is(.dashboard-hero, .admin-panel, .panel, .card, article) {
+  border-color: var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+body[data-theme="dashboard"] .dashboard-hero {
+  padding: 24px;
+  background: var(--surface);
+}
+body[data-theme="dashboard"] :is(.dashboard-hero, .panel-heading) h2 {
+  color: var(--text);
+  line-height: 1.5;
+}
+body[data-theme="dashboard"] :is(.dashboard-hero, .panel-heading) p {
+  color: var(--text-secondary);
+}
+body[data-theme="dashboard"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+body[data-theme="dashboard"] textarea { min-height: 104px; resize: vertical; }
+body[data-theme="dashboard"] :is(input, select, textarea):focus {
+  border-color: var(--primary);
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+body[data-theme="dashboard"] :is(input, select, textarea):disabled {
+  background: var(--surface-soft);
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: .75;
+}
+body[data-theme="dashboard"] :is(button, .button, [role="button"]) { border-radius: 10px; }
+body[data-theme="dashboard"] :is(.primary-btn, .submit-btn, .apply, .export-action) {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+body[data-theme="dashboard"] :is(.primary-btn, .submit-btn, .apply, .export-action):hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+body[data-theme="dashboard"] :is(.secondary-btn, .reset) {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+body[data-theme="dashboard"] :is(.table-wrap, .table-scroll, .desktop-table) {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  -webkit-overflow-scrolling: touch;
+}
+body[data-theme="dashboard"] table { width: 100%; border-collapse: collapse; }
+body[data-theme="dashboard"] :is(th, td) {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+}
+body[data-theme="dashboard"] th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-weight: 800;
+}
+body[data-theme="dashboard"] tbody tr { transition: background 160ms ease; }
+body[data-theme="dashboard"] tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 35%, var(--surface)); }
+body[data-theme="dashboard"] :is(.empty-state, .empty, .no-data) {
+  padding: 32px 16px;
+  color: var(--muted);
+  text-align: center;
+}
+@media (max-width: 980px) {
+  body[data-theme="dashboard"] .dashboard-layout { width: min(100% - 20px, 100%); }
+  body[data-theme="dashboard"] .dashboard-sidebar { border-radius: 0; }
+  body[data-theme="dashboard"] .mobile-primary-nav {
+    border-color: var(--border);
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    box-shadow: var(--shadow);
+  }
+}
+@media (max-width: 560px) {
+  body[data-theme="dashboard"] .dashboard-hero { padding: 16px; }
+  body[data-theme="dashboard"] :is(th, td) { padding: 10px 12px; }
 }

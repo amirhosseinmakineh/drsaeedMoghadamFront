@@ -9,7 +9,7 @@
   background: var(--bm-surface);
 }
 :host(.variant-elevated) {
-  box-shadow: 0 0.75rem 2rem rgb(50 38 26 / 10%);
+  box-shadow: var(--shadow, 0 4px 18px rgb(15 118 110 / 7%));
 }
 :host(.variant-interactive) {
   cursor: pointer;

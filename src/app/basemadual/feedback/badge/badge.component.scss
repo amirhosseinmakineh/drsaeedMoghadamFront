@@ -4,24 +4,12 @@
   min-height: 1.75rem;
   padding-inline: 0.625rem;
   border-radius: 999px;
+  background: var(--surface-soft, #ecf4f3);
+  color: var(--text-secondary, #536967);
   font-size: 0.75rem;
   font-weight: 700;
-  background: #eee;
-  color: #555;
 }
-:host(.success) {
-  background: #e8f6ee;
-  color: #176b3a;
-}
-:host(.danger) {
-  background: #fdecec;
-  color: #a52a2a;
-}
-:host(.warning) {
-  background: #fff4d8;
-  color: #865e00;
-}
-:host(.info) {
-  background: #e8f2fc;
-  color: #235f91;
-}
+:host(.success) { background: color-mix(in srgb, var(--success, #16a34a) 12%, white); color: var(--success, #16a34a); }
+:host(.danger) { background: color-mix(in srgb, var(--danger, #dc2626) 12%, white); color: var(--danger, #dc2626); }
+:host(.warning) { background: color-mix(in srgb, var(--warning, #d97706) 13%, white); color: var(--warning, #d97706); }
+:host(.info) { background: color-mix(in srgb, var(--info, #0284c7) 12%, white); color: var(--info, #0284c7); }
