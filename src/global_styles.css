@@ -20,6 +20,47 @@
   --shadow: 0 14px 42px rgba(0, 0, 0, 0.3);
 }
 
+/* Authenticated workspaces deliberately use one neutral, high-contrast theme.
+   Route-level tokens keep the clinic's public dark-cyan identity untouched. */
+body[data-theme="dashboard"] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #ffffff;
+  --surface-muted: #ffffff;
+  --text: #000000;
+  --muted: #000000;
+  --line: #d4d4d4;
+  --brand: #000000;
+  --brand-2: #000000;
+  --cyan: #000000;
+  --cyan-soft: #000000;
+  --danger: #b42318;
+  --success: #18794e;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="dashboard"],
+body[data-theme="dashboard"] .app-shell,
+body[data-theme="dashboard"] main {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body[data-theme="dashboard"] input,
+body[data-theme="dashboard"] select,
+body[data-theme="dashboard"] textarea {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+body[data-theme="dashboard"] input::placeholder,
+body[data-theme="dashboard"] textarea::placeholder {
+  color: #000000;
+  opacity: 0.65;
+}
+
 
 /* =========================================================
    GLOBAL

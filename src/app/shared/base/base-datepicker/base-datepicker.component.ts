@@ -3,7 +3,9 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   EventEmitter,
+  HostListener,
   Input,
   OnChanges,
   Output,
@@ -56,7 +58,10 @@ export class BaseDatepickerComponent implements OnChanges {
   private cachedDays: DatePickerDay[] = [];
   private daysCacheKey = "";
 
-  constructor(private cdr: ChangeDetectorRef) {
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private readonly elementRef: ElementRef<HTMLElement>,
+  ) {
     this.rebuildDaysCache();
   }
 
@@ -154,6 +159,25 @@ export class BaseDatepickerComponent implements OnChanges {
   toggleCalendar(): void {
     if (!this.compact) return;
     this.calendarOpen = !this.calendarOpen;
+  }
+
+  @HostListener("document:pointerdown", ["$event"])
+  closeWhenClickingOutside(event: PointerEvent): void {
+    if (
+      this.compact &&
+      this.calendarOpen &&
+      !this.elementRef.nativeElement.contains(event.target as Node)
+    ) {
+      this.calendarOpen = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  @HostListener("document:keydown.escape")
+  closeWithEscape(): void {
+    if (!this.calendarOpen) return;
+    this.calendarOpen = false;
+    this.cdr.markForCheck();
   }
 
   private rebuildDaysCache(): void {

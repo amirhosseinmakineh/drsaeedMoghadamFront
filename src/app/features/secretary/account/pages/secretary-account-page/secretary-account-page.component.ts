@@ -8,6 +8,7 @@ import { BaseSectionComponent } from "../../../../../basemadual/layout/section/s
 import { BaseDrawerComponent } from "../../../../../basemadual/overlays/drawer/drawer.component";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { SecretaryAccountSummaryComponent } from "../../components/secretary-account-summary/secretary-account-summary.component";
+import { SecretaryAccountShellComponent } from "../../components/secretary-account-shell/secretary-account-shell.component";
 import { SecretaryTransactionDetailsComponent } from "../../components/secretary-transaction-details/secretary-transaction-details.component";
 import { SecretaryTransactionFiltersComponent } from "../../components/secretary-transaction-filters/secretary-transaction-filters.component";
 import { SecretaryTransactionFormComponent } from "../../components/secretary-transaction-form/secretary-transaction-form.component";
@@ -30,6 +31,7 @@ import { SecretaryAccountService } from "../../services/secretary-account.servic
     BasePageShellComponent,
     BaseSectionComponent,
     SecretaryAccountSummaryComponent,
+    SecretaryAccountShellComponent,
     SecretaryTransactionDetailsComponent,
     SecretaryTransactionFiltersComponent,
     SecretaryTransactionFormComponent,
