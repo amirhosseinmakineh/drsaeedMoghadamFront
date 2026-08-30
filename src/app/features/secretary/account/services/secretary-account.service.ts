@@ -9,6 +9,8 @@ import {
   CreatedTransactionDto,
   GetSecretaryFinancialTransactionsRequest,
   SecretaryExpenseCategoryDto,
+  SecretaryExpenseCategoryManagementDto,
+  SaveSecretaryExpenseCategoryRequest,
   SecretaryFinancialSummaryDto,
   SecretaryFinancialTransactionDto,
   SecretaryFinancialTransactionListDto,
@@ -17,6 +19,7 @@ import {
 @Injectable({ providedIn: "root" })
 export class SecretaryAccountService {
   private readonly baseUrl = `${environment.apiBaseUrl}/secretary/account`;
+  private readonly expenseCategoriesUrl = `${environment.apiBaseUrl}/secretary/expense-categories`;
 
   constructor(
     private readonly http: HttpClient,
@@ -53,6 +56,42 @@ export class SecretaryAccountService {
       `${this.baseUrl}/expense-categories`,
       { headers: this.authHeaders() },
     );
+  }
+
+  getManagedExpenseCategories(): Observable<ApiResponse<SecretaryExpenseCategoryManagementDto[]>> {
+    return this.http.get<ApiResponse<SecretaryExpenseCategoryManagementDto[]>>(
+      this.expenseCategoriesUrl,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  getManagedExpenseCategory(id: number): Observable<ApiResponse<SecretaryExpenseCategoryManagementDto>> {
+    return this.http.get<ApiResponse<SecretaryExpenseCategoryManagementDto>>(
+      `${this.expenseCategoriesUrl}/${id}`,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  createExpenseCategory(request: SaveSecretaryExpenseCategoryRequest): Observable<ApiResponse<SecretaryExpenseCategoryManagementDto>> {
+    return this.http.post<ApiResponse<SecretaryExpenseCategoryManagementDto>>(
+      this.expenseCategoriesUrl,
+      request,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  updateExpenseCategory(id: number, request: SaveSecretaryExpenseCategoryRequest): Observable<ApiResponse<SecretaryExpenseCategoryManagementDto>> {
+    return this.http.put<ApiResponse<SecretaryExpenseCategoryManagementDto>>(
+      `${this.expenseCategoriesUrl}/${id}`,
+      request,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  deleteExpenseCategory(id: number): Observable<ApiResponse<unknown>> {
+    return this.http.delete<ApiResponse<unknown>>(`${this.expenseCategoriesUrl}/${id}`, {
+      headers: this.authHeaders(),
+    });
   }
 
   getTransaction(id: number): Observable<ApiResponse<SecretaryFinancialTransactionDto>> {

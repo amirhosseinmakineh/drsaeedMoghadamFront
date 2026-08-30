@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, ViewChild, inject } from "@angular/core";
+import { RouterLink } from "@angular/router";
 import { finalize } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BaseButtonComponent } from "../../../../../basemadual/actions/base-button/base-button.component";
@@ -38,6 +39,7 @@ import { SecretaryAccountService } from "../../services/secretary-account.servic
     SecretaryTransactionFiltersComponent,
     SecretaryTransactionFormComponent,
     SecretaryTransactionListComponent,
+    RouterLink,
   ],
   templateUrl: "./secretary-account-page.component.html",
   styleUrl: "./secretary-account-page.component.scss",
