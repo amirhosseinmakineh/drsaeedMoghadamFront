@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from "@angular/core";
-import {
-  BaseFilterBarComponent,
-  BaseSearchFilterComponent,
-  BaseSelectFilterComponent,
-  PersianDatePickerComponent,
-} from "@basemadual";
+import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
+import { BaseFilterBarComponent } from "../../../../../basemadual/filters/filter-bar/filter-bar.component";
+import { BaseSearchFilterComponent } from "../../../../../basemadual/filters/search-filter/search-filter.component";
+import { BaseSelectFilterComponent } from "../../../../../basemadual/filters/select-filter/select-filter.component";
 import { TRANSACTION_TYPE_OPTIONS } from "../../constants/secretary-account.constants";
 import { SecretaryExpenseCategoryDto, SecretaryTransactionFilters } from "../../models/secretary-account.models";
 @Component({

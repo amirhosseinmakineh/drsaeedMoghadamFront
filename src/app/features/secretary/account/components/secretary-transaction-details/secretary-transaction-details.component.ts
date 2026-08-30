@@ -1,9 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import {
-  BaseBadgeComponent,
-  BaseSkeletonComponent,
-  PersianDatePipe,
-} from "@basemadual";
+import { PersianDatePipe } from "../../../../../basemadual/date/persian-date.pipe";
+import { BaseBadgeComponent } from "../../../../../basemadual/feedback/badge/badge.component";
+import { BaseSkeletonComponent } from "../../../../../basemadual/feedback/skeleton/skeleton.component";
 import { FinancialTransactionType } from "../../enums/financial-transaction-type.enum";
 import { SecretaryFinancialTransactionDto } from "../../models/secretary-account.models";
 @Component({

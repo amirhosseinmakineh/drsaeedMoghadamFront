@@ -10,16 +10,14 @@ import {
 } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import {
-  BaseButtonComponent,
-  BaseFormErrorComponent,
-  BaseNumberInputComponent,
-  BaseSegmentedControlComponent,
-  BaseSelectInputComponent,
-  BaseTextInputComponent,
-  BaseTextareaInputComponent,
-  PersianDatePickerComponent,
-} from "@basemadual";
+import { BaseButtonComponent } from "../../../../../basemadual/actions/base-button/base-button.component";
+import { BaseSegmentedControlComponent } from "../../../../../basemadual/actions/segmented-control/segmented-control.component";
+import { BaseFormErrorComponent } from "../../../../../basemadual/forms/form-error/form-error.component";
+import { BaseNumberInputComponent } from "../../../../../basemadual/forms/number-input/number-input.component";
+import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
+import { BaseSelectInputComponent } from "../../../../../basemadual/forms/select-input/select-input.component";
+import { BaseTextInputComponent } from "../../../../../basemadual/forms/text-input/text-input.component";
+import { BaseTextareaInputComponent } from "../../../../../basemadual/forms/textarea-input/textarea-input.component";
 import { PAYMENT_METHOD_OPTIONS, TRANSACTION_TYPE_OPTIONS } from "../../constants/secretary-account.constants";
 import { FinancialTransactionType } from "../../enums/financial-transaction-type.enum";
 import { PaymentMethod } from "../../enums/payment-method.enum";

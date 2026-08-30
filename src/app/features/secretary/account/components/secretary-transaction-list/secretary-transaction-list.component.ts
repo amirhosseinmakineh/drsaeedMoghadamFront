@@ -1,16 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output } from "@angular/core";
-import {
-  BaseBadgeComponent,
-  BaseButtonComponent,
-  BaseDataTableComponent,
-  BaseEmptyStateComponent,
-  BaseErrorStateComponent,
-  BaseSkeletonComponent,
-  BaseTablePaginationComponent,
-} from "@basemadual";
+import { BaseButtonComponent } from "../../../../../basemadual/actions/base-button/base-button.component";
 import { PersianDateService } from "../../../../../basemadual/date/persian-date.service";
-import {  BaseBadgeComponent} from "../../../../../basemadual/"
-import type { BaseTableColumn } from "@basemadual";
+import { BaseBadgeComponent } from "../../../../../basemadual/feedback/badge/badge.component";
+import { BaseEmptyStateComponent } from "../../../../../basemadual/feedback/empty-state/empty-state.component";
+import { BaseErrorStateComponent } from "../../../../../basemadual/feedback/error-state/error-state.component";
+import { BaseSkeletonComponent } from "../../../../../basemadual/feedback/skeleton/skeleton.component";
+import type { BaseTableColumn } from "../../../../../basemadual/models/base-ui.models";
+import { BaseDataTableComponent } from "../../../../../basemadual/table/data-table/data-table.component";
+import { BaseTablePaginationComponent } from "../../../../../basemadual/table/table-pagination/table-pagination.component";
 import { SecretaryFinancialTransactionDto } from "../../models/secretary-account.models";
 interface TransactionRow {
   type: string;
@@ -62,9 +59,7 @@ export class SecretaryTransactionListComponent implements OnChanges {
   ];
   rows: TransactionRow[] = [];
   private readonly money = new Intl.NumberFormat("fa-IR");
-constructor(
-  private readonly persianDate: PersianDateService,
-) {}
+  constructor(private readonly persianDate: PersianDateService) {}
   ngOnChanges(): void {
     this.rows = this.items.map((item) => ({
       type: item.typeTitle,
