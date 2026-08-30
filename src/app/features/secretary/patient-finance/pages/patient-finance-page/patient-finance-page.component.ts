@@ -13,7 +13,9 @@ import { PatientFinanceApiService } from "../../services/patient-finance-api.ser
 
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
-interface FinancePatientOption { patientFileId: number; patientId: number; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
+interface FinancePatientOption { patientFileId: number; patientId: string; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
+
+const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
 function commitmentRequired(control: AbstractControl): ValidationErrors | null {
   const agreement = Number(control.get("agreementType")?.value);
@@ -99,7 +101,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientPhone(patient: FinancePatientOption): string { return patient.phoneNumber ?? ""; }
   patientFileNumber(patient: FinancePatientOption): string { return String(patient.fileNumber ?? ""); }
   selectPatient(patient: FinancePatientOption): void {
-    if (!Number.isInteger(patient.patientId) || patient.patientId <= 0) return;
+    if (!GUID_PATTERN.test(patient.patientId)) {
+      this.toast.error("شناسه بیمار این پرونده GUID نیست و با API ثبت پرونده مالی سازگار نیست. پاسخ patient-files باید patientId از نوع GUID برگرداند.");
+      return;
+    }
     this.createForm.controls.patientId.setValue(patient.patientId);
     this.patientSearch = this.patientName(patient);
     this.patientDropdownOpen = false;
@@ -201,10 +206,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: result => {
         this.patientOptions = result.items
-          .filter(patient => Number.isInteger(patient.patientId) && patient.patientId! > 0)
+          .filter(patient => patient.patientId !== null && patient.patientId !== undefined)
           .map(patient => ({
             patientFileId: patient.id,
-            patientId: patient.patientId!,
+            patientId: String(patient.patientId),
             fileNumber: patient.fileNumber,
             firstName: patient.firstName,
             lastName: patient.lastName,
