@@ -60,9 +60,9 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
 
-  readonly filters = this.fb.group({ search: [""], patientId: [null as number | null, Validators.min(1)], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
+  readonly filters = this.fb.group({ search: [""], patientId: this.fb.control<string | null>(null, Validators.pattern(GUID_PATTERN)), status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
   readonly createForm = this.fb.group({
-    patientId: [null as number | null, [Validators.required, Validators.min(1)]],
+    patientId: this.fb.control<string | null>(null, [Validators.required, Validators.pattern(GUID_PATTERN)]),
     serviceId: [null as number | null, Validators.required],
     totalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
