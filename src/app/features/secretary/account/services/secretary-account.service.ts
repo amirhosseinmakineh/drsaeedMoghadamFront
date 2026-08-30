@@ -14,6 +14,7 @@ import {
   SecretaryFinancialSummaryDto,
   SecretaryFinancialTransactionDto,
   SecretaryFinancialTransactionListDto,
+  UpdateSecretaryFinancialTransactionRequest,
 } from "../models/secretary-account.models";
 
 @Injectable({ providedIn: "root" })
@@ -96,6 +97,21 @@ export class SecretaryAccountService {
 
   getTransaction(id: number): Observable<ApiResponse<SecretaryFinancialTransactionDto>> {
     return this.http.get<ApiResponse<SecretaryFinancialTransactionDto>>(
+      `${this.baseUrl}/financial-transactions/${id}`,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  updateTransaction(id: number, request: UpdateSecretaryFinancialTransactionRequest): Observable<ApiResponse<CreatedTransactionDto>> {
+    return this.http.put<ApiResponse<CreatedTransactionDto>>(
+      `${this.baseUrl}/financial-transactions/${id}`,
+      request,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  deleteTransaction(id: number): Observable<ApiResponse<never>> {
+    return this.http.delete<ApiResponse<never>>(
       `${this.baseUrl}/financial-transactions/${id}`,
       { headers: this.authHeaders() },
     );

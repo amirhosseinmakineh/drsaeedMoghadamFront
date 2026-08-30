@@ -4,6 +4,7 @@ import {
   DestroyRef,
   EventEmitter,
   Input,
+  OnChanges,
   OnInit,
   Output,
   inject,
@@ -25,6 +26,7 @@ import { normalizeSecretaryTransaction } from "../../mappers/secretary-account.m
 import {
   CreateSecretaryFinancialTransactionRequest,
   SecretaryExpenseCategoryDto,
+  SecretaryFinancialTransactionDto,
 } from "../../models/secretary-account.models";
 @Component({
   selector: "app-secretary-transaction-form",
@@ -44,11 +46,13 @@ import {
   styleUrl: "./secretary-transaction-form.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SecretaryTransactionFormComponent implements OnInit {
+export class SecretaryTransactionFormComponent implements OnInit, OnChanges {
   @Input()
   categories: SecretaryExpenseCategoryDto[] = [];
   @Input()
   isSubmitting = false;
+  @Input()
+  transaction: SecretaryFinancialTransactionDto | null = null;
   @Output()
   transactionSubmitted = new EventEmitter<CreateSecretaryFinancialTransactionRequest>();
   private readonly formBuilder = inject(FormBuilder);
@@ -70,6 +74,22 @@ export class SecretaryTransactionFormComponent implements OnInit {
     this.form.controls.type.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((type) => this.updateCategoryControl(type));
+  }
+  ngOnChanges(): void {
+    if (!this.transaction) return;
+    const transaction = this.transaction;
+    this.form.reset({
+      type: transaction.type,
+      amount: transaction.amount,
+      transactionDate: new Date(transaction.transactionDate),
+      subject: transaction.subject,
+      counterpartyName: transaction.counterpartyName,
+      paymentMethod: transaction.paymentMethod,
+      description: transaction.description,
+      expenseCategoryId: transaction.expenseCategoryId,
+    });
+    this.updateCategoryControl(transaction.type);
+    this.form.controls.expenseCategoryId.setValue(transaction.expenseCategoryId);
   }
   get categoryOptions() {
     return this.categories.map(({ id, title }) => ({ value: id, label: title }));

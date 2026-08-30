@@ -47,6 +47,7 @@ export interface SecretaryFinancialTransactionDto {
   expenseCategoryId: number | null;
   expenseCategoryTitle: string | null;
   createdAt: string;
+  updatedAt: string | null;
 }
 
 export interface SecretaryFinancialTransactionListDto {
@@ -83,3 +84,5 @@ export interface SaveSecretaryExpenseCategoryRequest {
 export interface CreatedTransactionDto {
   id: number;
 }
+
+export type UpdateSecretaryFinancialTransactionRequest = CreateSecretaryFinancialTransactionRequest;

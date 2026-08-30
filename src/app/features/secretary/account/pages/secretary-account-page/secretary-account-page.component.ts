@@ -8,6 +8,7 @@ import { BasePageShellComponent } from "../../../../../basemadual/layout/page-sh
 import { BaseSectionComponent } from "../../../../../basemadual/layout/section/section.component";
 import { BaseDrawerComponent } from "../../../../../basemadual/overlays/drawer/drawer.component";
 import { BaseModalComponent } from "../../../../../basemadual/overlays/modal/modal.component";
+import { BaseConfirmDialogComponent } from "../../../../../basemadual/overlays/confirm-dialog/confirm-dialog.component";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { SecretaryAccountSummaryComponent } from "../../components/secretary-account-summary/secretary-account-summary.component";
 import { SecretaryAccountShellComponent } from "../../components/secretary-account-shell/secretary-account-shell.component";
@@ -32,6 +33,7 @@ import { handleTransactionReceipt, ReceiptAction } from "../../utils/transaction
     BaseButtonComponent,
     BaseDrawerComponent,
     BaseModalComponent,
+    BaseConfirmDialogComponent,
     BasePageShellComponent,
     BaseSectionComponent,
     SecretaryAccountSummaryComponent,
@@ -64,6 +66,9 @@ export class SecretaryAccountPageComponent implements OnInit {
   transactionsLoadFailed = false;
   createDrawerOpen = false;
   detailsDrawerOpen = false;
+  editModalOpen = false;
+  deleteDialogOpen = false;
+  isDeletingTransaction = false;
   receiptLoadingId: number | null = null;
   private readonly destroyRef = inject(DestroyRef);
   constructor(
@@ -86,6 +91,21 @@ export class SecretaryAccountPageComponent implements OnInit {
   closeDetailsDrawer(): void {
     this.detailsDrawerOpen = false;
     this.selectedTransaction = null;
+  }
+  openEdit(transaction: SecretaryFinancialTransactionDto): void {
+    this.selectedTransaction = transaction;
+    this.detailsDrawerOpen = false;
+    this.editModalOpen = true;
+  }
+  closeEdit(): void {
+    if (!this.isSubmittingTransaction) this.editModalOpen = false;
+  }
+  requestDelete(transaction: SecretaryFinancialTransactionDto): void {
+    this.selectedTransaction = transaction;
+    this.deleteDialogOpen = true;
+  }
+  closeDelete(): void {
+    if (!this.isDeletingTransaction) this.deleteDialogOpen = false;
   }
   handleFiltersChanged(filters: SecretaryTransactionFilters): void {
     const dateRangeChanged =
@@ -117,7 +137,15 @@ export class SecretaryAccountPageComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ data }) => (this.selectedTransaction = data),
+        next: (response) => {
+          if (!response.isSuccess) {
+            this.toast.error(response.message);
+            this.closeDetailsDrawer();
+            this.loadTransactions();
+            return;
+          }
+          this.selectedTransaction = response.data;
+        },
         error: (error: HttpErrorResponse) => this.showError(error),
       });
   }
@@ -138,6 +166,49 @@ export class SecretaryAccountPageComponent implements OnInit {
         next: (response) => this.handleCreateSuccess(response.message),
         error: (error: HttpErrorResponse) => this.showError(error),
       });
+  }
+  updateTransaction(request: CreateSecretaryFinancialTransactionRequest): void {
+    if (this.isSubmittingTransaction || !this.selectedTransaction) return;
+    this.isSubmittingTransaction = true;
+    const id = this.selectedTransaction.id;
+    this.accountService.updateTransaction(id, request).pipe(
+      finalize(() => { this.isSubmittingTransaction = false; this.cdr.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (response) => {
+        if (!response.isSuccess) { this.toast.error(response.message); return; }
+        this.toast.success(response.message || "تراکنش مالی با موفقیت ویرایش شد");
+        this.editModalOpen = false;
+        this.loadTransactions();
+        this.loadSummary();
+        this.showDetails(id);
+      },
+      error: (error: HttpErrorResponse) => this.handleMutationError(error),
+    });
+  }
+  deleteTransaction(): void {
+    if (this.isDeletingTransaction || !this.selectedTransaction) return;
+    this.isDeletingTransaction = true;
+    this.accountService.deleteTransaction(this.selectedTransaction.id).pipe(
+      finalize(() => { this.isDeletingTransaction = false; this.cdr.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (response) => {
+        if (!response.isSuccess) { this.toast.error(response.message); return; }
+        this.toast.success(response.message || "تراکنش مالی با موفقیت حذف شد");
+        this.deleteDialogOpen = false;
+        this.detailsDrawerOpen = false;
+        this.selectedTransaction = null;
+        this.loadTransactions();
+        this.loadSummary();
+      },
+      error: (error: HttpErrorResponse) => this.handleMutationError(error),
+    });
+  }
+  get deleteMessage(): string {
+    const item = this.selectedTransaction;
+    if (!item) return "";
+    return `آیا از حذف تراکنش ${item.typeTitle} ${item.subject || "بدون عنوان"} به مبلغ ${new Intl.NumberFormat("fa-IR").format(item.amount)} تومان مطمئن هستید؟`;
   }
   async issueReceipt(id: number, action: ReceiptAction = "share"): Promise<void> {
     if (this.receiptLoadingId !== null) return;
@@ -221,6 +292,13 @@ export class SecretaryAccountPageComponent implements OnInit {
         ? apiMessage
         : SECRETARY_ACCOUNT_ERROR_MESSAGE;
     this.toast.error(message);
+  }
+  private handleMutationError(error: HttpErrorResponse): void {
+    this.showError(error);
+    if (error.error?.message === "تراکنش مالی یافت نشد") {
+      this.loadTransactions();
+      this.loadSummary();
+    }
   }
   private showReceiptError(error: unknown): void {
     if (error instanceof Error && error.message === "POPUP_BLOCKED") {
