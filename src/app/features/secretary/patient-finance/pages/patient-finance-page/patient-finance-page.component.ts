@@ -59,7 +59,7 @@ export class PatientFinancePageComponent implements OnInit {
   patientOptionsLoaded = false;
   patientDropdownOpen = false;
 
-  readonly filters = this.fb.group({ search: [""], patientId: [null as number | null], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
+  readonly filters = this.fb.group({ search: [""], patientId: [null as string | null, Validators.pattern(GUID_PATTERN)], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
   readonly createForm = this.fb.group({
     patientId: [null as string | null, [Validators.required, Validators.pattern(GUID_PATTERN)]],
     serviceId: [null as number | null, Validators.required],
@@ -116,6 +116,7 @@ export class PatientFinancePageComponent implements OnInit {
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   applyFilters(): void {
     const { year, month } = this.filters.getRawValue();
+    if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک GUID معتبر باشد."); return; }
     if (this.activeTab === "debts" && ((year && !month) || (!year && month))) { this.toast.error("سال و ماه شمسی باید با هم وارد شوند."); return; }
     this.page = 1; this.load();
   }
