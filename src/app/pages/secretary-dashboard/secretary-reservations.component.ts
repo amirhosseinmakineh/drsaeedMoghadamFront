@@ -185,19 +185,14 @@ export class SecretaryReservationsComponent
     this.load();
   }
 
-  applyStatusFilter(value: AttendanceConfirmationStatus | null): void {
-    this.statusFilter = value;
-    this.pageNumber = 1;
-    this.load();
-  }
-
-  applyReservationTypeFilter(value: ReservationType | null): void {
-    this.reservationTypeFilter = value;
-    this.pageNumber = 1;
-    this.load();
-  }
-
-  applyReservationTypeFilter(): void {
+  applyFilters(change: {
+    status?: AttendanceConfirmationStatus | null;
+    reservationType?: ReservationType | null;
+  }): void {
+    if ("status" in change) this.statusFilter = change.status ?? null;
+    if ("reservationType" in change) {
+      this.reservationTypeFilter = change.reservationType ?? null;
+    }
     this.pageNumber = 1;
     this.load();
   }
