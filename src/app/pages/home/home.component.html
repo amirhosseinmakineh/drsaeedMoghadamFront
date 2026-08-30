@@ -1,67 +1,15 @@
-<section class="hero-section page-section">
-  <div class="hero-copy">
-    <h1>{{ pickText(heroSlides[activeSlide()].title, language()) }}</h1>
-    <p class="hero-text">
-      {{ pickText(heroSlides[activeSlide()].text, language()) }}
-    </p>
-
-    <div class="hero-actions">
-      <button class="primary-btn" type="button" (click)="openAuth()">
-        <app-fa-icon name="user"></app-fa-icon>
-        {{ language() === "fa" ? "ورود / عضویت" : "Sign in / Join" }}
-      </button>
-      <a class="secondary-btn" routerLink="/services">
-        {{ language() === "fa" ? "مشاهده خدمات" : "Explore services" }}
-        <app-fa-icon name="arrowLeft"></app-fa-icon>
-      </a>
-    </div>
-
-    <div class="hero-slide-controls" aria-label="Hero slider controls">
-      <button
-        *ngFor="let slide of heroSlides; let i = index"
-        type="button"
-        [class.active]="i === activeSlide()"
-        [attr.aria-label]="pickText(slide.title, language())"
-        (click)="activeSlide.set(i)"
-      >
-        <span></span>
-      </button>
-    </div>
-
-    <div class="stat-grid" aria-label="Clinic highlights">
-      <article *ngFor="let stat of stats">
-        <strong>{{ pickText(stat.value, language()) }}</strong>
-        <span>{{ pickText(stat.label, language()) }}</span>
-      </article>
-    </div>
-  </div>
-
-  <div class="hero-visual" aria-label="Animated dental care graphic">
-    <div class="motion-orbit"></div>
-    <div class="smile-motion">
-      <span></span>
-      <span></span>
-      <span></span>
-      <svg viewBox="0 0 420 260" role="img" aria-label="Smile motion graphic">
-        <path
-          class="face-line"
-          d="M74 116c28-62 102-86 171-62 47 16 82 53 103 101"
-        />
-        <path class="smile-line" d="M112 147c45 58 143 67 204 5" />
-        <circle class="focus-dot" cx="118" cy="145" r="8" />
-        <circle class="focus-dot delay" cx="298" cy="148" r="8" />
-      </svg>
-    </div>
+<section class="hero-cyan">
+  <div class="hero-cyan__media">
     @switch (heroSlides[activeSlide()].id) {
       @case ("mobile-first") {
         <img
-          src="/images/5-640.png"
+          src="/images/image.jpg"
           srcset="
             /images/5-360.png 360w,
             /images/5-640.png 640w,
             /images/5-960.png 960w
           "
-          sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
+          sizes="100vw"
           width="1310"
           height="1201"
           [alt]="pickText(heroSlides[activeSlide()].title, language())"
@@ -70,15 +18,15 @@
           fetchpriority="high"
         />
       }
+
       @default {
         <img
-          src="/images/1-640.png"
+        src="/images/image (1).jpg"
           srcset="
-            /images/1-360.png 360w,
-            /images/1-640.png 640w,
-            /images/1-960.png 960w
-          "
-          sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
+            /images/image (1).jpg,
+            /images/image (1).jpg,
+            /images/image (1).jpg"
+          sizes="100vw"
           width="1361"
           height="1156"
           [alt]="pickText(heroSlides[activeSlide()].title, language())"
@@ -88,68 +36,167 @@
         />
       }
     }
+    <div class="hero-cyan__overlay"></div>
+  </div>
+
+  <div class="hero-cyan__content">
+    <div class="hero-cyan__text">
+
+      <h1 class="hero-cyan__title">
+        {{
+          language() === "fa"
+            ? "لبخندی که لایقش هستید"
+            : "The smile you deserve"
+        }}
+      </h1>
+
+<p class="hero-cyan__desc">
+  {{
+    language() === "fa"
+      ? "دکتر سعید مقدم با تخصص در طراحی لبخند، کامپوزیت و لمینت، لبخندی طبیعی و ماندگار برای شما خلق می‌کند."
+      : "Dr. Saeed Moghaddam specializes in smile design, composite and veneers, creating a natural and lasting smile for you."
+  }}
+</p>
+      <div class="hero-cyan__actions">
+        <button
+          type="button"
+          class="hero-cyan__btn"
+          (click)="openAuth()"
+        >
+          {{
+            language() === "fa"
+              ? "دریافت مشاوره رایگان"
+              : "Free consultation"
+          }}
+        </button>
+
+        <a routerLink="/services" class="hero-cyan__link">
+          {{
+            language() === "fa"
+              ? "مشاهده خدمات"
+              : "View services"
+          }}
+          <app-fa-icon name="arrowLeft"></app-fa-icon>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-cyan__services">
+      <a routerLink="/services/composite" class="hero-cyan__service">
+        <span>01</span>
+        <strong>{{ language() === "fa" ? "کامپوزیت" : "Composite" }}</strong>
+      </a>
+
+      <a routerLink="/services/laminate" class="hero-cyan__service">
+        <span>02</span>
+        <strong>{{ language() === "fa" ? "لمینت" : "Veneers" }}</strong>
+      </a>
+
+      <a routerLink="/services/whitening" class="hero-cyan__service">
+        <span>03</span>
+        <strong>{{ language() === "fa" ? "بلیچینگ" : "Whitening" }}</strong>
+      </a>
+    </div>
   </div>
 </section>
+<section class="doctor-lux" aria-labelledby="doctor-intro-title">
+  <div class="doctor-lux__container">
+    
+    <div class="doctor-lux__content">
+      <span class="doctor-lux__eyebrow">
+        {{ language() === "fa" ? "معرفی پزشک" : "About the Doctor" }}
+      </span>
 
-<section class="page-section doctor-intro" aria-labelledby="doctor-intro-title">
-  <div class="section-heading">
-    <span class="eyebrow">{{ language() === "fa" ? "دندان‌پزشکی زیبایی و طراحی لبخند" : "Cosmetic dentistry and smile design" }}</span>
-    <h2 id="doctor-intro-title">
-      {{ language() === "fa" ? "دکتر سعید مقدم؛ راهنمای انتخاب درمان زیبایی متناسب با وضعیت دندان" : "Dr. Saeed Moghaddam: choosing cosmetic care for your dental condition" }}
-    </h2>
+      <h2 id="doctor-intro-title" class="doctor-lux__title">
+        {{ language() === "fa" 
+          ? "دکتر سعید مقدم" 
+          : "Dr. Saeed Moghaddam" }}
+      </h2>
+
+      <p class="doctor-lux__lead">
+        {{ language() === "fa"
+          ? "متخصص دندان‌پزشکی زیبایی با بیش از ۱۰ سال سابقه در طراحی لبخند"
+          : "Cosmetic dentistry specialist with over 10 years of experience in smile design" }}
+      </p>
+
+      <div class="doctor-lux__text">
+        <p>
+          {{ language() === "fa"
+            ? "دکتر سعید مقدم با بیش از ۱۰ سال سابقه فعالیت در حوزه دندان‌پزشکی زیبایی، خدمات تخصصی کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان را ارائه می‌دهد. تمرکز اصلی ایشان بر طراحی لبخند طبیعی، هماهنگ با چهره و متناسب با نیاز هر فرد است."
+            : "Dr. Saeed Moghaddam, with over 10 years of experience in cosmetic dentistry, provides specialized composite veneers, porcelain veneers and professional teeth whitening. His main focus is creating natural smile designs that harmonize with each patient’s facial features." }}
+        </p>
+        <p>
+          {{ language() === "fa"
+            ? "در کلینیک دکتر سعید مقدم، پیش از شروع هر درمان، وضعیت دندان‌ها و لثه به‌صورت دقیق بررسی می‌شود تا مناسب‌ترین روش زیبایی انتخاب گردد."
+            : "At Dr. Saeed Moghaddam’s clinic, every treatment begins with a careful examination of the teeth and gums to select the most suitable cosmetic approach." }}
+        </p>
+      </div>
+
+      <div class="doctor-lux__actions">
+        <a routerLink="/about" class="doctor-lux__btn">
+          {{ language() === "fa" ? "درباره دکتر سعید مقدم" : "About Dr. Saeed Moghaddam" }}
+        </a>
+        <a routerLink="/services" class="doctor-lux__link">
+          {{ language() === "fa" ? "مشاهده خدمات" : "View services" }}
+          <app-fa-icon name="arrowLeft"></app-fa-icon>
+        </a>
+      </div>
+    </div>
+
+    <div class="doctor-lux__services">
+      <a routerLink="/services/composite" class="doctor-lux__service">
+        <span class="doctor-lux__num">01</span>
+        <div>
+          <strong>{{ language() === "fa" ? "کامپوزیت ونیر" : "Composite Veneers" }}</strong>
+          <span>{{ language() === "fa" ? "اصلاح فرم و رنگ دندان" : "Shape and color correction" }}</span>
+        </div>
+      </a>
+
+      <a routerLink="/services/laminate" class="doctor-lux__service">
+        <span class="doctor-lux__num">02</span>
+        <div>
+          <strong>{{ language() === "fa" ? "لمینت سرامیکی" : "Porcelain Veneers" }}</strong>
+          <span>{{ language() === "fa" ? "طراحی لبخند ماندگار" : "Long-lasting smile design" }}</span>
+        </div>
+      </a>
+
+      <a routerLink="/services/whitening" class="doctor-lux__service">
+        <span class="doctor-lux__num">03</span>
+        <div>
+          <strong>{{ language() === "fa" ? "بلیچینگ دندان" : "Teeth Whitening" }}</strong>
+          <span>{{ language() === "fa" ? "روشن کردن لبخند" : "Brighten your smile" }}</span>
+        </div>
+      </a>
+    </div>
+
   </div>
-  <div class="doctor-intro-content">
-    <p>
-      {{ language() === "fa" ? "در وب‌سایت دکتر سعید مقدم می‌توانید پیش از مراجعه، تفاوت کامپوزیت ونیر، لمینت سرامیکی و بلیچینگ دندان را بررسی کنید. هدف این راهنما کمک به شناخت کاربرد، محدودیت و مراقبت هر روش است؛ انتخاب نهایی فقط پس از معاینه دندان، لثه، مینا، بایت و ترمیم‌های قبلی انجام می‌شود." : "On Dr. Saeed Moghaddam’s website, you can compare composite veneers, porcelain veneers and teeth whitening before a visit. This guide explains each option’s uses, limits and aftercare; final selection follows examination of teeth, gums, enamel, bite and existing restorations." }}
-    </p>
-    <p>
-      {{ language() === "fa" ? "اگر نام «سعید مقدم» را برای بررسی خدمات دندان‌پزشکی جست‌وجو کرده‌اید، این صفحه مسیرهای درمانی معرفی‌شده در کلینیک را یک‌جا در اختیار شما می‌گذارد؛ بدون وعده نتیجه یکسان، قیمت قطعی پیش از معاینه یا ادعای درمان مناسب برای همه." : "If you searched for Saeed Moghaddam’s dental services, this page brings the clinic’s treatment paths together without promising identical results, a fixed pre-examination price or one treatment suitable for everyone." }}
-    </p>
-  </div>
-  <nav class="keyword-links" [attr.aria-label]="language() === 'fa' ? 'راهنمای خدمات دکتر سعید مقدم' : 'Dr. Saeed Moghaddam service guides'">
-    <a routerLink="/services/composite">{{ language() === "fa" ? "کامپوزیت دندان دکتر سعید مقدم" : "Composite veneers" }}</a>
-    <a routerLink="/services/laminate">{{ language() === "fa" ? "لمینت دندان دکتر سعید مقدم" : "Porcelain veneers" }}</a>
-    <a routerLink="/services/whitening">{{ language() === "fa" ? "بلیچینگ دندان دکتر سعید مقدم" : "Teeth whitening" }}</a>
-    <a routerLink="/about">{{ language() === "fa" ? "درباره دکتر سعید مقدم" : "About Dr. Saeed Moghaddam" }}</a>
-  </nav>
 </section>
+<section class="services-lux" id="services">
+  <div class="services-lux__container">
 
-<section class="page-section service-showcase" id="services">
-  <div class="section-heading">
-    <h2>
-      {{
-        language() === "fa"
-          ? "خدمات زیبایی کلینیک دندان‌پزشکی دکتر سعید مقدم"
-          : "Cosmetic dental services at the clinic"
-      }}
-    </h2>
-  </div>
+    <!-- Header -->
+    <div class="services-lux__header">
+      <span class="services-lux__eyebrow">
+        {{ language() === "fa" ? "خدمات تخصصی" : "Specialized Services" }}
+      </span>
+      <h2 class="services-lux__title">
+        {{ language() === "fa"
+          ? "خدمات زیبایی دندان"
+          : "Cosmetic Dental Services" }}
+      </h2>
+      <p class="services-lux__desc">
+        {{ language() === "fa"
+          ? "سه مسیر اصلی طراحی لبخند در کلینیک دکتر سعید مقدم"
+          : "Three main smile design paths at Dr. Saeed Moghaddam’s clinic" }}
+      </p>
+    </div>
 
-  <div class="service-grid">
-    <article
-      class="service-card"
-      *ngFor="let service of featuredServices"
-      [style.--accent]="service.accent"
-    >
-      @switch (service.id) {
-        @case ("laminate") {
-          <img
-            src="/images/2-640.png"
-            srcset="
-              /images/2-360.png 360w,
-              /images/2-640.png 640w,
-              /images/2-960.png 960w
-            "
-            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
-            width="1310"
-            height="1200"
-            [alt]="pickText(service.title, language())"
-            loading="lazy"
-            decoding="async"
-            fetchpriority="low"
-          />
-        }
-        @case ("composite") {
+    <!-- Services Grid -->
+    <div class="services-lux__grid">
+
+      <!-- Composite -->
+      <a routerLink="/services/composite" class="services-lux__card">
+        <div class="services-lux__image">
           <img
             src="/images/3-640.png"
             srcset="
@@ -157,16 +204,65 @@
               /images/3-640.png 640w,
               /images/3-960.png 960w
             "
-            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
+            sizes="(max-width: 768px) 100vw, 33vw"
             width="1310"
             height="1201"
-            [alt]="pickText(service.title, language())"
+            [alt]="language() === 'fa' ? 'کامپوزیت ونیر' : 'Composite Veneers'"
             loading="lazy"
             decoding="async"
-            fetchpriority="low"
           />
-        }
-        @case ("whitening") {
+        </div>
+        <div class="services-lux__body">
+          <span class="services-lux__num">01</span>
+          <h3>{{ language() === "fa" ? "کامپوزیت ونیر" : "Composite Veneers" }}</h3>
+          <p>
+            {{ language() === "fa"
+              ? "اصلاح فرم، رنگ و لب‌پریدگی دندان‌ها با نتیجه‌ای طبیعی"
+              : "Correct shape, color and chips with a natural result" }}
+          </p>
+          <span class="services-lux__more">
+            {{ language() === "fa" ? "مشاهده جزئیات" : "View details" }}
+            <app-fa-icon name="arrowLeft"></app-fa-icon>
+          </span>
+        </div>
+      </a>
+
+      <!-- Laminate -->
+      <a routerLink="/services/laminate" class="services-lux__card">
+        <div class="services-lux__image">
+          <img
+            src="/images/2-640.png"
+            srcset="
+              /images/2-360.png 360w,
+              /images/2-640.png 640w,
+              /images/2-960.png 960w
+            "
+            sizes="(max-width: 768px) 100vw, 33vw"
+            width="1310"
+            height="1200"
+            [alt]="language() === 'fa' ? 'لمینت سرامیکی' : 'Porcelain Veneers'"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="services-lux__body">
+          <span class="services-lux__num">02</span>
+          <h3>{{ language() === "fa" ? "لمینت سرامیکی" : "Porcelain Veneers" }}</h3>
+          <p>
+            {{ language() === "fa"
+              ? "طراحی لبخند ماندگار با ظاهری شفاف و طبیعی"
+              : "Long-lasting smile design with a clear, natural look" }}
+          </p>
+          <span class="services-lux__more">
+            {{ language() === "fa" ? "مشاهده جزئیات" : "View details" }}
+            <app-fa-icon name="arrowLeft"></app-fa-icon>
+          </span>
+        </div>
+      </a>
+
+      <!-- Whitening -->
+      <a routerLink="/services/whitening" class="services-lux__card">
+        <div class="services-lux__image">
           <img
             src="/images/5-640.png"
             srcset="
@@ -174,309 +270,717 @@
               /images/5-640.png 640w,
               /images/5-960.png 960w
             "
-            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
+            sizes="(max-width: 768px) 100vw, 33vw"
             width="1310"
             height="1201"
-            [alt]="pickText(service.title, language())"
+            [alt]="language() === 'fa' ? 'بلیچینگ دندان' : 'Teeth Whitening'"
             loading="lazy"
             decoding="async"
-            fetchpriority="low"
           />
-        }
-        @default {
-          <img
-            src="/images/1-640.png"
-            srcset="
-              /images/1-360.png 360w,
-              /images/1-640.png 640w,
-              /images/1-960.png 960w
-            "
-            sizes="(max-width: 640px) 76vw, (max-width: 980px) 70vw, 34vw"
-            width="1361"
-            height="1156"
-            [alt]="pickText(service.title, language())"
-            loading="lazy"
-            decoding="async"
-            fetchpriority="low"
-          />
-        }
-      }
-      <span class="icon-bubble"
-        ><app-fa-icon [name]="service.icon"></app-fa-icon
-      ></span>
-      <h3>{{ pickText(service.title, language()) }}</h3>
-      <b>{{ pickText(service.subtitle, language()) }}</b>
-      <p>{{ pickText(service.summary, language()) }}</p>
-      <a [routerLink]="['/services', service.id]">
-        {{
-          language() === "fa"
-            ? "مشاهده " + pickText(service.title, language())
-            : "View " + pickText(service.title, language())
-        }}
-        <app-fa-icon name="arrowLeft"></app-fa-icon>
+        </div>
+        <div class="services-lux__body">
+          <span class="services-lux__num">03</span>
+          <h3>{{ language() === "fa" ? "بلیچینگ دندان" : "Teeth Whitening" }}</h3>
+          <p>
+            {{ language() === "fa"
+              ? "روشن کردن رنگ دندان‌های طبیعی به‌صورت حرفه‌ای"
+              : "Professionally brighten the shade of natural teeth" }}
+          </p>
+          <span class="services-lux__more">
+            {{ language() === "fa" ? "مشاهده جزئیات" : "View details" }}
+            <app-fa-icon name="arrowLeft"></app-fa-icon>
+          </span>
+        </div>
       </a>
-    </article>
+
+    </div>
   </div>
 </section>
-
-<section class="page-section treatment-guide" aria-labelledby="treatment-comparison-title">
-  <div class="section-heading center">
-    <h2 id="treatment-comparison-title">
-      {{ language() === "fa" ? "کامپوزیت، لمینت یا بلیچینگ؛ کدام درمان برای چه هدفی است؟" : "Composite, veneers or bleaching: which treatment matches each goal?" }}
-    </h2>
-    <p>
-      {{ language() === "fa" ? "انتخاب درمان فقط با دیدن عکس یا اعلام قیمت ممکن نیست. رنگ طبیعی دندان، سلامت مینا و لثه، وضعیت بایت و ترمیم‌های قبلی باید در معاینه بررسی شوند." : "Treatment cannot be selected from a photo or price alone. Natural tooth shade, enamel and gum health, bite and existing restorations require an examination." }}
-    </p>
-  </div>
-  <div class="comparison-table" role="region" [attr.aria-label]="language() === 'fa' ? 'مقایسه درمان‌های زیبایی دندان' : 'Cosmetic dental treatment comparison'" tabindex="0">
-    <table>
-      <thead><tr>
-        <th scope="col">{{ language() === "fa" ? "درمان" : "Treatment" }}</th>
-        <th scope="col">{{ language() === "fa" ? "کاربرد اصلی" : "Primary use" }}</th>
-        <th scope="col">{{ language() === "fa" ? "نکته مهم" : "Important point" }}</th>
-      </tr></thead>
-      <tbody>
-        <tr><th scope="row"><a routerLink="/services/composite">{{ language() === "fa" ? "کامپوزیت ونیر" : "Composite veneers" }}</a></th><td>{{ language() === "fa" ? "اصلاح محدود فرم، لب‌پریدگی و فاصله‌های کوچک" : "Minor shape, chip and small-gap correction" }}</td><td>{{ language() === "fa" ? "ممکن است به پولیش دوره‌ای نیاز داشته باشد و رنگ‌پذیر است." : "May need periodic polishing and can stain." }}</td></tr>
-        <tr><th scope="row"><a routerLink="/services/laminate">{{ language() === "fa" ? "لمینت سرامیکی" : "Porcelain veneers" }}</a></th><td>{{ language() === "fa" ? "اصلاح پایدارتر فرم و رنگ در موارد انتخاب‌شده" : "More durable shape and shade correction in selected cases" }}</td><td>{{ language() === "fa" ? "درمان معمولاً برگشت‌پذیر نیست و ممکن است به تراش مینا نیاز داشته باشد." : "Usually irreversible and may require enamel preparation." }}</td></tr>
-        <tr><th scope="row"><a routerLink="/services/whitening">{{ language() === "fa" ? "بلیچینگ دندان" : "Dental bleaching" }}</a></th><td>{{ language() === "fa" ? "روشن‌کردن رنگ دندان طبیعی" : "Lightening natural tooth shade" }}</td><td>{{ language() === "fa" ? "رنگ کامپوزیت، روکش و لمینت را تغییر نمی‌دهد و ممکن است حساسیت موقت ایجاد کند." : "Does not change restorations and may cause temporary sensitivity." }}</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="medical-note">{{ language() === "fa" ? "این مطالب برای آگاهی عمومی است و جایگزین معاینه، تشخیص یا طرح درمان دندان‌پزشک نیست." : "This information is educational and does not replace a dentist’s examination, diagnosis or treatment plan." }}</p>
-</section>
-
-<section class="portfolio-slider page-section">
-  <div class="section-heading">
-    <h2>
-      {{
-        language() === "fa"
-          ? "نمونه‌کارهای کامپوزیت ونیر"
-          : "Composite veneer work samples"
-      }}
-    </h2>
-    <p>
-      {{
-        language() === "fa"
-          ? "تصاویر نمونه‌کارهای کامپوزیت را در اسلایدر ببینید؛ نتیجه هر فرد پس از معاینه مشخص می‌شود."
-          : "Browse composite veneer work in the slider; each patient's result is determined after examination."
-      }}
-    </p>
-  </div>
-
-  <div class="portfolio-stage">
-    <div class="portfolio-image-card">
-      <img
-        [src]="workSamples[activeWorkSample()].image.src"
-        [attr.sizes]="workSamples[activeWorkSample()].image.sizes"
-        [width]="workSamples[activeWorkSample()].image.width"
-        [height]="workSamples[activeWorkSample()].image.height"
-        [alt]="pickText(workSamples[activeWorkSample()].title, language())"
-        loading="lazy"
-        decoding="async"
-        fetchpriority="low"
-      />
+<section class="treatment-guide" aria-labelledby="treatment-comparison-title">
+  <div class="treatment-guide__container">
+    <div class="treatment-guide__header">
+      <h2 id="treatment-comparison-title" class="treatment-guide__title">
+        {{ language() === "fa"
+          ? "کامپوزیت، لمینت یا بلیچینگ؛ کدام برای چه هدفی است؟"
+          : "Composite, Veneers or Whitening: Which is right for you?" }}
+      </h2>
     </div>
 
-    <article class="portfolio-copy">
-      <span>0{{ activeWorkSample() + 1 }}</span>
-      <h3>{{ pickText(workSamples[activeWorkSample()].title, language()) }}</h3>
-      <p>
-        {{ pickText(workSamples[activeWorkSample()].description, language()) }}
-      </p>
-      <b>{{ pickText(workSamples[activeWorkSample()].result, language()) }}</b>
-    </article>
-  </div>
+    <div class="treatment-guide__table-container">
+      <table class="treatment-guide__table">
+        <thead>
+          <tr>
+            <th scope="col">
+              <span>{{ language() === "fa" ? "درمان" : "Treatment" }}</span>
+            </th>
+            <th scope="col">
+              <span>{{ language() === "fa" ? "کاربرد اصلی" : "Primary Use" }}</span>
+            </th>
+            <th scope="col">
+              <span>{{ language() === "fa" ? "نکته مهم" : "Important Note" }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">
+              <a routerLink="/services/composite" class="treatment-guide__treatment-name">
+                {{ language() === "fa" ? "کامپوزیت ونیر" : "Composite Veneers" }}
+              </a>
+            </th>
+            <td>
+              {{ language() === "fa"
+                ? "اصلاح فرم و رنگ دندان با نتیجه طبیعی"
+                : "Shape and color correction with natural look" }}
+            </td>
+            <td>
+              {{ language() === "fa"
+                ? "رنگ‌پذیر است و ممکن است نیاز به پولیش دوره‌ای داشته باشد"
+                : "Can be stained and may need periodic polishing" }}
+            </td>
+          </tr>
 
-  <div class="slider-controls">
-    <button
-      type="button"
-      (click)="nextWorkSample(-1)"
-      aria-label="Previous work sample"
-    >
-      <app-fa-icon name="arrowRight"></app-fa-icon>
-    </button>
-    <button
-      type="button"
-      (click)="nextWorkSample(1)"
-      aria-label="Next work sample"
-    >
-      <app-fa-icon name="arrowLeft"></app-fa-icon>
-    </button>
+          <tr>
+            <th scope="row">
+              <a routerLink="/services/laminate" class="treatment-guide__treatment-name">
+                {{ language() === "fa" ? "لمینت سرامیکی" : "Porcelain Veneers" }}
+              </a>
+            </th>
+            <td>
+              {{ language() === "fa"
+                ? "اصلاح دقیق فرم و رنگ با نتیجه ماندگار"
+                : "Precise shape and shade correction with lasting results" }}
+            </td>
+            <td>
+              {{ language() === "fa"
+                ? "معمولاً برگشت‌پذیر نیست و نیاز به تراش مینا دارد"
+                : "Usually irreversible and requires enamel preparation" }}
+            </td>
+          </tr>
+
+          <tr>
+            <th scope="row">
+              <a routerLink="/services/whitening" class="treatment-guide__treatment-name">
+                {{ language() === "fa" ? "بلیچینگ دندان" : "Teeth Whitening" }}
+              </a>
+            </th>
+            <td>
+              {{ language() === "fa"
+                ? "روشن کردن رنگ دندان طبیعی"
+                : "Lighten natural tooth shade" }}
+            </td>
+            <td>
+              {{ language() === "fa"
+                ? "رنگ کامپوزیت و لمینت را تغییر نمی‌دهد"
+                : "Does not change restorations" }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
+<section class="clinic-path" aria-labelledby="clinic-path-title">
+  <div class="clinic-path__container">
 
-<section class="page-section">
-  <div class="section-heading center">
-    <h2>
-      {{
-        language() === "fa"
-          ? "قبل از شروع درمان چه چیزهایی برای بیمار روشن می‌شود؟"
-          : "What becomes clear before treatment starts?"
-      }}
-    </h2>
-  </div>
-  <div class="benefit-grid">
-    <article *ngFor="let item of benefits" class="glass-card">
-      <span class="icon-bubble"
-        ><app-fa-icon [name]="item.icon"></app-fa-icon
-      ></span>
-      <h3>{{ pickText(item.title, language()) }}</h3>
-      <p>{{ pickText(item.text, language()) }}</p>
-    </article>
-  </div>
-</section>
+    <!-- Header -->
+    <div class="clinic-path__header">
+      <h2 id="clinic-path-title" class="clinic-path__title">
+        {{ language() === "fa"
+          ? "از معاینه تا پیگیری  "
+          : "From examination to follow-up" }}
+      </h2>
+    </div>
 
-<section class="page-section dental-graphics">
-  <div class="section-heading center">
-    <h2>
-      {{
-        language() === "fa"
-          ? "مسیر مراجعه در کلینیک: بررسی، طرح درمان و پیگیری"
-          : "Clinic visit path: exam, treatment plan and follow-up"
-      }}
-    </h2>
-  </div>
+    <!-- Steps -->
+    <div class="clinic-path__steps">
 
-  <div class="dental-map">
-    <article>
-      <span><app-fa-icon name="tooth"></app-fa-icon></span>
-      <h3>{{ language() === "fa" ? "معاینه و عکس" : "Exam and imaging" }}</h3>
-      <p>
-        {{
-          language() === "fa"
-            ? "سلامت دندان، لثه، مینا، ترمیم‌های قبلی و حساسیت پیش از تصمیم زیبایی بررسی می‌شود."
-            : "Tooth, gum, enamel, existing restorations and sensitivity are reviewed before cosmetic decisions."
-        }}
-      </p>
-    </article>
-    <article>
-      <span><app-fa-icon name="smile"></app-fa-icon></span>
-      <h3>{{ language() === "fa" ? "طراحی لبخند" : "Smile planning" }}</h3>
-      <p>
-        {{
-          language() === "fa"
-            ? "فرم، رنگ و تناسب دندان‌ها با چهره برای نتیجه طبیعی تحلیل می‌شود."
-            : "Shape, shade and tooth proportions are analyzed for a natural result."
-        }}
-      </p>
-    </article>
-    <article>
-      <span><app-fa-icon name="shield"></app-fa-icon></span>
-      <h3>
-        {{ language() === "fa" ? "مراقبت و پیگیری" : "Aftercare follow-up" }}
-      </h3>
-      <p>
-        {{
-          language() === "fa"
-            ? "بعد از درمان، توصیه‌های ساده برای ماندگاری نتیجه و سلامت دهان ارائه می‌شود."
-            : "After treatment, simple guidance supports lasting results and oral health."
-        }}
-      </p>
-    </article>
+      <article class="clinic-path__step">
+        <div class="clinic-path__icon">
+          <app-fa-icon name="tooth"></app-fa-icon>
+        </div>
+        <span class="clinic-path__num">01</span>
+        <h3>
+          {{ language() === "fa" ? "معاینه و بررسی" : "Exam & Assessment" }}
+        </h3>
+        <p>
+          {{ language() === "fa"
+            ? "سلامت دندان، لثه، مینا و ترمیم‌های قبلی قبل از هر تصمیم زیبایی بررسی می‌شود."
+            : "Tooth, gum, enamel and existing restorations are checked before any cosmetic decision." }}
+        </p>
+      </article>
+
+      <article class="clinic-path__step">
+        <div class="clinic-path__icon">
+          <app-fa-icon name="smile"></app-fa-icon>
+        </div>
+        <span class="clinic-path__num">02</span>
+        <h3>
+          {{ language() === "fa" ? "طراحی لبخند" : "Smile Design" }}
+        </h3>
+        <p>
+          {{ language() === "fa"
+            ? "فرم، رنگ و تناسب دندان‌ها با چهره شما برای نتیجه‌ای طبیعی تحلیل می‌شود."
+            : "Shape, shade and proportions are analyzed to match your face for a natural result." }}
+        </p>
+      </article>
+
+      <article class="clinic-path__step">
+        <div class="clinic-path__icon">
+          <app-fa-icon name="shield"></app-fa-icon>
+        </div>
+        <span class="clinic-path__num">03</span>
+        <h3>
+          {{ language() === "fa" ? "مراقبت و پیگیری" : "Aftercare & Follow-up" }}
+        </h3>
+        <p>
+          {{ language() === "fa"
+            ? "بعد از درمان، راهنمایی ساده برای ماندگاری نتیجه و سلامت دهان ارائه می‌شود."
+            : "After treatment, simple guidance is provided to keep results lasting and oral health stable." }}
+        </p>
+      </article>
+
+    </div>
   </div>
 </section>
+<section class="results-lux" aria-labelledby="results-title">
+  <div class="results-lux__container">
 
-<section class="page-section lead-section">
-  <div>
-    <h2>
-      {{
-        language() === "fa"
-          ? "فرم ثبت شماره تماس برای دریافت راهنمایی"
-          : "Phone number form for guidance"
-      }}
-    </h2>
-    <p>
-      {{
-        language() === "fa"
-          ? "اگر نمی‌دانید کدام درمان مناسب‌تر است، شماره و توضیح کوتاه را ثبت کنید تا تماس اولیه دقیق‌تر انجام شود."
-          : "If you are unsure which treatment fits best, submit your number and a short note so the first call can be more useful."
-      }}
-    </p>
-    <app-base-datepicker
-      [language]="language()"
-      [selectedDate]="lead.preferredDate"
-      (dateChange)="lead.preferredDate = $event"
-    ></app-base-datepicker>
+    <header class="results-lux__header">
+
+      <h2 id="results-title" class="results-lux__title">
+        {{
+          language() === "fa"
+            ? "قبل و بعد درمان"
+            : "Before & After"
+        }}
+      </h2>
+
+      <p class="results-lux__desc">
+        {{
+          language() === "fa"
+            ? "نمونه‌هایی از نتایج درمان‌های زیبایی انجام‌شده در کلینیک زیبایی دکتر سعید مقدم"
+            : "A selection of cosmetic dental treatment results from our clinic"
+        }}
+      </p>
+    </header>
+
+
+    <div class="results-lux__grid">
+
+      <!-- Composite -->
+      <article class="results-lux__case">
+
+        <div class="results-lux__images">
+
+          <figure class="results-lux__image">
+            <img
+              src="/afterbefor/735e9b76-d085-4d6d-8fe3-baea732ecb34.jfif"
+              [alt]="language() === 'fa'
+                ? 'قبل از درمان کامپوزیت'
+                : 'Before composite treatment'"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <span class="results-lux__badge">
+              {{ language() === "fa" ? "قبل" : "Before" }}
+            </span>
+          </figure>
+
+          <figure class="results-lux__image">
+            <img
+              src="/afterbefor/d6758396-1b7c-4f07-ad90-6e234e9f2cf2.jfif"
+              [alt]="language() === 'fa'
+                ? 'بعد از درمان کامپوزیت'
+                : 'After composite treatment'"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <span class="results-lux__badge results-lux__badge--after">
+              {{ language() === "fa" ? "بعد" : "After" }}
+            </span>
+          </figure>
+
+        </div>
+      </article>
+
+
+      <!-- Laminate -->
+      <article class="results-lux__case">
+
+        <div class="results-lux__images">
+
+          <figure class="results-lux__image">
+            <img
+              src="/afterbefor/2.jfif"
+              [alt]="language() === 'fa'
+                ? 'قبل از درمان لمینت'
+                : 'Before veneer treatment'"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <span class="results-lux__badge">
+              {{ language() === "fa" ? "قبل" : "Before" }}
+            </span>
+          </figure>
+
+          <figure class="results-lux__image">
+            <img
+              src="/afterbefor/2-1.jfif"
+              [alt]="language() === 'fa'
+                ? 'بعد از درمان لمینت'
+                : 'After veneer treatment'"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <span class="results-lux__badge results-lux__badge--after">
+              {{ language() === "fa" ? "بعد" : "After" }}
+            </span>
+          </figure>
+
+        </div>
+
+      </article>
+
+
+      <!-- Whitening -->
+      <article class="results-lux__case">
+
+        <div class="results-lux__images">
+
+          <figure class="results-lux__image">
+            <img
+              src="/afterbefor/3.jfif"
+              [alt]="language() === 'fa'
+                ? 'قبل از بلیچینگ'
+                : 'Before whitening'"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <span class="results-lux__badge">
+              {{ language() === "fa" ? "قبل" : "Before" }}
+            </span>
+          </figure>
+
+          <figure class="results-lux__image">
+            <img
+              src="/afterbefor/3-1.jfif"
+              [alt]="language() === 'fa'
+                ? 'بعد از بلیچینگ'
+                : 'After whitening'"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <span class="results-lux__badge results-lux__badge--after">
+              {{ language() === "fa" ? "بعد" : "After" }}
+            </span>
+          </figure>
+
+        </div>
+
+
+      </article>
+
+    </div>
+
+
+    <div class="results-lux__footer">
+      <a routerLink="/portfolio" class="results-lux__btn">
+        {{
+          language() === "fa"
+            ? "مشاهده همه نمونه‌کارها"
+            : "View all cases"
+        }}
+
+        <app-fa-icon name="arrowLeft"></app-fa-icon>
+      </a>
+    </div>
+
   </div>
+</section>
+<section class="testimonials-lux" aria-labelledby="testimonials-title">
+  <div class="testimonials-lux__container">
 
-  <form class="lead-form" (ngSubmit)="submitLead()">
-    <label>
-      {{ language() === "fa" ? "نام و نام خانوادگی" : "Full name" }}
-      <input
-        [(ngModel)]="lead.fullName"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadFullName"
-        required
-        autocomplete="name"
-      />
-    </label>
-    <label>
-      {{ language() === "fa" ? "شماره تماس" : "Phone number" }}
-      <input
-        [(ngModel)]="lead.phone"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadPhone"
-        required
-        inputmode="tel"
-        autocomplete="tel"
-      />
-    </label>
-    <label>
-      {{ language() === "fa" ? "درمان مورد نظر" : "Service of interest" }}
-      <select
-        [(ngModel)]="lead.serviceId"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadService"
+    <header class="testimonials-lux__header">
+      <span class="testimonials-lux__eyebrow">
+        {{ language() === "fa" ? "تجربه بیماران" : "Patient Stories" }}
+      </span>
+
+      <h2 id="testimonials-title" class="testimonials-lux__title">
+        {{
+          language() === "fa"
+            ? "داستان لبخندهای واقعی"
+            : "Real Smile Stories"
+        }}
+      </h2>
+
+      <p class="testimonials-lux__desc">
+        {{
+          language() === "fa"
+            ? "بخشی از تجربه بیمارانی که درمان زیبایی خود را در کلینیک دکتر سعید مقدم انجام داده‌اند."
+            : "A selection of patient experiences from cosmetic treatments at Dr. Saeed Moghaddam’s clinic."
+        }}
+      </p>
+    </header>
+
+
+    <div class="testimonials-lux__slider">
+
+      <article class="testimonials-lux__slide">
+
+        <div class="testimonials-lux__video">
+
+          <video
+            poster="/images/patient-1-poster.jpg"
+            controls
+            preload="metadata"
+          >
+            <source
+              src="/videos/patient-1.mp4"
+              type="video/mp4"
+            />
+          </video>
+
+          <span class="testimonials-lux__video-label">
+            {{
+              language() === "fa"
+                ? "کامپوزیت ونیر"
+                : "Composite Veneers"
+            }}
+          </span>
+
+        </div>
+
+
+        <div class="testimonials-lux__content">
+
+          <span class="testimonials-lux__quote">“</span>
+
+          <blockquote>
+            {{
+              language() === "fa"
+                ? "چیزی که برای من خیلی مهم بود طبیعی بودن نتیجه بود. فرم دندان‌ها دقیقاً همون چیزی شد که می‌خواستم و از نتیجه کامپوزیت خیلی راضی هستم."
+                : "What mattered most to me was achieving a natural result. The shape of my teeth turned out exactly how I wanted and I’m very happy with my composite treatment."
+            }}
+          </blockquote>
+
+
+          <div class="testimonials-lux__meta">
+
+            <div>
+              <strong>
+                {{ language() === "fa" ? "سارا م." : "Sara M." }}
+              </strong>
+
+              <span>
+                {{
+                  language() === "fa"
+                    ? "کامپوزیت ونیر"
+                    : "Composite Veneers"
+                }}
+              </span>
+            </div>
+
+            <div class="testimonials-lux__rating" aria-label="5 stars">
+              <span>★</span>
+              <span>★</span>
+              <span>★</span>
+              <span>★</span>
+              <span>★</span>
+            </div>
+
+          </div>
+
+
+          <div class="testimonials-lux__controls">
+
+            <button
+              type="button"
+              class="testimonials-lux__arrow"
+              aria-label="Previous testimonial"
+            >
+              <app-fa-icon name="arrowRight"></app-fa-icon>
+            </button>
+
+            <div class="testimonials-lux__progress">
+              <span class="testimonials-lux__active">01</span>
+              <span class="testimonials-lux__line"></span>
+              <span>03</span>
+            </div>
+
+            <button
+              type="button"
+              class="testimonials-lux__arrow"
+              aria-label="Next testimonial"
+            >
+              <app-fa-icon name="arrowLeft"></app-fa-icon>
+            </button>
+
+          </div>
+
+        </div>
+
+      </article>
+
+    </div>
+
+  </div>
+</section>
+<section class="consult-lead" aria-labelledby="consult-lead-title">
+  <div class="consult-lead__container">
+
+    <!-- Vector side -->
+    <div class="consult-lead__visual" aria-hidden="true">
+      <svg
+        class="consult-lead__vector"
+        viewBox="0 0 420 420"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
       >
-        <option *ngFor="let service of services" [value]="service.id">
-          {{ pickText(service.title, language()) }}
-        </option>
-      </select>
-    </label>
-    <label>
-      {{ language() === "fa" ? "توضیح کوتاه" : "Short note" }}
-      <textarea
-        [(ngModel)]="lead.message"
-        [ngModelOptions]="ngModelBlurOptions"
-        name="leadMessage"
-        rows="4"
-      ></textarea>
-    </label>
-    <button class="primary-btn" type="submit">
-      <app-fa-icon name="phone"></app-fa-icon>
-      {{ language() === "fa" ? "ثبت درخواست تماس" : "Submit call request" }}
-    </button>
-    <p
-      *ngIf="leadFeedback()"
-      class="success-message"
-      [class.error]="leadFeedbackType() === 'error'"
-    >
-      {{ leadFeedback() }}
-    </p>
-    <p *ngIf="leadSent()" class="success-message">
-      {{
-        language() === "fa"
-          ? "درخواست تماس شما ثبت شد. مشاور کلینیک برای راهنمایی با شما تماس می‌گیرد."
-          : "Your call request has been recorded. A clinic consultant will contact you for guidance."
-      }}
-    </p>
-  </form>
-</section>
+        <!-- soft glow -->
+        <circle cx="210" cy="210" r="170" fill="url(#g1)" opacity="0.35" />
+        <circle cx="210" cy="210" r="120" stroke="url(#g2)" stroke-width="1.5" opacity="0.5" />
 
-<section class="page-section faq-section">
-  <div class="section-heading center">
-    <h2>
-      {{
-        language() === "fa"
-          ? "پرسش‌های پرتکرار قبل از ثبت درخواست تماس"
-          : "Common questions before submitting a call request"
-      }}
-    </h2>
+        <!-- abstract smile arc -->
+        <path
+          d="M120 230 C160 290, 260 290, 300 230"
+          stroke="#2dd4bf"
+          stroke-width="10"
+          stroke-linecap="round"
+          fill="none"
+          opacity="0.95"
+        />
+
+        <!-- soft dots -->
+        <circle cx="145" cy="175" r="9" fill="#5eead4" opacity="0.9" />
+        <circle cx="275" cy="175" r="9" fill="#5eead4" opacity="0.9" />
+
+        <!-- thin decorative lines -->
+        <path
+          d="M90 320 C150 350, 270 350, 330 320"
+          stroke="#2dd4bf"
+          stroke-width="2"
+          stroke-linecap="round"
+          opacity="0.35"
+        />
+        <path
+          d="M110 100 C170 70, 250 70, 310 100"
+          stroke="#2dd4bf"
+          stroke-width="2"
+          stroke-linecap="round"
+          opacity="0.25"
+        />
+
+        <defs>
+          <radialGradient id="g1" cx="50%" cy="45%" r="55%">
+            <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.45" />
+            <stop offset="100%" stop-color="#06141c" stop-opacity="0" />
+          </radialGradient>
+          <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#2dd4bf" />
+            <stop offset="100%" stop-color="#5eead4" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <h2 id="consult-lead-title" class="consult-lead__title consult-lead__title--under">
+        {{ language() === "fa"
+          ? "برای مشاوره شماره خود را ثبت کنید"
+          : "Leave your number for a consultation" }}
+      </h2>
+    </div>
+
+    <!-- Form -->
+    <form class="consult-lead__form" (ngSubmit)="submitLead()">
+      <label class="consult-lead__field">
+        <span>{{ language() === "fa" ? "نام و نام خانوادگی" : "Full name" }}</span>
+        <input
+          [(ngModel)]="lead.fullName"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="leadFullName"
+          required
+          autocomplete="name"
+        />
+      </label>
+
+      <label class="consult-lead__field">
+        <span>{{ language() === "fa" ? "شماره موبایل" : "Mobile number" }}</span>
+        <input
+          [(ngModel)]="lead.phone"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="leadPhone"
+          required
+          inputmode="tel"
+          autocomplete="tel"
+          placeholder="09xxxxxxxxx"
+        />
+      </label>
+
+      <label class="consult-lead__field">
+        <span>{{ language() === "fa" ? "درمان مورد نظر" : "Treatment of interest" }}</span>
+        <select
+          [(ngModel)]="lead.serviceId"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="leadService"
+        >
+          <option *ngFor="let service of services" [value]="service.id">
+            {{ pickText(service.title, language()) }}
+          </option>
+        </select>
+      </label>
+
+      <label class="consult-lead__field">
+        <span>{{ language() === "fa" ? "توضیح کوتاه (اختیاری)" : "Short note (optional)" }}</span>
+        <textarea
+          [(ngModel)]="lead.message"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="leadMessage"
+          rows="3"
+          [placeholder]="language() === 'fa'
+            ? 'مثلاً: می‌خواهم درباره کامپوزیت راهنمایی بگیرم'
+            : 'e.g. I’d like advice about composite veneers'"
+        ></textarea>
+      </label>
+
+      <button class="consult-lead__submit" type="submit">
+        {{ language() === "fa" ? "ثبت برای مشاوره" : "Request consultation" }}
+      </button>
+
+      <p
+        *ngIf="leadFeedback()"
+        class="consult-lead__msg"
+        [class.is-error]="leadFeedbackType() === 'error'"
+      >
+        {{ leadFeedback() }}
+      </p>
+
+      <p *ngIf="leadSent()" class="consult-lead__msg is-ok">
+        {{ language() === "fa"
+          ? "شماره شما ثبت شد. به‌زودی برای مشاوره با شما تماس می‌گیریم."
+          : "Your number is saved. We’ll call you soon for a consultation." }}
+      </p>
+    </form>
+
   </div>
-  <div class="faq-list">
-    <details *ngFor="let item of faqs">
-      <summary>{{ pickText(item.question, language()) }}</summary>
-      <p>{{ pickText(item.answer, language()) }}</p>
-    </details>
+</section>
+<section class="faq-lux" aria-labelledby="faq-title">
+  <div class="faq-lux__container">
+
+    <header class="faq-lux__header">
+      <span class="faq-lux__eyebrow">
+        {{ language() === "fa" ? "سوالات پرتکرار" : "FAQ" }}
+      </span>
+      <h2 id="faq-title" class="faq-lux__title">
+        {{ language() === "fa"
+          ? "پاسخ به سوالات رایج درباره کامپوزیت، لمینت و بلیچینگ"
+          : "Common questions about composite, veneers and whitening" }}
+      </h2>
+      <p class="faq-lux__desc">
+        {{ language() === "fa"
+          ? "قبل از ثبت شماره، این پاسخ‌ها کمک می‌کند تصویر دقیق‌تری از درمان داشته باشید."
+          : "These answers help you understand treatment options before requesting a consultation." }}
+      </p>
+    </header>
+
+    <div class="faq-lux__list">
+
+      <details class="faq-lux__item" open>
+        <summary>
+          {{ language() === "fa"
+            ? "تفاوت کامپوزیت ونیر و لمینت سرامیکی چیست؟"
+            : "What is the difference between composite veneers and porcelain veneers?" }}
+        </summary>
+        <p>
+          {{ language() === "fa"
+            ? "کامپوزیت معمولاً در یک جلسه و با مواد رزینی روی دندان فرم داده می‌شود. لمینت سرامیکی در لابراتوار ساخته می‌شود، دوام و مقاومت بیشتری در برابر تغییر رنگ دارد و اغلب به تراش محدود مینا نیاز دارد."
+            : "Composite is usually shaped on the tooth in one visit with resin material. Porcelain veneers are lab-made, more stain-resistant and durable, and often need limited enamel preparation." }}
+        </p>
+      </details>
+
+      <details class="faq-lux__item">
+        <summary>
+          {{ language() === "fa"
+            ? "ماندگاری کامپوزیت و لمینت تقریباً چقدر است؟"
+            : "How long do composite and porcelain veneers last?" }}
+        </summary>
+        <p>
+          {{ language() === "fa"
+            ? "با مراقبت مناسب، کامپوزیت معمولاً حدود ۵ تا ۸ سال و لمینت سرامیکی حدود ۱۰ تا ۱۵ سال یا بیشتر ماندگاری دارد. عادت‌های غذایی، بهداشت و مراجعه دوره‌ای روی دوام اثر مستقیم دارند."
+            : "With proper care, composite often lasts about 5–8 years and porcelain veneers about 10–15 years or more. Diet, hygiene and regular checkups strongly affect longevity." }}
+        </p>
+      </details>
+
+      <details class="faq-lux__item">
+        <summary>
+          {{ language() === "fa"
+            ? "آیا کامپوزیت تغییر رنگ می‌دهد؟"
+            : "Do composite veneers stain?" }}
+        </summary>
+        <p>
+          {{ language() === "fa"
+            ? "کامپوزیت نسبت به لمینت بیشتر مستعد لکه است؛ به‌خصوص با مصرف زیاد چای، قهوه یا دخانیات. پولیش دوره‌ای و مراقبت منظم به حفظ ظاهر کمک می‌کند."
+            : "Composite is more prone to staining than porcelain, especially with frequent tea, coffee or smoking. Periodic polishing and good care help maintain appearance." }}
+        </p>
+      </details>
+
+      <details class="faq-lux__item">
+        <summary>
+          {{ language() === "fa"
+            ? "بلیچینگ روی کامپوزیت یا لمینت اثر دارد؟"
+            : "Does whitening work on composite or veneers?" }}
+        </summary>
+        <p>
+          {{ language() === "fa"
+            ? "خیر. بلیچینگ فقط رنگ دندان طبیعی را روشن می‌کند و رنگ کامپوزیت یا لمینت را تغییر نمی‌دهد. اگر بخشی از دندان‌ها ترمیم شده باشد، انتخاب سایه باید از قبل هماهنگ شود."
+            : "No. Whitening only lightens natural enamel and does not change composite or porcelain color. If some teeth already have restorations, shade matching should be planned in advance." }}
+        </p>
+      </details>
+
+      <details class="faq-lux__item">
+        <summary>
+          {{ language() === "fa"
+            ? "هزینه درمان قبل از معاینه مشخص می‌شود؟"
+            : "Can treatment cost be fixed before examination?" }}
+        </summary>
+        <p>
+          {{ language() === "fa"
+            ? "بازه حدودی را می‌توان گفت، اما هزینه دقیق بعد از معاینه مشخص می‌شود؛ چون تعداد دندان‌ها، وضعیت مینا، ترمیم‌های قبلی و نوع درمان در قیمت نهایی اثر دارد."
+            : "An approximate range can be shared, but exact cost is set after examination because tooth count, enamel condition, existing restorations and treatment type all affect the final fee." }}
+        </p>
+      </details>
+
+      <details class="faq-lux__item">
+        <summary>
+          {{ language() === "fa"
+            ? "اگر پوسیدگی یا التهاب لثه داشته باشم می‌توانم درمان زیبایی انجام دهم؟"
+            : "Can I get cosmetic treatment if I have decay or gum inflammation?" }}
+        </summary>
+        <p>
+          {{ language() === "fa"
+            ? "ابتدا باید معاینه شود. در بسیاری از موارد، پوسیدگی فعال یا التهاب لثه باید قبل از کامپوزیت، لمینت یا بلیچینگ کنترل شود تا درمان ایمن‌تر و قابل پیش‌بینی‌تر باشد."
+            : "An exam is required first. In many cases, active decay or gum inflammation should be controlled before composite, veneers or whitening so treatment is safer and more predictable." }}
+        </p>
+      </details>
+
+      <details class="faq-lux__item">
+        <summary>
+          {{ language() === "fa"
+            ? "بعد از ثبت شماره برای مشاوره چه اتفاقی می‌افتد؟"
+            : "What happens after I submit my number for consultation?" }}
+        </summary>
+        <p>
+          {{ language() === "fa"
+            ? "نام، شماره و درمان مورد نظر شما ثبت می‌شود و برای راهنمایی اولیه با شما تماس گرفته می‌شود. در این تماس می‌توانید سوال‌های خود را بپرسید و در صورت نیاز برای مراجعه هماهنگی کنید."
+            : "Your name, number and preferred treatment are recorded, then you receive an initial guidance call. You can ask questions and schedule a visit if needed." }}
+        </p>
+      </details>
+
+    </div>
   </div>
 </section>
