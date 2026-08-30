@@ -22,7 +22,7 @@
             <span class="patient-options" role="listbox">
               @if (patientOptionsLoading) { <span class="patient-message">در حال دریافت فهرست بیماران…</span> }
               @else if (!patientOptions.length) { <span class="patient-message">بیماری با این مشخصات پیدا نشد.</span> }
-              @else { @for (patient of patientOptions; track patientFileId(patient)) { <button type="button" role="option" [disabled]="!patientCanBeSelected(patient)" (mousedown)="$event.preventDefault()" (click)="selectPatient(patient)"><strong>{{ patientName(patient) }}</strong><small>{{ patientPhone(patient) || 'بدون شماره تماس' }}</small><small>شماره پرونده: {{ patientFileNumber(patient) || '—' }}</small>@if (!patientCanBeSelected(patient)) { <small>شناسه کاربری بیمار در پاسخ سرور موجود نیست</small> }</button> } }
+              @else { @for (patient of patientOptions; track patientFileId(patient)) { <button type="button" role="option" [disabled]="!patientCanBeSelected(patient)" (mousedown)="$event.preventDefault()" (click)="selectPatient(patient)"><strong>{{ patientName(patient) }}</strong><small>{{ patientPhone(patient) || 'بدون شماره تماس' }}</small><small>شماره پرونده: {{ patientFileNumber(patient) || '—' }}</small>@if (!patientCanBeSelected(patient)) { <small>شناسه مالی بیمار در پاسخ سرور موجود نیست</small> }</button> } }
             </span>
           }
           @if (createForm.controls.patientId.touched && createForm.controls.patientId.invalid) { <small class="field-error">انتخاب بیمار الزامی است.</small> }

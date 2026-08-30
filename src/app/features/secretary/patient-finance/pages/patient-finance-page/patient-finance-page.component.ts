@@ -13,7 +13,7 @@ import { PatientFinanceApiService } from "../../services/patient-finance-api.ser
 
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
-interface FinancePatientOption { patientFileId: number; patientId: string | null; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
+interface FinancePatientOption { patientFileId: number; financialPatientId: string | null; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
 
 const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
@@ -100,10 +100,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientName(patient: FinancePatientOption): string { return [patient.firstName, patient.lastName].filter(Boolean).join(" ").trim() || "بیمار بدون نام"; }
   patientPhone(patient: FinancePatientOption): string { return patient.phoneNumber ?? ""; }
   patientFileNumber(patient: FinancePatientOption): string { return String(patient.fileNumber ?? ""); }
-  patientCanBeSelected(patient: FinancePatientOption): boolean { return patient.patientId !== null; }
+  patientCanBeSelected(patient: FinancePatientOption): boolean { return patient.financialPatientId !== null; }
   selectPatient(patient: FinancePatientOption): void {
-    if (!patient.patientId) return;
-    this.createForm.controls.patientId.setValue(patient.patientId);
+    if (!patient.financialPatientId) return;
+    this.createForm.controls.patientId.setValue(patient.financialPatientId);
     this.patientSearch = this.patientName(patient);
     this.patientDropdownOpen = false;
   }
@@ -204,11 +204,12 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: result => {
         this.patientOptions = result.items.map(patient => {
-          const identifiers = [patient.patientUserId, patient.userId, patient.patientId];
-          const patientId = identifiers.find((identifier): identifier is string => typeof identifier === "string" && GUID_PATTERN.test(identifier)) ?? null;
+          const financialPatientId = typeof patient.financialPatientId === "string" && GUID_PATTERN.test(patient.financialPatientId)
+            ? patient.financialPatientId
+            : null;
           return {
             patientFileId: patient.id,
-            patientId,
+            financialPatientId,
             fileNumber: patient.fileNumber,
             firstName: patient.firstName,
             lastName: patient.lastName,
