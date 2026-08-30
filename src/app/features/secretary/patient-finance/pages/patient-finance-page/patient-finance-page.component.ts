@@ -57,6 +57,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientSearch = "";
   patientOptionsLoading = false;
   patientDropdownOpen = false;
+  private selectedFinancialPatientId: string | null = null;
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
 
@@ -103,12 +104,14 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientCanBeSelected(patient: FinancePatientOption): boolean { return patient.financialPatientId !== null; }
   selectPatient(patient: FinancePatientOption): void {
     if (!patient.financialPatientId) return;
+    this.selectedFinancialPatientId = patient.financialPatientId;
     this.createForm.controls.patientId.setValue(patient.financialPatientId);
     this.patientSearch = this.patientName(patient);
     this.patientDropdownOpen = false;
   }
   onPatientSearch(value: string): void {
     this.patientSearch = value;
+    this.selectedFinancialPatientId = null;
     this.createForm.controls.patientId.setValue(null);
     this.patientDropdownOpen = true;
     if (this.patientSearchTimer !== null) clearTimeout(this.patientSearchTimer);
@@ -144,10 +147,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
 
   submitCase(): void {
     if (this.submitting) return;
-    if (this.createForm.invalid) { this.createForm.markAllAsTouched(); this.toast.error(this.createForm.hasError("commitmentRequired") ? "ثبت حداقل یک چک یا سفته الزامی است." : "لطفاً اطلاعات پرونده را کامل کنید."); return; }
+    if (!this.selectedFinancialPatientId || !GUID_PATTERN.test(this.selectedFinancialPatientId) || this.createForm.invalid) { this.createForm.markAllAsTouched(); this.toast.error(this.createForm.hasError("commitmentRequired") ? "ثبت حداقل یک چک یا سفته الزامی است." : "لطفاً اطلاعات پرونده را کامل کنید."); return; }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: Number(value.patientId), serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: number): void {
