@@ -26,18 +26,35 @@ body[data-theme="dashboard"] {
   color-scheme: light;
   --bg: #ffffff;
   --surface: #ffffff;
-  --surface-soft: #ffffff;
-  --surface-muted: #ffffff;
+  --surface-soft: #fafafa;
+  --surface-muted: #f5f5f5;
   --text: #000000;
   --muted: #000000;
-  --line: #d4d4d4;
+  --line: #e2e2e2;
   --brand: #000000;
   --brand-2: #000000;
   --cyan: #000000;
   --cyan-soft: #000000;
   --danger: #b42318;
   --success: #18794e;
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.055);
+}
+
+body[data-theme="dashboard"] button,
+body[data-theme="dashboard"] a,
+body[data-theme="dashboard"] input,
+body[data-theme="dashboard"] select,
+body[data-theme="dashboard"] textarea {
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+body[data-theme="dashboard"] button:focus-visible,
+body[data-theme="dashboard"] a:focus-visible,
+body[data-theme="dashboard"] input:focus-visible,
+body[data-theme="dashboard"] select:focus-visible,
+body[data-theme="dashboard"] textarea:focus-visible {
+  outline: 3px solid rgb(0 0 0 / 18%);
+  outline-offset: 2px;
 }
 
 body[data-theme="dashboard"],

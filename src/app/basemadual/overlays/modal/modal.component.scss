@@ -15,6 +15,7 @@ section {
   width: 100%;
   height: 100%;
   background: var(--bm-surface);
+  color: var(--bm-text);
 }
 header,
 footer {
@@ -42,6 +43,7 @@ header button {
   min-height: 44px;
   border: 0;
   background: transparent;
+  color: var(--bm-text);
   font-size: 1.5rem;
 }
 main {
@@ -55,10 +57,14 @@ main {
     padding: var(--bm-space-4);
   }
   section {
-    width: min(36rem, 100%);
+    width: min(48rem, 100%);
     height: auto;
     max-height: min(90vh, 50rem);
     border-radius: var(--bm-radius-lg);
     overflow: hidden;
   }
+}
+@media (max-width: 639px) {
+  section { border-radius: 0; }
+  main { padding: var(--bm-space-3); }
 }

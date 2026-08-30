@@ -6,6 +6,7 @@ import { BaseButtonComponent } from "../../../../../basemadual/actions/base-butt
 import { BasePageShellComponent } from "../../../../../basemadual/layout/page-shell/page-shell.component";
 import { BaseSectionComponent } from "../../../../../basemadual/layout/section/section.component";
 import { BaseDrawerComponent } from "../../../../../basemadual/overlays/drawer/drawer.component";
+import { BaseModalComponent } from "../../../../../basemadual/overlays/modal/modal.component";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { SecretaryAccountSummaryComponent } from "../../components/secretary-account-summary/secretary-account-summary.component";
 import { SecretaryAccountShellComponent } from "../../components/secretary-account-shell/secretary-account-shell.component";
@@ -28,6 +29,7 @@ import { SecretaryAccountService } from "../../services/secretary-account.servic
   imports: [
     BaseButtonComponent,
     BaseDrawerComponent,
+    BaseModalComponent,
     BasePageShellComponent,
     BaseSectionComponent,
     SecretaryAccountSummaryComponent,
