@@ -1,0 +1,70 @@
+<app-secretary-account-shell>
+<app-base-page-shell title="پرونده‌های بیمار" [showHeader]="false">
+  <app-base-content-container>
+    <app-base-page-header title="پرونده‌های بیمار" subtitle="مدیریت پرونده‌های جدید و قدیمی بیماران" (back)="location.back()">
+      <app-base-button variant="secondary" (pressed)="importOpen = true; importFile = null; importErrors = []">ورود پرونده‌های قدیمی از اکسل</app-base-button>
+      <app-base-button (pressed)="openCreate()">ایجاد پرونده جدید</app-base-button>
+    </app-base-page-header>
+
+    <app-base-filter-bar [disabled]="loading" (apply)="loadFiles()" (reset)="resetFilters()">
+      <app-base-search-filter label="جستجو" placeholder="جستجو بر اساس نام، نام خانوادگی یا شماره تماس"
+        [value]="query.search" (valueChange)="filterChanged('search', $event)" />
+      <label class="file-filter"><span>شماره پرونده</span><input type="search" [value]="query.fileNumber"
+        placeholder="شماره پرونده" (change)="filterChanged('fileNumber', $any($event.target).value)" /></label>
+      <app-base-select-filter label="نوع پرونده" placeholder="همه" [options]="sourceOptions"
+        [value]="query.sourceType" (valueChange)="filterChanged('sourceType', $event)" />
+    </app-base-filter-bar>
+
+    <app-base-card>
+      @if (loading) { <app-base-loading label="در حال دریافت پرونده‌ها…" /> }
+      @else if (loadError) { <div class="load-error"><p>{{ loadError }}</p><app-base-button (pressed)="loadFiles()">تلاش دوباره</app-base-button></div> }
+      @else if (!files.length) {
+        <app-base-empty-state icon="📁" title="هنوز پرونده‌ای برای بیماران ثبت نشده است.">
+          <app-base-button (pressed)="openCreate()">ایجاد پرونده جدید</app-base-button>
+        </app-base-empty-state>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>شماره پرونده</th><th>نام</th><th>نام خانوادگی</th><th>شماره تماس</th><th>نوع پرونده</th><th>عملیات</th></tr></thead>
+            <tbody>@for (file of files; track file.id) {
+              <tr>
+                <td data-label="شماره پرونده"><strong>{{ file.fileNumber }}</strong></td>
+                <td data-label="نام">{{ file.firstName }}</td><td data-label="نام خانوادگی">{{ file.lastName }}</td>
+                <td data-label="شماره تماس" dir="ltr">{{ file.phoneNumber }}</td>
+                <td data-label="نوع پرونده"><app-base-badge [variant]="file.sourceType === 'Legacy' ? 'warning' : 'success'">{{ sourceLabel(file.sourceType) }}</app-base-badge></td>
+                <td data-label="عملیات"><div class="row-actions"><button type="button" (click)="openEdit(file)">ویرایش</button><button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
+              </tr>
+            }</tbody>
+          </table>
+        </div>
+        <div class="pagination"><label>تعداد در صفحه <select [value]="query.pageSize" (change)="changePageSize($any($event.target).value)">@for (option of pageSizeOptions; track option.value) { <option [value]="option.value">{{ option.label }}</option> }</select></label>
+          <app-base-table-pagination [currentPage]="query.page" [pageSize]="query.pageSize" [totalCount]="totalCount" (pageChange)="changePage($event)" /></div>
+      }
+    </app-base-card>
+  </app-base-content-container>
+</app-base-page-shell>
+</app-secretary-account-shell>
+
+<app-base-modal [open]="createOpen" title="ایجاد پرونده جدید" [closeOnBackdrop]="!creating" (close)="closeCreate()">
+  <app-base-search-filter label="جستجوی بیمار" placeholder="نام، نام خانوادگی یا شماره تماس" [value]="eligibleSearch" (valueChange)="searchEligible($event)" />
+  @if (eligibleLoading) { <app-base-loading label="در حال دریافت بیماران واجد شرایط…" /> }
+  @else if (!eligible.length) { <app-base-empty-state title="بیمار دارای رزرو بدون پرونده‌ای برای ایجاد پرونده جدید وجود ندارد." /> }
+  @else { <div class="patient-list">@for (patient of eligible; track patient.id) {
+    <button type="button" [class.selected]="selectedPatient?.id === patient.id" (click)="selectPatient(patient)"><strong>{{ patient.firstName }} {{ patient.lastName }}</strong><span dir="ltr">{{ patient.phoneNumber }}</span></button>
+  }</div><app-base-table-pagination [currentPage]="eligiblePage" [pageSize]="8" [totalCount]="eligibleTotal" (pageChange)="eligiblePage = $event; loadEligible()" /> }
+  @if (selectedPatient) { <section class="selected-summary"><h3>بیمار انتخاب‌شده</h3><dl><div><dt>نام</dt><dd>{{ selectedPatient.firstName }}</dd></div><div><dt>نام خانوادگی</dt><dd>{{ selectedPatient.lastName }}</dd></div><div><dt>شماره تماس</dt><dd dir="ltr">{{ selectedPatient.phoneNumber }}</dd></div></dl><p>شماره پرونده پس از ثبت توسط سیستم صادر می‌شود.</p></section> }
+  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeCreate()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">ثبت پرونده</app-base-button></div>
+</app-base-modal>
+
+<app-base-modal [open]="editOpen" title="ویرایش پرونده" [closeOnBackdrop]="!updating" (close)="closeEdit()">
+  @if (editing) { <form class="edit-form" (ngSubmit)="update()"><label>شماره پرونده<input readonly [value]="editing.fileNumber" /></label><label>نوع پرونده<input readonly [value]="sourceLabel(editing.sourceType)" /></label><label>نام<input required [(ngModel)]="editForm.firstName" name="firstName" /></label><label>نام خانوادگی<input required [(ngModel)]="editForm.lastName" name="lastName" /></label><label>شماره تماس<input required dir="ltr" [(ngModel)]="editForm.phoneNumber" name="phoneNumber" /></label></form> }
+  <div baseModalFooter><app-base-button variant="secondary" [disabled]="updating" (pressed)="closeEdit()">انصراف</app-base-button><app-base-button [loading]="updating" (pressed)="update()">ذخیره تغییرات</app-base-button></div>
+</app-base-modal>
+
+<app-base-confirm-dialog [open]="!!deleting" title="حذف پرونده" [message]="'آیا از حذف پرونده شماره ' + deleting?.fileNumber + ' اطمینان دارید؟'" variant="danger" confirmLabel="حذف پرونده" [loading]="deleteLoading" (cancel)="deleting = null" (confirm)="remove()" />
+
+<app-base-modal [open]="importOpen" title="ورود پرونده‌های قدیمی از اکسل" [closeOnBackdrop]="!importing" (close)="!importing && (importOpen = false)">
+  <div class="import-box"><p>فایل اکسل باید شامل نام، نام خانوادگی، شماره پرونده و شماره تماس باشد.</p><label>انتخاب فایل اکسل<input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" [disabled]="importing" (change)="chooseFile($event)" /></label>
+    @if (importErrors.length) { <section class="import-errors" role="alert"><h3>جزئیات خطاهای فایل</h3><ul>@for (error of importErrors; track $index) { <li>{{ error }}</li> }</ul></section> }</div>
+  <div baseModalFooter><app-base-button variant="secondary" [disabled]="importing" (pressed)="importOpen = false">انصراف</app-base-button><app-base-button [loading]="importing" [disabled]="!importFile" (pressed)="importLegacy()">بارگذاری</app-base-button></div>
+</app-base-modal>

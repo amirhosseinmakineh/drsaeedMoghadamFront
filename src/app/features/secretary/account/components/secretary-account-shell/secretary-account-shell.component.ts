@@ -18,6 +18,8 @@ export class SecretaryAccountShellComponent {
   mobileSidebarOpen = false;
   accountingMenuOpen = true;
   readonly patientFinanceActive: boolean;
+  readonly patientFilesActive: boolean;
+  readonly clinicAccountingActive: boolean;
   readonly displayName = computed(() => {
     const user = this.auth.user();
     return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "کاربر";
@@ -25,6 +27,8 @@ export class SecretaryAccountShellComponent {
 
   constructor(private readonly auth: AuthService, private readonly router: Router) {
     this.patientFinanceActive = this.router.url.startsWith("/secretary/patient-finance");
+    this.patientFilesActive = this.router.url.startsWith("/secretary/accounting/patient-files");
+    this.clinicAccountingActive = !this.patientFinanceActive && !this.patientFilesActive;
   }
 
   logout(): void {
