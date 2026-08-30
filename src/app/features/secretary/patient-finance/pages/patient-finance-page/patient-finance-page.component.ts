@@ -13,9 +13,7 @@ import { PatientFinanceApiService } from "../../services/patient-finance-api.ser
 
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
-interface FinancePatientOption { patientFileId: number; patientId: string; fileNumber: string; firstName: string; lastName: string; phoneNumber: string; }
-
-const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+interface FinancePatientOption { patientFileId: number; patientId: number; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
 
 function commitmentRequired(control: AbstractControl): ValidationErrors | null {
   const agreement = Number(control.get("agreementType")?.value);
@@ -60,9 +58,9 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
 
-  readonly filters = this.fb.group({ search: [""], patientId: [null as string | null, Validators.pattern(GUID_PATTERN)], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
+  readonly filters = this.fb.group({ search: [""], patientId: [null as number | null, Validators.min(1)], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
   readonly createForm = this.fb.group({
-    patientId: [null as string | null, [Validators.required, Validators.pattern(GUID_PATTERN)]],
+    patientId: [null as number | null, [Validators.required, Validators.min(1)]],
     serviceId: [null as number | null, Validators.required],
     totalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
@@ -99,9 +97,9 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientFileId(patient: FinancePatientOption): number { return patient.patientFileId; }
   patientName(patient: FinancePatientOption): string { return [patient.firstName, patient.lastName].filter(Boolean).join(" ").trim() || "بیمار بدون نام"; }
   patientPhone(patient: FinancePatientOption): string { return patient.phoneNumber ?? ""; }
-  patientFileNumber(patient: FinancePatientOption): string { return patient.fileNumber ?? ""; }
+  patientFileNumber(patient: FinancePatientOption): string { return String(patient.fileNumber ?? ""); }
   selectPatient(patient: FinancePatientOption): void {
-    if (!GUID_PATTERN.test(patient.patientId)) return;
+    if (!Number.isInteger(patient.patientId) || patient.patientId <= 0) return;
     this.createForm.controls.patientId.setValue(patient.patientId);
     this.patientSearch = this.patientName(patient);
     this.patientDropdownOpen = false;
@@ -125,7 +123,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   applyFilters(): void {
     const { year, month } = this.filters.getRawValue();
-    if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک GUID معتبر باشد."); return; }
+    if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک عدد معتبر باشد."); return; }
     if (this.activeTab === "debts" && ((year && !month) || (!year && month))) { this.toast.error("سال و ماه شمسی باید با هم وارد شوند."); return; }
     this.page = 1; this.load();
   }
@@ -146,7 +144,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     if (this.createForm.invalid) { this.createForm.markAllAsTouched(); this.toast.error(this.createForm.hasError("commitmentRequired") ? "ثبت حداقل یک چک یا سفته الزامی است." : "لطفاً اطلاعات پرونده را کامل کنید."); return; }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: value.patientId!, serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: Number(value.patientId), serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: number): void {
@@ -203,7 +201,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: result => {
         this.patientOptions = result.items
-          .filter(patient => typeof patient.patientId === "string" && GUID_PATTERN.test(patient.patientId))
+          .filter(patient => Number.isInteger(patient.patientId) && patient.patientId! > 0)
           .map(patient => ({
             patientFileId: patient.id,
             patientId: patient.patientId!,
