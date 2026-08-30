@@ -12,6 +12,7 @@ import {
 import { ToastService } from "../../../core/toast/toast.service";
 import { EligiblePatient, PatientFile, PatientFileQuery } from "./patient-file.models";
 import { PatientFilesService } from "./patient-files.service";
+import { SecretaryAccountShellComponent } from "../account/components/secretary-account-shell/secretary-account-shell.component";
 
 @Component({
   selector: "app-patient-files-page",
@@ -20,7 +21,7 @@ import { PatientFilesService } from "./patient-files.service";
     BaseConfirmDialogComponent, BaseContentContainerComponent, BaseEmptyStateComponent,
     BaseFilterBarComponent, BaseLoadingComponent, BaseModalComponent, BasePageHeaderComponent,
     BasePageShellComponent, BaseSearchFilterComponent, BaseSelectFilterComponent,
-    BaseTablePaginationComponent],
+    BaseTablePaginationComponent, SecretaryAccountShellComponent],
   templateUrl: "./patient-files-page.component.html",
   styleUrl: "./patient-files-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,3 +1,4 @@
+<app-secretary-account-shell>
 <app-base-page-shell title="پرونده‌های بیمار" [showHeader]="false">
   <app-base-content-container>
     <app-base-page-header title="پرونده‌های بیمار" subtitle="مدیریت پرونده‌های جدید و قدیمی بیماران" (back)="location.back()">
@@ -42,6 +43,7 @@
     </app-base-card>
   </app-base-content-container>
 </app-base-page-shell>
+</app-secretary-account-shell>
 
 <app-base-modal [open]="createOpen" title="ایجاد پرونده جدید" [closeOnBackdrop]="!creating" (close)="closeCreate()">
   <app-base-search-filter label="جستجوی بیمار" placeholder="نام، نام خانوادگی یا شماره تماس" [value]="eligibleSearch" (valueChange)="searchEligible($event)" />
