@@ -62,6 +62,11 @@ export class SecretaryReservationsComponent
   feedback = "";
   feedbackType: "success" | "error" = "success";
   statusFilter: AttendanceConfirmationStatus | null = null;
+  reservationTypeFilter: ReservationType | null = null;
+  readonly reservationTypeOptions = [
+    { value: ReservationType.Regular, label: "رزرو عادی" },
+    { value: ReservationType.AfterSalesService, label: "خدمات پس از درمان" },
+  ];
   readonly statusOptions = [
     AttendanceConfirmationStatus.PendingConsultantConfirmation,
     AttendanceConfirmationStatus.ConsultantConfirmedPresent,
@@ -180,7 +185,14 @@ export class SecretaryReservationsComponent
     this.load();
   }
 
-  applyStatusFilter(): void {
+  applyFilters(change: {
+    status?: AttendanceConfirmationStatus | null;
+    reservationType?: ReservationType | null;
+  }): void {
+    if ("status" in change) this.statusFilter = change.status ?? null;
+    if ("reservationType" in change) {
+      this.reservationTypeFilter = change.reservationType ?? null;
+    }
     this.pageNumber = 1;
     this.load();
   }
@@ -235,6 +247,7 @@ export class SecretaryReservationsComponent
           pageSize: this.pageSize,
           searchText: this.searchText.trim() || undefined,
           attendanceConfirmationStatus: this.statusFilter,
+          reservationType: this.reservationTypeFilter,
         })
         .pipe(
           finalize(() => {
