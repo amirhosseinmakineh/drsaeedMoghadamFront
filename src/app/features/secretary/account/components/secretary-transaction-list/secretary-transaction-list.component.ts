@@ -44,8 +44,12 @@ export class SecretaryTransactionListComponent implements OnChanges {
   pageSize = 20;
   @Input()
   totalCount = 0;
+  @Input()
+  receiptLoadingId: number | null = null;
   @Output()
   detailsRequested = new EventEmitter<number>();
+  @Output()
+  receiptRequested = new EventEmitter<number>();
   @Output()
   pageChanged = new EventEmitter<number>();
   @Output()
@@ -77,4 +81,6 @@ export class SecretaryTransactionListComponent implements OnChanges {
   show(row: TransactionRow): void {
     this.detailsRequested.emit(row.source.id);
   }
+  readonly isReceiptLoading = (row: TransactionRow): boolean =>
+    row.source.id === this.receiptLoadingId;
 }

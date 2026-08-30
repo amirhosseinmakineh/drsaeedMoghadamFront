@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { AuthService } from "../../../../core/auth/auth.service";
@@ -99,6 +99,14 @@ export class SecretaryAccountService {
       `${this.baseUrl}/financial-transactions/${id}`,
       { headers: this.authHeaders() },
     );
+  }
+
+  getTransactionReceipt(id: number): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/financial-transactions/${id}/receipt`, {
+      headers: this.authHeaders().set("Accept", "text/html"),
+      observe: "response",
+      responseType: "blob",
+    });
   }
 
   private toParams(request: GetSecretaryFinancialTransactionsRequest): HttpParams {
