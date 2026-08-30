@@ -129,7 +129,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   applyFilters(): void {
     const { year, month } = this.filters.getRawValue();
-    if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک GUID معتبر باشد."); return; }
+    if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک عدد معتبر باشد."); return; }
     if (this.activeTab === "debts" && ((year && !month) || (!year && month))) { this.toast.error("سال و ماه شمسی باید با هم وارد شوند."); return; }
     this.page = 1; this.load();
   }

@@ -45,7 +45,7 @@
   } @else {
     <section class="card filters" [formGroup]="filters">
       <label>جست‌وجو<input formControlName="search" placeholder="نام یا تلفن بیمار"></label>
-      <label>شناسه بیمار<input type="text" formControlName="patientId" inputmode="text" autocomplete="off" placeholder="GUID بیمار"></label>
+      <label>شناسه بیمار<input type="number" min="1" formControlName="patientId" inputmode="numeric" autocomplete="off" placeholder="شناسه عددی بیمار"></label>
       @if (activeTab !== 'transactions' && activeTab !== 'due') { <label>وضعیت<select formControlName="status"><option [ngValue]="null">همه</option><option [ngValue]="1">در انتظار / فعال</option><option [ngValue]="2">پرداخت‌شده</option><option [ngValue]="3">پرداخت‌نشده / لغوشده</option>@if (activeTab === 'cheques' || activeTab === 'notes') { <option [ngValue]="4">لغوشده</option> }</select></label> }
       @if (activeTab === 'debts' || activeTab === 'transactions' || activeTab === 'due') { <label>نوع منبع<select formControlName="sourceType"><option [ngValue]="null">همه</option><option [ngValue]="1">چک</option><option [ngValue]="2">سفته</option></select></label> }
       <app-base-persian-date-picker label="از تاریخ" [value]="filters.controls.fromDate.value" (valueChange)="filters.controls.fromDate.setValue($event)" /><app-base-persian-date-picker label="تا تاریخ" [value]="filters.controls.toDate.value" (valueChange)="filters.controls.toDate.setValue($event)" />
