@@ -56,7 +56,6 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientOptions: FinancePatientOption[] = [];
   patientSearch = "";
   patientOptionsLoading = false;
-  patientOptionsLoaded = false;
   patientDropdownOpen = false;
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
@@ -81,9 +80,20 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   }
   get cheques(): FormArray { return this.createForm.controls.cheques; }
   get notes(): FormArray { return this.createForm.controls.promissoryNotes; }
-  selectTab(tab: FinanceTab): void { this.activeTab = tab; this.page = 1; this.items = []; this.details = null; if (tab === "create") this.loadPatientOptions(); else this.load(); }
+  selectTab(tab: FinanceTab): void {
+    this.activeTab = tab;
+    this.page = 1;
+    this.items = [];
+    this.details = null;
+    if (tab === "create") {
+      this.patientDropdownOpen = true;
+      this.requestPatientOptions("");
+      return;
+    }
+    this.load();
+  }
   loadPatientOptions(): void {
-    if (this.patientOptionsLoading || this.patientOptionsLoaded) return;
+    if (this.patientOptionsLoading || this.patientOptions.length) return;
     this.requestPatientOptions("");
   }
   patientFileId(patient: FinancePatientOption): number { return patient.patientFileId; }
@@ -100,7 +110,6 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.patientSearch = value;
     this.createForm.controls.patientId.setValue(null);
     this.patientDropdownOpen = true;
-    this.patientOptionsLoaded = false;
     if (this.patientSearchTimer !== null) clearTimeout(this.patientSearchTimer);
     this.patientSearchSubscription?.unsubscribe();
     this.patientOptionsLoading = false;
@@ -172,6 +181,11 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     return `${year}-${month}-${day}`;
   }
   private requestPatientOptions(searchText: string): void {
+    if (this.patientSearchTimer !== null) {
+      clearTimeout(this.patientSearchTimer);
+      this.patientSearchTimer = null;
+    }
+    this.patientSearchSubscription?.unsubscribe();
     this.patientOptionsLoading = true;
     this.cdr.markForCheck();
     this.patientSearchSubscription = this.patientFilesApi.getPatientFiles({
@@ -198,7 +212,6 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
             lastName: patient.lastName,
             phoneNumber: patient.phoneNumber,
           }));
-        this.patientOptionsLoaded = true;
         this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => this.showError(error),
