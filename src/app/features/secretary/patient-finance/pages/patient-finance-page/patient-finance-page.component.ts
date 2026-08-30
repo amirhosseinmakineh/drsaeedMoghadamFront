@@ -5,7 +5,6 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { finalize, forkJoin, Observable } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
-import { SecretaryPatientOption } from "../../../../../core/secretary/secretary-dashboard.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
 import { PatientFilesService } from "../../../patient-files/patient-files.service";
@@ -14,6 +13,9 @@ import { PatientFinanceApiService } from "../../services/patient-finance-api.ser
 
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
+interface FinancePatientOption { patientId: string; firstName: string; lastName: string; phoneNumber: string; }
+
+const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
 function commitmentRequired(control: AbstractControl): ValidationErrors | null {
   const agreement = Number(control.get("agreementType")?.value);
@@ -51,7 +53,7 @@ export class PatientFinancePageComponent implements OnInit {
   actionId: number | null = null;
   details: PatientFinancialCaseDetails | null = null;
   summary: PatientFinancialCaseSummary | null = null;
-  patientOptions: SecretaryPatientOption[] = [];
+  patientOptions: FinancePatientOption[] = [];
   patientSearch = "";
   patientOptionsLoading = false;
   patientOptionsLoaded = false;
@@ -59,7 +61,7 @@ export class PatientFinancePageComponent implements OnInit {
 
   readonly filters = this.fb.group({ search: [""], patientId: [null as number | null], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
   readonly createForm = this.fb.group({
-    patientId: [null as number | null, [Validators.required, Validators.min(1)]],
+    patientId: [null as string | null, [Validators.required, Validators.pattern(GUID_PATTERN)]],
     serviceId: [null as number | null, Validators.required],
     totalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
@@ -80,9 +82,9 @@ export class PatientFinancePageComponent implements OnInit {
     this.patientFilesApi.getPatientFiles({ search: "", fileNumber: "", sourceType: "System", page: 1, pageSize: 100 }).pipe(finalize(() => { this.patientOptionsLoading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: result => {
         this.patientOptions = result.items
-          .filter(patient => Number.isFinite(Number(patient.patientId)) && Number(patient.patientId) > 0)
+          .filter(patient => typeof patient.patientId === "string" && GUID_PATTERN.test(patient.patientId))
           .map(patient => ({
-            patientId: Number(patient.patientId),
+            patientId: patient.patientId!,
             firstName: patient.firstName,
             lastName: patient.lastName,
             phoneNumber: patient.phoneNumber,
@@ -92,25 +94,17 @@ export class PatientFinancePageComponent implements OnInit {
       error: (error: HttpErrorResponse) => this.showError(error),
     });
   }
-  get filteredPatientOptions(): SecretaryPatientOption[] {
+  get filteredPatientOptions(): FinancePatientOption[] {
     const query = this.normalizePatientText(this.patientSearch);
     if (!query) return this.patientOptions;
     return this.patientOptions.filter(patient => this.normalizePatientText(`${this.patientName(patient)} ${this.patientPhone(patient)}`).includes(query));
   }
-  patientId(patient: SecretaryPatientOption): number { return Number(patient.patientId ?? patient.PatientId ?? patient.leadAssignmentId ?? patient.LeadAssignmentId ?? patient.id ?? patient.Id); }
-  patientName(patient: SecretaryPatientOption): string {
-    const person = patient.user ?? patient.User ?? patient.lead ?? patient.Lead ?? {};
-    const name = patient.fullName?.trim() || patient.FullName?.trim() || [patient.firstName ?? patient.FirstName ?? person["firstName"] ?? person["FirstName"], patient.lastName ?? patient.LastName ?? person["lastName"] ?? person["LastName"]].filter(Boolean).join(" ").trim();
-    return name || patient.userName || patient.UserName || "بیمار بدون نام";
-  }
-  patientPhone(patient: SecretaryPatientOption): string {
-    const person = patient.user ?? patient.User ?? patient.lead ?? patient.Lead ?? {};
-    return String(patient.phoneNumber ?? patient.PhoneNumber ?? person["phoneNumber"] ?? person["PhoneNumber"] ?? "");
-  }
-  selectPatient(patient: SecretaryPatientOption): void {
-    const id = this.patientId(patient);
-    if (!Number.isFinite(id) || id < 1) return;
-    this.createForm.controls.patientId.setValue(id);
+  patientId(patient: FinancePatientOption): string { return patient.patientId; }
+  patientName(patient: FinancePatientOption): string { return [patient.firstName, patient.lastName].filter(Boolean).join(" ").trim() || "بیمار بدون نام"; }
+  patientPhone(patient: FinancePatientOption): string { return patient.phoneNumber ?? ""; }
+  selectPatient(patient: FinancePatientOption): void {
+    if (!GUID_PATTERN.test(patient.patientId)) return;
+    this.createForm.controls.patientId.setValue(patient.patientId);
     this.patientSearch = this.patientName(patient);
     this.patientDropdownOpen = false;
   }
@@ -142,7 +136,7 @@ export class PatientFinancePageComponent implements OnInit {
     if (this.createForm.invalid) { this.createForm.markAllAsTouched(); this.toast.error(this.createForm.hasError("commitmentRequired") ? "ثبت حداقل یک چک یا سفته الزامی است." : "لطفاً اطلاعات پرونده را کامل کنید."); return; }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: Number(value.patientId), serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: value.patientId!, serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ agreementType: FinancialAgreementType.Deposit }); this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: number): void {

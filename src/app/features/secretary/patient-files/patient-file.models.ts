@@ -2,7 +2,7 @@ export type PatientFileSourceType = "System" | "Legacy";
 
 export interface PatientFile {
   id: number;
-  patientId?: number | null;
+  patientId?: string | null;
   fileNumber: string;
   firstName: string;
   lastName: string;

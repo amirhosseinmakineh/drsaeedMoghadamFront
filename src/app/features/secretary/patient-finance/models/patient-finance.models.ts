@@ -11,7 +11,7 @@ export interface PageQuery { page?: number; pageSize?: number; [key: string]: st
 
 export interface CreateChequeRequest { amount: number; sayadNumber: string; ownerName: string; dueDate: string; }
 export interface CreatePromissoryNoteRequest { serialNumber: string; amount: number; dueDate: string; }
-export interface CreateFinancialCaseRequest { patientId: number; serviceId: number; totalAmount: number; agreementType: FinancialAgreementType; cheques: CreateChequeRequest[]; promissoryNotes: CreatePromissoryNoteRequest[]; }
+export interface CreateFinancialCaseRequest { patientId: string; serviceId: number; totalAmount: number; agreementType: FinancialAgreementType; cheques?: CreateChequeRequest[] | null; promissoryNotes?: CreatePromissoryNoteRequest[] | null; }
 export interface UpdateFinancialCaseRequest { totalAmount: number; agreementType: FinancialAgreementType; }
 export interface PatientFinancialCase { id: number; patientId: number; patientName: string; patientPhoneNumber: string | null; serviceId: number; serviceName: string; totalAmount: number; totalPaidAmount: number; remainingAmount: number; totalDebtAmount: number; agreementType: FinancialAgreementType; status: FinancialCaseStatus; createdAt: string; }
 export interface PatientFinancialCaseDetails { case: PatientFinancialCase; chequeCount: number; chequeAmount: number; promissoryNoteCount: number; promissoryNoteAmount: number; }
