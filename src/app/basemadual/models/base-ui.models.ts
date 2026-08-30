@@ -18,4 +18,4 @@ export type BaseBadgeVariant =
   | "warning"
   | "info"
   | "neutral";
-export type BaseButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+export type BaseButtonVariant = "primary" | "secondary" | "danger" | "ghost" | "success";

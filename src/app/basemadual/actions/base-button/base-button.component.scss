@@ -11,7 +11,7 @@ button {
   min-height: 44px;
   padding-inline: var(--bm-space-4);
   border: 1px solid transparent;
-  border-radius: var(--bm-radius-md);
+  border-radius: var(--radius, var(--bm-radius-md));
   font: inherit;
   font-weight: 700;
 }
@@ -26,6 +26,10 @@ button {
 }
 .danger {
   background: var(--bm-danger);
+  color: white;
+}
+.success {
+  background: var(--success);
   color: white;
 }
 .ghost {

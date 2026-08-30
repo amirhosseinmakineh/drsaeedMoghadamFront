@@ -96,3 +96,7 @@ article footer:empty,
     width: 1%;
   }
 }
+@media (min-width: 768px) {
+  tbody tr { transition: background 160ms ease; }
+  tbody tr:hover { background: color-mix(in srgb, var(--bm-brand) 7%, var(--bm-surface)); }
+}
