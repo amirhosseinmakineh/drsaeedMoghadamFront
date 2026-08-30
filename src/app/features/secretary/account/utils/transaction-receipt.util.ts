@@ -20,22 +20,40 @@ export async function handleTransactionReceipt(
     return;
   }
 
-  const file = new File([blob], fileName, { type: "text/html;charset=utf-8" });
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+  const file = createShareableReceiptFile(blob, fileName);
+  if (file && canShareReceipt(file)) {
     try {
       await navigator.share({
         title: `رسید تراکنش ${transactionId}`,
         text: "رسید تراکنش مالی",
         files: [file],
       });
+      return;
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return;
-      throw error;
+      // Sharing can fail after an asynchronous HTTP request because some
+      // browsers no longer consider the original click a user gesture. A
+      // receipt must still remain available, so fall back to downloading it.
     }
-    return;
   }
 
   downloadReceipt(blob, fileName);
+}
+
+function createShareableReceiptFile(blob: Blob, fileName: string): File | null {
+  if (typeof File !== "function") return null;
+  return new File([blob], fileName, { type: blob.type || "text/html;charset=utf-8" });
+}
+
+function canShareReceipt(file: File): boolean {
+  if (typeof navigator.share !== "function" || typeof navigator.canShare !== "function") {
+    return false;
+  }
+  try {
+    return navigator.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
 }
 
 function previewReceipt(blob: Blob): void {
@@ -53,8 +71,11 @@ function downloadReceipt(blob: Blob, fileName: string): void {
   const link = document.createElement("a");
   link.href = url;
   link.download = fileName;
+  link.style.display = "none";
+  document.body.appendChild(link);
   link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
 
 function receiptFileName(response: HttpResponse<Blob>, transactionId: number): string {
