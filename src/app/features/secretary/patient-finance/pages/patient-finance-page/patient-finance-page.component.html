@@ -13,7 +13,20 @@
     <form class="card create-form" [formGroup]="createForm" (ngSubmit)="submitCase()">
       <div class="section-title"><div><h2>ساخت پرونده مالی</h2><p>اطلاعات بیمار، خدمت و توافق مالی را وارد کنید.</p></div></div>
       <div class="form-grid">
-        <label>شناسه بیمار<input type="number" formControlName="patientId" placeholder="مثلاً ۱۲۵"></label>
+        <label class="patient-picker">بیمار
+          <span class="patient-search-wrap">
+            <input type="search" autocomplete="off" placeholder="جست‌وجوی نام یا شماره تماس" [value]="patientSearch" (input)="onPatientSearch($any($event.target).value)" (focus)="patientDropdownOpen = true; loadPatientOptions()" (blur)="closePatientDropdown()" aria-label="جست‌وجو و انتخاب بیمار" [attr.aria-expanded]="patientDropdownOpen">
+            @if (patientOptionsLoading) { <span class="patient-spinner" aria-label="در حال دریافت بیماران"></span> }
+          </span>
+          @if (patientDropdownOpen) {
+            <span class="patient-options" role="listbox">
+              @if (patientOptionsLoading) { <span class="patient-message">در حال دریافت فهرست بیماران…</span> }
+              @else if (!filteredPatientOptions.length) { <span class="patient-message">بیماری با این مشخصات پیدا نشد.</span> }
+              @else { @for (patient of filteredPatientOptions; track patientId(patient)) { <button type="button" role="option" (mousedown)="$event.preventDefault()" (click)="selectPatient(patient)"><strong>{{ patientName(patient) }}</strong><small>{{ patientPhone(patient) || 'بدون شماره تماس' }}</small></button> } }
+            </span>
+          }
+          @if (createForm.controls.patientId.touched && createForm.controls.patientId.invalid) { <small class="field-error">انتخاب بیمار الزامی است.</small> }
+        </label>
         <label>خدمت<select formControlName="serviceId"><option [ngValue]="null">انتخاب خدمت</option>@for (service of services; track service.id) { <option [ngValue]="service.id">{{ service.label }}</option> }</select></label>
         <label>مبلغ کل درمان (ریال)<input type="number" formControlName="totalAmount" min="1"></label>
         <label>نوع توافق<select formControlName="agreementType"><option [ngValue]="1">پیش‌پرداخت (نیازمند تعهد)</option><option [ngValue]="2">ودیعه</option></select></label>

@@ -231,6 +231,8 @@ export interface CreateSecretaryReservationRequest {
 export interface SecretaryPatientOption {
   id?: number;
   Id?: number;
+  patientId?: number;
+  PatientId?: number;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   fullName?: string | null;
