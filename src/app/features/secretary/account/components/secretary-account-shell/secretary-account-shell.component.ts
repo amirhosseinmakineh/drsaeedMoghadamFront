@@ -16,12 +16,16 @@ import { FaIconComponent } from "../../../../../shared/ui/fa-icon/fa-icon.compon
 })
 export class SecretaryAccountShellComponent {
   mobileSidebarOpen = false;
+  accountingMenuOpen = true;
+  readonly patientFinanceActive: boolean;
   readonly displayName = computed(() => {
     const user = this.auth.user();
     return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "کاربر";
   });
 
-  constructor(private readonly auth: AuthService, private readonly router: Router) {}
+  constructor(private readonly auth: AuthService, private readonly router: Router) {
+    this.patientFinanceActive = this.router.url.startsWith("/secretary/patient-finance");
+  }
 
   logout(): void {
     this.auth.logout();

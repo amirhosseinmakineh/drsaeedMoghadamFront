@@ -61,6 +61,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
   readonly user = this.auth.user;
   activeSection: SecretaryDashboardSection = "overview";
   mobileSidebarOpen = false;
+  accountingMenuOpen = false;
 
   readonly dashboardLinks: SecretaryDashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },

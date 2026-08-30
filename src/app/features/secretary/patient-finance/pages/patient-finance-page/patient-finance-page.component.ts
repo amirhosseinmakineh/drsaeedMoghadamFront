@@ -3,9 +3,10 @@ import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
-import { RouterLink } from "@angular/router";
 import { finalize, forkJoin, Observable } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
+import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
+import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
 import { CommitmentStatus, CreateChequeRequest, CreatePromissoryNoteRequest, DebtStatus, FinancialAgreementType, FinancialCaseStatus, FinancialSourceType, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote } from "../../models/patient-finance.models";
 import { PatientFinanceApiService } from "../../services/patient-finance-api.service";
 
@@ -21,7 +22,7 @@ function commitmentRequired(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: "app-patient-finance-page",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, SecretaryAccountShellComponent],
   templateUrl: "./patient-finance-page.component.html",
   styleUrl: "./patient-finance-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,7 +50,7 @@ export class PatientFinancePageComponent implements OnInit {
   details: PatientFinancialCaseDetails | null = null;
   summary: PatientFinancialCaseSummary | null = null;
 
-  readonly filters = this.fb.group({ search: [""], patientId: [null as number | null], status: [null as number | null], sourceType: [null as number | null], fromDate: [""], toDate: [""], year: [null as number | null], month: [null as number | null] });
+  readonly filters = this.fb.group({ search: [""], patientId: [null as number | null], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
   readonly createForm = this.fb.group({
     patientId: [null as number | null, [Validators.required, Validators.min(1)]],
     serviceId: [null as number | null, Validators.required],
@@ -57,7 +58,7 @@ export class PatientFinancePageComponent implements OnInit {
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
     cheques: this.fb.array([]), promissoryNotes: this.fb.array([]),
   }, { validators: commitmentRequired });
-  readonly commitmentForm = this.fb.group({ type: [FinancialSourceType.Cheque, Validators.required], amount: [null as number | null, [Validators.required, Validators.min(1)]], identifier: ["", Validators.required], ownerName: [""], dueDate: ["", Validators.required] });
+  readonly commitmentForm = this.fb.group({ type: [FinancialSourceType.Cheque, Validators.required], amount: [null as number | null, [Validators.required, Validators.min(1)]], identifier: ["", Validators.required], ownerName: [""], dueDate: [null as Date | null, Validators.required] });
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
   private readonly destroyRef = inject(DestroyRef);
@@ -66,8 +67,8 @@ export class PatientFinancePageComponent implements OnInit {
   get cheques(): FormArray { return this.createForm.controls.cheques; }
   get notes(): FormArray { return this.createForm.controls.promissoryNotes; }
   selectTab(tab: FinanceTab): void { this.activeTab = tab; this.page = 1; this.items = []; this.details = null; if (tab !== "create") this.load(); }
-  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: ["", Validators.required] })); this.createForm.updateValueAndValidity(); }
-  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: ["", Validators.required] })); this.createForm.updateValueAndValidity(); }
+  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
+  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   applyFilters(): void {
@@ -82,7 +83,7 @@ export class PatientFinancePageComponent implements OnInit {
     if (this.activeTab === "create") return;
     this.loading = true;
     const raw = this.filters.getRawValue();
-    const query = { ...raw, page: this.page, pageSize: this.pageSize };
+    const query = { ...raw, fromDate: this.apiDate(raw.fromDate), toDate: this.apiDate(raw.toDate), page: this.page, pageSize: this.pageSize };
     const request: Observable<PaginatedResult<ListItem>> = (this.activeTab === "cases" ? this.api.getCases(query) : this.activeTab === "cheques" ? this.api.getCheques(query) : this.activeTab === "notes" ? this.api.getPromissoryNotes(query) : this.activeTab === "debts" ? this.api.getDebts(query) : this.activeTab === "transactions" ? this.api.getTransactions(query) : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
     request.pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result: PaginatedResult<any>) => { this.items = result.items ?? []; this.totalCount = result.totalCount ?? 0; }, error: (error: HttpErrorResponse) => this.showError(error) });
   }
@@ -118,7 +119,14 @@ export class PatientFinancePageComponent implements OnInit {
   money(value: number | null | undefined): string { return new Intl.NumberFormat("fa-IR").format(value ?? 0); }
   date(value: string | null | undefined): string { return value ? new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(value)) : "—"; }
   statusLabel(value: number): string { return ({ 1: "در انتظار", 2: "پرداخت‌شده", 3: "پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
-  private iso(value: string): string { return new Date(`${value}T00:00:00`).toISOString(); }
+  private iso(value: Date): string { return value.toISOString(); }
+  private apiDate(value: Date | null): string | null {
+    if (!value) return null;
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
   private mutate(id: number, request: ReturnType<PatientFinanceApiService["payDebt"]>, success: string): void { if (this.actionId !== null) return; this.actionId = id; request.pipe(finalize(() => { this.actionId = null; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: r => { if (!r.isSuccess) { this.toast.error(r.message); return; } this.toast.success(r.message || success); this.load(); if (this.details) this.openDetails(this.details.case.id); }, error: e => this.showError(e) }); }
   private showError(error: HttpErrorResponse): void { this.toast.error(error.error?.message || error.message || "ارتباط با سرور انجام نشد."); }
 }
