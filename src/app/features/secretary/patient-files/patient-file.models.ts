@@ -2,8 +2,8 @@ export type PatientFileSourceType = "System" | "Legacy";
 
 export interface PatientFile {
   id: number;
-  patientId?: string | null;
-  fileNumber: string;
+  patientId?: string | number | null;
+  fileNumber: number;
   firstName: string;
   lastName: string;
   phoneNumber: string;
@@ -54,7 +54,7 @@ export interface EligiblePatientQuery {
 
 export interface CreatePatientFileResult {
   id: number;
-  fileNumber: string;
+  fileNumber: number;
 }
 
 export interface ImportPatientFilesResult {
