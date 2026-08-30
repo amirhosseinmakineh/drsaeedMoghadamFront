@@ -3,7 +3,7 @@ import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
-import { catchError, debounce, defer, EMPTY, finalize, forkJoin, Observable, Subject, switchMap, timer } from "rxjs";
+import { finalize, forkJoin, Observable, Subscription } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
@@ -58,7 +58,8 @@ export class PatientFinancePageComponent implements OnInit {
   patientOptionsLoading = false;
   patientOptionsLoaded = false;
   patientDropdownOpen = false;
-  private readonly patientSearchRequests = new Subject<{ searchText: string; immediate: boolean }>();
+  private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private patientSearchSubscription: Subscription | null = null;
 
   readonly filters = this.fb.group({ search: [""], patientId: [null as string | null, Validators.pattern(GUID_PATTERN)], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
   readonly createForm = this.fb.group({
@@ -106,7 +107,7 @@ export class PatientFinancePageComponent implements OnInit {
   selectTab(tab: FinanceTab): void { this.activeTab = tab; this.page = 1; this.items = []; this.details = null; if (tab === "create") this.loadPatientOptions(); else this.load(); }
   loadPatientOptions(): void {
     if (this.patientOptionsLoading || this.patientOptionsLoaded) return;
-    this.patientSearchRequests.next({ searchText: "", immediate: true });
+    this.requestPatientOptions("");
   }
   patientFileId(patient: FinancePatientOption): number { return patient.patientFileId; }
   patientName(patient: FinancePatientOption): string { return [patient.firstName, patient.lastName].filter(Boolean).join(" ").trim() || "بیمار بدون نام"; }
@@ -123,7 +124,13 @@ export class PatientFinancePageComponent implements OnInit {
     this.createForm.controls.patientId.setValue(null);
     this.patientDropdownOpen = true;
     this.patientOptionsLoaded = false;
-    this.patientSearchRequests.next({ searchText: value.trim(), immediate: false });
+    if (this.patientSearchTimer !== null) clearTimeout(this.patientSearchTimer);
+    this.patientSearchSubscription?.unsubscribe();
+    this.patientOptionsLoading = false;
+    this.patientSearchTimer = setTimeout(() => {
+      this.patientSearchTimer = null;
+      this.requestPatientOptions(value.trim());
+    }, 400);
   }
   closePatientDropdown(): void { setTimeout(() => { this.patientDropdownOpen = false; this.cdr.markForCheck(); }, 150); }
   addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
@@ -186,6 +193,39 @@ export class PatientFinancePageComponent implements OnInit {
     const month = String(value.getMonth() + 1).padStart(2, "0");
     const day = String(value.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  }
+  private requestPatientOptions(searchText: string): void {
+    this.patientOptionsLoading = true;
+    this.cdr.markForCheck();
+    this.patientSearchSubscription = this.patientFilesApi.getPatientFiles({
+      search: searchText,
+      fileNumber: "",
+      sourceType: "",
+      page: 1,
+      pageSize: 20,
+    }).pipe(
+      finalize(() => {
+        this.patientOptionsLoading = false;
+        this.cdr.markForCheck();
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: result => {
+        this.patientOptions = result.items
+          .filter(patient => typeof patient.patientId === "string" && GUID_PATTERN.test(patient.patientId))
+          .map(patient => ({
+            patientFileId: patient.id,
+            patientId: patient.patientId!,
+            fileNumber: patient.fileNumber,
+            firstName: patient.firstName,
+            lastName: patient.lastName,
+            phoneNumber: patient.phoneNumber,
+          }));
+        this.patientOptionsLoaded = true;
+        this.cdr.markForCheck();
+      },
+      error: (error: HttpErrorResponse) => this.showError(error),
+    });
   }
   private mutate(id: number, request: ReturnType<PatientFinanceApiService["payDebt"]>, success: string): void { if (this.actionId !== null) return; this.actionId = id; request.pipe(finalize(() => { this.actionId = null; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: r => { if (!r.isSuccess) { this.toast.error(r.message); return; } this.toast.success(r.message || success); this.load(); if (this.details) this.openDetails(this.details.case.id); }, error: e => this.showError(e) }); }
   private showError(error: HttpErrorResponse): void { this.toast.error(error.error?.message || error.message || "ارتباط با سرور انجام نشد."); }
