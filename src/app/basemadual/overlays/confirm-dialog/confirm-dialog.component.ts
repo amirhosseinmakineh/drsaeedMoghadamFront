@@ -15,10 +15,11 @@ import { BaseButtonComponent } from "../../actions/base-button/base-button.compo
   template: `<app-base-modal
     [open]="open"
     [title]="title"
+    [closeOnBackdrop]="!loading"
     (close)="cancel.emit()"
     ><p>{{ message }}</p>
     <div baseModalFooter>
-      <app-base-button variant="secondary" (pressed)="cancel.emit()">{{
+      <app-base-button variant="secondary" [disabled]="loading" (pressed)="cancel.emit()">{{
         cancelLabel
       }}</app-base-button
       ><app-base-button

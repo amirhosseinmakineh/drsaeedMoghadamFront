@@ -26,6 +26,10 @@ export class SecretaryTransactionDetailsComponent {
   receiptShareRequested = new EventEmitter<number>();
   @Output()
   receiptDownloadRequested = new EventEmitter<number>();
+  @Output()
+  editRequested = new EventEmitter<SecretaryFinancialTransactionDto>();
+  @Output()
+  deleteRequested = new EventEmitter<SecretaryFinancialTransactionDto>();
   readonly incomeType = FinancialTransactionType.Income;
   readonly money = new Intl.NumberFormat("fa-IR");
 }
