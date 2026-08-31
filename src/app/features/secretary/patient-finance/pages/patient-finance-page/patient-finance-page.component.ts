@@ -142,6 +142,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
+  onCreateAgreementChange(): void { this.clearInactiveAgreementAmount(this.createForm); }
+  onEditAgreementChange(): void { this.clearInactiveAgreementAmount(this.editForm); }
   applyFilters(): void {
     const { year, month } = this.filters.getRawValue();
     if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک عدد معتبر باشد."); return; }
@@ -205,6 +207,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     const month = String(value.getMonth() + 1).padStart(2, "0");
     const day = String(value.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  }
+  private clearInactiveAgreementAmount(form: typeof this.createForm | typeof this.editForm): void {
+    if (form.controls.agreementType.value === FinancialAgreementType.PrePayment) form.controls.depositAmount.setValue(0);
+    else form.controls.prePaymentAmount.setValue(0);
   }
   private requestPatientOptions(searchText: string): void {
     if (this.patientSearchTimer !== null) {
