@@ -201,7 +201,20 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   }
   closeDetails(): void { this.details = null; this.summary = null; }
   cancelCase(item: PatientFinancialCase): void { if (item.status !== FinancialCaseStatus.Active || !confirm("پرونده مالی لغو شود؟ سابقه مالی حذف نخواهد شد.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "پرونده مالی لغو شد."); }
-  updateStatus(kind: "cheque" | "note", id: number, status: 2 | 3 | 4): void { const label = status === 2 ? "وصول این تعهد تأیید شود؟" : status === 3 ? "این تعهد برگشتی ثبت شود؟" : "این تعهد لغو شود؟"; if (!confirm(label)) return; const request = kind === "cheque" ? this.api.updateChequeStatus(id, status) : this.api.updatePromissoryNoteStatus(id, status); this.mutate(id, request, "وضعیت تعهد به‌روزرسانی شد."); }
+  updateStatus(kind: "cheque" | "note", id: number, status: 2 | 3 | 4, dueDate?: string): void {
+    if (dueDate && !this.isCommitmentDue(dueDate)) {
+      this.toast.error("ثبت نتیجه پرداخت فقط از روز سررسید امکان‌پذیر است.");
+      return;
+    }
+    const label = status === 2
+      ? "وصول این تعهد تأیید شود؟ مبلغ آن به‌عنوان پرداخت ثبت می‌شود."
+      : status === 3
+        ? "پرداخت‌نشدن این تعهد ثبت شود؟ مبلغ آن به بدهی بیمار تبدیل می‌شود."
+        : "این تعهد لغو شود؟";
+    if (!confirm(label)) return;
+    const request = kind === "cheque" ? this.api.updateChequeStatus(id, status) : this.api.updatePromissoryNoteStatus(id, status);
+    this.mutate(id, request, status === 3 ? "عدم پرداخت ثبت و مبلغ به بدهی بیمار تبدیل شد." : "وضعیت تعهد به‌روزرسانی شد.");
+  }
   payDebt(item: PatientDebt): void { if (item.status !== DebtStatus.Unpaid || !confirm("تسویه کامل این بدهی ثبت شود؟")) return; this.mutate(item.id, this.api.payDebt(item.id), "بدهی با موفقیت تسویه شد."); }
   addCommitment(): void {
     if (!this.details || this.commitmentForm.invalid || this.submitting) { this.commitmentForm.markAllAsTouched(); return; }
@@ -218,6 +231,15 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   money(value: number | null | undefined): string { return new Intl.NumberFormat("fa-IR").format(value ?? 0); }
   date(value: string | null | undefined): string { return value ? new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(value)) : "—"; }
   statusLabel(value: number): string { return ({ 1: "در انتظار", 2: "پرداخت‌شده", 3: "پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
+  isCommitmentDue(value: string | null | undefined): boolean {
+    if (!value) return false;
+    const dueDate = new Date(value);
+    if (Number.isNaN(dueDate.getTime())) return false;
+    const today = new Date();
+    dueDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return dueDate.getTime() <= today.getTime();
+  }
   private iso(value: Date): string { return value.toISOString(); }
   private apiDate(value: Date | null): string | null {
     if (!value) return null;
