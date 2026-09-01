@@ -71,6 +71,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   actionId: number | null = null;
   details: PatientFinancialCaseDetails | null = null;
   summary: PatientFinancialCaseSummary | null = null;
+  detailCheques: PatientCheque[] = [];
+  detailNotes: PatientPromissoryNote[] = [];
   patientOptions: FinancePatientOption[] = [];
   patientSearch = "";
   patientOptionsLoading = false;
@@ -315,6 +317,12 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private clearInactiveAgreementAmount(form: typeof this.createForm): void {
     if (form.controls.agreementType.value === FinancialAgreementType.PrePayment) form.controls.depositAmount.setValue(0);
     else form.controls.prePaymentAmount.setValue(0);
+  }
+  private buildCommitmentEditForms(): void {
+    this.chequeEditForms.clear();
+    this.noteEditForms.clear();
+    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, [Validators.required, Validators.min(1)]], ownerName: [item.ownerName, Validators.required] })));
+    this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, [Validators.required, Validators.min(1)]] })));
   }
   private requestPatientOptions(searchText: string): void {
     if (this.patientSearchTimer !== null) {
