@@ -3,7 +3,7 @@ import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
-import { finalize, forkJoin, Observable, Subscription } from "rxjs";
+import { finalize, forkJoin, map, Observable, Subscription, switchMap } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
@@ -60,6 +60,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   actionId: number | null = null;
   details: PatientFinancialCaseDetails | null = null;
   summary: PatientFinancialCaseSummary | null = null;
+  detailCheques: PatientCheque[] = [];
+  detailNotes: PatientPromissoryNote[] = [];
   patientOptions: FinancePatientOption[] = [];
   patientSearch = "";
   patientOptionsLoading = false;
@@ -86,6 +88,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
   }, { validators: agreedAmountsWithinTotal });
   readonly commitmentForm = this.fb.group({ type: [FinancialSourceType.Cheque, Validators.required], amount: [null as number | null, [Validators.required, Validators.min(1)]], identifier: ["", Validators.required], ownerName: [""], dueDate: [null as Date | null, Validators.required] });
+  readonly chequeEditForms = new FormArray<any>([]);
+  readonly noteEditForms = new FormArray<any>([]);
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
   private readonly destroyRef = inject(DestroyRef);
@@ -190,7 +194,22 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
 
   openDetails(id: number): void {
     this.loading = true;
-    forkJoin({ details: this.api.getCase(id), summary: this.api.getCaseSummary(id) }).pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: ({ details, summary }) => { this.details = details; this.summary = summary; this.editForm.reset({ totalAmount: details.case.totalAmount, prePaymentAmount: details.case.prePaymentAmount ?? 0, depositAmount: details.case.depositAmount ?? 0, agreementType: details.case.agreementType }); }, error: (e) => this.showError(e) });
+    this.api.getCase(id).pipe(
+      switchMap(details => forkJoin({
+        details: [details],
+        summary: this.api.getCaseSummary(id),
+        cheques: details.cheques ? [details.cheques] : this.api.getCheques({ patientId: details.case.patientId, page: 1, pageSize: 200 }).pipe(map(result => result.items.filter(item => item.patientFinancialCaseId === id))),
+        notes: details.promissoryNotes ? [details.promissoryNotes] : this.api.getPromissoryNotes({ patientId: details.case.patientId, page: 1, pageSize: 200 }).pipe(map(result => result.items.filter(item => item.patientFinancialCaseId === id))),
+      })),
+      finalize(() => { this.loading = false; this.cdr.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({ next: ({ details, summary, cheques, notes }) => {
+      this.details = details;
+      this.summary = summary;
+      this.detailCheques = cheques;
+      this.detailNotes = notes;
+      this.buildCommitmentEditForms();
+    }, error: (e) => this.showError(e) });
   }
   updateCase(): void {
     if (!this.details || this.editForm.invalid || this.submitting) { this.editForm.markAllAsTouched(); return; }
@@ -199,8 +218,21 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.submitting = true;
     this.api.updateCase(id, { totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: result => { if (!result.isSuccess) { this.toast.error(result.message); return; } this.toast.success(result.message || "اطلاعات پرونده به‌روزرسانی شد."); this.load(); this.openDetails(id); }, error: e => this.showError(e) });
   }
-  closeDetails(): void { this.details = null; this.summary = null; }
-  cancelCase(item: PatientFinancialCase): void { if (item.status !== FinancialCaseStatus.Active || !confirm("پرونده مالی لغو شود؟ سابقه مالی حذف نخواهد شد.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "پرونده مالی لغو شد."); }
+  closeDetails(): void { this.details = null; this.summary = null; this.detailCheques = []; this.detailNotes = []; this.chequeEditForms.clear(); this.noteEditForms.clear(); }
+  canCancelCase(item: PatientFinancialCase): boolean { return item.status === FinancialCaseStatus.Active && item.agreementType === FinancialAgreementType.Deposit && item.totalPaidAmount === 0; }
+  cancelCase(item: PatientFinancialCase): void { if (!this.canCancelCase(item) || !confirm("ودیعه مالی لغو شود؟ سابقه مالی حذف نخواهد شد.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "ودیعه مالی لغو شد."); }
+  saveCheque(index: number): void {
+    const item = this.detailCheques[index]; const form = this.chequeEditForms.at(index);
+    if (!item || item.status !== CommitmentStatus.Pending || form.invalid || this.actionId !== null) { form?.markAllAsTouched(); return; }
+    const value = form.getRawValue() as { amount: number; ownerName: string };
+    this.mutate(item.id, this.api.updateCheque(item.id, { amount: Number(value.amount), ownerName: value.ownerName.trim() }), "اطلاعات قابل ویرایش چک ذخیره شد.");
+  }
+  saveNote(index: number): void {
+    const item = this.detailNotes[index]; const form = this.noteEditForms.at(index);
+    if (!item || item.status !== CommitmentStatus.Pending || form.invalid || this.actionId !== null) { form?.markAllAsTouched(); return; }
+    const value = form.getRawValue() as { amount: number };
+    this.mutate(item.id, this.api.updatePromissoryNote(item.id, { amount: Number(value.amount) }), "مبلغ سفته ذخیره شد.");
+  }
   updateStatus(kind: "cheque" | "note", id: number, status: 2 | 3 | 4, dueDate?: string): void {
     if (dueDate && !this.isCommitmentDue(dueDate)) {
       this.toast.error("ثبت نتیجه پرداخت فقط از روز سررسید امکان‌پذیر است.");
@@ -240,6 +272,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     today.setHours(0, 0, 0, 0);
     return dueDate.getTime() <= today.getTime();
   }
+  patientReference(name: string | null | undefined, fileNumber: string | number | null | undefined): string { return `${name?.trim() || "بیمار"} به شماره پرونده ${fileNumber || "—"}`; }
   private iso(value: Date): string { return value.toISOString(); }
   private apiDate(value: Date | null): string | null {
     if (!value) return null;
@@ -251,6 +284,12 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private clearInactiveAgreementAmount(form: typeof this.createForm | typeof this.editForm): void {
     if (form.controls.agreementType.value === FinancialAgreementType.PrePayment) form.controls.depositAmount.setValue(0);
     else form.controls.prePaymentAmount.setValue(0);
+  }
+  private buildCommitmentEditForms(): void {
+    this.chequeEditForms.clear();
+    this.noteEditForms.clear();
+    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, [Validators.required, Validators.min(1)]], ownerName: [item.ownerName, Validators.required] })));
+    this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, [Validators.required, Validators.min(1)]] })));
   }
   private requestPatientOptions(searchText: string): void {
     if (this.patientSearchTimer !== null) {
