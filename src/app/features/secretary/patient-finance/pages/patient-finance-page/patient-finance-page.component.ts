@@ -33,6 +33,13 @@ function agreedAmountsWithinTotal(control: AbstractControl): ValidationErrors | 
   return prePayment + deposit > total ? { agreedAmountsExceedTotal: true } : null;
 }
 
+function todayOrLater(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+  const selected = new Date(control.value); const today = new Date();
+  selected.setHours(0, 0, 0, 0); today.setHours(0, 0, 0, 0);
+  return selected.getTime() < today.getTime() ? { pastDate: true } : null;
+}
+
 @Component({
   selector: "app-patient-finance-page",
   standalone: true,
@@ -53,6 +60,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   readonly FinancialCaseStatus = FinancialCaseStatus;
   readonly CommitmentStatus = CommitmentStatus;
   readonly DebtStatus = DebtStatus;
+  readonly today = (() => { const value = new Date(); value.setHours(0, 0, 0, 0); return value; })();
   activeTab: FinanceTab = "cases";
   items: ListItem[] = [];
   totalCount = 0;
@@ -92,7 +100,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     depositAmount: [0, [Validators.required, Validators.min(0)]],
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
   }, { validators: agreedAmountsWithinTotal });
-  readonly commitmentForm = this.fb.group({ type: [FinancialSourceType.Cheque, Validators.required], amount: [null as number | null, [Validators.required, Validators.min(1)]], identifier: ["", Validators.required], ownerName: [""], dueDate: [null as Date | null, Validators.required] });
+  readonly commitmentForm = this.fb.group({ type: [FinancialSourceType.Cheque, Validators.required], amount: [null as number | null, [Validators.required, Validators.min(1)]], identifier: ["", Validators.required], ownerName: [""], dueDate: [null as Date | null, [Validators.required, todayOrLater]] });
   readonly chequeEditForms = new FormArray<ChequeEditForm>([]);
   readonly noteEditForms = new FormArray<NoteEditForm>([]);
 
@@ -130,7 +138,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       finalize(() => { this.commitmentModalLoading = false; this.cdr.markForCheck(); }),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
-      next: result => { this.commitmentModalItems = result.items ?? []; },
+      next: result => { this.commitmentModalItems = (result.items ?? []).filter(commitment => commitment.patientFinancialCaseId === item.id); },
       error: (error: HttpErrorResponse) => this.showError(error),
     });
   }
@@ -165,8 +173,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     }, 400);
   }
   closePatientDropdown(): void { setTimeout(() => { this.patientDropdownOpen = false; this.cdr.markForCheck(); }, 150); }
-  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
-  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
+  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
+  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   onCreateAgreementChange(): void { this.clearInactiveAgreementAmount(this.createForm); }
@@ -185,6 +193,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.loading = true;
     const raw = this.filters.getRawValue();
     const query = { ...raw, fromDate: this.apiDate(raw.fromDate), toDate: this.apiDate(raw.toDate), page: this.page, pageSize: this.pageSize };
+    if (this.activeTab === "debts" && query.status === null) query.status = DebtStatus.Unpaid;
     const request: Observable<PaginatedResult<ListItem>> = (this.activeTab === "cases" || this.isCommitmentTab ? this.api.getCases(query) : this.activeTab === "debts" ? this.api.getDebts(query) : this.activeTab === "transactions" ? this.api.getTransactions(query) : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
     request.pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result: PaginatedResult<any>) => {
       this.items = this.activeTab === "due" ? (result.items ?? []).filter((item: PatientFinancialCommitment) => this.isNearDue(item.dueDate)) : result.items ?? [];
