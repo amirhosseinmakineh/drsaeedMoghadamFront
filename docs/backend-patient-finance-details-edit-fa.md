@@ -553,7 +553,9 @@ Frontend دکمه‌های «تأیید پرداخت» و «ثبت عدم پرد
 POST /api/secretary/patient-debts/{debtId}/pay
 ```
 
-Backend باید در یک Transaction دیتابیس:
+Backend پیش از تسویه باید بررسی کند هیچ چک یا سفته‌ای با وضعیت `Pending` برای `patientFinancialCaseId` همان بدهی وجود ندارد. اگر تعهد در گردش وجود داشت، درخواست با `409 Conflict` و پیام «تا تعیین تکلیف همه چک‌ها و سفته‌های در گردش، تسویه کامل بدهی امکان‌پذیر نیست» رد شود. این شرط باید در Backend اجرا شود و غیرفعال‌بودن دکمه Frontend کافی نیست.
+
+Backend سپس باید در یک Transaction دیتابیس:
 
 1. Debt را از `Unpaid` به `Paid` تغییر دهد؛
 2. Source اصلی چک یا سفته را به `Paid` تغییر دهد؛
@@ -633,7 +635,8 @@ unpaidPromissoryNoteAmount
 - [ ] دکمه ممکن است در UI وجود داشته باشد، اما Resolve قبل از سررسید در Backend رد می‌شود.
 - [ ] تعهد Paid یا Cancelled در due endpoint نمایش داده نمی‌شود.
 - [ ] Paid کردن Source دارای Debt قدیمی، Debt باز را باقی نمی‌گذارد.
-- [ ] پرداخت Debt، Source را Paid می‌کند و فقط یک Transaction می‌سازد.
+- [ ] تا وقتی Case تعهد Pending دارد، PayDebt با `409` رد می‌شود.
+- [ ] پرداخت Debt پس از تعیین تکلیف همه تعهدات، Source را Paid می‌کند و فقط یک Transaction می‌سازد.
 - [ ] `GET patient-debts?status=1` هیچ Debt تسویه‌شده یا ناسازگار با Source Paid برنمی‌گرداند.
 - [ ] Summary بعد از Paid، Unpaid و PayDebt بدون دوباره‌شماری مبلغ درست است.
 
@@ -646,7 +649,8 @@ unpaidPromissoryNoteAmount
 - [ ] Resolve قبل از سررسید در Domain/Service مسدود است.
 - [ ] Paid کردن Source هیچ Debt بازی برای همان Source باقی نمی‌گذارد.
 - [ ] Unpaid کردن Source فقط یک Debt ایجاد می‌کند.
-- [ ] PayDebt وضعیت Debt و Source را اتمیک Paid می‌کند و یک Transaction می‌سازد.
+- [ ] PayDebt در حضور هر چک یا سفته Pending مسدود است.
+- [ ] PayDebt پس از نبود تعهد در گردش، وضعیت Debt و Source را اتمیک Paid می‌کند و یک Transaction می‌سازد.
 - [ ] فیلتر `status=1` فهرست بدهی‌ها درست اعمال می‌شود.
 - [ ] داده‌های قدیمی ناسازگار با Migration یا Cleanup Job اصلاح شده‌اند.
 - [ ] Summary بعد از هر Mutation از اطلاعات قطعی و بدون دوباره‌شماری محاسبه می‌شود.

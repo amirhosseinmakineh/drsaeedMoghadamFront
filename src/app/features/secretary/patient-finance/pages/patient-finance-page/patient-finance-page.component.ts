@@ -80,6 +80,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   commitmentModalCase: PatientFinancialCase | null = null;
   commitmentModalItems: Array<PatientCheque | PatientPromissoryNote> = [];
   commitmentModalLoading = false;
+  debtEligibilityLoading = false;
+  readonly debtCaseIdsWithPendingCommitments = new Set<number>();
   private selectedFinancialPatientId: PatientGuid | null = null;
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
@@ -194,12 +196,13 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     const raw = this.filters.getRawValue();
     const query = { ...raw, fromDate: this.apiDate(raw.fromDate), toDate: this.apiDate(raw.toDate), page: this.page, pageSize: this.pageSize };
     if (this.activeTab === "debts" && query.status === null) query.status = DebtStatus.Unpaid;
+    if (this.activeTab !== "debts") this.debtCaseIdsWithPendingCommitments.clear();
     const request: Observable<PaginatedResult<ListItem>> = (this.isCommitmentTab
       ? this.getCasesWithSelectedCommitment(query)
       : this.activeTab === "cases"
         ? this.api.getCases(query)
         : this.activeTab === "debts"
-          ? this.api.getDebts(query)
+          ? this.getDebtsWithEligibility(query)
           : this.activeTab === "transactions"
             ? this.api.getTransactions(query)
             : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
@@ -219,6 +222,23 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       const items = (cases.items ?? []).filter(item => caseIds.has(item.id));
       return { ...cases, items, totalCount: items.length, totalPages: items.length ? 1 : 0, hasPrevious: false, hasNext: false };
     }));
+  }
+
+  private getDebtsWithEligibility(query: Record<string, string | number | boolean | null | undefined>): Observable<PaginatedResult<PatientDebt>> {
+    this.debtEligibilityLoading = true;
+    this.debtCaseIdsWithPendingCommitments.clear();
+    const pendingQuery = { status: CommitmentStatus.Pending, page: 1, pageSize: 100 };
+    return forkJoin({
+      debts: this.api.getDebts(query),
+      cheques: this.api.getCheques(pendingQuery),
+      notes: this.api.getPromissoryNotes(pendingQuery),
+    }).pipe(
+      map(({ debts, cheques, notes }) => {
+        [...(cheques.items ?? []), ...(notes.items ?? [])].forEach(item => this.debtCaseIdsWithPendingCommitments.add(item.patientFinancialCaseId));
+        return debts;
+      }),
+      finalize(() => { this.debtEligibilityLoading = false; this.cdr.markForCheck(); }),
+    );
   }
 
   submitCase(): void {
@@ -284,7 +304,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     const request = kind === "cheque" ? this.api.updateChequeStatus(id, status) : this.api.updatePromissoryNoteStatus(id, status);
     this.mutate(id, request, status === 3 ? "عدم پرداخت ثبت و مبلغ به بدهی بیمار تبدیل شد." : "وضعیت تعهد به‌روزرسانی شد.");
   }
-  payDebt(item: PatientDebt): void { if (item.status !== DebtStatus.Unpaid || !confirm("تسویه کامل این بدهی ثبت شود؟")) return; this.mutate(item.id, this.api.payDebt(item.id), "بدهی با موفقیت تسویه شد."); }
+  payDebt(item: PatientDebt): void { if (!this.canPayDebt(item) || !confirm("تسویه کامل این بدهی ثبت شود؟")) return; this.mutate(item.id, this.api.payDebt(item.id), "بدهی با موفقیت تسویه شد."); }
+  canPayDebt(item: PatientDebt): boolean { return item.status === DebtStatus.Unpaid && !this.debtEligibilityLoading && !this.debtCaseIdsWithPendingCommitments.has(item.patientFinancialCaseId); }
   addCommitment(): void {
     if (!this.details || this.commitmentForm.invalid || this.submitting) { this.commitmentForm.markAllAsTouched(); return; }
     const value = this.commitmentForm.getRawValue(); const caseId = this.details.case.id; const dueDate = this.iso(value.dueDate!); const type = Number(value.type);
