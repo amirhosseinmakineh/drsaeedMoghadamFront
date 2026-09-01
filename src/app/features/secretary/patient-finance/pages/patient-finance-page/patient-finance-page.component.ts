@@ -6,6 +6,7 @@ import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, Reacti
 import { finalize, forkJoin, map, Observable, Subscription, switchMap } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
+import { BaseModalComponent } from "../../../../../basemadual/overlays/modal/modal.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
 import { PatientFilesService } from "../../../patient-files/patient-files.service";
 import { CommitmentStatus, CreateChequeRequest, CreatePromissoryNoteRequest, DebtStatus, FinancialAgreementType, FinancialCaseStatus, FinancialSourceType, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientGuid, PatientPromissoryNote } from "../../models/patient-finance.models";
@@ -35,7 +36,7 @@ function agreedAmountsWithinTotal(control: AbstractControl): ValidationErrors | 
 @Component({
   selector: "app-patient-finance-page",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, SecretaryAccountShellComponent],
+  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, BaseModalComponent, SecretaryAccountShellComponent],
   templateUrl: "./patient-finance-page.component.html",
   styleUrl: "./patient-finance-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -275,6 +276,13 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     return dueDate.getTime() <= today.getTime();
   }
   patientReference(name: string | null | undefined, fileNumber: string | number | null | undefined): string { return `${name?.trim() || "بیمار"} به شماره پرونده ${fileNumber || "—"}`; }
+  recordFileNumber(item: { patientFileNumber?: string | number | null; fileNumber?: string | number | null }): string | number | null { return item.patientFileNumber ?? item.fileNumber ?? null; }
+  serviceLabel(serviceId: number | null | undefined, serviceName: string | null | undefined): string {
+    const byId = this.services.find(service => service.id === Number(serviceId))?.label;
+    if (byId) return byId;
+    const normalized = serviceName?.trim().toLowerCase();
+    return ({ composite: "کامپوزیت", implant: "ایمپلنت", laminate: "لمینت" } as Record<string, string>)[normalized ?? ""] ?? serviceName ?? "—";
+  }
   private iso(value: Date): string { return value.toISOString(); }
   private apiDate(value: Date | null): string | null {
     if (!value) return null;
