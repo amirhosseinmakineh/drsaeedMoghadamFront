@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { finalize, forkJoin, map, Observable, Subscription, switchMap } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
@@ -14,6 +14,8 @@ import { PatientFinanceApiService } from "../../services/patient-finance-api.ser
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
 interface FinancePatientOption { patientFileId: number; financialPatientId: string | null; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
+type ChequeEditForm = FormGroup<{ amount: FormControl<number | null>; ownerName: FormControl<string | null> }>;
+type NoteEditForm = FormGroup<{ amount: FormControl<number | null> }>;
 
 const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
@@ -88,8 +90,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
   }, { validators: agreedAmountsWithinTotal });
   readonly commitmentForm = this.fb.group({ type: [FinancialSourceType.Cheque, Validators.required], amount: [null as number | null, [Validators.required, Validators.min(1)]], identifier: ["", Validators.required], ownerName: [""], dueDate: [null as Date | null, Validators.required] });
-  readonly chequeEditForms = new FormArray<any>([]);
-  readonly noteEditForms = new FormArray<any>([]);
+  readonly chequeEditForms = new FormArray<ChequeEditForm>([]);
+  readonly noteEditForms = new FormArray<NoteEditForm>([]);
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
   private readonly destroyRef = inject(DestroyRef);
