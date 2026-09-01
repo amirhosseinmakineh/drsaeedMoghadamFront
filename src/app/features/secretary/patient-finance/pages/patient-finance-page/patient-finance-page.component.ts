@@ -194,11 +194,31 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     const raw = this.filters.getRawValue();
     const query = { ...raw, fromDate: this.apiDate(raw.fromDate), toDate: this.apiDate(raw.toDate), page: this.page, pageSize: this.pageSize };
     if (this.activeTab === "debts" && query.status === null) query.status = DebtStatus.Unpaid;
-    const request: Observable<PaginatedResult<ListItem>> = (this.activeTab === "cases" || this.isCommitmentTab ? this.api.getCases(query) : this.activeTab === "debts" ? this.api.getDebts(query) : this.activeTab === "transactions" ? this.api.getTransactions(query) : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
+    const request: Observable<PaginatedResult<ListItem>> = (this.isCommitmentTab
+      ? this.getCasesWithSelectedCommitment(query)
+      : this.activeTab === "cases"
+        ? this.api.getCases(query)
+        : this.activeTab === "debts"
+          ? this.api.getDebts(query)
+          : this.activeTab === "transactions"
+            ? this.api.getTransactions(query)
+            : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
     request.pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result: PaginatedResult<any>) => {
       this.items = this.activeTab === "due" ? (result.items ?? []).filter((item: PatientFinancialCommitment) => this.isNearDue(item.dueDate)) : result.items ?? [];
       this.totalCount = this.activeTab === "due" ? this.items.length : result.totalCount ?? 0;
     }, error: (error: HttpErrorResponse) => this.showError(error) });
+  }
+
+  private getCasesWithSelectedCommitment(query: Record<string, string | number | boolean | null | undefined>): Observable<PaginatedResult<PatientFinancialCase>> {
+    const commitmentQuery = { ...query, page: 1, pageSize: 100 };
+    const commitments = (this.activeTab === "cheques"
+      ? this.api.getCheques(commitmentQuery)
+      : this.api.getPromissoryNotes(commitmentQuery)) as Observable<PaginatedResult<PatientCheque | PatientPromissoryNote>>;
+    return forkJoin({ cases: this.api.getCases(query), commitments }).pipe(map(({ cases, commitments: result }) => {
+      const caseIds = new Set((result.items ?? []).map(item => item.patientFinancialCaseId));
+      const items = (cases.items ?? []).filter(item => caseIds.has(item.id));
+      return { ...cases, items, totalCount: items.length, totalPages: items.length ? 1 : 0, hasPrevious: false, hasNext: false };
+    }));
   }
 
   submitCase(): void {

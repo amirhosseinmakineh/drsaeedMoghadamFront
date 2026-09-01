@@ -407,3 +407,246 @@ AND NOT EXISTS(Paid transaction for this case)
 - [ ] Permissionهای مشاهده، ویرایش، تعیین وضعیت و لغو اعمال شده‌اند.
 - [ ] خطاها با Status Code مناسب و پیام فارسی قابل نمایش برمی‌گردند.
 - [ ] تست‌های Unit و Integration تمام سناریوهای بخش ۱۰ را پوشش می‌دهند.
+
+---
+
+## ۱۲. الحاقیه قرارداد Backend بر اساس آخرین تغییرات Frontend
+
+این بخش نیازمندی‌های جدید تب‌های «چک‌ها»، «سفته‌ها»، «نزدیک سررسید» و «بدهی‌ها» را مشخص می‌کند. موارد این بخش برای Backend الزامی‌اند؛ محدودیت‌ها و فیلترهای Frontend صرفاً برای تجربه کاربری هستند و جای Validation سمت سرور را نمی‌گیرند.
+
+### ۱۲.۱. تفکیک قطعی چک و سفته بر اساس پرونده
+
+Frontend هنگام بازکردن مودال چک‌های یک بیمار درخواست زیر را می‌فرستد:
+
+```http
+GET /api/secretary/patient-cheques?patientFinancialCaseId=412&page=1&pageSize=100
+```
+
+و برای مودال سفته‌ها:
+
+```http
+GET /api/secretary/patient-promissory-notes?patientFinancialCaseId=412&page=1&pageSize=100
+```
+
+Backend باید پارامتر `patientFinancialCaseId` را واقعاً در Query اعمال کند. پاسخ endpoint چک فقط باید `PatientCheque` و پاسخ endpoint سفته فقط باید `PatientPromissoryNote` برگرداند. هیچ رکورد متعلق به پرونده دیگر، حتی اگر بیمار آن یکسان باشد، مجاز نیست در پاسخ قرار گیرد.
+
+نمونه Query منطقی:
+
+```csharp
+var query = db.PatientCheques
+    .Where(x => x.PatientFinancialCaseId == request.PatientFinancialCaseId);
+```
+
+قواعد لازم:
+
+- `patientFinancialCaseId` باید به پرونده‌ای موجود و قابل مشاهده برای کاربر متصل باشد؛
+- عدم دسترسی به پرونده با `403` یا `404` کنترل‌شده پاسخ داده شود؛
+- فیلتر باید قبل از Pagination اعمال شود؛
+- `totalCount` تعداد رکوردهای همان نوع و همان پرونده باشد؛
+- چک و سفته نباید با یک DTO مشترک مبهم یا یک لیست ترکیبی برگردند؛
+- ترتیب پیشنهادی `dueDate ASC, id ASC` است.
+
+Frontend برای محافظت بیشتر پاسخ را دوباره با `patientFinancialCaseId` فیلتر می‌کند، اما Backend نباید به این فیلتر ثانویه متکی باشد.
+
+### ۱۲.۲. جلوگیری از ثبت سررسید گذشته
+
+تاریخ سررسید چک و سفته در تمام مسیرهای ایجاد باید **امروز یا آینده** باشد. این قانون باید با timezone رسمی سامانه (پیشنهاد: `Asia/Tehran`) بررسی شود، نه timezone مرورگر یا UTC خام.
+
+endpointهای مشمول:
+
+```http
+POST /api/secretary/patient-financial-cases
+POST /api/secretary/patient-financial-cases/{caseId}/cheques
+POST /api/secretary/patient-financial-cases/{caseId}/promissory-notes
+```
+
+قاعده اعتبارسنجی:
+
+```text
+DueDateInClinicTimezone.Date >= TodayInClinicTimezone.Date
+```
+
+در ایجاد پرونده، این Validation باید برای **تک‌تک** اعضای `cheques` و `promissoryNotes` انجام شود. وجود حتی یک تاریخ گذشته باید کل درخواست را با `400 Bad Request` رد کند و هیچ پرونده یا تعهد ناقصی در دیتابیس ثبت نشود.
+
+پاسخ خطای پیشنهادی:
+
+```json
+{
+  "isSuccess": false,
+  "message": "تاریخ سررسید چک یا سفته نمی‌تواند قبل از امروز باشد.",
+  "data": null
+}
+```
+
+تاریخ امروز مجاز است. برای تاریخ نامعتبر یا بدون timezone نیز باید قرارداد Parse مشخص و Validation قطعی وجود داشته باشد.
+
+### ۱۲.۳. قرارداد «نزدیک سررسید» با بازه سه‌روزه
+
+Frontend از endpoint زیر استفاده می‌کند:
+
+```http
+GET /api/secretary/patient-financial-commitments/due
+```
+
+قرارداد پیشنهادی این endpoint:
+
+- فقط تعهدهای `Pending` برگردند؛
+- تعهدهایی که تاریخ سررسید آن‌ها امروز، فردا، دو روز بعد یا سه روز بعد است نمایش داده شوند؛
+- تعهد Pending عقب‌افتاده نیز تا زمان تعیین تکلیف در لیست باقی بماند؛
+- تعهدهای `Paid`، `Unpaid` و `Cancelled` در این endpoint برگردانده نشوند؛
+- نوع تعهد در فیلد `type` با `Cheque=1` و `PromissoryNote=2` مشخص شود؛
+- پاسخ شامل اطلاعات لازم برای عنوان بیمار و ثبت نتیجه باشد.
+
+شرط منطقی پیشنهادی:
+
+```text
+Status == Pending
+AND DueDate.Date <= Today.Date + 3 days
+```
+
+نمونه آیتم پاسخ:
+
+```json
+{
+  "id": 810,
+  "type": 1,
+  "patientFinancialCaseId": 412,
+  "patientId": "63d14ab0-d729-4507-a59f-cf9bb463c721",
+  "patientName": "مریم احمدی",
+  "patientFileNumber": "1405-1024",
+  "amount": 35000000,
+  "dueDate": "2026-09-04T00:00:00+03:30",
+  "status": 1
+}
+```
+
+Frontend دکمه‌های «تأیید پرداخت» و «ثبت عدم پرداخت» را برای سه روز مانده به سررسید غیرفعال نمایش می‌دهد و در روز سررسید فعال می‌کند. Backend نیز باید مستقل از UI، هر درخواست تعیین وضعیت قبل از روز سررسید را رد کند.
+
+### ۱۲.۴. سازگاری وضعیت چک/سفته، تراکنش و بدهی
+
+مشکل مهمی که Backend باید از آن جلوگیری کند، نمایش بدهی باز برای چک یا سفته‌ای است که بعداً پرداخت‌شده محسوب شده است. وضعیت Source، Debt و Transaction باید همواره سازگار بماند.
+
+#### ثبت پرداخت مستقیم تعهد
+
+هنگام تغییر وضعیت یک چک یا سفته Pending به `Paid`:
+
+1. وضعیت Source به `Paid` تغییر کند؛
+2. دقیقاً یک `PaymentTransaction` برای همان `sourceType + sourceId` ساخته شود؛
+3. هیچ Debt باز برای همان Source وجود نداشته باشد؛
+4. اگر به علت داده قدیمی Debt باز وجود دارد، در همان Transaction دیتابیس به `Paid/Cancelled` تبدیل شود؛
+5. Summary پرونده دوباره محاسبه شود.
+
+#### ثبت عدم پرداخت
+
+هنگام تغییر وضعیت Pending به `Unpaid`:
+
+1. وضعیت Source به `Unpaid` تغییر کند؛
+2. دقیقاً یک Debt باز برای همان `sourceType + sourceId` ساخته شود؛
+3. PaymentTransaction ساخته نشود؛
+4. Unique Constraint یا Idempotency مانع Debt تکراری شود.
+
+#### تسویه بدهی
+
+هنگام فراخوانی:
+
+```http
+POST /api/secretary/patient-debts/{debtId}/pay
+```
+
+Backend باید در یک Transaction دیتابیس:
+
+1. Debt را از `Unpaid` به `Paid` تغییر دهد؛
+2. Source اصلی چک یا سفته را به `Paid` تغییر دهد؛
+3. دقیقاً یک PaymentTransaction ایجاد کند؛
+4. Summary و مجموع پرداخت‌شده/مانده پرونده را به‌روزرسانی کند؛
+5. از اجرای دوباره عملیات و ایجاد پرداخت تکراری جلوگیری کند.
+
+### ۱۲.۵. قرارداد فهرست بدهی‌ها
+
+Frontend برای نمایش بدهی‌های جاری درخواست زیر را ارسال می‌کند:
+
+```http
+GET /api/secretary/patient-debts?status=1&page=1&pageSize=20
+```
+
+Backend باید فیلتر `status=1` را اعمال کند و فقط Debtهای واقعاً باز را برگرداند. یک Debt نباید صرفاً به علت باقی‌ماندن رکورد تاریخی، باز محسوب شود؛ وضعیت آن باید با Source اصلی و تراکنش‌های قطعی سازگار باشد.
+
+قواعد پیشنهادی Integrity:
+
+```text
+Open Debt is valid only when:
+Debt.Status == Unpaid
+AND Source.Status == Unpaid
+AND no successful payment transaction exists for the same source
+```
+
+برای داده‌های قدیمی ناسازگار، Migration یا Cleanup Job لازم است:
+
+- Debt باز دارای Source پرداخت‌شده بسته شود؛
+- Debt تکراری بر اساس `sourceType + sourceId` ادغام/اصلاح شود؛
+- تراکنش تکراری شناسایی و مطابق قواعد حسابداری اصلاح شود؛
+- پس از Cleanup یک Unique Index مناسب اضافه شود.
+
+پیشنهاد Constraint:
+
+```text
+UNIQUE (SourceType, SourceId) WHERE DebtStatus = Unpaid
+UNIQUE (SourceType, SourceId, TransactionType)
+```
+
+نحوه دقیق Partial Index با توجه به Database Provider تعیین شود.
+
+### ۱۲.۶. محاسبات مالی بعد از تأیید یا رد
+
+بعد از تعیین تکلیف تعهد، مقادیر زیر باید فقط در Backend محاسبه و در endpoint Summary برگردانده شوند:
+
+```text
+totalPaidAmount
+remainingAmount
+totalDebtAmount
+paidChequeAmount
+pendingChequeAmount
+unpaidChequeAmount
+paidPromissoryNoteAmount
+pendingPromissoryNoteAmount
+unpaidPromissoryNoteAmount
+```
+
+قواعد پایه:
+
+- `Paid` وارد `totalPaidAmount` می‌شود؛
+- `Pending` نه پرداخت است و نه بدهی قطعی؛
+- `Unpaid` تا قبل از تسویه وارد `totalDebtAmount` می‌شود؛
+- Debt تسویه‌شده دیگر وارد `totalDebtAmount` نمی‌شود و مبلغ پرداخت آن فقط یک‌بار در `totalPaidAmount` محاسبه می‌شود؛
+- `remainingAmount` و `totalDebtAmount` مفاهیم مستقل‌اند و نباید با جمع ساده یا دوباره‌شماری Source و Debt محاسبه شوند.
+
+تمام Mutationهای وضعیت باید پس از Commit پاسخ موفق بدهند تا Refresh بعدی Frontend Summary قطعی و سازگار دریافت کند.
+
+### ۱۲.۷. تست‌های پذیرش تکمیلی
+
+- [ ] درخواست چک با `patientFinancialCaseId=A` هیچ چک متعلق به Case B را برنمی‌گرداند.
+- [ ] endpoint سفته هیچ DTO چک برنمی‌گرداند و بالعکس.
+- [ ] ایجاد چک یا سفته با سررسید دیروز با `400` رد می‌شود.
+- [ ] ایجاد چک یا سفته با سررسید امروز موفق است.
+- [ ] اگر یکی از تعهدات آرایه ایجاد پرونده تاریخ گذشته داشته باشد، کل عملیات Rollback می‌شود.
+- [ ] تعهد Pending سه روز مانده به موعد در due endpoint نمایش داده می‌شود.
+- [ ] دکمه ممکن است در UI وجود داشته باشد، اما Resolve قبل از سررسید در Backend رد می‌شود.
+- [ ] تعهد Paid یا Cancelled در due endpoint نمایش داده نمی‌شود.
+- [ ] Paid کردن Source دارای Debt قدیمی، Debt باز را باقی نمی‌گذارد.
+- [ ] پرداخت Debt، Source را Paid می‌کند و فقط یک Transaction می‌سازد.
+- [ ] `GET patient-debts?status=1` هیچ Debt تسویه‌شده یا ناسازگار با Source Paid برنمی‌گرداند.
+- [ ] Summary بعد از Paid، Unpaid و PayDebt بدون دوباره‌شماری مبلغ درست است.
+
+### ۱۲.۸. چک‌لیست فوری تیم Backend
+
+- [ ] فیلتر `patientFinancialCaseId` در endpointهای چک و سفته قبل از Pagination اعمال شده است.
+- [ ] پاسخ چک و سفته کاملاً تفکیک شده است.
+- [ ] سررسید گذشته در Create Case، Add Cheque و Add Promissory Note رد می‌شود.
+- [ ] due endpoint فقط Pendingهای تا سه روز آینده و Pendingهای عقب‌افتاده را می‌دهد.
+- [ ] Resolve قبل از سررسید در Domain/Service مسدود است.
+- [ ] Paid کردن Source هیچ Debt بازی برای همان Source باقی نمی‌گذارد.
+- [ ] Unpaid کردن Source فقط یک Debt ایجاد می‌کند.
+- [ ] PayDebt وضعیت Debt و Source را اتمیک Paid می‌کند و یک Transaction می‌سازد.
+- [ ] فیلتر `status=1` فهرست بدهی‌ها درست اعمال می‌شود.
+- [ ] داده‌های قدیمی ناسازگار با Migration یا Cleanup Job اصلاح شده‌اند.
+- [ ] Summary بعد از هر Mutation از اطلاعات قطعی و بدون دوباره‌شماری محاسبه می‌شود.
