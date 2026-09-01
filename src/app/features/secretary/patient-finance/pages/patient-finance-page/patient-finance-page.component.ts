@@ -2,18 +2,21 @@ import { CommonModule } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
-import { finalize, forkJoin, Observable, Subscription } from "rxjs";
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
+import { finalize, forkJoin, map, Observable, of, Subscription, switchMap } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
+import { BaseModalComponent } from "../../../../../basemadual/overlays/modal/modal.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
 import { PatientFilesService } from "../../../patient-files/patient-files.service";
-import { CommitmentStatus, CreateChequeRequest, CreatePromissoryNoteRequest, DebtStatus, FinancialAgreementType, FinancialCaseStatus, FinancialSourceType, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientGuid, PatientPromissoryNote } from "../../models/patient-finance.models";
+import { CommitmentStatus, DebtStatus, FinancialAgreementType, FinancialCaseStatus, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientGuid, PatientPromissoryNote } from "../../models/patient-finance.models";
 import { PatientFinanceApiService } from "../../services/patient-finance-api.service";
 
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
 interface FinancePatientOption { patientFileId: number; financialPatientId: string | null; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
+type ChequeEditForm = FormGroup<{ amount: FormControl<number | null>; ownerName: FormControl<string | null> }>;
+type NoteEditForm = FormGroup<{ amount: FormControl<number | null> }>;
 
 const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
@@ -30,10 +33,17 @@ function agreedAmountsWithinTotal(control: AbstractControl): ValidationErrors | 
   return prePayment + deposit > total ? { agreedAmountsExceedTotal: true } : null;
 }
 
+function todayOrLater(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) return null;
+  const selected = new Date(control.value); const today = new Date();
+  selected.setHours(0, 0, 0, 0); today.setHours(0, 0, 0, 0);
+  return selected.getTime() < today.getTime() ? { pastDate: true } : null;
+}
+
 @Component({
   selector: "app-patient-finance-page",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, SecretaryAccountShellComponent],
+  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, BaseModalComponent, SecretaryAccountShellComponent],
   templateUrl: "./patient-finance-page.component.html",
   styleUrl: "./patient-finance-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +60,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   readonly FinancialCaseStatus = FinancialCaseStatus;
   readonly CommitmentStatus = CommitmentStatus;
   readonly DebtStatus = DebtStatus;
+  readonly today = (() => { const value = new Date(); value.setHours(0, 0, 0, 0); return value; })();
   activeTab: FinanceTab = "cases";
   items: ListItem[] = [];
   totalCount = 0;
@@ -64,7 +75,11 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientSearch = "";
   patientOptionsLoading = false;
   patientDropdownOpen = false;
-  selectedCommitmentPatient: { id: PatientGuid; name: string } | null = null;
+  commitmentModalCase: PatientFinancialCase | null = null;
+  commitmentModalItems: Array<PatientCheque | PatientPromissoryNote> = [];
+  commitmentModalLoading = false;
+  debtEligibilityLoading = false;
+  readonly debtCaseIdsWithPendingCommitments = new Set<number>();
   private selectedFinancialPatientId: PatientGuid | null = null;
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
@@ -79,13 +94,11 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
     cheques: this.fb.array([]), promissoryNotes: this.fb.array([]),
   }, { validators: [commitmentRequired, agreedAmountsWithinTotal] });
-  readonly editForm = this.fb.group({
-    totalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
-    prePaymentAmount: [0, [Validators.required, Validators.min(0)]],
-    depositAmount: [0, [Validators.required, Validators.min(0)]],
-    agreementType: [FinancialAgreementType.Deposit, Validators.required],
-  }, { validators: agreedAmountsWithinTotal });
-  readonly commitmentForm = this.fb.group({ type: [FinancialSourceType.Cheque, Validators.required], amount: [null as number | null, [Validators.required, Validators.min(1)]], identifier: ["", Validators.required], ownerName: [""], dueDate: [null as Date | null, Validators.required] });
+  // Kept as typed compatibility containers so older merged templates/helpers compile safely.
+  // The current details modal does not render or populate these arrays.
+  readonly chequeEditForms = new FormArray<ChequeEditForm>([]);
+  readonly noteEditForms = new FormArray<NoteEditForm>([]);
+
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
   private readonly destroyRef = inject(DestroyRef);
@@ -102,28 +115,30 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.page = 1;
     this.items = [];
     this.details = null;
-    this.selectedCommitmentPatient = null;
+    this.closeCommitmentModal();
     if (tab === "create") {
-      this.patientDropdownOpen = true;
-      this.requestPatientOptions("");
+      this.patientDropdownOpen = false;
       return;
     }
     this.load();
   }
   get isCommitmentTab(): boolean { return this.activeTab === "cheques" || this.activeTab === "notes"; }
-  get showingPatientCommitments(): boolean { return this.isCommitmentTab && this.selectedCommitmentPatient !== null; }
   showPatientCommitments(item: PatientFinancialCase): void {
-    this.selectedCommitmentPatient = { id: item.patientId, name: item.patientName };
-    this.page = 1;
-    this.items = [];
-    this.load();
+    this.commitmentModalCase = item;
+    this.commitmentModalItems = [];
+    this.commitmentModalLoading = true;
+    const request = (this.activeTab === "cheques"
+      ? this.api.getCheques({ patientFinancialCaseId: item.id, page: 1, pageSize: 100 })
+      : this.api.getPromissoryNotes({ patientFinancialCaseId: item.id, page: 1, pageSize: 100 })) as Observable<PaginatedResult<PatientCheque | PatientPromissoryNote>>;
+    request.pipe(
+      finalize(() => { this.commitmentModalLoading = false; this.cdr.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: result => { this.commitmentModalItems = (result.items ?? []).filter(commitment => commitment.patientFinancialCaseId === item.id); },
+      error: (error: HttpErrorResponse) => this.showError(error),
+    });
   }
-  showFinancialCases(): void {
-    this.selectedCommitmentPatient = null;
-    this.page = 1;
-    this.items = [];
-    this.load();
-  }
+  closeCommitmentModal(): void { this.commitmentModalCase = null; this.commitmentModalItems = []; this.commitmentModalLoading = false; }
   loadPatientOptions(): void {
     if (this.patientOptionsLoading || this.patientOptions.length) return;
     this.requestPatientOptions("");
@@ -154,12 +169,11 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     }, 400);
   }
   closePatientDropdown(): void { setTimeout(() => { this.patientDropdownOpen = false; this.cdr.markForCheck(); }, 150); }
-  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
-  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, Validators.required] })); this.createForm.updateValueAndValidity(); }
+  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
+  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   onCreateAgreementChange(): void { this.clearInactiveAgreementAmount(this.createForm); }
-  onEditAgreementChange(): void { this.clearInactiveAgreementAmount(this.editForm); }
   applyFilters(): void {
     const { year, month } = this.filters.getRawValue();
     if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک عدد معتبر باشد."); return; }
@@ -174,10 +188,51 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.loading = true;
     const raw = this.filters.getRawValue();
     const query = { ...raw, fromDate: this.apiDate(raw.fromDate), toDate: this.apiDate(raw.toDate), page: this.page, pageSize: this.pageSize };
-    if (this.selectedCommitmentPatient) query.patientId = this.selectedCommitmentPatient.id;
-    const showCases = this.isCommitmentTab && !this.selectedCommitmentPatient;
-    const request: Observable<PaginatedResult<ListItem>> = (this.activeTab === "cases" || showCases ? this.api.getCases(query) : this.activeTab === "cheques" ? this.api.getCheques(query) : this.activeTab === "notes" ? this.api.getPromissoryNotes(query) : this.activeTab === "debts" ? this.api.getDebts(query) : this.activeTab === "transactions" ? this.api.getTransactions(query) : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
-    request.pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result: PaginatedResult<any>) => { this.items = result.items ?? []; this.totalCount = result.totalCount ?? 0; }, error: (error: HttpErrorResponse) => this.showError(error) });
+    if (this.activeTab === "debts" && query.status === null) query.status = DebtStatus.Unpaid;
+    if (this.activeTab !== "debts") this.debtCaseIdsWithPendingCommitments.clear();
+    const request: Observable<PaginatedResult<ListItem>> = (this.isCommitmentTab
+      ? this.getCasesWithSelectedCommitment(query)
+      : this.activeTab === "cases"
+        ? this.api.getCases(query)
+        : this.activeTab === "debts"
+          ? this.getDebtsWithEligibility(query)
+          : this.activeTab === "transactions"
+            ? this.api.getTransactions(query)
+            : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
+    request.pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result: PaginatedResult<any>) => {
+      this.items = this.activeTab === "due" ? (result.items ?? []).filter((item: PatientFinancialCommitment) => this.isNearDue(item.dueDate)) : result.items ?? [];
+      this.totalCount = this.activeTab === "due" ? this.items.length : result.totalCount ?? 0;
+    }, error: (error: HttpErrorResponse) => this.showError(error) });
+  }
+
+  private getCasesWithSelectedCommitment(query: Record<string, string | number | boolean | null | undefined>): Observable<PaginatedResult<PatientFinancialCase>> {
+    const commitmentQuery = { ...query, page: 1, pageSize: 100 };
+    const commitments = (this.activeTab === "cheques"
+      ? this.api.getCheques(commitmentQuery)
+      : this.api.getPromissoryNotes(commitmentQuery)) as Observable<PaginatedResult<PatientCheque | PatientPromissoryNote>>;
+    return forkJoin({ cases: this.api.getCases(query), commitments }).pipe(map(({ cases, commitments: result }) => {
+      const caseIds = new Set((result.items ?? []).map(item => item.patientFinancialCaseId));
+      const items = (cases.items ?? []).filter(item => caseIds.has(item.id));
+      return { ...cases, items, totalCount: items.length, totalPages: items.length ? 1 : 0, hasPrevious: false, hasNext: false };
+    }));
+  }
+
+  private getDebtsWithEligibility(query: Record<string, string | number | boolean | null | undefined>): Observable<PaginatedResult<PatientDebt>> {
+    this.debtEligibilityLoading = true;
+    this.debtCaseIdsWithPendingCommitments.clear();
+    return this.api.getDebts(query).pipe(
+      switchMap(debts => {
+        const caseIds = [...new Set((debts.items ?? []).map(item => item.patientFinancialCaseId))];
+        if (!caseIds.length) return of(debts);
+        return forkJoin(caseIds.map(caseId => this.api.getCaseSummary(caseId).pipe(map(summary => ({ caseId, summary }))))).pipe(
+          map(summaries => {
+            summaries.filter(({ summary }) => summary.pendingChequeAmount > 0 || summary.pendingPromissoryNoteAmount > 0).forEach(({ caseId }) => this.debtCaseIdsWithPendingCommitments.add(caseId));
+            return debts;
+          }),
+        );
+      }),
+      finalize(() => { this.debtEligibilityLoading = false; this.cdr.markForCheck(); }),
+    );
   }
 
   submitCase(): void {
@@ -190,17 +245,17 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
 
   openDetails(id: number): void {
     this.loading = true;
-    forkJoin({ details: this.api.getCase(id), summary: this.api.getCaseSummary(id) }).pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: ({ details, summary }) => { this.details = details; this.summary = summary; this.editForm.reset({ totalAmount: details.case.totalAmount, prePaymentAmount: details.case.prePaymentAmount ?? 0, depositAmount: details.case.depositAmount ?? 0, agreementType: details.case.agreementType }); }, error: (e) => this.showError(e) });
-  }
-  updateCase(): void {
-    if (!this.details || this.editForm.invalid || this.submitting) { this.editForm.markAllAsTouched(); return; }
-    const id = this.details.case.id;
-    const value = this.editForm.getRawValue();
-    this.submitting = true;
-    this.api.updateCase(id, { totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: result => { if (!result.isSuccess) { this.toast.error(result.message); return; } this.toast.success(result.message || "اطلاعات پرونده به‌روزرسانی شد."); this.load(); this.openDetails(id); }, error: e => this.showError(e) });
+    forkJoin({ details: this.api.getCase(id), summary: this.api.getCaseSummary(id) }).pipe(
+      finalize(() => { this.loading = false; this.cdr.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({ next: ({ details, summary }) => {
+      this.details = details;
+      this.summary = summary;
+    }, error: (e) => this.showError(e) });
   }
   closeDetails(): void { this.details = null; this.summary = null; }
-  cancelCase(item: PatientFinancialCase): void { if (item.status !== FinancialCaseStatus.Active || !confirm("پرونده مالی لغو شود؟ سابقه مالی حذف نخواهد شد.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "پرونده مالی لغو شد."); }
+  canCancelCase(item: PatientFinancialCase): boolean { return item.status === FinancialCaseStatus.Active && item.agreementType === FinancialAgreementType.Deposit && item.totalPaidAmount === 0; }
+  cancelCase(item: PatientFinancialCase): void { if (!this.canCancelCase(item) || !confirm("ودیعه مالی لغو شود؟ سابقه مالی حذف نخواهد شد.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "ودیعه مالی لغو شد."); }
   updateStatus(kind: "cheque" | "note", id: number, status: 2 | 3 | 4, dueDate?: string): void {
     if (dueDate && !this.isCommitmentDue(dueDate)) {
       this.toast.error("ثبت نتیجه پرداخت فقط از روز سررسید امکان‌پذیر است.");
@@ -215,13 +270,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     const request = kind === "cheque" ? this.api.updateChequeStatus(id, status) : this.api.updatePromissoryNoteStatus(id, status);
     this.mutate(id, request, status === 3 ? "عدم پرداخت ثبت و مبلغ به بدهی بیمار تبدیل شد." : "وضعیت تعهد به‌روزرسانی شد.");
   }
-  payDebt(item: PatientDebt): void { if (item.status !== DebtStatus.Unpaid || !confirm("تسویه کامل این بدهی ثبت شود؟")) return; this.mutate(item.id, this.api.payDebt(item.id), "بدهی با موفقیت تسویه شد."); }
-  addCommitment(): void {
-    if (!this.details || this.commitmentForm.invalid || this.submitting) { this.commitmentForm.markAllAsTouched(); return; }
-    const value = this.commitmentForm.getRawValue(); const caseId = this.details.case.id; const dueDate = this.iso(value.dueDate!); const type = Number(value.type);
-    const request = type === FinancialSourceType.Cheque ? this.api.addCheque(caseId, { amount: Number(value.amount), sayadNumber: value.identifier!, ownerName: value.ownerName!, dueDate } as CreateChequeRequest) : this.api.addPromissoryNote(caseId, { amount: Number(value.amount), serialNumber: value.identifier!, dueDate } as CreatePromissoryNoteRequest);
-    this.submitting = true; request.pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (r) => { if (!r.isSuccess) { this.toast.error(r.message); return; } this.toast.success("تعهد جدید ثبت شد."); this.commitmentForm.reset({ type: FinancialSourceType.Cheque }); this.openDetails(caseId); }, error: e => this.showError(e) });
-  }
+  payDebt(item: PatientDebt): void { if (!this.canPayDebt(item) || !confirm("تسویه کامل این بدهی ثبت شود؟")) return; this.mutate(item.id, this.api.payDebt(item.id), "بدهی با موفقیت تسویه شد."); }
+  canPayDebt(item: PatientDebt): boolean { return item.status === DebtStatus.Unpaid && !this.debtEligibilityLoading && !this.debtCaseIdsWithPendingCommitments.has(item.patientFinancialCaseId); }
   caseItem(item: ListItem): PatientFinancialCase { return item as PatientFinancialCase; }
   chequeItem(item: ListItem): PatientCheque { return item as PatientCheque; }
   noteItem(item: ListItem): PatientPromissoryNote { return item as PatientPromissoryNote; }
@@ -240,6 +290,20 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     today.setHours(0, 0, 0, 0);
     return dueDate.getTime() <= today.getTime();
   }
+  isNearDue(value: string | null | undefined): boolean {
+    if (!value) return false;
+    const dueDate = new Date(value); if (Number.isNaN(dueDate.getTime())) return false;
+    const today = new Date(); dueDate.setHours(0, 0, 0, 0); today.setHours(0, 0, 0, 0);
+    return Math.ceil((dueDate.getTime() - today.getTime()) / 86_400_000) <= 3;
+  }
+  patientReference(name: string | null | undefined, fileNumber: string | number | null | undefined): string { return `${name?.trim() || "بیمار"} به شماره پرونده ${fileNumber || "—"}`; }
+  recordFileNumber(item: { patientFileNumber?: string | number | null; fileNumber?: string | number | null }): string | number | null { return item.patientFileNumber ?? item.fileNumber ?? null; }
+  serviceLabel(serviceId: number | null | undefined, serviceName: string | null | undefined): string {
+    const byId = this.services.find(service => service.id === Number(serviceId))?.label;
+    if (byId) return byId;
+    const normalized = serviceName?.trim().toLowerCase();
+    return ({ composite: "کامپوزیت", implant: "ایمپلنت", laminate: "لمینت" } as Record<string, string>)[normalized ?? ""] ?? serviceName ?? "—";
+  }
   private iso(value: Date): string { return value.toISOString(); }
   private apiDate(value: Date | null): string | null {
     if (!value) return null;
@@ -248,7 +312,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     const day = String(value.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
-  private clearInactiveAgreementAmount(form: typeof this.createForm | typeof this.editForm): void {
+  private clearInactiveAgreementAmount(form: typeof this.createForm): void {
     if (form.controls.agreementType.value === FinancialAgreementType.PrePayment) form.controls.depositAmount.setValue(0);
     else form.controls.prePaymentAmount.setValue(0);
   }
