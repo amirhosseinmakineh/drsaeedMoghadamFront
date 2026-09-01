@@ -98,35 +98,6 @@
     <div class="details-heading"><span>جزئیات حسابداری بیمار</span><strong>{{ serviceLabel(details.case.serviceId, details.case.serviceName) }}</strong></div>
     <div class="agreement-amounts"><div><span>پیش‌پرداخت توافق‌شده</span><strong>{{ money(details.case.prePaymentAmount) }}</strong></div><div><span>ودیعه توافق‌شده</span><strong>{{ money(details.case.depositAmount) }}</strong></div></div>
     @if (summary) { <div class="summary-grid"><article><span>مبلغ کل</span><strong>{{ money(summary.totalAmount) }}</strong></article><article class="green"><span>پرداخت قطعی</span><strong>{{ money(summary.totalPaidAmount) }}</strong></article><article class="orange"><span>مانده</span><strong>{{ money(summary.remainingAmount) }}</strong></article><article class="red"><span>بدهی باز</span><strong>{{ money(summary.totalDebtAmount) }}</strong></article></div> }
-    <section class="commitment-vectors" aria-label="چک‌ها و سفته‌های پرونده">
-      <h3>چک‌ها ({{ detailCheques.length }})</h3>
-      @if (!detailCheques.length) { <p class="vector-empty">چکی برای این بیمار ثبت نشده است.</p> }
-      @for (item of detailCheques; track item.id; let i = $index) {
-        <article class="commitment-vector cheque-vector" [class.locked]="item.status !== CommitmentStatus.Pending">
-          <div class="vector-title"><strong>چک شماره {{ i + 1 }}</strong><span class="badge s{{item.status}}">{{ statusLabel(item.status) }}</span></div>
-          <form [formGroup]="chequeEditForms.at(i)" (ngSubmit)="saveCheque(i)">
-            <label>مبلغ (ریال)<input type="number" min="1" formControlName="amount" [readonly]="item.status !== CommitmentStatus.Pending"></label>
-            <label>صاحب چک<input formControlName="ownerName" [readonly]="item.status !== CommitmentStatus.Pending"></label>
-            <div class="immutable-field"><span>شماره صیادی (غیرقابل تغییر)</span><strong dir="ltr">{{ item.sayadNumber }}</strong></div>
-            <div class="immutable-field"><span>تاریخ سررسید (غیرقابل تغییر)</span><strong>{{ date(item.dueDate) }}</strong></div>
-            @if (item.status === CommitmentStatus.Pending) { <button class="primary" type="submit" [disabled]="actionId !== null || chequeEditForms.at(i).invalid">ذخیره چک</button> }
-          </form>
-        </article>
-      }
-      <h3>سفته‌ها ({{ detailNotes.length }})</h3>
-      @if (!detailNotes.length) { <p class="vector-empty">سفته‌ای برای این بیمار ثبت نشده است.</p> }
-      @for (item of detailNotes; track item.id; let i = $index) {
-        <article class="commitment-vector note-vector" [class.locked]="item.status !== CommitmentStatus.Pending">
-          <div class="vector-title"><strong>سفته شماره {{ i + 1 }}</strong><span class="badge s{{item.status}}">{{ statusLabel(item.status) }}</span></div>
-          <form [formGroup]="noteEditForms.at(i)" (ngSubmit)="saveNote(i)">
-            <label>مبلغ (ریال)<input type="number" min="1" formControlName="amount" [readonly]="item.status !== CommitmentStatus.Pending"></label>
-            <div class="immutable-field"><span>سریال سفته (غیرقابل تغییر)</span><strong dir="ltr">{{ item.serialNumber }}</strong></div>
-            <div class="immutable-field"><span>تاریخ سررسید (غیرقابل تغییر)</span><strong>{{ date(item.dueDate) }}</strong></div>
-            @if (item.status === CommitmentStatus.Pending) { <button class="primary" type="submit" [disabled]="actionId !== null || noteEditForms.at(i).invalid">ذخیره سفته</button> }
-          </form>
-        </article>
-      }
-    </section>
   }
   </app-base-modal>
 </div>
