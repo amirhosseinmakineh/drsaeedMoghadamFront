@@ -69,7 +69,9 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientSearch = "";
   patientOptionsLoading = false;
   patientDropdownOpen = false;
-  selectedCommitmentPatient: { id: PatientGuid; name: string } | null = null;
+  commitmentModalCase: PatientFinancialCase | null = null;
+  commitmentModalItems: Array<PatientCheque | PatientPromissoryNote> = [];
+  commitmentModalLoading = false;
   private selectedFinancialPatientId: PatientGuid | null = null;
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
@@ -109,7 +111,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.page = 1;
     this.items = [];
     this.details = null;
-    this.selectedCommitmentPatient = null;
+    this.closeCommitmentModal();
     if (tab === "create") {
       this.patientDropdownOpen = false;
       return;
@@ -117,19 +119,22 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.load();
   }
   get isCommitmentTab(): boolean { return this.activeTab === "cheques" || this.activeTab === "notes"; }
-  get showingPatientCommitments(): boolean { return this.isCommitmentTab && this.selectedCommitmentPatient !== null; }
   showPatientCommitments(item: PatientFinancialCase): void {
-    this.selectedCommitmentPatient = { id: item.patientId, name: item.patientName };
-    this.page = 1;
-    this.items = [];
-    this.load();
+    this.commitmentModalCase = item;
+    this.commitmentModalItems = [];
+    this.commitmentModalLoading = true;
+    const request = (this.activeTab === "cheques"
+      ? this.api.getCheques({ patientFinancialCaseId: item.id, page: 1, pageSize: 100 })
+      : this.api.getPromissoryNotes({ patientFinancialCaseId: item.id, page: 1, pageSize: 100 })) as Observable<PaginatedResult<PatientCheque | PatientPromissoryNote>>;
+    request.pipe(
+      finalize(() => { this.commitmentModalLoading = false; this.cdr.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: result => { this.commitmentModalItems = result.items ?? []; },
+      error: (error: HttpErrorResponse) => this.showError(error),
+    });
   }
-  showFinancialCases(): void {
-    this.selectedCommitmentPatient = null;
-    this.page = 1;
-    this.items = [];
-    this.load();
-  }
+  closeCommitmentModal(): void { this.commitmentModalCase = null; this.commitmentModalItems = []; this.commitmentModalLoading = false; }
   loadPatientOptions(): void {
     if (this.patientOptionsLoading || this.patientOptions.length) return;
     this.requestPatientOptions("");
@@ -180,10 +185,11 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.loading = true;
     const raw = this.filters.getRawValue();
     const query = { ...raw, fromDate: this.apiDate(raw.fromDate), toDate: this.apiDate(raw.toDate), page: this.page, pageSize: this.pageSize };
-    if (this.selectedCommitmentPatient) query.patientId = this.selectedCommitmentPatient.id;
-    const showCases = this.isCommitmentTab && !this.selectedCommitmentPatient;
-    const request: Observable<PaginatedResult<ListItem>> = (this.activeTab === "cases" || showCases ? this.api.getCases(query) : this.activeTab === "cheques" ? this.api.getCheques(query) : this.activeTab === "notes" ? this.api.getPromissoryNotes(query) : this.activeTab === "debts" ? this.api.getDebts(query) : this.activeTab === "transactions" ? this.api.getTransactions(query) : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
-    request.pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result: PaginatedResult<any>) => { this.items = result.items ?? []; this.totalCount = result.totalCount ?? 0; }, error: (error: HttpErrorResponse) => this.showError(error) });
+    const request: Observable<PaginatedResult<ListItem>> = (this.activeTab === "cases" || this.isCommitmentTab ? this.api.getCases(query) : this.activeTab === "debts" ? this.api.getDebts(query) : this.activeTab === "transactions" ? this.api.getTransactions(query) : this.api.getDueCommitments(query)) as Observable<PaginatedResult<ListItem>>;
+    request.pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result: PaginatedResult<any>) => {
+      this.items = this.activeTab === "due" ? (result.items ?? []).filter((item: PatientFinancialCommitment) => this.isNearDue(item.dueDate)) : result.items ?? [];
+      this.totalCount = this.activeTab === "due" ? this.items.length : result.totalCount ?? 0;
+    }, error: (error: HttpErrorResponse) => this.showError(error) });
   }
 
   submitCase(): void {
@@ -273,6 +279,12 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     dueDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
     return dueDate.getTime() <= today.getTime();
+  }
+  isNearDue(value: string | null | undefined): boolean {
+    if (!value) return false;
+    const dueDate = new Date(value); if (Number.isNaN(dueDate.getTime())) return false;
+    const today = new Date(); dueDate.setHours(0, 0, 0, 0); today.setHours(0, 0, 0, 0);
+    return Math.ceil((dueDate.getTime() - today.getTime()) / 86_400_000) <= 3;
   }
   patientReference(name: string | null | undefined, fileNumber: string | number | null | undefined): string { return `${name?.trim() || "بیمار"} به شماره پرونده ${fileNumber || "—"}`; }
   recordFileNumber(item: { patientFileNumber?: string | number | null; fileNumber?: string | number | null }): string | number | null { return item.patientFileNumber ?? item.fileNumber ?? null; }
