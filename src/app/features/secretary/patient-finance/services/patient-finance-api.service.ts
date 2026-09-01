@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
 import { AuthService } from "../../../../core/auth/auth.service";
 import { environment } from "../../../../../environments/environment";
-import { ApiResult, CreateChequeRequest, CreateFinancialCaseRequest, CreatePromissoryNoteRequest, IdResponse, PageQuery, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote, UpdateFinancialCaseRequest } from "../models/patient-finance.models";
+import { ApiResult, CreateChequeRequest, CreateFinancialCaseRequest, CreatePromissoryNoteRequest, IdResponse, PageQuery, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote, UpdateChequeRequest, UpdateFinancialCaseRequest, UpdatePromissoryNoteRequest } from "../models/patient-finance.models";
 
 @Injectable({ providedIn: "root" })
 export class PatientFinanceApiService {
@@ -32,8 +32,10 @@ export class PatientFinanceApiService {
   addCheque(caseId: number, body: CreateChequeRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/cheques`, body, this.options()); }
   addPromissoryNote(caseId: number, body: CreatePromissoryNoteRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/promissory-notes`, body, this.options()); }
   getCheques(query: PageQuery) { return this.get<PaginatedResult<PatientCheque>>(`${this.baseUrl}/patient-cheques`, query); }
+  updateCheque(id: number, body: UpdateChequeRequest) { return this.http.put<ApiResult<IdResponse>>(`${this.baseUrl}/patient-cheques/${id}`, body, this.options()); }
   updateChequeStatus(id: number, status: 2 | 3 | 4) { return this.http.put<ApiResult<IdResponse>>(`${this.baseUrl}/patient-cheques/${id}/status`, { status }, this.options()); }
   getPromissoryNotes(query: PageQuery) { return this.get<PaginatedResult<PatientPromissoryNote>>(`${this.baseUrl}/patient-promissory-notes`, query); }
+  updatePromissoryNote(id: number, body: UpdatePromissoryNoteRequest) { return this.http.put<ApiResult<IdResponse>>(`${this.baseUrl}/patient-promissory-notes/${id}`, body, this.options()); }
   updatePromissoryNoteStatus(id: number, status: 2 | 3 | 4) { return this.http.put<ApiResult<IdResponse>>(`${this.baseUrl}/patient-promissory-notes/${id}/status`, { status }, this.options()); }
   getDebts(query: PageQuery) { return this.get<PaginatedResult<PatientDebt>>(`${this.baseUrl}/patient-debts`, query); }
   payDebt(id: number) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-debts/${id}/pay`, null, this.options()); }

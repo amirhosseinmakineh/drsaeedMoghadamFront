@@ -14,7 +14,9 @@ import { BaseDatepickerComponent } from "../../../shared/base/base-datepicker/ba
         language="fa"
         [label]="localizedLabel"
         [selectedDate]="value ?? undefined"
-        [unrestrictedDates]="true"
+        [minDate]="minDate"
+        [allowToday]="!!minDate"
+        [unrestrictedDates]="!minDate"
         [compact]="true"
         (dateChange)="valueChange.emit($event)"
       />
@@ -29,6 +31,7 @@ export class PersianDatePickerComponent {
   @Input() value: Date | null = null;
   @Input() required = false;
   @Input() disabled = false;
+  @Input() minDate: Date | null = null;
   @Input() error = "";
   @Output() valueChange = new EventEmitter<Date | null>();
 
