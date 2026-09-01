@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { finalize, forkJoin, map, Observable, of, Subscription, switchMap } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
@@ -96,6 +96,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
     cheques: this.fb.array([]), promissoryNotes: this.fb.array([]),
   }, { validators: [commitmentRequired, agreedAmountsWithinTotal] });
+  // Kept as typed compatibility containers so older merged templates/helpers compile safely.
+  // The current details modal does not render or populate these arrays.
+  readonly chequeEditForms = new FormArray<ChequeEditForm>([]);
+  readonly noteEditForms = new FormArray<NoteEditForm>([]);
 
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
