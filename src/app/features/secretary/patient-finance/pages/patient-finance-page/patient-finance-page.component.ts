@@ -111,8 +111,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.details = null;
     this.selectedCommitmentPatient = null;
     if (tab === "create") {
-      this.patientDropdownOpen = true;
-      this.requestPatientOptions("");
+      this.patientDropdownOpen = false;
       return;
     }
     this.load();
