@@ -15,6 +15,8 @@ import { PatientFinanceApiService } from "../../services/patient-finance-api.ser
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
 interface FinancePatientOption { patientFileId: number; financialPatientId: string | null; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
+type ChequeEditForm = FormGroup<{ amount: FormControl<number | null>; ownerName: FormControl<string | null> }>;
+type NoteEditForm = FormGroup<{ amount: FormControl<number | null> }>;
 
 const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
@@ -69,6 +71,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   actionId: number | null = null;
   details: PatientFinancialCaseDetails | null = null;
   summary: PatientFinancialCaseSummary | null = null;
+  detailCheques: PatientCheque[] = [];
+  detailNotes: PatientPromissoryNote[] = [];
   patientOptions: FinancePatientOption[] = [];
   patientSearch = "";
   patientOptionsLoading = false;
@@ -309,6 +313,12 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private clearInactiveAgreementAmount(form: typeof this.createForm): void {
     if (form.controls.agreementType.value === FinancialAgreementType.PrePayment) form.controls.depositAmount.setValue(0);
     else form.controls.prePaymentAmount.setValue(0);
+  }
+  private buildCommitmentEditForms(): void {
+    this.chequeEditForms.clear();
+    this.noteEditForms.clear();
+    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, [Validators.required, Validators.min(1)]], ownerName: [item.ownerName, Validators.required] })));
+    this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, [Validators.required, Validators.min(1)]] })));
   }
   private requestPatientOptions(searchText: string): void {
     if (this.patientSearchTimer !== null) {
