@@ -2,7 +2,7 @@
 <div class="finance-page" dir="rtl">
   <header class="page-header">
     <div><a routerLink="/dashboard/secretary">بازگشت به داشبورد</a><p>حسابداری بیماران</p><h1>مدیریت حسابداری بیماران</h1></div>
-    <button type="button" class="primary" (click)="selectTab('create')">+ ثبت حساب جدید</button>
+    <button type="button" class="primary" (click)="selectTab('create')">+ ثبت حساب مالی جدید</button>
   </header>
 
   <nav class="tabs" aria-label="بخش‌های حسابداری بیمار">
@@ -49,12 +49,12 @@
       <label>جست‌وجو<input formControlName="search" placeholder="نام یا تلفن بیمار"></label>
       @if (activeTab !== 'transactions' && activeTab !== 'due' && !isCommitmentTab) { <label>وضعیت<select formControlName="status"><option [ngValue]="null">همه</option><option [ngValue]="1">در انتظار / فعال</option><option [ngValue]="2">پرداخت‌شده</option><option [ngValue]="3">پرداخت‌نشده / لغوشده</option>@if (activeTab === 'cheques' || activeTab === 'notes') { <option [ngValue]="4">لغوشده</option> }</select></label> }
       @if (activeTab === 'debts' || activeTab === 'transactions' || activeTab === 'due') { <label>نوع منبع<select formControlName="sourceType"><option [ngValue]="null">همه</option><option [ngValue]="1">چک</option><option [ngValue]="2">سفته</option></select></label> }
-      <app-base-persian-date-picker label="تاریخ شروع" [value]="filters.controls.fromDate.value" (valueChange)="filters.controls.fromDate.setValue($event)" /><app-base-persian-date-picker label="تاریخ پایان" [value]="filters.controls.toDate.value" (valueChange)="filters.controls.toDate.setValue($event)" />
+      <app-base-persian-date-picker [label]="fromDateFilterLabel" [value]="filters.controls.fromDate.value" (valueChange)="filters.controls.fromDate.setValue($event)" /><app-base-persian-date-picker [label]="toDateFilterLabel" [value]="filters.controls.toDate.value" (valueChange)="filters.controls.toDate.setValue($event)" />
       <div class="filter-actions"><button type="button" class="primary" (click)="applyFilters()">اعمال فیلتر</button><button type="button" class="secondary" (click)="clearFilters()">پاک کردن</button></div>
     </section>
 
     <section class="card list-card">
-      <div class="section-title"><div><h2>{{ isCommitmentTab ? 'حساب‌های دارای تعهد مالی' : activeTabLabel }}</h2><p>{{ totalCount }} حساب مالی</p></div><div class="row">@if (activeTab === 'cases') { <button class="primary" (click)="selectTab('create')">ثبت حساب جدید</button> }</div></div>
+      <div class="section-title"><div><h2>{{ isCommitmentTab ? 'حساب‌های دارای تعهد مالی' : activeTabLabel }}</h2><p>{{ totalCount }} حساب مالی</p></div><div class="row">@if (activeTab === 'cases') { <button class="primary" (click)="selectTab('create')">ثبت حساب مالی جدید</button> }</div></div>
       @if (loading) { <div class="empty">در حال دریافت اطلاعات…</div> }
       @else if (!items.length) { <div class="empty"><strong>رکوردی پیدا نشد</strong><span>فیلترها را تغییر دهید یا رکورد جدید بسازید.</span></div> }
       @else { <div class="table-wrap"><table><thead><tr><th>بیمار / پرونده</th><th>شرح</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>
