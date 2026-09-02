@@ -53,10 +53,10 @@ function todayOrLater(control: AbstractControl): ValidationErrors | null {
 })
 export class PatientFinancePageComponent implements OnInit, OnDestroy {
   readonly tabs: { id: FinanceTab; label: string }[] = [
-    { id: "cases", label: "حساب‌های مالی بیماران" }, { id: "create", label: "ثبت حساب مالی جدید" },
-    { id: "cheques", label: "چک‌های دریافتی" }, { id: "notes", label: "سفته‌های دریافتی" },
-    { id: "debts", label: "بدهی بیماران" }, { id: "transactions", label: "پرداخت‌های بیماران" },
-    { id: "due", label: "سررسیدهای مالی نزدیک" },
+    { id: "cases", label: "پرونده‌ها" }, { id: "create", label: "پرونده جدید" },
+    { id: "cheques", label: "چک‌ها" }, { id: "notes", label: "سفته‌ها" },
+    { id: "debts", label: "بدهی‌ها" }, { id: "transactions", label: "پرداخت‌ها" },
+    { id: "due", label: "نزدیک سررسید" },
   ];
   readonly services = [{ id: 1, label: "کامپوزیت" }, { id: 2, label: "ایمپلنت" }, { id: 3, label: "لمینت" }];
   readonly Math = Math;
