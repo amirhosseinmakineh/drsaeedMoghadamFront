@@ -60,3 +60,8 @@ p {
     justify-content: space-between;
   }
 }
+@media (min-width: 1280px) {
+  .shell {
+    width: min(100% - 3rem, 96rem);
+  }
+}

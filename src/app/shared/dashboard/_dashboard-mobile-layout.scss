@@ -8,6 +8,10 @@
     display: none;
   }
 
+  .dashboard-content {
+    container: dashboard-content / inline-size;
+  }
+
   // Keep desktop dashboards dense and predictable; mobile navigation must not
   // leak into wide layouts.
   @media (min-width: 981px) {
@@ -121,6 +125,38 @@
 
     .dashboard-content {
       gap: 22px;
+    }
+  }
+
+  // Preserve comfortable density on short laptop screens without changing the
+  // wide-desktop information architecture.
+  @media (min-width: 981px) and (max-height: 760px) {
+    .dashboard-layout,
+    .dashboard-layout.admin-mode {
+      padding-top: 12px;
+    }
+
+    .dashboard-sidebar {
+      top: 12px;
+      max-height: calc(100dvh - 24px);
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .dashboard-user-card {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      padding: 12px;
+    }
+
+    .dashboard-user-card .avatar {
+      width: 48px;
+      height: 48px;
+    }
+
+    .dashboard-user-card h1 {
+      margin-block: 2px;
+      font-size: 1rem;
     }
   }
 

@@ -18,6 +18,23 @@
 input, select, textarea { width: 100%; max-width: 100%; }
 .finance-details-modal ::ng-deep section[role="dialog"],
 .commitments-preview-modal ::ng-deep section[role="dialog"] { max-height: 92dvh; }
+.form-validation-summary { margin-block: 16px 0; }
+
+/* The page lives beside a desktop sidebar, so its usable width can be much
+   smaller than the viewport. Adapt to the content column, not only the screen. */
+@container dashboard-content (max-width: 980px) {
+  .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container dashboard-content (max-width: 680px) {
+  .filters,
+  .form-grid,
+  .commitment-grid,
+  fieldset { grid-template-columns: minmax(0, 1fr); }
+  .page-header { align-items: stretch; flex-direction: column; }
+  .filter-actions { align-items: stretch; }
+}
 
 @media (max-width: 640px) {
   .finance-page { width: 100%; padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
@@ -32,6 +49,17 @@ input, select, textarea { width: 100%; max-width: 100%; }
   .payment-document dl div { align-items: stretch; flex-direction: column; }
   .filter-actions > *,
   .form-actions > * { width: 100%; }
+  .form-actions {
+    position: sticky;
+    z-index: 4;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    margin-inline: -14px;
+    padding: 12px 14px;
+    border-top: 1px solid #e3e8ef;
+    background: color-mix(in srgb, #fff 94%, transparent);
+    box-shadow: 0 -10px 24px rgb(15 23 42 / 8%);
+    backdrop-filter: blur(14px);
+  }
   .payment-document { min-width: 0; padding: 16px; }
   .finance-details-modal ::ng-deep section[role="dialog"],
   .commitments-preview-modal ::ng-deep section[role="dialog"] { width: 100%; max-height: 100dvh; }
