@@ -386,6 +386,7 @@
   }
 }
 .services-lux {
+  --bg: #06141c;
   --surface: #0b1f29;
   --text: #e8f5f3;
   --muted: rgba(232, 245, 243, 0.68);
@@ -397,11 +398,13 @@
   padding: var(--pad) 0;
   color: var(--text);
 
-  /* بک‌گراند عکس */
-  background-image: url('/1.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background:
+    radial-gradient(
+      circle at 50% 0,
+      rgba(45, 212, 191, 0.08),
+      transparent 34rem
+    ),
+    var(--bg);
 }
 
 .services-lux__container {
@@ -453,7 +456,7 @@
 .services-lux__card {
   display: flex;
   flex-direction: column;
-  background-image: url('/1.png');
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 24px;
   overflow: hidden;
@@ -472,6 +475,7 @@
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
+  background: #102b36;
 
   img {
     width: 100%;
@@ -491,6 +495,7 @@
   gap: 0.5rem;
   padding: 1.5rem 1.4rem 1.6rem;
   flex: 1;
+  background: var(--surface);
 }
 
 .services-lux__num {
@@ -540,8 +545,24 @@
 }
 
 @media (max-width: 560px) {
+  .services-lux {
+    --pad: 3.25rem;
+  }
+
+  .services-lux__container {
+    padding-inline: 1rem;
+  }
+
   .services-lux__header {
     margin-bottom: 2.5rem;
+  }
+
+  .services-lux__card {
+    border-radius: 22px;
+  }
+
+  .services-lux__body {
+    padding: 1.25rem 1.15rem 1.4rem;
   }
 }
 .treatment-guide {
