@@ -6,6 +6,7 @@ import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, Reacti
 import { finalize, forkJoin, map, Observable, of, Subscription, switchMap } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
+import { BaseNumberInputComponent } from "../../../../../basemadual/forms/number-input/number-input.component";
 import { BaseModalComponent } from "../../../../../basemadual/overlays/modal/modal.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
 import { PatientFilesService } from "../../../patient-files/patient-files.service";
@@ -19,6 +20,8 @@ type ChequeEditForm = FormGroup<{ amount: FormControl<number | null>; ownerName:
 type NoteEditForm = FormGroup<{ amount: FormControl<number | null> }>;
 
 const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+const SAYAD_NUMBER_PATTERN = /^\d{16}$/;
+const PROMISSORY_NOTE_SERIAL_PATTERN = /^\d{12}$/;
 
 function commitmentRequired(control: AbstractControl): ValidationErrors | null {
   const agreement = Number(control.get("agreementType")?.value);
@@ -43,7 +46,7 @@ function todayOrLater(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: "app-patient-finance-page",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, BaseModalComponent, SecretaryAccountShellComponent],
+  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, BaseNumberInputComponent, BaseModalComponent, SecretaryAccountShellComponent],
   templateUrl: "./patient-finance-page.component.html",
   styleUrl: "./patient-finance-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -171,8 +174,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     }, 400);
   }
   closePatientDropdown(): void { setTimeout(() => { this.patientDropdownOpen = false; this.cdr.markForCheck(); }, 150); }
-  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", Validators.required], ownerName: ["", Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
-  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", Validators.required], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
+  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", [Validators.required, Validators.pattern(SAYAD_NUMBER_PATTERN)]], ownerName: ["", Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
+  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", [Validators.required, Validators.pattern(PROMISSORY_NOTE_SERIAL_PATTERN)]], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   onCreateAgreementChange(): void { this.clearInactiveAgreementAmount(this.createForm); }
@@ -280,7 +283,19 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   debtItem(item: ListItem): PatientDebt { return item as PatientDebt; }
   transactionItem(item: ListItem): PatientFinancialTransaction { return item as PatientFinancialTransaction; }
   dueItem(item: ListItem): PatientFinancialCommitment { return item as PatientFinancialCommitment; }
-  money(value: number | null | undefined): string { return new Intl.NumberFormat("fa-IR").format(value ?? 0); }
+  money(value: number | null | undefined): string { return `${new Intl.NumberFormat("fa-IR").format(value ?? 0)} تومان`; }
+  setAmount(control: AbstractControl, value: number | null): void { control.setValue(value); control.markAsTouched(); }
+  normalizeIdentifier(control: AbstractControl, event: Event, maxLength: number): void {
+    const input = event.target as HTMLInputElement;
+    const normalized = input.value
+      .replace(/[۰-۹]/g, digit => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+      .replace(/[٠-٩]/g, digit => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+      .replace(/\D/g, "")
+      .slice(0, maxLength);
+    input.value = normalized;
+    control.setValue(normalized);
+    control.markAsTouched();
+  }
   date(value: string | null | undefined): string { return value ? new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(value)) : "—"; }
   statusLabel(value: number): string { return ({ 1: "در انتظار", 2: "پرداخت‌شده", 3: "پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
   isCommitmentDue(value: string | null | undefined): boolean {
