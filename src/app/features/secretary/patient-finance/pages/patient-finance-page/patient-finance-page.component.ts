@@ -53,10 +53,10 @@ function todayOrLater(control: AbstractControl): ValidationErrors | null {
 })
 export class PatientFinancePageComponent implements OnInit, OnDestroy {
   readonly tabs: { id: FinanceTab; label: string }[] = [
-    { id: "cases", label: "پرونده‌ها" }, { id: "create", label: "پرونده جدید" },
-    { id: "cheques", label: "چک‌ها" }, { id: "notes", label: "سفته‌ها" },
-    { id: "debts", label: "بدهی‌ها" }, { id: "transactions", label: "پرداخت‌ها" },
-    { id: "due", label: "نزدیک سررسید" },
+    { id: "cases", label: "حساب‌های بیماران" }, { id: "create", label: "ثبت حساب جدید" },
+    { id: "cheques", label: "چک‌های دریافتی" }, { id: "notes", label: "سفته‌های دریافتی" },
+    { id: "debts", label: "بدهی بیماران" }, { id: "transactions", label: "پرداخت‌های بیماران" },
+    { id: "due", label: "سررسیدهای نزدیک" },
   ];
   readonly services = [{ id: 1, label: "کامپوزیت" }, { id: 2, label: "ایمپلنت" }, { id: 3, label: "لمینت" }];
   readonly Math = Math;
@@ -89,13 +89,13 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
 
-  readonly filters = this.fb.group({ search: [""], patientId: this.fb.control<string | null>(null, Validators.pattern(GUID_PATTERN)), status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null], year: [null as number | null], month: [null as number | null] });
+  readonly filters = this.fb.group({ search: [""], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null] });
   readonly createForm = this.fb.group({
     patientId: this.fb.control<string | null>(null, [Validators.required, Validators.pattern(GUID_PATTERN)]),
     serviceId: [null as number | null, Validators.required],
-    totalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
-    prePaymentAmount: [0, [Validators.required, Validators.min(0)]],
-    depositAmount: [0, [Validators.required, Validators.min(0)]],
+    totalAmount: [null as number | null, Validators.required],
+    prePaymentAmount: [0, Validators.required],
+    depositAmount: [0, Validators.required],
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
     cheques: this.fb.array([]), promissoryNotes: this.fb.array([]),
   }, { validators: [commitmentRequired, agreedAmountsWithinTotal] });
@@ -174,15 +174,12 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     }, 400);
   }
   closePatientDropdown(): void { setTimeout(() => { this.patientDropdownOpen = false; this.cdr.markForCheck(); }, 150); }
-  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, [Validators.required, Validators.min(1)]], sayadNumber: ["", [Validators.required, Validators.pattern(SAYAD_NUMBER_PATTERN)]], ownerName: ["", Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
-  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", [Validators.required, Validators.pattern(PROMISSORY_NOTE_SERIAL_PATTERN)]], amount: [null, [Validators.required, Validators.min(1)]], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
+  addCheque(): void { this.cheques.push(this.fb.group({ amount: [null, Validators.required], sayadNumber: ["", [Validators.required, Validators.pattern(SAYAD_NUMBER_PATTERN)]], ownerName: ["", Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
+  addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", [Validators.required, Validators.pattern(PROMISSORY_NOTE_SERIAL_PATTERN)]], amount: [null, Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
   onCreateAgreementChange(): void { this.clearInactiveAgreementAmount(this.createForm); }
   applyFilters(): void {
-    const { year, month } = this.filters.getRawValue();
-    if (this.filters.controls.patientId.invalid) { this.filters.controls.patientId.markAsTouched(); this.toast.error("شناسه بیمار باید یک عدد معتبر باشد."); return; }
-    if (this.activeTab === "debts" && ((year && !month) || (!year && month))) { this.toast.error("سال و ماه شمسی باید با هم وارد شوند."); return; }
     this.page = 1; this.load();
   }
   clearFilters(): void { this.filters.reset(); this.page = 1; this.load(); }
@@ -336,8 +333,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private buildCommitmentEditForms(): void {
     this.chequeEditForms.clear();
     this.noteEditForms.clear();
-    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, [Validators.required, Validators.min(1)]], ownerName: [item.ownerName, Validators.required] })));
-    this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, [Validators.required, Validators.min(1)]] })));
+    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], ownerName: [item.ownerName, Validators.required] })));
+    this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, Validators.required] })));
   }
   private requestPatientOptions(searchText: string): void {
     if (this.patientSearchTimer !== null) {

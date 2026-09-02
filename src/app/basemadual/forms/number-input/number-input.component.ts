@@ -37,6 +37,7 @@ export class BaseNumberInputComponent {
   @Input() value: number | null = null;
   @Input() min?: number;
   @Input() max?: number;
+  @Input() maxFractionDigits?: number;
   @Input() prefix = "";
   @Input() suffix = "";
   @Input() disabled = false;
@@ -45,11 +46,22 @@ export class BaseNumberInputComponent {
   get displayValue(): string {
     return this.value === null
       ? ""
-      : new Intl.NumberFormat("fa-IR").format(this.value);
+      : new Intl.NumberFormat("fa-IR", {
+          maximumFractionDigits: this.maxFractionDigits ?? 20,
+        }).format(this.value);
   }
   onInput(event: Event): void {
     const rawValue = (event.target as HTMLInputElement).value;
-    const parsed = Number(this.toEnglishDigits(rawValue).replaceAll(",", ""));
+    let normalized = this.toEnglishDigits(rawValue)
+      .replace(/[٬,]/g, "")
+      .replace("٫", ".");
+    if (this.maxFractionDigits !== undefined) {
+      const [integer, fraction] = normalized.split(".");
+      normalized = fraction === undefined
+        ? integer
+        : `${integer}.${fraction.slice(0, this.maxFractionDigits)}`;
+    }
+    const parsed = Number(normalized);
     if (rawValue.trim() === "" || Number.isNaN(parsed)) {
       this.valueChange.emit(null);
       return;
