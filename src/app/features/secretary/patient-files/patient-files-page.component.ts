@@ -85,7 +85,7 @@ export class PatientFilesPageComponent implements OnInit {
         error: (error) => this.financeError = this.errorMessage(error, "دریافت اطلاعات مالی انجام نشد.") });
   }
   closeFinance(): void { this.financeFile = null; this.financeError = ""; this.financeRefreshing = false; }
-  money(value: number): string { return `${new Intl.NumberFormat("fa-IR").format(value)} ریال`; }
+  money(value: number): string { return `${new Intl.NumberFormat("fa-IR").format(value)} تومان`; }
   date(value: string): string { const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? "—" : new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(parsed); }
   agreementLabel(value: number): string { return ({ 1: "پیش‌پرداخت", 2: "بیعانه" } as Record<number, string>)[value] ?? "نامشخص"; }
   caseStatusLabel(value: number): string { return ({ 1: "فعال", 2: "تکمیل‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
