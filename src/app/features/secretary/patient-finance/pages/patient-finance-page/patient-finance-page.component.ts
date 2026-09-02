@@ -53,10 +53,10 @@ function todayOrLater(control: AbstractControl): ValidationErrors | null {
 })
 export class PatientFinancePageComponent implements OnInit, OnDestroy {
   readonly tabs: { id: FinanceTab; label: string }[] = [
-    { id: "cases", label: "حساب‌های بیماران" }, { id: "create", label: "ثبت حساب جدید" },
+    { id: "cases", label: "حساب‌های مالی بیماران" }, { id: "create", label: "ثبت حساب مالی جدید" },
     { id: "cheques", label: "چک‌های دریافتی" }, { id: "notes", label: "سفته‌های دریافتی" },
     { id: "debts", label: "بدهی بیماران" }, { id: "transactions", label: "پرداخت‌های بیماران" },
-    { id: "due", label: "سررسیدهای نزدیک" },
+    { id: "due", label: "سررسیدهای مالی نزدیک" },
   ];
   readonly services = [{ id: 1, label: "کامپوزیت" }, { id: 2, label: "ایمپلنت" }, { id: 3, label: "لمینت" }];
   readonly Math = Math;
@@ -106,6 +106,14 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
 
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
+  get fromDateFilterLabel(): string { return this.dateFilterLabels.from; }
+  get toDateFilterLabel(): string { return this.dateFilterLabels.to; }
+  private get dateFilterLabels(): { from: string; to: string } {
+    if (this.activeTab === "debts" || this.isCommitmentTab || this.activeTab === "due") {
+      return { from: "سررسید از تاریخ", to: "سررسید تا تاریخ" };
+    }
+    return { from: "ثبت از تاریخ", to: "ثبت تا تاریخ" };
+  }
   private readonly destroyRef = inject(DestroyRef);
   constructor(private readonly fb: FormBuilder, private readonly api: PatientFinanceApiService, private readonly patientFilesApi: PatientFilesService, private readonly toast: ToastService, private readonly cdr: ChangeDetectorRef) {}
   ngOnInit(): void { this.load(); }
