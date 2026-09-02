@@ -2,7 +2,7 @@
 <div class="finance-page" dir="rtl">
   <header class="page-header">
     <div><a routerLink="/dashboard/secretary">بازگشت به داشبورد</a><p>حسابداری بیماران</p><h1>مدیریت حسابداری بیماران</h1></div>
-    <button type="button" class="primary" (click)="selectTab('create')">+ پرونده مالی جدید</button>
+    <button type="button" class="primary" (click)="selectTab('create')">+ ثبت حساب جدید</button>
   </header>
 
   <nav class="tabs" aria-label="بخش‌های حسابداری بیمار">
@@ -42,7 +42,7 @@
       <div formArrayName="promissoryNotes" class="commitment-grid">
         @for (group of notes.controls; track group; let i = $index) { <fieldset [formGroupName]="i"><legend>سفته شماره {{ i + 1 }}</legend><label>شماره سریال<input formControlName="serialNumber" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="۱۲ رقم" (input)="normalizeIdentifier($any(group).controls.serialNumber, $event, 12)">@if ($any(group).controls.serialNumber.touched && $any(group).controls.serialNumber.invalid) { <small class="field-error">شماره سریال سفته باید دقیقاً ۱۲ رقم باشد.</small> }</label><app-base-number-input [inputId]="'note-amount-' + i" label="مبلغ" suffix="تومان" [maxFractionDigits]="3" [value]="$any(group).controls.amount.value" (valueChange)="setAmount($any(group).controls.amount, $event)" /><app-base-persian-date-picker label="تاریخ سررسید" [required]="true" [minDate]="today" [value]="$any(group).controls.dueDate.value" (valueChange)="$any(group).controls.dueDate.setValue($event)" /><button type="button" class="danger-link" (click)="removeNote(i)">حذف از فرم</button></fieldset> }
       </div>
-      <div class="form-actions"><button class="primary" type="submit" [disabled]="submitting || createForm.invalid">{{ submitting ? 'در حال ثبت…' : 'ثبت پرونده مالی' }}</button><button class="secondary" type="button" (click)="selectTab('cases')">انصراف</button></div>
+      <div class="form-actions"><button class="primary" type="submit" [disabled]="submitting || createForm.invalid">{{ submitting ? 'در حال ثبت…' : 'ثبت حساب مالی' }}</button><button class="secondary" type="button" (click)="selectTab('cases')">انصراف</button></div>
     </form>
   } @else {
     <section class="card filters" [formGroup]="filters">
@@ -54,7 +54,7 @@
     </section>
 
     <section class="card list-card">
-      <div class="section-title"><div><h2>{{ isCommitmentTab ? 'بیماران دارای پرونده مالی' : activeTabLabel }}</h2><p>{{ totalCount }} پرونده</p></div><div class="row">@if (activeTab === 'cases') { <button class="primary" (click)="selectTab('create')">پرونده جدید</button> }</div></div>
+      <div class="section-title"><div><h2>{{ isCommitmentTab ? 'حساب‌های دارای تعهد مالی' : activeTabLabel }}</h2><p>{{ totalCount }} حساب مالی</p></div><div class="row">@if (activeTab === 'cases') { <button class="primary" (click)="selectTab('create')">ثبت حساب جدید</button> }</div></div>
       @if (loading) { <div class="empty">در حال دریافت اطلاعات…</div> }
       @else if (!items.length) { <div class="empty"><strong>رکوردی پیدا نشد</strong><span>فیلترها را تغییر دهید یا رکورد جدید بسازید.</span></div> }
       @else { <div class="table-wrap"><table><thead><tr><th>بیمار / پرونده</th><th>شرح</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>
