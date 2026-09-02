@@ -980,12 +980,28 @@ export class ConsultantDashboardService {
       this.readNumber(response, "totalPages", "pages", "pageCount") ??
       Math.ceil(totalCount / Math.max(1, pageSize));
 
+    const normalizedTotalCount = Math.max(0, totalCount);
+    const normalizedPageSize = pageSize > 0 ? pageSize : filters.pageSize;
+    const normalizedPageNumber =
+      pageNumber > 0 ? pageNumber : filters.pageNumber;
+    const calculatedTotalPages = Math.max(
+      1,
+      Math.ceil(normalizedTotalCount / Math.max(1, normalizedPageSize)),
+    );
+    const normalizedTotalPages =
+      !Number.isFinite(totalPages) ||
+      totalPages >= 2_147_483_647 ||
+      totalPages <= 0 ||
+      totalPages > calculatedTotalPages
+        ? calculatedTotalPages
+        : totalPages;
+
     return {
       items,
-      totalCount,
-      pageNumber,
-      pageSize,
-      totalPages: Math.max(1, totalPages),
+      totalCount: normalizedTotalCount,
+      pageNumber: normalizedPageNumber,
+      pageSize: normalizedPageSize,
+      totalPages: normalizedTotalPages,
       raw: response,
       source,
     };
