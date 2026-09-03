@@ -35,6 +35,8 @@ import { AdminDailyReservationsReportComponent } from "../admin-dashboard/admin-
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
 import { AdminLeadsReportComponent } from "../admin-dashboard/admin-leads-report.component";
 import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consultant-profile.component";
+import { AdminSecretarySaleServicesComponent } from "../admin-dashboard/admin-secretary-sale-services.component";
+import { AdminSecretarySalesApprovalComponent } from "../admin-dashboard/admin-secretary-sales-approval.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -66,7 +68,9 @@ type DashboardSection =
   | "leads"
   | "leadReports"
   | "leadsReport"
-  | "dailyReservationsReport";
+  | "dailyReservationsReport"
+  | "secretarySaleServices"
+  | "secretarySales";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -104,6 +108,8 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "leadReports",
   "leadsReport",
   "dailyReservationsReport",
+  "secretarySaleServices",
+  "secretarySales",
 ];
 
 @Component({
@@ -122,6 +128,8 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminDailyReservationsReportComponent,
     AdminAttendanceTableComponent,
     AdminConsultantProfileComponent,
+    AdminSecretarySaleServicesComponent,
+    AdminSecretarySalesApprovalComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -142,6 +150,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "leadReports", label: "گزارش تماس درخواست‌ها", icon: "clipboard" },
     { id: "leadsReport", label: "گزارش لیدها", icon: "table" },
     { id: "dailyReservationsReport", label: "رزروهای روزانه", icon: "calendar" },
+    { id: "secretarySaleServices", label: "خدمات فروش منشی", icon: "list" },
+    { id: "secretarySales", label: "فروش‌های منشی‌ها", icon: "wallet" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },

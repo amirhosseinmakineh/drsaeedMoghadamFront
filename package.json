@@ -8,6 +8,7 @@
     "build:local": "SKIP_WEBPUSH_CONFIG_CHECK=1 npm run build",
     "check:secretary-template": "node scripts/validate-secretary-reservations-template.mjs",
     "check:patient-finance-template": "node scripts/validate-patient-finance-template.mjs",
+    "check:secretary-sales": "node scripts/validate-secretary-sales-ui.mjs",
     "generate:webpush": "node scripts/generate-webpush-config.mjs",
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
     "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
