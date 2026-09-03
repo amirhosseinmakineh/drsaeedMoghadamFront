@@ -1,0 +1,8 @@
+import { CommonModule } from "@angular/common";
+import { Component, EventEmitter, Output } from "@angular/core";
+import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { finalize } from "rxjs";
+import { ToastService } from "../../../../../core/toast/toast.service";
+import { PatientReferralApiService } from "../../../services/patient-referral-api.service";
+@Component({selector:"app-create-referral-form",standalone:true,imports:[CommonModule,ReactiveFormsModule],templateUrl:"./create-referral-form.component.html",styleUrl:"./create-referral-form.component.scss"})
+export class CreateReferralFormComponent { @Output() created=new EventEmitter<void>(); saving=false; form=this.fb.nonNullable.group({firstName:["",[Validators.required,Validators.minLength(2),Validators.maxLength(100)]],lastName:["",[Validators.required,Validators.minLength(2),Validators.maxLength(100)]],phoneNumber:["",[Validators.required,Validators.pattern(/^09\d{9}$/)]],description:["",Validators.maxLength(500)]}); constructor(private fb:FormBuilder,private api:PatientReferralApiService,private toast:ToastService){} submit(){if(this.saving||this.form.invalid){this.form.markAllAsTouched();return}this.saving=true;const v=this.form.getRawValue();this.api.createReferral({...v,description:v.description.trim()||undefined}).pipe(finalize(()=>this.saving=false)).subscribe({next:()=>{this.form.reset();this.toast.success("بیمار با موفقیت معرفی شد و برای پیگیری به منشی ارسال گردید.");this.created.emit()},error:()=>this.toast.error("ثبت معرفی انجام نشد. لطفاً دوباره تلاش کنید.")});} invalid(name:string){const c=this.form.get(name);return !!(c?.invalid&&c.touched)} }

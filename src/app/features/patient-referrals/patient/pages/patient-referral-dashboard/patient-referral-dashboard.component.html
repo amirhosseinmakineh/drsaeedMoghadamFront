@@ -1,0 +1,206 @@
+<section class="dashboard-layout patient-mode" dir="rtl">
+  <header class="dashboard-mobile-header">
+    <div class="mobile-header-info">
+      <button
+        class="mobile-menu-btn"
+        type="button"
+        aria-label="باز کردن منوی داشبورد"
+        [attr.aria-expanded]="mobileSidebarOpen"
+        (click)="toggleMobileSidebar()"
+      >
+        <app-fa-icon name="menu" />
+      </button>
+      <span class="mobile-avatar"><app-fa-icon name="user" /></span>
+      <div>
+        <strong>{{ dashboard?.firstName || auth.user()?.firstName }} {{ dashboard?.lastName || auth.user()?.lastName }}</strong>
+        <small>بیمار</small>
+      </div>
+    </div>
+    <div class="mobile-header-actions">
+      <a class="mobile-back-btn" routerLink="/" aria-label="بازگشت به سایت">
+        <app-fa-icon name="home" />
+      </a>
+      <button class="mobile-logout-btn" type="button" (click)="logout()" aria-label="خروج از حساب">
+        <app-fa-icon name="logout" />
+      </button>
+    </div>
+  </header>
+
+  <button
+    *ngIf="mobileSidebarOpen"
+    class="mobile-sidebar-backdrop"
+    type="button"
+    aria-label="بستن منو"
+    (click)="closeMobileSidebar()"
+  ></button>
+
+  <aside class="dashboard-sidebar" [class.mobile-sidebar-open]="mobileSidebarOpen">
+    <div class="mobile-sidebar-header">
+      <strong>منوی داشبورد</strong>
+      <button type="button" aria-label="بستن منو" (click)="closeMobileSidebar()">
+        <app-fa-icon name="close" />
+      </button>
+    </div>
+
+    <a class="dashboard-brand" routerLink="/">
+      <span class="brand-mark"><app-fa-icon name="tooth" /></span>
+      <strong>کلینیک دکتر سعید مقدم</strong>
+    </a>
+
+    <a class="dashboard-back-link" routerLink="/">
+      <app-fa-icon name="arrowRight" />
+      <span>بازگشت به صفحه اصلی</span>
+    </a>
+
+    <div class="dashboard-user-card">
+      <span class="avatar"><app-fa-icon name="user" /></span>
+      <div>
+        <small>کاربر وارد شده</small>
+        <h1>{{ dashboard?.firstName || auth.user()?.firstName }} {{ dashboard?.lastName || auth.user()?.lastName }}</h1>
+        <b>بیمار</b>
+      </div>
+    </div>
+
+    <nav class="dashboard-nav" aria-label="منوی داشبورد بیمار">
+      <button
+        *ngFor="let item of navigationItems; trackBy: trackNavigationItem"
+        type="button"
+        [class.active]="activeSection === item.id"
+        [attr.aria-current]="activeSection === item.id ? 'page' : null"
+        (click)="navigateTo(item.id)"
+      >
+        <app-fa-icon [name]="item.icon" />
+        <span>{{ item.label }}</span>
+      </button>
+    </nav>
+
+    <button class="secondary-btn logout-btn" type="button" (click)="logout()">
+      <app-fa-icon name="logout" />
+      خروج از حساب کاربری
+    </button>
+  </aside>
+
+  <main class="dashboard-content">
+    <header class="dashboard-hero">
+      <span>داشبورد بیمار</span>
+      <h2>مدیریت معرفی‌ها و پاداش‌های شما</h2>
+      <p>بیمار جدید معرفی کنید و روند پیگیری تا پرداخت پاداش را ببینید.</p>
+    </header>
+
+    <app-loading *ngIf="loading && !dashboard" />
+
+    <section class="error" *ngIf="error && !dashboard">
+      <p>امکان دریافت اطلاعات داشبورد وجود نداشت.</p>
+      <button type="button" (click)="loadAll()">تلاش دوباره</button>
+    </section>
+
+    <ng-container *ngIf="dashboard as dashboardData">
+      <section id="overview" class="dashboard-section overview-section" tabindex="-1">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">نمای کلی</span>
+            <h2>کیف پول و وضعیت معرفی‌ها</h2>
+          </div>
+          <button class="refresh-button" type="button" [disabled]="loading" (click)="loadAll()">
+            <app-fa-icon name="clock" />
+            به‌روزرسانی
+          </button>
+        </div>
+
+        <app-patient-wallet-card
+          [balance]="dashboardData.walletBalance"
+          [approved]="dashboardData.approvedReferrals"
+        />
+
+        <section class="summary" aria-label="خلاصه معرفی‌ها">
+          <article>
+            <app-fa-icon name="users" />
+            <span>کل معرفی‌ها</span>
+            <strong>{{ dashboardData.totalReferrals }}</strong>
+          </article>
+          <article>
+            <app-fa-icon name="clock" />
+            <span>در حال پیگیری</span>
+            <strong>{{ dashboardData.pendingReferrals }}</strong>
+          </article>
+          <article>
+            <app-fa-icon name="award" />
+            <span>تأیید و پرداخت‌شده</span>
+            <strong>{{ dashboardData.approvedReferrals }}</strong>
+          </article>
+          <article *ngIf="dashboardData.rejectedReferrals != null">
+            <app-fa-icon name="close" />
+            <span>ردشده</span>
+            <strong>{{ dashboardData.rejectedReferrals }}</strong>
+          </article>
+        </section>
+      </section>
+
+      <section id="create-referral" class="dashboard-section" tabindex="-1">
+        <app-create-referral-form (created)="loadAll()" />
+      </section>
+
+      <section id="referral-history" class="dashboard-section history" tabindex="-1">
+        <div class="section-title">
+          <div>
+            <span class="eyebrow">سوابق شما</span>
+            <h2>تاریخچه معرفی‌ها</h2>
+            <p>روند پیگیری هر بیمار را اینجا ببینید.</p>
+          </div>
+          <div class="filters" role="search">
+            <input
+              [(ngModel)]="query.search"
+              (keyup.enter)="filter()"
+              aria-label="جست‌وجوی معرفی‌ها"
+              placeholder="جست‌وجوی نام یا موبایل"
+            />
+            <select [(ngModel)]="query.status" (change)="filter()" aria-label="فیلتر وضعیت">
+              <option [ngValue]="null">همه وضعیت‌ها</option>
+              <option *ngFor="let status of statuses" [ngValue]="status.value">{{ status.label }}</option>
+            </select>
+            <select [(ngModel)]="query.pageSize" (change)="filter()" aria-label="تعداد رکورد در صفحه">
+              <option [ngValue]="6">۶ رکورد</option>
+              <option [ngValue]="12">۱۲ رکورد</option>
+            </select>
+            <button class="primary" type="button" (click)="filter()">
+              <app-fa-icon name="search" />
+              جست‌وجو
+            </button>
+          </div>
+        </div>
+
+        <div class="cards">
+          <app-referral-card
+            *ngFor="let item of list?.items"
+            [referral]="item"
+            [showTimeline]="true"
+          />
+        </div>
+
+        <app-empty-state
+          *ngIf="list && !list.items.length"
+          title="هنوز معرفی‌ای ثبت نشده است"
+          description="از منوی معرفی بیمار، اولین بیمار را معرفی کنید."
+        />
+
+        <div class="pagination" *ngIf="(list?.totalPages || 0) > 1">
+          <button type="button" (click)="page(query.page - 1)" [disabled]="query.page === 1">قبلی</button>
+          <span>صفحه {{ query.page }} از {{ list?.totalPages }}</span>
+          <button type="button" (click)="page(query.page + 1)" [disabled]="query.page === list?.totalPages">بعدی</button>
+        </div>
+      </section>
+    </ng-container>
+  </main>
+
+  <nav class="mobile-primary-nav" aria-label="دسترسی سریع داشبورد بیمار">
+    <button
+      *ngFor="let item of navigationItems; trackBy: trackNavigationItem"
+      type="button"
+      [class.active]="activeSection === item.id"
+      (click)="navigateTo(item.id)"
+    >
+      <app-fa-icon [name]="item.icon" />
+      <span>{{ item.label }}</span>
+    </button>
+  </nav>
+</section>
