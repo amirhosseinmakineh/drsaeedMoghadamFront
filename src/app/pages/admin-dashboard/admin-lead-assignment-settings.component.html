@@ -1,0 +1,55 @@
+<section class="assignment-settings" aria-labelledby="assignment-settings-title">
+  <header class="page-heading">
+    <span>تنظیمات لید</span>
+    <h2 id="assignment-settings-title">مدیریت تخصیص لیدها</h2>
+    <p>مشخص کنید سرویس تخصیص خودکار در اجرای بعدی، لیدها را از کدام منبع انتخاب کند.</p>
+  </header>
+
+  @if (loading) {
+    <div class="state-card" role="status">در حال دریافت تنظیم فعلی...</div>
+  } @else {
+    <form class="settings-card" (ngSubmit)="save()">
+      <fieldset>
+        <legend>نوع لید قابل تخصیص</legend>
+
+        <label class="source-option" [class.selected]="selectedSource === sourceTypes.NewLeads">
+          <input
+            type="radio"
+            name="assignmentSourceType"
+            [value]="sourceTypes.NewLeads"
+            [(ngModel)]="selectedSource"
+          />
+          <span class="radio-indicator" aria-hidden="true"></span>
+          <span class="option-copy">
+            <strong>لیدهای جدید</strong>
+            <small>لیدهای جدید طبق قوانین فعلی سیستم به مشاوران تخصیص داده می‌شوند.</small>
+          </span>
+        </label>
+
+        <label class="source-option" [class.selected]="selectedSource === sourceTypes.BurnedLeads">
+          <input
+            type="radio"
+            name="assignmentSourceType"
+            [value]="sourceTypes.BurnedLeads"
+            [(ngModel)]="selectedSource"
+          />
+          <span class="radio-indicator" aria-hidden="true"></span>
+          <span class="option-copy">
+            <strong>لیدهای سوخته</strong>
+            <small>لیدهای قبلی واجد شرایط مجدداً وارد چرخه تخصیص به مشاوران می‌شوند.</small>
+          </span>
+        </label>
+      </fieldset>
+
+      <div class="settings-footer">
+        <p class="current-value">
+          وضعیت فعلی:
+          <strong>{{ savedSource === sourceTypes.NewLeads ? "لیدهای جدید" : "لیدهای سوخته" }}</strong>
+        </p>
+        <button type="submit" [disabled]="saving || selectedSource === savedSource">
+          {{ saving ? "در حال ذخیره..." : "ذخیره تنظیمات" }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

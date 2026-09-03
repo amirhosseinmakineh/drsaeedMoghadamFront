@@ -37,6 +37,7 @@ import { AdminLeadsReportComponent } from "../admin-dashboard/admin-leads-report
 import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consultant-profile.component";
 import { AdminSecretarySaleServicesComponent } from "../admin-dashboard/admin-secretary-sale-services.component";
 import { AdminSecretarySalesApprovalComponent } from "../admin-dashboard/admin-secretary-sales-approval.component";
+import { AdminLeadAssignmentSettingsComponent } from "../admin-dashboard/admin-lead-assignment-settings.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -70,7 +71,8 @@ type DashboardSection =
   | "leadsReport"
   | "dailyReservationsReport"
   | "secretarySaleServices"
-  | "secretarySales";
+  | "secretarySales"
+  | "leadAssignmentSettings";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -110,6 +112,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "dailyReservationsReport",
   "secretarySaleServices",
   "secretarySales",
+  "leadAssignmentSettings",
 ];
 
 @Component({
@@ -130,6 +133,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminConsultantProfileComponent,
     AdminSecretarySaleServicesComponent,
     AdminSecretarySalesApprovalComponent,
+    AdminLeadAssignmentSettingsComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -152,6 +156,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "dailyReservationsReport", label: "رزروهای روزانه", icon: "calendar" },
     { id: "secretarySaleServices", label: "خدمات فروش منشی", icon: "list" },
     { id: "secretarySales", label: "فروش‌های منشی‌ها", icon: "wallet" },
+    { id: "leadAssignmentSettings", label: "مدیریت تخصیص لیدها", icon: "clipboard" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },

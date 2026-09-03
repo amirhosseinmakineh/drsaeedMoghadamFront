@@ -177,6 +177,10 @@
               <span><app-fa-icon name="wallet"></app-fa-icon></span>
               <strong>تأیید فروش‌های منشی</strong>
             </button>
+            <button type="button" (click)="setSection('leadAssignmentSettings')">
+              <span><app-fa-icon name="clipboard"></app-fa-icon></span>
+              <strong>مدیریت تخصیص لیدها</strong>
+            </button>
           </section>
         }
 
@@ -471,6 +475,10 @@
 
         @if (activeSection === "secretarySales") {
           <app-admin-secretary-sales-approval></app-admin-secretary-sales-approval>
+        }
+
+        @if (activeSection === "leadAssignmentSettings") {
+          <app-admin-lead-assignment-settings></app-admin-lead-assignment-settings>
         }
 
       </section>
