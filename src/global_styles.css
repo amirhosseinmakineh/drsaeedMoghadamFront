@@ -102,7 +102,7 @@ html {
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
 
   background: var(--bg);
   color: var(--text);
@@ -116,11 +116,30 @@ body {
     sans-serif;
 
   line-height: 1.8;
-  overflow-x: hidden;
 }
 
 * {
   box-sizing: border-box;
+}
+
+body[data-theme="dashboard"] .app-shell,
+body[data-theme="dashboard"] main,
+body[data-theme="dashboard"] section,
+body[data-theme="dashboard"] article,
+body[data-theme="dashboard"] form {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+body[data-theme="dashboard"] input,
+body[data-theme="dashboard"] select,
+body[data-theme="dashboard"] textarea,
+body[data-theme="dashboard"] button {
+  max-inline-size: 100%;
+}
+
+body[data-theme="dashboard"] :where(h1, h2, h3, h4, p, a, span, strong, small, label, dd) {
+  overflow-wrap: anywhere;
 }
 
 a {

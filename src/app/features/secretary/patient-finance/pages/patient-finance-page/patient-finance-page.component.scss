@@ -7,3 +7,60 @@
 .badge.case-active{color:#087f5b;background:#dcfce7}.finance-details-modal ::ng-deep section[role="dialog"]{width:min(64rem,calc(100vw - 32px));max-height:92vh}.details-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid #e5e7eb}.details-heading span{color:#64748b}.details-heading strong{font-size:1.05rem;color:#0f766e}@media(max-width:639px){.finance-details-modal ::ng-deep section[role="dialog"]{width:100%;max-height:100vh}.details-heading{align-items:flex-start;flex-direction:column}}
 .commitments-preview-modal ::ng-deep section[role="dialog"]{width:min(62rem,calc(100vw - 32px));max-height:92vh}.modal-loading{display:grid;min-height:180px;place-items:center;color:#64748b}.document-vectors{display:flex;flex-wrap:wrap;justify-content:center;gap:18px}.payment-document{position:relative;width:min(27rem,100%);min-height:240px;overflow:hidden;padding:22px;border:2px solid #74c0a8;border-radius:18px;background:linear-gradient(135deg,#f0fdfa,#fff 58%,#ecfdf5);box-shadow:0 12px 28px #0f766e14}.payment-document.note-document{border-color:#c4b5fd;background:linear-gradient(135deg,#faf5ff,#fff 58%,#f5f3ff)}.document-watermark{position:absolute;bottom:-20px;left:10px;color:#0f766e0d;font-size:7rem;font-weight:950;transform:rotate(-12deg);pointer-events:none}.note-document .document-watermark{color:#7c3aed0d}.document-top,.document-amount{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px}.document-top>span:first-child{font-weight:900;color:#0f766e}.note-document .document-top>span:first-child{color:#6d28d9}.document-amount{margin:25px 0;padding:14px;border-block:1px dashed #94a3b8}.document-amount span{color:#64748b}.document-amount strong{font-size:1.2rem}.payment-document dl{position:relative;display:grid;gap:12px;margin:0}.payment-document dl div{display:flex;justify-content:space-between;gap:12px}.payment-document dt{color:#64748b}.payment-document dd{margin:0;font-weight:800}.commitments-preview-modal .empty.small{min-height:180px}@media(max-width:720px){.document-vectors{display:flex;flex-direction:column;align-items:center}.commitments-preview-modal ::ng-deep section[role="dialog"]{width:100%;max-height:100vh}.payment-document{min-height:220px}}
 .debt-payment-action{display:flex;max-width:190px;flex-direction:column;align-items:flex-start;gap:6px}.debt-payment-action small{color:#64748b;font-size:.7rem;line-height:1.6}.debt-payment-action button:disabled{background:#e2e8f0;border-color:#cbd5e1;color:#64748b;opacity:1}
+
+/* Page-specific containment for the finance workspace. */
+:host { min-width: 0; min-height: 100dvh; }
+.finance-page,
+.finance-page > *,
+.card,
+.table-wrap { min-width: 0; max-width: 100%; }
+.table-wrap { overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+input, select, textarea { width: 100%; max-width: 100%; }
+.finance-details-modal ::ng-deep section[role="dialog"],
+.commitments-preview-modal ::ng-deep section[role="dialog"] { max-height: 92dvh; }
+.form-validation-summary { margin-block: 16px 0; }
+
+/* The page lives beside a desktop sidebar, so its usable width can be much
+   smaller than the viewport. Adapt to the content column, not only the screen. */
+@container dashboard-content (max-width: 980px) {
+  .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container dashboard-content (max-width: 680px) {
+  .filters,
+  .form-grid,
+  .commitment-grid,
+  fieldset { grid-template-columns: minmax(0, 1fr); }
+  .page-header { align-items: stretch; flex-direction: column; }
+  .filter-actions { align-items: stretch; }
+}
+
+@media (max-width: 640px) {
+  .finance-page { width: 100%; padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .tabs { max-width: calc(100% + 24px); margin-inline: -12px; }
+  .filter-actions,
+  .form-actions,
+  .section-title,
+  .commitment-head,
+  .details-heading,
+  .document-top,
+  .document-amount,
+  .payment-document dl div { align-items: stretch; flex-direction: column; }
+  .filter-actions > *,
+  .form-actions > * { width: 100%; }
+  .form-actions {
+    position: sticky;
+    z-index: 4;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    margin-inline: -14px;
+    padding: 12px 14px;
+    border-top: 1px solid #e3e8ef;
+    background: color-mix(in srgb, #fff 94%, transparent);
+    box-shadow: 0 -10px 24px rgb(15 23 42 / 8%);
+    backdrop-filter: blur(14px);
+  }
+  .payment-document { min-width: 0; padding: 16px; }
+  .finance-details-modal ::ng-deep section[role="dialog"],
+  .commitments-preview-modal ::ng-deep section[role="dialog"] { width: 100%; max-height: 100dvh; }
+}

@@ -169,6 +169,18 @@
               <span><app-fa-icon name="table"></app-fa-icon></span>
               <strong>رزروهای روزانه</strong>
             </button>
+            <button type="button" (click)="setSection('secretarySaleServices')">
+              <span><app-fa-icon name="list"></app-fa-icon></span>
+              <strong>خدمات فروش منشی</strong>
+            </button>
+            <button type="button" (click)="setSection('secretarySales')">
+              <span><app-fa-icon name="wallet"></app-fa-icon></span>
+              <strong>تأیید فروش‌های منشی</strong>
+            </button>
+            <button type="button" (click)="setSection('leadAssignmentSettings')">
+              <span><app-fa-icon name="clipboard"></app-fa-icon></span>
+              <strong>مدیریت تخصیص لیدها</strong>
+            </button>
           </section>
         }
 
@@ -455,6 +467,18 @@
 
         @if (activeSection === "dailyReservationsReport") {
           <app-admin-daily-reservations-report></app-admin-daily-reservations-report>
+        }
+
+        @if (activeSection === "secretarySaleServices") {
+          <app-admin-secretary-sale-services></app-admin-secretary-sale-services>
+        }
+
+        @if (activeSection === "secretarySales") {
+          <app-admin-secretary-sales-approval></app-admin-secretary-sales-approval>
+        }
+
+        @if (activeSection === "leadAssignmentSettings") {
+          <app-admin-lead-assignment-settings></app-admin-lead-assignment-settings>
         }
 
       </section>
