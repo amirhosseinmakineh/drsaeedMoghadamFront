@@ -47,7 +47,7 @@
           {{ createFormErrorMessage }}
         </p>
       }
-      <div class="form-actions"><button class="primary" type="submit" [disabled]="submitting">{{ submitting ? 'در حال ثبت…' : 'ثبت حساب مالی' }}</button><button class="secondary" type="button" (click)="selectTab('cases')">انصراف</button></div>
+      <div class="form-actions"><button class="primary" type="submit" [disabled]="submitting">{{ submitting ? 'در حال ثبت…' : 'ثبت پرونده مالی' }}</button><button class="secondary" type="button" (click)="selectTab('cases')">انصراف</button></div>
     </form>
   } @else {
     <section class="card filters" [formGroup]="filters">

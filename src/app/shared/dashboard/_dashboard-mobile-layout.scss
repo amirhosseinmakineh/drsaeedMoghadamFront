@@ -1,4 +1,74 @@
 @mixin dashboard-mobile-layout {
+  :host {
+    display: block;
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at 8% 4%, color-mix(in srgb, #0f766e 9%, transparent), transparent 30rem),
+      linear-gradient(180deg, #f8fafc 0%, color-mix(in srgb, var(--surface-muted) 72%, #f5f7fb) 100%);
+  }
+
+  .dashboard-sidebar,
+  .dashboard-hero {
+    border-color: color-mix(in srgb, var(--line) 82%, #dce3ea);
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.07);
+  }
+
+  .dashboard-back-link,
+  .mobile-back-btn {
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    border: 1px solid color-mix(in srgb, var(--brand) 22%, var(--line));
+    border-radius: 15px;
+    background: color-mix(in srgb, var(--brand) 7%, var(--surface));
+    color: var(--brand);
+    font-weight: 900;
+    text-decoration: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .dashboard-back-link {
+    display: flex;
+    width: 100%;
+    padding: 9px 12px;
+  }
+
+  .dashboard-back-link:hover,
+  .mobile-back-btn:hover {
+    border-color: color-mix(in srgb, var(--brand) 48%, var(--line));
+    background: color-mix(in srgb, var(--brand) 13%, var(--surface));
+    transform: translateY(-1px);
+  }
+
+  .dashboard-back-link:focus-visible,
+  .mobile-back-btn:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--brand) 30%, transparent);
+    outline-offset: 2px;
+  }
+
+  .dashboard-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 7% 0%, color-mix(in srgb, #14b8a6 18%, transparent), transparent 38%),
+      linear-gradient(135deg, var(--surface), color-mix(in srgb, #f0fdfa 68%, var(--surface)));
+  }
+
+  .dashboard-nav button,
+  .dashboard-nav a,
+  .dashboard-content article,
+  .admin-panel,
+  .consultant-panel {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .dashboard-content article:hover,
+  .admin-overview button:hover {
+    border-color: color-mix(in srgb, var(--brand) 24%, var(--line));
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  }
+
   .dashboard-mobile-header,
   .mobile-primary-nav,
   .mobile-sidebar-backdrop,
@@ -183,6 +253,10 @@
       max-width: 100%;
     }
 
+    .dashboard-back-link {
+      display: flex;
+    }
+
     .dashboard-mobile-header {
       display: flex;
       align-items: center;
@@ -245,6 +319,20 @@
       font: inherit;
       font-weight: 950;
       font-size: 0.82rem;
+    }
+
+    .mobile-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .mobile-back-btn {
+      display: inline-flex;
+      min-height: 40px;
+      padding: 7px 10px;
+      font-size: 0.78rem;
     }
 
     .mobile-menu-btn {
@@ -447,8 +535,16 @@
 
   @media (max-width: 390px) {
     .mobile-avatar,
-    .mobile-logout-btn span {
+    .mobile-logout-btn span,
+    .mobile-back-btn span {
       display: none;
+    }
+
+    .mobile-back-btn,
+    .mobile-logout-btn {
+      width: 40px;
+      justify-content: center;
+      padding-inline: 0;
     }
 
     .dashboard-mobile-header {
