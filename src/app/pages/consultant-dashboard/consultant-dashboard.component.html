@@ -18,16 +18,22 @@
         <small>{{ roleLabel() }}</small>
       </div>
     </div>
-    <button
-      class="mobile-logout-btn"
-      type="button"
-      [disabled]="loggingOut"
-      (click)="logout()"
-      aria-label="خروج از حساب کاربری"
-    >
-      <app-fa-icon name="logout"></app-fa-icon>
-      <span>خروج</span>
-    </button>
+    <div class="mobile-header-actions">
+      <a class="mobile-back-btn" routerLink="/" aria-label="بازگشت به صفحه اصلی">
+        <app-fa-icon name="arrowRight"></app-fa-icon>
+        <span>بازگشت</span>
+      </a>
+      <button
+        class="mobile-logout-btn"
+        type="button"
+        [disabled]="loggingOut"
+        (click)="logout()"
+        aria-label="خروج از حساب کاربری"
+      >
+        <app-fa-icon name="logout"></app-fa-icon>
+        <span>خروج</span>
+      </button>
+    </div>
   </header>
 
   @if (mobileSidebarOpen) {
@@ -60,6 +66,11 @@
         ><app-fa-icon name="tooth"></app-fa-icon
       ></span>
       <strong>کلینیک دکتر سعید مقدم</strong>
+    </a>
+
+    <a class="dashboard-back-link" routerLink="/">
+      <app-fa-icon name="arrowRight"></app-fa-icon>
+      <span>بازگشت به صفحه اصلی</span>
     </a>
 
     <div class="dashboard-user-card">
