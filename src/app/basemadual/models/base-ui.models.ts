@@ -14,7 +14,7 @@ export interface BaseTableColumn<T extends object> {
 export type BaseCardVariant = "default" | "elevated" | "interactive" | "flat";
 export type BaseBadgeVariant =
   | "success"
-  | "danger"
+  | "danger" 
   | "warning"
   | "info"
   | "neutral";
