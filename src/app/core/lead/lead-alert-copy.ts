@@ -4,6 +4,7 @@ export const LEAD_ALERT_PUSH_TITLE = "شماره جدید دارید";
 export const LEAD_ALERT_PUSH_BODY = "برای مشاهده، اعلان را باز کنید.";
 
 export interface RealtimeLeadNotificationDetails {
+  leadLimitType?: "Realtime" | "Burnt";
   userName?: string | null;
   phoneNumber?: string | null;
   isReminder?: boolean;
@@ -13,8 +14,10 @@ export function buildRealtimeLeadNotificationTitle(
   details?: RealtimeLeadNotificationDetails,
 ): string {
   const name = normalizeLeadField(details?.userName);
-  if (!name) return LEAD_ALERT_PUSH_TITLE;
-  return details?.isReminder ? `یادآوری شماره: ${name}` : `شماره جدید: ${name}`;
+  const leadTitle =
+    details?.leadLimitType === "Burnt" ? "لید سوخته" : "شماره جدید";
+  if (!name) return leadTitle;
+  return details?.isReminder ? `یادآوری ${leadTitle}: ${name}` : `${leadTitle}: ${name}`;
 }
 
 export function buildRealtimeLeadNotificationBody(

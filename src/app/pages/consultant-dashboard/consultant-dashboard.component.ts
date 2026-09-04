@@ -225,6 +225,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   canGoOnlineFromStatus = false;
   dashboardStatusLoaded = false;
   todayReservationsCount = 0;
+  totalReservationsCount = 0;
+  totalReservedPatientsCount = 0;
   todayCallsCount = 0;
   dailyLimit = 0;
   todayPickupCount = 0;
@@ -3160,6 +3162,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.isOnline = status.isOnline;
     this.canGoOnlineFromStatus = status.canGoOnline;
     this.todayReservationsCount = status.todayReservationsCount ?? 0;
+    this.totalReservationsCount = status.totalReservationsCount ?? 0;
+    this.totalReservedPatientsCount = status.totalReservedPatientsCount ?? 0;
     this.todayCallsCount = status.todayCallsCount ?? 0;
     this.dailyLimit = status.dailyLimit ?? 0;
     this.todayPickupCount = status.todayPickupCount ?? 0;

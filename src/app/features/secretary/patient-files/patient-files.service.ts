@@ -34,11 +34,11 @@ export class PatientFilesService {
     );
   }
 
-  createPatientFile(patientId: number): Observable<CreatePatientFileResult> {
-    return this.http.post<unknown>(this.endpoint, { patientId }).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
+  createPatientFile(patientId: number, description: string | null): Observable<CreatePatientFileResult> {
+    return this.http.post<unknown>(this.endpoint, { patientId, description }).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
   }
 
-  updatePatientFile(id: number, body: Pick<PatientFile, "firstName" | "lastName" | "phoneNumber">): Observable<PatientFile> {
+  updatePatientFile(id: number, body: Pick<PatientFile, "firstName" | "lastName" | "phoneNumber" | "description">): Observable<PatientFile> {
     return this.http.put<unknown>(`${this.endpoint}/${id}`, body).pipe(map((response) => this.data<PatientFile>(response)));
   }
 

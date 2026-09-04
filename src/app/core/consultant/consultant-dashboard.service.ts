@@ -53,6 +53,8 @@ export interface ConsultantDashboardStatus {
   canGoOnline: boolean;
   onlineStatusBlockReason: string | null;
   todayReservationsCount: number;
+  totalReservationsCount: number;
+  totalReservedPatientsCount: number;
   todayCallsCount: number;
   dailyLimit: number;
   todayPickupCount: number;
@@ -76,6 +78,8 @@ export interface BroadcastRealtimeLeadItem {
   PhoneNumber?: string | null;
   createdAt?: string;
   CreatedAt?: string;
+  leadLimitType?: "Realtime" | "Burnt";
+  LeadLimitType?: "Realtime" | "Burnt";
 }
 
 export interface BroadcastRealtimeLeadsResponse {
@@ -885,6 +889,18 @@ export class ConsultantDashboardService {
           source,
           "todayReservationsCount",
           "TodayReservationsCount",
+        ) ?? 0,
+      totalReservationsCount:
+        this.readNumber(
+          source,
+          "totalReservationsCount",
+          "TotalReservationsCount",
+        ) ?? 0,
+      totalReservedPatientsCount:
+        this.readNumber(
+          source,
+          "totalReservedPatientsCount",
+          "TotalReservedPatientsCount",
         ) ?? 0,
       todayCallsCount:
         this.readNumber(source, "todayCallsCount", "TodayCallsCount") ?? 0,

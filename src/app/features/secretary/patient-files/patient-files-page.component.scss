@@ -1,6 +1,7 @@
 :host { display: block; direction: rtl; }
 app-base-page-header { display: block; margin-block-end: 1rem; }
-.file-filter, .edit-form label, .import-box label { display: grid; gap: .3rem; color: var(--muted, #64748b); font-size: .875rem; }
+.file-filter, .edit-form label, .import-box label, .description-field { display: grid; gap: .3rem; color: var(--muted, #64748b); font-size: .875rem; }
+.description-field { margin-top: 1rem; }.description-field textarea { width: 100%; resize: vertical; min-height: 6rem; }.description-field small { text-align: left; }.description-cell { max-width: 18rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 input, select { min-height: 44px; border: 1px solid #dbe2ea; border-radius: 10px; padding: .55rem .75rem; background: #fff; font: inherit; }
 .table-wrap { overflow-x: auto; } table { width: 100%; border-collapse: collapse; } th, td { padding: .85rem; text-align: right; border-bottom: 1px solid #e8edf2; white-space: nowrap; }
 th { color: #64748b; font-size: .85rem; background: #f8fafc; } .row-actions { display: flex; gap: .5rem; }

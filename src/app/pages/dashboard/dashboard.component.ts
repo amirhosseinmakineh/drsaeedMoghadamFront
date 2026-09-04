@@ -19,6 +19,7 @@ import {
   Consultant,
   ConsultantDailySummaryItem,
   ConsultantFilters,
+  LeadAssignmentSourceType,
   SaveUserRequest,
   SecretaryFilters,
   SecretaryPermissionType,
@@ -67,6 +68,7 @@ type DashboardSection =
   | "consultants"
   | "consultantProfile"
   | "leads"
+  | "leadSettings"
   | "leadReports"
   | "leadsReport"
   | "dailyReservationsReport"
@@ -107,6 +109,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "consultants",
   "consultantProfile",
   "leads",
+  "leadSettings",
   "leadReports",
   "leadsReport",
   "dailyReservationsReport",
@@ -151,6 +154,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "consultants", label: "مشاوران", icon: "doctor" },
     { id: "consultantProfile", label: "پروفایل مشاور", icon: "user" },
     { id: "leads", label: "درخواست‌های مشاوره", icon: "clipboard" },
+    { id: "leadSettings", label: "تنظیمات تخصیص لید", icon: "settings" },
     { id: "leadReports", label: "گزارش تماس درخواست‌ها", icon: "clipboard" },
     { id: "leadsReport", label: "گزارش لیدها", icon: "table" },
     { id: "dailyReservationsReport", label: "رزروهای روزانه", icon: "calendar" },
@@ -248,6 +252,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedAttendanceConsultant: Consultant | null = null;
   selectedLeadsConsultant: Consultant | null = null;
   selectedProfileConsultantId: number | null = null;
+  leadAssignmentSourceType: LeadAssignmentSourceType = 1;
+  leadAssignmentSettingLoading = false;
+  leadAssignmentSettingSaving = false;
   mobileSidebarOpen = false;
 
   feedbackMessage = "";
@@ -395,6 +402,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         });
       this.loadUsers();
       this.loadConsultants();
+      this.loadLeadAssignmentSetting();
       this.applySectionRouteParams(this.route.snapshot.queryParamMap);
       this.routeQueryParamsSubscription = this.route.queryParamMap.subscribe(
         (params) => this.applySectionRouteParams(params),
@@ -496,6 +504,60 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (section === "secretaries" && !this.secretaries.length) this.loadSecretaries();
     if (section === "consultants" && !this.consultants.length)
       this.loadConsultants();
+  }
+
+  loadLeadAssignmentSetting(): void {
+    if (this.leadAssignmentSettingLoading) return;
+    this.leadAssignmentSettingLoading = true;
+    this.markDirty();
+
+    this.adminApi
+      .getLeadAssignmentSetting()
+      .pipe(
+        finalize(() => {
+          this.leadAssignmentSettingLoading = false;
+          this.markDirty();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (setting) => {
+          this.leadAssignmentSourceType = Number(setting.assignmentSourceType) === 2 ? 2 : 1;
+          this.markDirty();
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "خطا در دریافت تنظیمات نوع لید."),
+            "error",
+          ),
+      });
+  }
+
+  saveLeadAssignmentSetting(): void {
+    if (this.leadAssignmentSettingSaving) return;
+    this.leadAssignmentSettingSaving = true;
+    this.markDirty();
+
+    this.adminApi
+      .updateLeadAssignmentSetting(this.leadAssignmentSourceType)
+      .pipe(
+        finalize(() => {
+          this.leadAssignmentSettingSaving = false;
+          this.markDirty();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (setting) => {
+          this.leadAssignmentSourceType = Number(setting.assignmentSourceType) === 2 ? 2 : 1;
+          this.showFeedback("نوع لید قابل تخصیص ذخیره شد", "success");
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "خطا در ذخیره تنظیمات نوع لید."),
+            "error",
+          ),
+      });
   }
 
   private syncSectionQueryParam(section: DashboardSection): void {

@@ -39,10 +39,11 @@ export class PatientFilesPageComponent implements OnInit {
   eligibleTotal = 0;
   eligibleLoading = false;
   selectedPatient: EligiblePatient | null = null;
+  createDescription = "";
   creating = false;
   editOpen = false;
   editing: PatientFile | null = null;
-  editForm = { firstName: "", lastName: "", phoneNumber: "" };
+  editForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
   updating = false;
   deleting: PatientFile | null = null;
   deleteLoading = false;
@@ -93,7 +94,7 @@ export class PatientFilesPageComponent implements OnInit {
   debtStatusLabel(value: number): string { return ({ 1: "پرداخت‌نشده", 2: "پرداخت‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
   financialSourceLabel(value: number): string { return value === 1 ? "چک" : value === 2 ? "سفته" : "نامشخص"; }
 
-  openCreate(): void { this.createOpen = true; this.selectedPatient = null; this.eligibleSearch = ""; this.eligiblePage = 1; this.loadEligible(); }
+  openCreate(): void { this.createOpen = true; this.selectedPatient = null; this.createDescription = ""; this.eligibleSearch = ""; this.eligiblePage = 1; this.loadEligible(); }
   closeCreate(): void { if (!this.creating) this.createOpen = false; }
   loadEligible(): void {
     this.eligibleLoading = true;
@@ -107,19 +108,20 @@ export class PatientFilesPageComponent implements OnInit {
   create(): void {
     if (!this.selectedPatient || this.creating) return;
     this.creating = true;
-    this.api.createPatientFile(this.selectedPatient.id).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
+    const description = this.createDescription.trim() || null;
+    this.api.createPatientFile(this.selectedPatient.id, description).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
       .subscribe({ next: (result) => { this.toast.success(`پرونده بیمار با موفقیت ایجاد شد. شماره پرونده: ${result.fileNumber}`); this.createOpen = false; this.loadFiles(); },
         error: (error) => this.toast.error(this.errorMessage(error, "ایجاد پرونده انجام نشد.")) });
   }
 
   openEdit(file: PatientFile): void {
-    this.editing = file; this.editForm = { firstName: file.firstName, lastName: file.lastName, phoneNumber: file.phoneNumber }; this.editOpen = true;
+    this.editing = file; this.editForm = { firstName: file.firstName, lastName: file.lastName, phoneNumber: file.phoneNumber, description: file.description ?? "" }; this.editOpen = true;
   }
   closeEdit(): void { if (!this.updating) this.editOpen = false; }
   update(): void {
     if (!this.editing || this.updating || !this.editForm.firstName.trim() || !this.editForm.lastName.trim() || !this.editForm.phoneNumber.trim()) return;
     this.updating = true;
-    const body = { firstName: this.editForm.firstName.trim(), lastName: this.editForm.lastName.trim(), phoneNumber: this.editForm.phoneNumber.trim() };
+    const body = { firstName: this.editForm.firstName.trim(), lastName: this.editForm.lastName.trim(), phoneNumber: this.editForm.phoneNumber.trim(), description: this.editForm.description.trim() || null };
     this.api.updatePatientFile(this.editing.id, body).pipe(finalize(() => { this.updating = false; this.cdr.markForCheck(); }))
       .subscribe({ next: () => { this.toast.success("اطلاعات پرونده با موفقیت ویرایش شد."); this.editOpen = false; this.loadFiles(); },
         error: (error) => this.toast.error(this.errorMessage(error, "ویرایش پرونده انجام نشد.")) });

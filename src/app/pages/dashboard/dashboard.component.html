@@ -157,6 +157,10 @@
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
               <strong>مدیریت درخواست‌های مشاوره</strong>
             </button>
+            <button type="button" (click)="setSection('leadSettings')">
+              <span><app-fa-icon name="settings"></app-fa-icon></span>
+              <strong>تنظیمات تخصیص لید</strong>
+            </button>
             <button type="button" (click)="setSection('leadReports')">
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
               <strong>گزارش تماس درخواست‌های مشاوره</strong>
@@ -451,10 +455,35 @@
         }
 
         @if (activeSection === "leads") {
-          <app-admin-leads-table
-            mode="system"
-            title="مدیریت همه درخواست‌های مشاوره"
-          ></app-admin-leads-table>
+          <app-admin-leads-table mode="system" title="مدیریت همه درخواست‌های مشاوره"></app-admin-leads-table>
+        }
+
+        @if (activeSection === "leadSettings") {
+          <section class="lead-source-settings" aria-labelledby="lead-source-settings-title">
+            <div>
+              <span>مدیریت تخصیص لید</span>
+              <h2 id="lead-source-settings-title">منبع لید مشاوران</h2>
+              <p>مشخص کنید سرویس تخصیص و اعلان بعدی از لیدهای جدید استفاده کند یا شماره‌های سوخته.</p>
+            </div>
+            <div class="lead-source-settings__controls">
+              <select
+                [(ngModel)]="leadAssignmentSourceType"
+                [disabled]="leadAssignmentSettingLoading || leadAssignmentSettingSaving"
+                aria-label="نوع لید قابل تخصیص"
+              >
+                <option [ngValue]="1">لید جدید</option>
+                <option [ngValue]="2">شماره سوخته</option>
+              </select>
+              <button
+                type="button"
+                class="primary-action"
+                [disabled]="leadAssignmentSettingLoading || leadAssignmentSettingSaving"
+                (click)="saveLeadAssignmentSetting()"
+              >
+                {{ leadAssignmentSettingSaving ? "در حال ذخیره..." : "ذخیره" }}
+              </button>
+            </div>
+          </section>
         }
 
         @if (activeSection === "leadReports") {
