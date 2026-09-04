@@ -6,6 +6,7 @@ export enum LeadAssignmentState {
   Converted = 5,
   Expired = 6,
   Rejected = 7,
+  NoAnswer = 8,
 }
 
 export type LeadAssignmentStateBadgeTone =
@@ -51,6 +52,10 @@ const STATE_PRESENTATIONS: Record<
     label: "رد شده",
     badge: "danger",
   },
+  [LeadAssignmentState.NoAnswer]: {
+    label: "پاسخ نداد",
+    badge: "warn",
+  },
 };
 
 const STATE_BY_NAME: Record<string, LeadAssignmentState> = {
@@ -61,6 +66,7 @@ const STATE_BY_NAME: Record<string, LeadAssignmentState> = {
   Converted: LeadAssignmentState.Converted,
   Expired: LeadAssignmentState.Expired,
   Rejected: LeadAssignmentState.Rejected,
+  NoAnswer: LeadAssignmentState.NoAnswer,
 };
 
 const UNKNOWN_PRESENTATION: LeadAssignmentStatePresentation = {
@@ -127,6 +133,6 @@ function isLeadAssignmentState(
   value: number,
 ): value is LeadAssignmentState {
   return (
-    value >= LeadAssignmentState.New && value <= LeadAssignmentState.Rejected
+    value >= LeadAssignmentState.New && value <= LeadAssignmentState.NoAnswer
   );
 }

@@ -12,6 +12,12 @@ export interface ApiCommandResponse<T = unknown> {
   data?: T;
 }
 
+export type LeadAssignmentSourceType = 1 | 2;
+export interface LeadAssignmentSettingResponse {
+  assignmentSourceType: LeadAssignmentSourceType;
+  updatedAt?: string | null;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   totalCount: number;
@@ -592,6 +598,18 @@ export class AdminDashboardService {
     private auth: AuthService,
   ) {}
 
+  getLeadAssignmentSetting(): Observable<LeadAssignmentSettingResponse> {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/admin/lead-assignment-settings`, {
+      headers: this.authHeaders(),
+    }).pipe(map((response) => this.unwrap<LeadAssignmentSettingResponse>(response)));
+  }
+
+  updateLeadAssignmentSetting(assignmentSourceType: LeadAssignmentSourceType): Observable<LeadAssignmentSettingResponse> {
+    return this.http.put<unknown>(`${this.apiBaseUrl}/admin/lead-assignment-settings`, { assignmentSourceType }, {
+      headers: this.authHeaders(),
+    }).pipe(map((response) => this.unwrap<LeadAssignmentSettingResponse>(response)));
+  }
+
   getUsers(filters: UserFilters): Observable<PaginatedResponse<AdminUser>> {
     return this.http
       .get<unknown>(`${this.apiBaseUrl}/User`, {
@@ -1112,6 +1130,11 @@ export class AdminDashboardService {
           ),
         ),
       );
+  }
+
+  private unwrap<T>(response: unknown): T {
+    const wrapper = response as { data?: T; result?: T };
+    return wrapper?.data ?? wrapper?.result ?? response as T;
   }
 
   private authHeaders(): HttpHeaders {

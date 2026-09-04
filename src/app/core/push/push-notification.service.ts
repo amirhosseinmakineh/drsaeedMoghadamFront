@@ -432,6 +432,10 @@ export class PushNotificationService {
       pushType === "RealtimeLead"
         ? resolveRealtimeLeadNotificationTitle(
             {
+              leadLimitType:
+                payload.data?.["leadLimitType"] === "Burnt"
+                  ? "Burnt"
+                  : "Realtime",
               userName: payload.data?.["userName"] ?? payload.data?.["UserName"],
               phoneNumber:
                 payload.data?.["phoneNumber"] ?? payload.data?.["PhoneNumber"],
@@ -444,6 +448,10 @@ export class PushNotificationService {
       pushType === "RealtimeLead"
         ? resolveRealtimeLeadNotificationBody(
             {
+              leadLimitType:
+                payload.data?.["leadLimitType"] === "Burnt"
+                  ? "Burnt"
+                  : "Realtime",
               userName: payload.data?.["userName"] ?? payload.data?.["UserName"],
               phoneNumber:
                 payload.data?.["phoneNumber"] ?? payload.data?.["PhoneNumber"],
@@ -466,6 +474,8 @@ export class PushNotificationService {
   private titleForData(data?: Record<string, string>): string {
     if (data?.["type"] === "RealtimeLead") {
       return buildRealtimeLeadNotificationTitle({
+        leadLimitType:
+          data["leadLimitType"] === "Burnt" ? "Burnt" : "Realtime",
         userName: data["userName"] ?? data["UserName"],
         phoneNumber: data["phoneNumber"] ?? data["PhoneNumber"],
         isReminder: data["isReminder"] === "true",
@@ -478,6 +488,8 @@ export class PushNotificationService {
   private bodyForData(data?: Record<string, string>): string {
     if (data?.["type"] === "RealtimeLead") {
       return buildRealtimeLeadNotificationBody({
+        leadLimitType:
+          data["leadLimitType"] === "Burnt" ? "Burnt" : "Realtime",
         userName: data["userName"] ?? data["UserName"],
         phoneNumber: data["phoneNumber"] ?? data["PhoneNumber"],
         isReminder: data["isReminder"] === "true",

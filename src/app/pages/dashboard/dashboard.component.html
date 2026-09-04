@@ -439,10 +439,31 @@
         }
 
         @if (activeSection === "leads") {
-          <app-admin-leads-table
-            mode="system"
-            title="مدیریت همه درخواست‌های مشاوره"
-          ></app-admin-leads-table>
+          <section class="lead-source-settings" aria-labelledby="lead-source-settings-title">
+            <div>
+              <h3 id="lead-source-settings-title">نوع لید قابل تخصیص</h3>
+              <p>مشخص کنید اعلان و دریافت بعدی برای لید جدید باشد یا شماره سوخته.</p>
+            </div>
+            <div class="lead-source-settings__controls">
+              <select
+                [(ngModel)]="leadAssignmentSourceType"
+                [disabled]="leadAssignmentSettingLoading || leadAssignmentSettingSaving"
+                aria-label="نوع لید قابل تخصیص"
+              >
+                <option [ngValue]="1">لید جدید</option>
+                <option [ngValue]="2">شماره سوخته</option>
+              </select>
+              <button
+                type="button"
+                class="primary-action"
+                [disabled]="leadAssignmentSettingLoading || leadAssignmentSettingSaving"
+                (click)="saveLeadAssignmentSetting()"
+              >
+                {{ leadAssignmentSettingSaving ? "در حال ذخیره..." : "ذخیره" }}
+              </button>
+            </div>
+          </section>
+          <app-admin-leads-table mode="system" title="مدیریت همه درخواست‌های مشاوره"></app-admin-leads-table>
         }
 
         @if (activeSection === "leadReports") {
