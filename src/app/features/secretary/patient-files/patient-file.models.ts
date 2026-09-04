@@ -8,6 +8,7 @@ export interface PatientFile {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  description?: string | null;
   sourceType: PatientFileSourceType;
   createdAt?: string;
   finance: PatientFinance | null;
