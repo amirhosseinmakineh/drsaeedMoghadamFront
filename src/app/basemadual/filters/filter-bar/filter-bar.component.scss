@@ -2,12 +2,18 @@
 :host {
   @include foundation.host-tokens;
   display: block;
+  min-width: 0;
 }
 section,
 .fields,
 .actions {
   display: grid;
   gap: var(--bm-space-3);
+}
+.fields > *,
+.actions > * {
+  min-width: 0;
+  max-width: 100%;
 }
 section {
   padding: var(--bm-space-4);
@@ -52,5 +58,17 @@ button:focus-visible {
   }
   .fields ::ng-deep > * {
     flex: 1 1 10rem;
+  }
+}
+@media (max-width: 639px) {
+  section {
+    padding: var(--bm-space-3);
+  }
+  .fields,
+  .actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .actions button {
+    width: 100%;
   }
 }

@@ -53,6 +53,7 @@ export interface ConsultantDashboardStatus {
   canGoOnline: boolean;
   onlineStatusBlockReason: string | null;
   todayReservationsCount: number;
+  totalReservationsCount: number;
   todayCallsCount: number;
   dailyLimit: number;
   todayPickupCount: number;
@@ -887,6 +888,12 @@ export class ConsultantDashboardService {
           source,
           "todayReservationsCount",
           "TodayReservationsCount",
+        ) ?? 0,
+      totalReservationsCount:
+        this.readNumber(
+          source,
+          "totalReservationsCount",
+          "TotalReservationsCount",
         ) ?? 0,
       todayCallsCount:
         this.readNumber(source, "todayCallsCount", "TodayCallsCount") ?? 0,

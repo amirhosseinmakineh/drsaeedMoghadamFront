@@ -11,6 +11,11 @@
   margin-inline: auto;
   padding-block: var(--bm-space-4) var(--bm-space-8);
 }
+.shell > *,
+header > * {
+  min-width: 0;
+  max-width: 100%;
+}
 header {
   display: flex;
   flex-direction: column;
@@ -33,6 +38,16 @@ p {
 .filters:empty,
 .actions:empty {
   display: none;
+}
+@media (max-width: 639px) {
+  .shell {
+    width: min(100% - 0.75rem, 80rem);
+    padding-block-end: calc(var(--bm-space-8) + env(safe-area-inset-bottom, 0px));
+  }
+  .actions,
+  .actions ::ng-deep > * {
+    width: 100%;
+  }
 }
 @media (min-width: 640px) {
   .shell {

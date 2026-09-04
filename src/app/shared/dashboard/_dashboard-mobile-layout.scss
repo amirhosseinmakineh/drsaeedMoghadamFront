@@ -78,6 +78,10 @@
     display: none;
   }
 
+  .dashboard-content {
+    container: dashboard-content / inline-size;
+  }
+
   // Keep desktop dashboards dense and predictable; mobile navigation must not
   // leak into wide layouts.
   @media (min-width: 981px) {
@@ -195,6 +199,28 @@
   }
 
   @media (max-width: 980px) {
+    .dashboard-layout,
+    .dashboard-layout.admin-mode,
+    .dashboard-layout.patient-mode,
+    .dashboard-layout.consultant-mode,
+    .dashboard-layout.secretary-mode {
+      display: block;
+      width: min(100% - 20px, 100%);
+      max-width: 100%;
+      margin-inline: auto;
+      padding-block: max(8px, env(safe-area-inset-top, 0px))
+        calc(84px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .dashboard-layout *,
+    .dashboard-content,
+    .admin-shell,
+    .consultant-shell,
+    .secretary-shell {
+      min-width: 0;
+      max-width: 100%;
+    }
+
     .dashboard-back-link {
       display: flex;
     }
@@ -205,7 +231,7 @@
       justify-content: space-between;
       gap: 12px;
       position: sticky;
-      top: 0;
+      top: max(0px, env(safe-area-inset-top, 0px));
       z-index: 90;
       margin-bottom: 10px;
       padding: 10px 12px;
@@ -296,6 +322,45 @@
       z-index: 95;
       border: 0;
       background: rgba(20, 16, 12, 0.42);
+      backdrop-filter: blur(2px);
+    }
+
+    .dashboard-sidebar {
+      position: fixed;
+      inset-block: 0;
+      inset-inline-start: 0;
+      z-index: 100;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      width: min(320px, 85vw);
+      max-width: 85vw;
+      height: 100dvh;
+      min-height: 0;
+      max-height: 100dvh;
+      margin: 0;
+      padding:
+        max(14px, env(safe-area-inset-top, 0px))
+        14px
+        max(14px, env(safe-area-inset-bottom, 0px));
+      border-radius: 0;
+      overflow-x: clip;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      box-shadow: 0 0 42px rgb(0 0 0 / 24%);
+      transform: translateX(110%);
+      visibility: hidden;
+      transition: transform 220ms ease, visibility 220ms;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    [dir="ltr"] .dashboard-sidebar {
+      transform: translateX(-110%);
+    }
+
+    .dashboard-sidebar.mobile-sidebar-open {
+      transform: translateX(0);
+      visibility: visible;
     }
 
     .mobile-sidebar-header {
@@ -363,6 +428,8 @@
     }
 
     .dashboard-content {
+      width: 100%;
+      max-width: 100%;
       padding-top: 2px;
       padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     }
@@ -451,6 +518,26 @@
     .dashboard-mobile-header {
       gap: 6px;
       padding-inline: 8px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .dashboard-layout,
+    .dashboard-layout.admin-mode,
+    .dashboard-layout.patient-mode,
+    .dashboard-layout.consultant-mode,
+    .dashboard-layout.secretary-mode {
+      width: min(100% - 12px, 100%);
+    }
+
+    .dashboard-mobile-header {
+      border-radius: 18px;
+    }
+
+    .mobile-primary-nav {
+      inset-inline: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+      bottom: max(6px, env(safe-area-inset-bottom, 0px));
     }
   }
 }

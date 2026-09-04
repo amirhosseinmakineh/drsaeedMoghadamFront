@@ -2,6 +2,7 @@
 :host {
   @include foundation.host-tokens;
   display: block;
+  min-width: 0;
 }
 header,
 .copy,
@@ -38,7 +39,17 @@ p {
   flex-wrap: wrap;
 }
 @media (max-width: 639px) {
+  header {
+    align-items: stretch;
+  }
+  .copy {
+    align-items: flex-start;
+  }
   .actions {
     width: 100%;
+  }
+  .actions ::ng-deep > * {
+    flex: 1 1 100%;
+    max-width: 100%;
   }
 }
