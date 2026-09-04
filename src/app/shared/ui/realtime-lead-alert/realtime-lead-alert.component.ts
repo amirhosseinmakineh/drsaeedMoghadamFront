@@ -55,10 +55,4 @@ export class RealtimeLeadAlertComponent implements OnInit, OnDestroy {
   dismiss(leadId: number): void {
     this.alertService.dismissLead(leadId);
   }
-
-  titleFor(alert: RealtimeLeadAlert): string {
-    return alert.leadLimitType === "Burnt"
-      ? "لید سوخته دارید"
-      : this.leadAlertTitle;
-  }
 }

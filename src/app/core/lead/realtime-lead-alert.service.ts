@@ -23,7 +23,6 @@ import { RealtimeLeadPickupService } from "./realtime-lead-pickup.service";
 
 export interface RealtimeLeadAlert {
   leadId: number;
-  leadLimitType: "Realtime" | "Burnt";
   userName?: string | null;
   phoneNumber?: string | null;
   isSubmitting: boolean;
@@ -37,7 +36,6 @@ type ServiceWorkerMessage =
   | { type: "RealtimeLeadOpen"; leadId: number };
 
 interface IncomingLeadDetails extends RealtimeLeadNotificationDetails {
-  leadLimitType?: "Realtime" | "Burnt";
   title?: string;
   body?: string;
 }
@@ -85,11 +83,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
       return;
     }
 
-    const leadLimitType =
-      detail.data?.["leadLimitType"] === "Burnt" ? "Burnt" : "Realtime";
-
     void this.notifyIncomingLead(leadId, {
-      leadLimitType,
       userName: detail?.data?.["userName"] ?? detail?.data?.["UserName"],
       phoneNumber:
         detail?.data?.["phoneNumber"] ?? detail?.data?.["PhoneNumber"],
@@ -284,7 +278,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
         }
 
         await this.notifyIncomingLead(leadId, {
-          leadLimitType: alert.leadLimitType,
           userName: alert.userName,
           phoneNumber: alert.phoneNumber,
           isReminder: true,
@@ -306,7 +299,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
       if (!leadId) return;
 
       await this.notifyIncomingLead(leadId, {
-        leadLimitType: this.readBroadcastLeadLimitType(lead),
         userName: lead.userName ?? lead.UserName,
         phoneNumber: lead.phoneNumber ?? lead.PhoneNumber,
       });
@@ -320,14 +312,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
   private readBroadcastLeadId(lead: BroadcastRealtimeLeadItem): number | null {
     const leadId = Number(lead.leadAssignmentId ?? lead.LeadAssignmentId ?? 0);
     return Number.isFinite(leadId) && leadId > 0 ? leadId : null;
-  }
-
-  private readBroadcastLeadLimitType(
-    lead: BroadcastRealtimeLeadItem,
-  ): "Realtime" | "Burnt" {
-    return (lead.leadLimitType ?? lead.LeadLimitType) === "Burnt"
-      ? "Burnt"
-      : "Realtime";
   }
 
   private async handleServiceWorkerMessage(
@@ -386,7 +370,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
         profileId,
       );
       const notificationDetails: RealtimeLeadNotificationDetails = {
-        leadLimitType: enrichedDetails.leadLimitType,
         userName: enrichedDetails.userName,
         phoneNumber: enrichedDetails.phoneNumber,
         isReminder: enrichedDetails.isReminder,
@@ -402,7 +385,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
       const existingAlert = this.activeAlerts.get(leadId);
       if (existingAlert) {
-        existingAlert.leadLimitType = enrichedDetails.leadLimitType ?? "Realtime";
         existingAlert.userName =
           notificationDetails.userName ?? existingAlert.userName;
         existingAlert.phoneNumber =
@@ -411,7 +393,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
       } else {
         this.activeAlerts.set(leadId, {
           leadId,
-          leadLimitType: enrichedDetails.leadLimitType ?? "Realtime",
           userName: notificationDetails.userName,
           phoneNumber: notificationDetails.phoneNumber,
           isSubmitting: false,
@@ -435,7 +416,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
         data: {
           type: "RealtimeLead",
           leadId: String(leadId),
-          leadLimitType: enrichedDetails.leadLimitType ?? "Realtime",
           userName: notificationDetails.userName ?? "",
           phoneNumber: notificationDetails.phoneNumber ?? "",
           isReminder: notificationDetails.isReminder ? "true" : "false",
@@ -466,7 +446,6 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
       return {
         ...details,
-        leadLimitType: this.readBroadcastLeadLimitType(lead),
         userName:
           userName ||
           normalizeLeadField(lead.userName ?? lead.UserName) ||

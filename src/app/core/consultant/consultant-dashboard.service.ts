@@ -76,8 +76,6 @@ export interface BroadcastRealtimeLeadItem {
   PhoneNumber?: string | null;
   createdAt?: string;
   CreatedAt?: string;
-  leadLimitType?: "Realtime" | "Burnt";
-  LeadLimitType?: "Realtime" | "Burnt";
 }
 
 export interface BroadcastRealtimeLeadsResponse {
