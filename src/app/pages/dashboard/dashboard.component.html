@@ -157,6 +157,10 @@
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
               <strong>مدیریت درخواست‌های مشاوره</strong>
             </button>
+            <button type="button" (click)="setSection('leadSettings')">
+              <span><app-fa-icon name="settings"></app-fa-icon></span>
+              <strong>تنظیمات تخصیص لید</strong>
+            </button>
             <button type="button" (click)="setSection('leadReports')">
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
               <strong>گزارش تماس درخواست‌های مشاوره</strong>
@@ -439,10 +443,15 @@
         }
 
         @if (activeSection === "leads") {
+          <app-admin-leads-table mode="system" title="مدیریت همه درخواست‌های مشاوره"></app-admin-leads-table>
+        }
+
+        @if (activeSection === "leadSettings") {
           <section class="lead-source-settings" aria-labelledby="lead-source-settings-title">
             <div>
-              <h3 id="lead-source-settings-title">نوع لید قابل تخصیص</h3>
-              <p>مشخص کنید اعلان و دریافت بعدی برای لید جدید باشد یا شماره سوخته.</p>
+              <span>مدیریت تخصیص لید</span>
+              <h2 id="lead-source-settings-title">منبع لید مشاوران</h2>
+              <p>مشخص کنید سرویس تخصیص و اعلان بعدی از لیدهای جدید استفاده کند یا شماره‌های سوخته.</p>
             </div>
             <div class="lead-source-settings__controls">
               <select
@@ -463,7 +472,6 @@
               </button>
             </div>
           </section>
-          <app-admin-leads-table mode="system" title="مدیریت همه درخواست‌های مشاوره"></app-admin-leads-table>
         }
 
         @if (activeSection === "leadReports") {

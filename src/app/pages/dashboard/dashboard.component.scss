@@ -489,20 +489,18 @@ label {
 @include mobile-layout.dashboard-mobile-layout;
 
 .lead-source-settings {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: 18px;
-  margin-bottom: 18px;
-  padding: 18px;
+  padding: clamp(18px, 3vw, 28px);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 24px;
   background: var(--surface);
 }
-.lead-source-settings h3 { margin: 0 0 6px; }
+.lead-source-settings span { color: var(--brand); font-size: .85rem; font-weight: 700; }
+.lead-source-settings h2 { margin: 6px 0; }
 .lead-source-settings p { margin: 0; color: var(--muted); }
-.lead-source-settings__controls { display: flex; align-items: center; gap: 10px; }
-.lead-source-settings__controls select { min-width: 170px; }
+.lead-source-settings__controls { display: flex; align-items: center; gap: 12px; max-width: 520px; }
+.lead-source-settings__controls select { min-width: 220px; flex: 1; }
 @media (max-width: 620px) {
   .lead-source-settings,
   .lead-source-settings__controls { align-items: stretch; flex-direction: column; }

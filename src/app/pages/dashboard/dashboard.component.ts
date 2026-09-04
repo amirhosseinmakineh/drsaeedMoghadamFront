@@ -65,6 +65,7 @@ type DashboardSection =
   | "consultants"
   | "consultantProfile"
   | "leads"
+  | "leadSettings"
   | "leadReports"
   | "leadsReport"
   | "dailyReservationsReport";
@@ -102,6 +103,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "consultants",
   "consultantProfile",
   "leads",
+  "leadSettings",
   "leadReports",
   "leadsReport",
   "dailyReservationsReport",
@@ -140,6 +142,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "consultants", label: "مشاوران", icon: "doctor" },
     { id: "consultantProfile", label: "پروفایل مشاور", icon: "user" },
     { id: "leads", label: "درخواست‌های مشاوره", icon: "clipboard" },
+    { id: "leadSettings", label: "تنظیمات تخصیص لید", icon: "settings" },
     { id: "leadReports", label: "گزارش تماس درخواست‌ها", icon: "clipboard" },
     { id: "leadsReport", label: "گزارش لیدها", icon: "table" },
     { id: "dailyReservationsReport", label: "رزروهای روزانه", icon: "calendar" },
