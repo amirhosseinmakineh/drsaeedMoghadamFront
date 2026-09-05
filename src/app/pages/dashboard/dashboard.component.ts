@@ -39,6 +39,7 @@ import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consul
 import { AdminSecretarySaleServicesComponent } from "../admin-dashboard/admin-secretary-sale-services.component";
 import { AdminSecretarySalesApprovalComponent } from "../admin-dashboard/admin-secretary-sales-approval.component";
 import { AdminLeadAssignmentSettingsComponent } from "../admin-dashboard/admin-lead-assignment-settings.component";
+import { AdminPatientFinanceReportComponent } from "../admin-dashboard/admin-patient-finance-report.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -74,7 +75,8 @@ type DashboardSection =
   | "dailyReservationsReport"
   | "secretarySaleServices"
   | "secretarySales"
-  | "leadAssignmentSettings";
+  | "leadAssignmentSettings"
+  | "patientFinanceReport";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -116,6 +118,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "secretarySaleServices",
   "secretarySales",
   "leadAssignmentSettings",
+  "patientFinanceReport",
 ];
 
 @Component({
@@ -137,6 +140,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminSecretarySaleServicesComponent,
     AdminSecretarySalesApprovalComponent,
     AdminLeadAssignmentSettingsComponent,
+    AdminPatientFinanceReportComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -161,6 +165,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "secretarySaleServices", label: "خدمات فروش منشی", icon: "list" },
     { id: "secretarySales", label: "فروش‌های منشی‌ها", icon: "wallet" },
     { id: "leadAssignmentSettings", label: "مدیریت تخصیص لیدها", icon: "clipboard" },
+    { id: "patientFinanceReport", label: "گزارش حسابداری بیماران", icon: "wallet" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },

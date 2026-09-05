@@ -1,0 +1,37 @@
+<section class="finance-report" aria-labelledby="patient-finance-report-title">
+  <header class="report-header">
+    <div><span>گزارش مالی</span><h2 id="patient-finance-report-title">حسابداری تمام بیماران</h2><p>جمع مبالغ و خروجی اکسل دقیقاً مطابق فیلترهای انتخاب‌شده محاسبه می‌شود.</p></div>
+    <button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button>
+  </header>
+
+  <form class="filters" (ngSubmit)="load(true)">
+    <label>جست‌وجوی بیمار<input [(ngModel)]="filters.search" name="search" placeholder="نام، موبایل یا شماره پرونده" /></label>
+    <label>خدمت<select [(ngModel)]="filters.serviceId" name="serviceId"><option [ngValue]="undefined">همه</option><option *ngFor="let service of services" [ngValue]="service.value">{{ service.label }}</option></select></label>
+    <label>نوع توافق<select [(ngModel)]="filters.agreementType" name="agreementType"><option [ngValue]="undefined">همه</option><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
+    <label>وضعیت<select [(ngModel)]="filters.status" name="status"><option [ngValue]="undefined">همه</option><option [ngValue]="1">فعال</option><option [ngValue]="2">تسویه‌شده</option><option [ngValue]="3">لغوشده</option></select></label>
+    <label>از تاریخ<input type="date" [(ngModel)]="filters.fromDate" name="fromDate" /></label>
+    <label>تا تاریخ<input type="date" [(ngModel)]="filters.toDate" name="toDate" /></label>
+    <div class="filter-actions"><button type="submit" [disabled]="loading">{{ loading ? "در حال دریافت..." : "اعمال فیلتر" }}</button><button type="button" class="muted" (click)="clear()">پاک‌کردن</button></div>
+  </form>
+
+  @if (errorMessage) { <p class="error">{{ errorMessage }}</p> }
+  @if (report) {
+    <div class="summary">
+      <article><small>تعداد پرونده</small><strong>{{ report.summary.caseCount }}</strong></article>
+      <article><small>مبلغ کل</small><strong>{{ money(report.summary.totalAmount) }}</strong></article>
+      <article><small>پیش‌پرداخت</small><strong>{{ money(report.summary.prePaymentAmount) }}</strong></article>
+      <article><small>ودیعه</small><strong>{{ money(report.summary.depositAmount) }}</strong></article>
+      <article class="success"><small>پرداخت قطعی</small><strong>{{ money(report.summary.paidAmount) }}</strong></article>
+      <article class="warning"><small>مانده</small><strong>{{ money(report.summary.remainingAmount) }}</strong></article>
+      <article class="danger"><small>بدهی باز</small><strong>{{ money(report.summary.unpaidDebtAmount) }}</strong></article>
+      <article><small>مجموع چک‌ها</small><strong>{{ money(report.summary.chequeAmount) }}</strong></article>
+      <article><small>مجموع سفته‌ها</small><strong>{{ money(report.summary.promissoryNoteAmount) }}</strong></article>
+    </div>
+
+    <div class="table-wrap"><table><thead><tr><th>بیمار</th><th>پرونده</th><th>خدمت</th><th>مبلغ کل</th><th>پیش‌پرداخت</th><th>ودیعه</th><th>پرداخت</th><th>مانده</th><th>بدهی باز</th><th>چک</th><th>سفته</th><th>توافق</th><th>وضعیت</th><th>ثبت‌کننده</th><th>تاریخ</th></tr></thead><tbody>
+      <tr *ngFor="let item of report.items; trackBy: trackCase"><td><strong>{{ item.patientName }}</strong><small>{{ item.phoneNumber }}</small></td><td>{{ item.fileNumber || "—" }}</td><td>{{ item.serviceName }}</td><td>{{ money(item.totalAmount) }}</td><td>{{ money(item.prePaymentAmount) }}</td><td>{{ money(item.depositAmount) }}</td><td>{{ money(item.paidAmount) }}</td><td>{{ money(item.remainingAmount) }}</td><td>{{ money(item.unpaidDebtAmount) }}</td><td>{{ money(item.chequeAmount) }}</td><td>{{ money(item.promissoryNoteAmount) }}</td><td>{{ agreement(item.agreementType) }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ item.createdBy || "—" }}</td><td>{{ date(item.createdAt) }}</td></tr>
+    </tbody></table></div>
+    @if (!report.items.length) { <p class="empty">پرونده‌ای مطابق فیلتر پیدا نشد.</p> }
+    <footer class="pagination"><button type="button" [disabled]="filters.page <= 1" (click)="goTo(filters.page - 1)">قبلی</button><span>صفحه {{ filters.page }} از {{ totalPages }} — {{ report.totalCount }} رکورد</span><button type="button" [disabled]="filters.page >= totalPages" (click)="goTo(filters.page + 1)">بعدی</button></footer>
+  }
+</section>

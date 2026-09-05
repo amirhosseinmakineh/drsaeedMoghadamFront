@@ -426,6 +426,59 @@ export interface DailyReservationsReport {
   items: DailyReservationReportItem[];
 }
 
+export interface PatientFinanceReportFilters {
+  search?: string;
+  serviceId?: number;
+  agreementType?: number;
+  status?: number;
+  fromDate?: string;
+  toDate?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface PatientFinanceReportItem {
+  caseId: string;
+  patientId: string;
+  patientName: string;
+  phoneNumber: string;
+  fileNumber: string;
+  serviceId: number;
+  serviceName: string;
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  unpaidDebtAmount: number;
+  chequeAmount: number;
+  promissoryNoteAmount: number;
+  agreementType: number;
+  status: number;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface PatientFinanceReportSummary {
+  caseCount: number;
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  unpaidDebtAmount: number;
+  chequeAmount: number;
+  promissoryNoteAmount: number;
+}
+
+export interface PatientFinanceReportResponse {
+  items: PatientFinanceReportItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  summary: PatientFinanceReportSummary;
+}
+
 export interface LeadFilters {
   profileId?: number;
   leadAssignmentState?: number | null;
@@ -988,6 +1041,34 @@ export class AdminDashboardService {
     filters: DailyReservationsReportFilters,
   ): Observable<Blob> {
     return this.exportCsvReport("daily-reservations/export", filters);
+  }
+
+  getPatientFinanceReport(
+    filters: PatientFinanceReportFilters,
+  ): Observable<PatientFinanceReportResponse> {
+    return this.http.get<PatientFinanceReportResponse>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances`,
+      { headers: this.authHeaders(), params: this.toParams(filters) },
+    ).pipe(catchError((error) => throwError(() =>
+      this.toUserFacingError(error, "دریافت گزارش حسابداری بیماران انجام نشد"),
+    )));
+  }
+
+  exportPatientFinanceReport(filters: PatientFinanceReportFilters): Observable<Blob> {
+    const { page: _page, pageSize: _pageSize, ...exportFilters } = filters;
+    return this.http.get(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/export`,
+      {
+        headers: this.authHeaders().set(
+          "Accept",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
+        params: this.toParams(exportFilters),
+        responseType: "blob",
+      },
+    ).pipe(catchError((error) => throwError(() =>
+      this.toUserFacingError(error, "دریافت خروجی اکسل حسابداری انجام نشد"),
+    )));
   }
 
   exportReservationsReport(

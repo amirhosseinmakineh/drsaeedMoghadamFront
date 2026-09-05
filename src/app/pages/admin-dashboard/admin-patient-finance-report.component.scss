@@ -1,0 +1,23 @@
+:host { display: block; }
+.finance-report { display: grid; gap: 1rem; direction: rtl; }
+.report-header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+.report-header h2 { margin: .2rem 0; }
+.report-header p, .report-header span { color: var(--muted, #64748b); }
+button { border: 0; border-radius: .7rem; padding: .75rem 1rem; cursor: pointer; background: #0f766e; color: #fff; }
+button:disabled { opacity: .55; cursor: default; }
+.export { white-space: nowrap; }
+.filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; padding: 1rem; background: var(--surface, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 1rem; }
+label { display: grid; gap: .35rem; font-size: .82rem; color: var(--muted, #64748b); }
+input, select { width: 100%; min-width: 0; border: 1px solid var(--border, #cbd5e1); border-radius: .65rem; padding: .7rem; background: var(--surface, #fff); color: inherit; }
+.filter-actions { display: flex; align-items: end; gap: .5rem; }
+.muted { background: #64748b; }
+.summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+.summary article { padding: .9rem; border: 1px solid var(--border, #e2e8f0); border-radius: .85rem; background: var(--surface, #fff); display: grid; gap: .35rem; }
+.summary small { color: var(--muted, #64748b); }.summary strong { font-size: 1rem; }.success strong { color: #15803d; }.warning strong { color: #b45309; }.danger strong, .error { color: #b91c1c; }
+.table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border, #e2e8f0); border-radius: .9rem; }
+table { width: 100%; min-width: 1500px; border-collapse: collapse; background: var(--surface, #fff); }
+th, td { padding: .75rem; border-bottom: 1px solid var(--border, #e2e8f0); text-align: right; white-space: nowrap; }
+th { background: rgba(15, 118, 110, .1); } td small { display: block; color: var(--muted, #64748b); margin-top: .2rem; }
+.badge { padding: .25rem .55rem; border-radius: 999px; background: rgba(15, 118, 110, .12); }
+.pagination { display: flex; justify-content: center; align-items: center; gap: .8rem; }.empty { text-align: center; color: var(--muted, #64748b); }
+@media (max-width: 800px) { .report-header { align-items: stretch; flex-direction: column; }.filters, .summary { grid-template-columns: 1fr; }.filter-actions { align-items: stretch; }.pagination { flex-wrap: wrap; } }

@@ -185,6 +185,10 @@
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
               <strong>مدیریت تخصیص لیدها</strong>
             </button>
+            <button type="button" (click)="setSection('patientFinanceReport')">
+              <span><app-fa-icon name="wallet"></app-fa-icon></span>
+              <strong>گزارش حسابداری بیماران</strong>
+            </button>
           </section>
         }
 
@@ -508,6 +512,10 @@
 
         @if (activeSection === "leadAssignmentSettings") {
           <app-admin-lead-assignment-settings></app-admin-lead-assignment-settings>
+        }
+
+        @if (activeSection === "patientFinanceReport") {
+          <app-admin-patient-finance-report></app-admin-patient-finance-report>
         }
 
       </section>
