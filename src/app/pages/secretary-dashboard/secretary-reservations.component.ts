@@ -444,6 +444,11 @@ export class SecretaryReservationsComponent
     return Number.isFinite(numeric) ? numeric : null;
   }
 
+  reservationTrackKey(item: SecretaryReservation, index: number): string {
+    const id = this.reservationId(item);
+    return `${id ?? "missing"}:${index}`;
+  }
+
   patientName(item: SecretaryReservation): string {
     return (
       item.patientName?.trim() || item.PatientName?.trim() || "بیمار بدون نام"

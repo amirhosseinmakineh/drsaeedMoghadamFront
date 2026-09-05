@@ -21,7 +21,7 @@ type NoteEditForm = FormGroup<{ amount: FormControl<number | null> }>;
 
 const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const SAYAD_NUMBER_PATTERN = /^\d{16}$/;
-const PROMISSORY_NOTE_SERIAL_PATTERN = /^\d{12}$/;
+const PROMISSORY_NOTE_SERIAL_PATTERN = /^\d+$/;
 
 function commitmentRequired(control: AbstractControl): ValidationErrors | null {
   const agreement = Number(control.get("agreementType")?.value);
@@ -307,13 +307,13 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   dueItem(item: ListItem): PatientFinancialCommitment { return item as PatientFinancialCommitment; }
   money(value: number | null | undefined): string { return `${new Intl.NumberFormat("fa-IR").format(value ?? 0)} تومان`; }
   setAmount(control: AbstractControl, value: number | null): void { control.setValue(value); control.markAsTouched(); }
-  normalizeIdentifier(control: AbstractControl, event: Event, maxLength: number): void {
+  normalizeIdentifier(control: AbstractControl, event: Event, maxLength?: number): void {
     const input = event.target as HTMLInputElement;
-    const normalized = input.value
+    const digits = input.value
       .replace(/[۰-۹]/g, digit => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
       .replace(/[٠-٩]/g, digit => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-      .replace(/\D/g, "")
-      .slice(0, maxLength);
+      .replace(/\D/g, "");
+    const normalized = maxLength === undefined ? digits : digits.slice(0, maxLength);
     input.value = normalized;
     control.setValue(normalized);
     control.markAsTouched();
