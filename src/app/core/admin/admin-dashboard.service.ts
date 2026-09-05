@@ -479,6 +479,13 @@ export interface PatientFinanceReportResponse {
   summary: PatientFinanceReportSummary;
 }
 
+export interface UpdatePatientFinanceRequest {
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  agreementType: number;
+}
+
 export interface LeadFilters {
   profileId?: number;
   leadAssignmentState?: number | null;
@@ -1068,6 +1075,25 @@ export class AdminDashboardService {
       },
     ).pipe(catchError((error) => throwError(() =>
       this.toUserFacingError(error, "دریافت خروجی اکسل حسابداری انجام نشد"),
+    )));
+  }
+
+  updatePatientFinance(caseId: string, request: UpdatePatientFinanceRequest): Observable<ApiCommandResponse> {
+    return this.http.put<ApiCommandResponse>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/${caseId}`,
+      request,
+      { headers: this.authHeaders() },
+    ).pipe(catchError((error) => throwError(() =>
+      this.toUserFacingError(error, "ویرایش حسابداری بیمار انجام نشد"),
+    )));
+  }
+
+  deletePatientFinance(caseId: string): Observable<ApiCommandResponse> {
+    return this.http.delete<ApiCommandResponse>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/${caseId}`,
+      { headers: this.authHeaders() },
+    ).pipe(catchError((error) => throwError(() =>
+      this.toUserFacingError(error, "حذف حسابداری بیمار انجام نشد"),
     )));
   }
 

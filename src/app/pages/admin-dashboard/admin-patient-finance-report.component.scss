@@ -20,4 +20,9 @@ th, td { padding: .75rem; border-bottom: 1px solid var(--border, #e2e8f0); text-
 th { background: rgba(15, 118, 110, .1); } td small { display: block; color: var(--muted, #64748b); margin-top: .2rem; }
 .badge { padding: .25rem .55rem; border-radius: 999px; background: rgba(15, 118, 110, .12); }
 .pagination { display: flex; justify-content: center; align-items: center; gap: .8rem; }.empty { text-align: center; color: var(--muted, #64748b); }
+.row-actions { display: flex; gap: .4rem; }.row-actions button { padding: .45rem .65rem; }.delete { background: #b91c1c; }
+.modal-backdrop { position: fixed; inset: 0; background: rgba(2, 6, 23, .65); z-index: 1000; }
+.edit-modal { position: fixed; z-index: 1001; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(92vw, 520px); padding: 1rem; border-radius: 1rem; background: var(--surface, #fff); box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.edit-modal header { display: flex; justify-content: space-between; align-items: center; }.edit-modal h3 { margin: .2rem 0 1rem; }.edit-modal form { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }.close { background: transparent; color: inherit; font-size: 1.5rem; }.modal-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: .5rem; }
 @media (max-width: 800px) { .report-header { align-items: stretch; flex-direction: column; }.filters, .summary { grid-template-columns: 1fr; }.filter-actions { align-items: stretch; }.pagination { flex-wrap: wrap; } }
+@media (max-width: 520px) { .edit-modal form { grid-template-columns: 1fr; }.modal-actions { grid-column: 1; } }

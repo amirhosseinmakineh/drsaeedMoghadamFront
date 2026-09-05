@@ -5,7 +5,9 @@ import { finalize } from "rxjs";
 import {
   AdminDashboardService,
   PatientFinanceReportFilters,
+  PatientFinanceReportItem,
   PatientFinanceReportResponse,
+  UpdatePatientFinanceRequest,
 } from "../../core/admin/admin-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { downloadBlob } from "../../utils/file-download.util";
@@ -25,6 +27,10 @@ export class AdminPatientFinanceReportComponent implements OnInit {
   loading = false;
   downloading = false;
   errorMessage = "";
+  editing: PatientFinanceReportItem | null = null;
+  editForm: UpdatePatientFinanceRequest = { totalAmount: 0, prePaymentAmount: 0, depositAmount: 0, agreementType: 1 };
+  saving = false;
+  deletingId: string | null = null;
 
   readonly services = [
     { value: 1, label: "کامپوزیت" },
@@ -72,6 +78,57 @@ export class AdminPatientFinanceReportComponent implements OnInit {
           this.toast.success("خروجی اکسل حسابداری بیماران دانلود شد");
         },
         error: error => this.toast.error(error?.message || "دریافت فایل انجام نشد"),
+      });
+  }
+
+  startEdit(item: PatientFinanceReportItem): void {
+    this.editing = item;
+    this.editForm = {
+      totalAmount: item.totalAmount,
+      prePaymentAmount: item.prePaymentAmount,
+      depositAmount: item.depositAmount,
+      agreementType: item.agreementType,
+    };
+  }
+
+  cancelEdit(): void { this.editing = null; }
+
+  saveEdit(): void {
+    if (!this.editing || this.saving) return;
+    if (this.editForm.totalAmount <= 0 || this.editForm.prePaymentAmount < 0 || this.editForm.depositAmount < 0) {
+      this.toast.error("مبالغ واردشده معتبر نیستند");
+      return;
+    }
+    if (this.editForm.prePaymentAmount + this.editForm.depositAmount > this.editForm.totalAmount) {
+      this.toast.error("مجموع پیش‌پرداخت و ودیعه نمی‌تواند بیشتر از مبلغ کل باشد");
+      return;
+    }
+    this.saving = true;
+    this.api.updatePatientFinance(this.editing.caseId, this.editForm)
+      .pipe(finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: response => {
+          if (!response.isSuccess) { this.toast.error(response.message); return; }
+          this.toast.success(response.message || "حسابداری بیمار ویرایش شد");
+          this.editing = null;
+          this.load();
+        },
+        error: error => this.toast.error(error?.message || "ویرایش انجام نشد"),
+      });
+  }
+
+  delete(item: PatientFinanceReportItem): void {
+    if (this.deletingId || !confirm(`حسابداری ${item.patientName} حذف شود؟`)) return;
+    this.deletingId = item.caseId;
+    this.api.deletePatientFinance(item.caseId)
+      .pipe(finalize(() => { this.deletingId = null; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: response => {
+          if (!response.isSuccess) { this.toast.error(response.message); return; }
+          this.toast.success(response.message || "حسابداری بیمار حذف شد");
+          this.load();
+        },
+        error: error => this.toast.error(error?.message || "حذف انجام نشد"),
       });
   }
 
