@@ -58,7 +58,9 @@ export class BaseNumberInputComponent {
 
   onFocus(): void {
     this.focused = true;
-    this.editingValue = this.value === null ? "" : String(this.value);
+    this.editingValue = this.value === null
+      ? ""
+      : this.formatEditingValue(String(this.value));
   }
 
   onInput(event: Event): void {
@@ -77,8 +79,8 @@ export class BaseNumberInputComponent {
         .slice(0, this.maxFractionDigits);
       normalized = `${integer}.${fraction}`;
     }
-    this.editingValue = normalized;
-    input.value = normalized;
+    this.editingValue = this.formatEditingValue(normalized);
+    input.value = this.editingValue;
 
     const parsed = Number(normalized);
     if (normalized === "" || normalized === "." || Number.isNaN(parsed)) {
@@ -94,6 +96,18 @@ export class BaseNumberInputComponent {
 
   onBlur(): void {
     this.focused = false;
+  }
+
+  private formatEditingValue(value: string): string {
+    if (!value) return "";
+
+    const hasDecimalSeparator = value.includes(".");
+    const [integerPart = "", fractionPart = ""] = value.split(".");
+    const groupedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, "٬");
+
+    return hasDecimalSeparator
+      ? `${groupedInteger}.${fractionPart}`
+      : groupedInteger;
   }
 
   private toEnglishDigits(value: string): string {
