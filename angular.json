@@ -115,6 +115,15 @@
           },
 
           "defaultConfiguration": "development"
+        },
+
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "demo:build:development",
+            "tsConfig": "tsconfig.spec.json",
+            "runner": "vitest"
+          }
         }
 
       },

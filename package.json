@@ -12,6 +12,7 @@
     "check:lead-assignment-settings": "node scripts/validate-lead-assignment-settings-ui.mjs",
     "generate:webpush": "node scripts/generate-webpush-config.mjs",
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
+    "test": "ng test demo --watch=false",
     "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
     "optimize:images": "python3 scripts/optimize-images.py"
@@ -33,6 +34,8 @@
     "@angular/build": "^20.3.0",
     "@angular/cli": "^20.3.0",
     "@angular/compiler-cli": "^20.3.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.4"
   }
 }
