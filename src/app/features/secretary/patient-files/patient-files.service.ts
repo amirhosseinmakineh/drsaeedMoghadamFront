@@ -9,6 +9,7 @@ import {
   ImportPatientFilesResult,
   PagedResult,
   PatientFile,
+  PatientFileFinancialIdentity,
   PatientFileQuery,
 } from "./patient-file.models";
 
@@ -36,6 +37,12 @@ export class PatientFilesService {
 
   createPatientFile(patientId: number, description: string | null): Observable<CreatePatientFileResult> {
     return this.http.post<unknown>(this.endpoint, { patientId, description }).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
+  }
+
+  ensureFinancialIdentity(patientFileId: number): Observable<PatientFileFinancialIdentity> {
+    return this.http.post<unknown>(`${this.endpoint}/${patientFileId}/financial-identity`, {}).pipe(
+      map((response) => this.data<PatientFileFinancialIdentity>(response)),
+    );
   }
 
   updatePatientFile(id: number, body: Pick<PatientFile, "firstName" | "lastName" | "phoneNumber" | "description">): Observable<PatientFile> {

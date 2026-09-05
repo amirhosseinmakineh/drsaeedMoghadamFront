@@ -80,6 +80,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientOptions: FinancePatientOption[] = [];
   patientSearch = "";
   patientOptionsLoading = false;
+  resolvingPatientFileId: number | null = null;
   patientDropdownOpen = false;
   commitmentModalCase: PatientFinancialCase | null = null;
   commitmentModalItems: Array<PatientCheque | PatientPromissoryNote> = [];
@@ -171,11 +172,36 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientName(patient: FinancePatientOption): string { return [patient.firstName, patient.lastName].filter(Boolean).join(" ").trim() || "بیمار بدون نام"; }
   patientPhone(patient: FinancePatientOption): string { return patient.phoneNumber ?? ""; }
   patientFileNumber(patient: FinancePatientOption): string { return String(patient.fileNumber ?? ""); }
-  patientCanBeSelected(patient: FinancePatientOption): boolean { return patient.financialPatientId !== null; }
+  patientCanBeSelected(patient: FinancePatientOption): boolean { return this.resolvingPatientFileId !== patient.patientFileId; }
   selectPatient(patient: FinancePatientOption): void {
-    if (!patient.financialPatientId) return;
-    this.selectedFinancialPatientId = patient.financialPatientId;
-    this.createForm.controls.patientId.setValue(patient.financialPatientId);
+    if (patient.financialPatientId) {
+      this.applySelectedPatient(patient, patient.financialPatientId);
+      return;
+    }
+
+    if (this.resolvingPatientFileId !== null) return;
+    this.resolvingPatientFileId = patient.patientFileId;
+    this.patientFilesApi.ensureFinancialIdentity(patient.patientFileId).pipe(
+      finalize(() => {
+        this.resolvingPatientFileId = null;
+        this.cdr.markForCheck();
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: identity => {
+        if (!GUID_PATTERN.test(identity.financialPatientId)) {
+          this.toast.error("شناسه مالی معتبر برای بیمار ایجاد نشد.");
+          return;
+        }
+        patient.financialPatientId = identity.financialPatientId;
+        this.applySelectedPatient(patient, identity.financialPatientId);
+      },
+      error: (error: HttpErrorResponse) => this.showError(error),
+    });
+  }
+  private applySelectedPatient(patient: FinancePatientOption, financialPatientId: PatientGuid): void {
+    this.selectedFinancialPatientId = financialPatientId;
+    this.createForm.controls.patientId.setValue(financialPatientId);
     this.patientSearch = this.patientName(patient);
     this.patientDropdownOpen = false;
   }

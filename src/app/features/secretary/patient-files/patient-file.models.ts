@@ -59,6 +59,10 @@ export interface CreatePatientFileResult {
   fileNumber: number;
 }
 
+export interface PatientFileFinancialIdentity {
+  financialPatientId: string;
+}
+
 export interface ImportPatientFilesResult {
   success: boolean;
   importedCount: number;
