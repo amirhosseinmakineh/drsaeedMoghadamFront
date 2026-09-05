@@ -8,59 +8,90 @@
 .commitments-preview-modal ::ng-deep section[role="dialog"]{width:min(62rem,calc(100vw - 32px));max-height:92vh}.modal-loading{display:grid;min-height:180px;place-items:center;color:#64748b}.document-vectors{display:flex;flex-wrap:wrap;justify-content:center;gap:18px}.payment-document{position:relative;width:min(27rem,100%);min-height:240px;overflow:hidden;padding:22px;border:2px solid #74c0a8;border-radius:18px;background:linear-gradient(135deg,#f0fdfa,#fff 58%,#ecfdf5);box-shadow:0 12px 28px #0f766e14}.payment-document.note-document{border-color:#c4b5fd;background:linear-gradient(135deg,#faf5ff,#fff 58%,#f5f3ff)}.document-watermark{position:absolute;bottom:-20px;left:10px;color:#0f766e0d;font-size:7rem;font-weight:950;transform:rotate(-12deg);pointer-events:none}.note-document .document-watermark{color:#7c3aed0d}.document-top,.document-amount{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px}.document-top>span:first-child{font-weight:900;color:#0f766e}.note-document .document-top>span:first-child{color:#6d28d9}.document-amount{margin:25px 0;padding:14px;border-block:1px dashed #94a3b8}.document-amount span{color:#64748b}.document-amount strong{font-size:1.2rem}.payment-document dl{position:relative;display:grid;gap:12px;margin:0}.payment-document dl div{display:flex;justify-content:space-between;gap:12px}.payment-document dt{color:#64748b}.payment-document dd{margin:0;font-weight:800}.commitments-preview-modal .empty.small{min-height:180px}@media(max-width:720px){.document-vectors{display:flex;flex-direction:column;align-items:center}.commitments-preview-modal ::ng-deep section[role="dialog"]{width:100%;max-height:100vh}.payment-document{min-height:220px}}
 .debt-payment-action{display:flex;max-width:190px;flex-direction:column;align-items:flex-start;gap:6px}.debt-payment-action small{color:#64748b;font-size:.7rem;line-height:1.6}.debt-payment-action button:disabled{background:#e2e8f0;border-color:#cbd5e1;color:#64748b;opacity:1}
 
-/* Page-specific containment for the finance workspace. */
-:host { min-width: 0; min-height: 100dvh; }
-.finance-page,
-.finance-page > *,
-.card,
-.table-wrap { min-width: 0; max-width: 100%; }
-.table-wrap { overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
-input, select, textarea { width: 100%; max-width: 100%; }
-.finance-details-modal ::ng-deep section[role="dialog"],
-.commitments-preview-modal ::ng-deep section[role="dialog"] { max-height: 92dvh; }
-.form-validation-summary { margin-block: 16px 0; }
-
-/* The page lives beside a desktop sidebar, so its usable width can be much
-   smaller than the viewport. Adapt to the content column, not only the screen. */
-@container dashboard-content (max-width: 980px) {
-  .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@container dashboard-content (max-width: 680px) {
-  .filters,
-  .form-grid,
-  .commitment-grid,
-  fieldset { grid-template-columns: minmax(0, 1fr); }
-  .page-header { align-items: stretch; flex-direction: column; }
-  .filter-actions { align-items: stretch; }
-}
-
-@media (max-width: 640px) {
-  .finance-page { width: 100%; padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
-  .tabs { max-width: calc(100% + 24px); margin-inline: -12px; }
-  .filter-actions,
-  .form-actions,
-  .section-title,
-  .commitment-head,
-  .details-heading,
-  .document-top,
-  .document-amount,
-  .payment-document dl div { align-items: stretch; flex-direction: column; }
-  .filter-actions > *,
-  .form-actions > * { width: 100%; }
-  .form-actions {
-    position: sticky;
-    z-index: 4;
-    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-    margin-inline: -14px;
-    padding: 12px 14px;
-    border-top: 1px solid #e3e8ef;
-    background: color-mix(in srgb, #fff 94%, transparent);
-    box-shadow: 0 -10px 24px rgb(15 23 42 / 8%);
-    backdrop-filter: blur(14px);
+/* Mobile accounting is card-first: no page-level horizontal scrolling and every
+   action remains reachable with one hand. */
+@media (max-width: 700px) {
+  :host { overflow-x: clip; }
+  .finance-page {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 12px calc(24px + env(safe-area-inset-bottom));
   }
-  .payment-document { min-width: 0; padding: 16px; }
+  .page-header { gap: 14px; margin-bottom: 14px; }
+  .page-header h1 { font-size: 1.45rem; line-height: 1.45; }
+  .page-header p { margin-top: 8px; }
+  .page-header > .primary { width: 100%; min-height: 48px; }
+  .tabs {
+    margin-inline: -12px;
+    padding: 6px 12px 8px;
+    border-inline: 0;
+    border-radius: 0;
+    scroll-padding-inline: 12px;
+    scroll-snap-type: inline proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { min-height: 44px; padding: 10px 15px; scroll-snap-align: start; }
+  .card { border-radius: 14px; box-shadow: 0 4px 16px #0f172a0a; }
+  .filters { grid-template-columns: 1fr; padding: 12px; }
+  .filter-actions, .form-actions, .create-commitment-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .filter-actions button, .form-actions button, .create-commitment-actions button { min-height: 46px; }
+  .list-card, .create-form { padding: 12px; }
+  .section-title { align-items: flex-start; flex-direction: column; }
+  .section-title .row, .section-title .primary { width: 100%; }
+  .section-title .primary { min-height: 46px; }
+
+  .table-wrap { overflow: visible; }
+  table, thead, tbody, tr, th, td { display: block; min-width: 0; width: 100%; }
+  thead { display: none; }
+  tbody { display: grid; gap: 12px; }
+  tr { padding: 12px; border: 1px solid #e3e8ef; border-radius: 13px; background: #fff; }
+  td {
+    display: grid;
+    grid-template-columns: minmax(76px, .35fr) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 9px 0;
+    border-bottom: 1px dashed #e5eaf1;
+    overflow-wrap: anywhere;
+  }
+  td::before { color: #64748b; font-size: .76rem; font-weight: 700; }
+  td:nth-child(1)::before { content: "بیمار / پرونده"; }
+  td:nth-child(2)::before { content: "شرح"; }
+  td:nth-child(3)::before { content: "مبلغ"; }
+  td:nth-child(4)::before { content: "تاریخ"; }
+  td:nth-child(5)::before { content: "وضعیت"; }
+  td:nth-child(6)::before { content: "عملیات"; }
+  td:last-child { border-bottom: 0; padding-bottom: 0; }
+  td .actions { display: grid; grid-template-columns: 1fr; width: 100%; }
+  td .actions button, .debt-payment-action, .debt-payment-action button { width: 100%; max-width: none; min-height: 42px; }
+  .pagination { justify-content: space-between; gap: 8px; }
+  .pagination button { min-width: 72px; min-height: 44px; padding-inline: 10px; }
+  .pagination span { font-size: .82rem; text-align: center; }
+
+  .patient-options { position: fixed; z-index: 50; inset: auto 12px calc(12px + env(safe-area-inset-bottom)); max-height: min(58dvh, 420px); }
+  .patient-options button { min-height: 64px; }
+  fieldset { padding: 12px; }
+  .commitment-grid { gap: 10px; }
   .finance-details-modal ::ng-deep section[role="dialog"],
-  .commitments-preview-modal ::ng-deep section[role="dialog"] { width: 100%; max-height: 100dvh; }
+  .commitments-preview-modal ::ng-deep section[role="dialog"] {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+  .payment-document { min-height: 0; padding: 16px; }
+  .document-amount { margin: 18px 0; }
+  .payment-document dl div { align-items: flex-start; flex-direction: column; gap: 4px; }
+}
+
+@media (max-width: 380px) {
+  .filter-actions, .form-actions, .create-commitment-actions { grid-template-columns: 1fr; }
+  td { grid-template-columns: 70px minmax(0, 1fr); gap: 7px; }
+  .summary-grid, .agreement-amounts { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patient-spinner { animation-duration: 1.4s; }
+  .tabs { scroll-behavior: auto; }
 }
