@@ -4311,10 +4311,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     const reservationAt = this.selectedReservationDateTime();
     const reservationTimeChanged = this.isReservationTimeChanged(reservationAt);
+    if (!reservationAt || !Number.isFinite(reservationAt.getTime()))
+      return "زمان رزرو معتبر نیست";
     if (
-      !reservationAt ||
-      !Number.isFinite(reservationAt.getTime()) ||
-      (reservationTimeChanged && reservationAt.getTime() <= Date.now())
+      this.isReservationEditMode() &&
+      reservationTimeChanged &&
+      reservationAt.getTime() <= Date.now()
     )
       return "زمان رزرو باید در آینده باشد";
 

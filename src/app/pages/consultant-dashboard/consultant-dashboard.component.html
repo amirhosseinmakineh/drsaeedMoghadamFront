@@ -1351,7 +1351,7 @@
         <app-base-datepicker
           [label]="reservationDatePickerLabel"
           [selectedDate]="reservationForm.reservationDate ?? undefined"
-          [minDate]="minimumReservationDate()"
+          [unrestrictedDates]="true"
           [allowToday]="true"
           (dateChange)="setReservationDate($event)"
         ></app-base-datepicker>
