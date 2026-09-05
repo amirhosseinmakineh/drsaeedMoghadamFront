@@ -160,6 +160,17 @@ svg {
   max-width: 100%;
 }
 
+/* Fixed translucent layers force Safari and mobile Chromium to repaint the
+   page behind them during every scroll frame. Keep the same geometry and
+   colors on small screens while avoiding that expensive live blur. */
+@media (max-width: 980px) {
+  .site-header,
+  .mobile-bottom-nav {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
 
 /* =========================================================
    APP SHELL
