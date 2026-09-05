@@ -5,8 +5,9 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ToastService } from "../../core/toast/toast.service";
 import { SecretarySaleService, toman } from "../../features/secretary/sales/models/secretary-sales.models";
 import { SecretarySalesService } from "../../features/secretary/sales/services/secretary-sales.service";
+import { BaseNumberInputComponent } from "../../basemadual/forms/number-input/number-input.component";
 
-@Component({ selector: "app-admin-secretary-sale-services", standalone: true, imports: [FormsModule], templateUrl: "./admin-secretary-sale-services.component.html", styleUrl: "./admin-secretary-sales.shared.scss", changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: "app-admin-secretary-sale-services", standalone: true, imports: [FormsModule, BaseNumberInputComponent], templateUrl: "./admin-secretary-sale-services.component.html", styleUrl: "./admin-secretary-sales.shared.scss", changeDetection: ChangeDetectionStrategy.OnPush })
 export class AdminSecretarySaleServicesComponent implements OnInit {
   readonly toman = toman;
   items: SecretarySaleService[] = [];
