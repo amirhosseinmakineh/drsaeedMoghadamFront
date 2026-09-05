@@ -57,6 +57,7 @@ export class SecretaryReservationsComponent
   items: SecretaryReservation[] = [];
   notes: Record<number, string> = {};
   doctorNames: Record<number, string> = {};
+  approvalReservationId: number | null = null;
   loading = false;
   savingId: number | null = null;
   feedback = "";
@@ -367,8 +368,10 @@ export class SecretaryReservationsComponent
       return;
     }
     const doctorName = (this.doctorNames[reservationId] || "").trim();
-    if (!doctorName) {
+    if (patientReceivedService && !doctorName) {
+      this.approvalReservationId = reservationId;
       this.showFeedback("وارد کردن نام دکتر برای تایید حضور الزامی است", "error");
+      this.markDirty();
       return;
     }
 
@@ -377,7 +380,7 @@ export class SecretaryReservationsComponent
       .reviewAttendance({
         reservationId,
         patientReceivedService,
-        doctorName,
+        doctorName: patientReceivedService ? doctorName : null,
         note: (this.notes[reservationId] || "").trim() || null,
       })
       .pipe(finalize(() => (this.savingId = null)))
@@ -390,6 +393,10 @@ export class SecretaryReservationsComponent
                 : "انجام نشدن خدمت برای بیمار ثبت شد"),
             "success",
           );
+          delete this.doctorNames[reservationId];
+          if (this.approvalReservationId === reservationId) {
+            this.approvalReservationId = null;
+          }
           this.load();
         },
         error: (error) =>
@@ -400,6 +407,19 @@ export class SecretaryReservationsComponent
             "error",
           ),
       });
+  }
+
+  startApproval(item: SecretaryReservation): void {
+    const reservationId = this.reservationId(item);
+    if (!reservationId || !this.canManage(item)) return;
+    this.approvalReservationId = reservationId;
+    this.feedback = "";
+    this.markDirty();
+  }
+
+  cancelApproval(): void {
+    this.approvalReservationId = null;
+    this.markDirty();
   }
 
   goToPage(page: number): void {

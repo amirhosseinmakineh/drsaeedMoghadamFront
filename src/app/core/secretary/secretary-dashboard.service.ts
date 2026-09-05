@@ -215,7 +215,7 @@ export interface SecretaryReservationFilters {
 export interface ReviewAttendanceRequest {
   reservationId: number;
   patientReceivedService: boolean;
-  doctorName: string;
+  doctorName: string | null;
   note: string | null;
 }
 
