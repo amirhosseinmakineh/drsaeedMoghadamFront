@@ -42,6 +42,7 @@ import { AdminLeadAssignmentSettingsComponent } from "../admin-dashboard/admin-l
 import { AdminPatientFinanceReportComponent } from "../admin-dashboard/admin-patient-finance-report.component";
 import { AdminConsultantRewardsComponent } from "../admin-dashboard/admin-consultant-rewards.component";
 import { AdminPatientReferralsComponent } from "../../features/patient-referrals/admin/pages/admin-patient-referrals/admin-patient-referrals.component";
+import { PatientReferralDashboardComponent } from "../../features/patient-referrals/patient/pages/patient-referral-dashboard/patient-referral-dashboard.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -149,6 +150,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminPatientFinanceReportComponent,
     AdminConsultantRewardsComponent,
     AdminPatientReferralsComponent,
+    PatientReferralDashboardComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -179,6 +181,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
+    { id: "patientReferrals", label: "معرفی بیمار و کیف پول", icon: "users" },
   ];
 
   readonly displayName = computed(() => {
@@ -630,7 +633,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.activateSectionFromRoute("overview");
+    const initialSection = this.route.snapshot.data["initialSection"] as DashboardSection | undefined;
+    this.activateSectionFromRoute(initialSection && ADMIN_DASHBOARD_SECTIONS.includes(initialSection) ? initialSection : "overview");
   }
 
   toggleMobileSidebar(): void {
