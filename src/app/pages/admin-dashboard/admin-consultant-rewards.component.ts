@@ -8,7 +8,7 @@ import { formatIranDateTime } from "../../utils/iran-datetime.util";
 
 @Component({ selector: "app-admin-consultant-rewards", standalone: true, imports: [CommonModule, FormsModule], templateUrl: "./admin-consultant-rewards.component.html", styleUrl: "./admin-consultant-rewards.component.scss", changeDetection: ChangeDetectionStrategy.OnPush })
 export class AdminConsultantRewardsComponent implements OnInit {
-  items: ConsultantRewardItem[] = []; status?: ConsultantRewardStatus; loading = false; reviewingId: number | null = null;
+  items: ConsultantRewardItem[] = []; status: ConsultantRewardStatus | undefined = "Pending"; loading = false; reviewingId: number | null = null;
   constructor(private readonly api: ConsultantRewardService, private readonly toast: ToastService, private readonly cdr: ChangeDetectorRef) {}
   ngOnInit(): void { this.load(); }
   load(): void { this.loading = true; this.api.adminReport(this.status).pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); })).subscribe({ next: items => this.items = items, error: e => this.toast.error(e?.error?.message || "دریافت گزارش انجام نشد") }); }
