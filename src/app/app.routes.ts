@@ -118,10 +118,20 @@ export const routes: Routes = [
     path: "dashboard/patient",
     canActivate: [authGuard, roleGuard(["patient"])],
     loadComponent: () =>
-      import("./pages/dashboard/dashboard.component").then(
-        (m) => m.DashboardComponent,
+      import("./features/patient-referrals/patient/pages/patient-referral-dashboard/patient-referral-dashboard.component").then(
+        (m) => m.PatientReferralDashboardComponent,
       ),
     data: { role: "patient" },
+  },
+  {
+    path: "secretary/patient-referrals",
+    canActivate: [authGuard, roleGuard(["secretary"])],
+    loadComponent: () => import("./features/patient-referrals/secretary/pages/secretary-patient-referrals/secretary-patient-referrals.component").then(m => m.SecretaryPatientReferralsComponent),
+  },
+  {
+    path: "admin/patient-referrals",
+    canActivate: [authGuard, roleGuard(["admin"])],
+    loadComponent: () => import("./features/patient-referrals/admin/pages/admin-patient-referrals/admin-patient-referrals.component").then(m => m.AdminPatientReferralsComponent),
   },
   { path: "**", redirectTo: "" },
 ];
