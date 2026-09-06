@@ -124,6 +124,7 @@ export class AdminPatientFinanceReportComponent implements OnInit {
 
   openDetails(item: PatientFinanceReportItem): void {
     this.startEdit(item);
+    this.details = null;
     this.detailsLoading = true;
     this.api.getPatientFinanceDetails(item.caseId).pipe(finalize(() => {
       this.detailsLoading = false;
@@ -170,6 +171,7 @@ export class AdminPatientFinanceReportComponent implements OnInit {
         next: response => {
           if (!response.isSuccess) { this.toast.error(response.message); return; }
           this.toast.success(response.message || "حسابداری بیمار حذف شد");
+          this.cancelEdit();
           this.load();
         },
         error: error => this.toast.error(error?.message || "حذف انجام نشد"),

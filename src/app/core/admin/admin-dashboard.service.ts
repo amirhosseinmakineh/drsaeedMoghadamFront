@@ -1113,25 +1113,25 @@ export class AdminDashboardService {
 
   getPatientFinanceDetails(caseId: string): Observable<ApiCommandResponse<AdminPatientFinanceDetails>> {
     return this.http.get<ApiCommandResponse<AdminPatientFinanceDetails>>(
-      `${this.apiBaseUrl}/secretary/patient-financial-cases/${caseId}`,
+      `${this.apiBaseUrl}/admin/reports/patient-finances/${caseId}/details`,
       { headers: this.authHeaders() },
     );
   }
 
   updatePatientCheque(id: number, request: UpdateAdminChequeRequest): Observable<ApiCommandResponse> {
-    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/secretary/patient-cheques/${id}`, request, { headers: this.authHeaders() });
+    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/admin/reports/patient-finances/cheques/${id}`, request, { headers: this.authHeaders() });
   }
 
   deletePatientCheque(id: number): Observable<ApiCommandResponse> {
-    return this.http.delete<ApiCommandResponse>(`${this.apiBaseUrl}/secretary/patient-cheques/${id}`, { headers: this.authHeaders() });
+    return this.http.delete<ApiCommandResponse>(`${this.apiBaseUrl}/admin/reports/patient-finances/cheques/${id}`, { headers: this.authHeaders() });
   }
 
   updatePatientPromissoryNote(id: number, request: UpdateAdminPromissoryNoteRequest): Observable<ApiCommandResponse> {
-    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/secretary/patient-promissory-notes/${id}`, request, { headers: this.authHeaders() });
+    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/admin/reports/patient-finances/promissory-notes/${id}`, request, { headers: this.authHeaders() });
   }
 
   deletePatientPromissoryNote(id: number): Observable<ApiCommandResponse> {
-    return this.http.delete<ApiCommandResponse>(`${this.apiBaseUrl}/secretary/patient-promissory-notes/${id}`, { headers: this.authHeaders() });
+    return this.http.delete<ApiCommandResponse>(`${this.apiBaseUrl}/admin/reports/patient-finances/promissory-notes/${id}`, { headers: this.authHeaders() });
   }
 
   exportReservationsReport(

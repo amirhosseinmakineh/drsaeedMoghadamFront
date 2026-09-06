@@ -57,6 +57,9 @@
             <form class="commitment-row note" (ngSubmit)="saveNote(note)"><label>مبلغ<input type="number" min="0.001" step="0.001" [(ngModel)]="note.amount" [name]="'noteAmount' + note.id"></label><label>شماره سریال<input [(ngModel)]="note.serialNumber" [name]="'serial' + note.id"></label><label>سررسید<input type="date" [(ngModel)]="note.dueDate" [name]="'noteDate' + note.id"></label><button type="submit" [disabled]="commitmentSavingId === note.id">ذخیره</button><button type="button" class="delete" (click)="deleteNote(note)">حذف</button></form>
           } @empty { <p class="empty">سفته‌ای ثبت نشده است.</p> }
           <p class="delete-hint">حذف کل حسابداری فقط بعد از حذف همه چک‌ها و سفته‌ها فعال می‌شود.</p>
+          <button type="button" class="delete delete-case" (click)="delete(editing)" [disabled]="(details.cheques?.length || 0) > 0 || (details.promissoryNotes?.length || 0) > 0 || deletingId === editing.caseId">
+            {{ deletingId === editing.caseId ? "در حال حذف..." : "حذف کل حسابداری" }}
+          </button>
         </section>
       }
     </section>
