@@ -10,6 +10,7 @@ import { LanguageCode, NAV_ITEMS, pickText } from "./models/clinic.model";
 import { FaIconComponent } from "./shared/ui/fa-icon/fa-icon.component";
 import { ToastContainerComponent } from "./shared/ui/toast-container/toast-container.component";
 import { ReservationsRealtimeService } from "./core/reservation/reservations-realtime.service";
+import { AppUpdateService } from "./core/update/app-update.service";
 
 interface LanguageAwarePage {
   setLanguage?: (language: LanguageCode) => void;
@@ -51,6 +52,7 @@ export class AppComponent implements OnInit, OnDestroy {
     public auth: AuthService,
     private pushNotifications: PushNotificationService,
     private reservationsRealtime: ReservationsRealtimeService,
+    private appUpdates: AppUpdateService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -98,6 +100,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.appUpdates.start();
     this.reservationsRealtime.start();
     this.applyDocumentState();
     const user = this.auth.user();
