@@ -95,10 +95,6 @@
         <app-fa-icon [name]="item.icon"></app-fa-icon>
         <span>{{ item.label }}</span>
       </button>
-      <button type="button" routerLink="/consultant/wallet">
-        <app-fa-icon name="wallet"></app-fa-icon>
-        <span>کیف پول من</span>
-      </button>
     </nav>
 
     <button
@@ -1214,6 +1210,10 @@
         <app-secretary-follow-ups-list></app-secretary-follow-ups-list>
       }
 
+      @if (activeSection === "wallet" && isProfileReady()) {
+        <app-consultant-wallet></app-consultant-wallet>
+      }
+
     </section>
   </main>
 
@@ -1681,10 +1681,6 @@
     >
       <app-fa-icon [name]="item.icon"></app-fa-icon>
       <span>{{ item.label }}</span>
-    </button>
-    <button type="button" routerLink="/consultant/wallet">
-      <app-fa-icon name="wallet"></app-fa-icon>
-      <span>کیف پول</span>
     </button>
   </nav>
 </section>

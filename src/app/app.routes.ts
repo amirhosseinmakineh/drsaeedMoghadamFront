@@ -80,9 +80,10 @@ export const routes: Routes = [
     path: "consultant/wallet",
     canActivate: [authGuard, roleGuard(["consultant"])],
     loadComponent: () =>
-      import("./pages/consultant-dashboard/consultant-wallet.component").then(
-        (m) => m.ConsultantWalletComponent,
+      import("./pages/consultant-dashboard/consultant-dashboard.component").then(
+        (m) => m.ConsultantDashboardComponent,
       ),
+    data: { role: "consultant", initialSection: "wallet" },
   },
   {
     path: "dashboard/secretary",

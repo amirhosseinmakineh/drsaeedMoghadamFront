@@ -37,6 +37,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ConsultantReservationsPanelComponent } from "./consultant-reservations-panel.component";
 import { SecretaryFollowUpsListComponent } from "./secretary-follow-ups-list.component";
+import { ConsultantWalletComponent } from "./consultant-wallet.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
@@ -150,7 +151,8 @@ type ConsultantDashboardSection =
   | "patients"
   | "patient-profiles"
   | "secretary-follow-ups"
-  | "reservations";
+  | "reservations"
+  | "wallet";
 
 type ReportDialogMode = "create" | "edit";
 type ReservationDialogMode = "create" | "edit";
@@ -173,6 +175,7 @@ interface ConsultantDashboardLink {
     FaIconComponent,
     ConsultantReservationsPanelComponent,
     SecretaryFollowUpsListComponent,
+    ConsultantWalletComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./consultant-dashboard.component.html",
@@ -192,6 +195,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     { id: "patient-profiles", label: "پرونده‌ها", icon: "clipboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "secretary-follow-ups", label: "پیگیری‌های منشی", icon: "clipboard" },
+    { id: "wallet", label: "کیف پول من", icon: "wallet" },
   ];
 
   readonly displayName = computed(() => {
@@ -526,6 +530,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       "leads",
       "patients",
       "reservations",
+      "wallet",
     ];
     return primarySections
       .map((section) => this.visibleDashboardLinks.find((item) => item.id === section))
@@ -541,8 +546,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.closeMobileSidebar();
-    if (this.route.snapshot.data["initialSection"] === "leads") {
-      this.activeSection = "leads";
+    const initialSection = this.route.snapshot.data["initialSection"] as ConsultantDashboardSection | undefined;
+    if (initialSection) {
+      this.activeSection = initialSection;
     }
     this.profileId = this.currentProfileId();
     this.timerStarts = this.readJson<Record<string, number>>(
@@ -700,7 +706,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         section === "patients" ||
         section === "patient-profiles" ||
         section === "secretary-follow-ups" ||
-        section === "reservations") &&
+        section === "reservations" ||
+        section === "wallet") &&
       !this.isProfileReady()
     ) {
       return "profile";
@@ -1325,13 +1332,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         "patient-profiles",
         "secretary-follow-ups",
         "reservations",
+        "wallet",
       ].includes(section)
     ) {
       this.activateSectionFromRoute(section);
     } else if (params.get("type")) {
       this.activateSectionFromRoute("leads");
     } else {
-      this.activateSectionFromRoute("overview");
+      const initialSection = this.route.snapshot.data["initialSection"] as ConsultantDashboardSection | undefined;
+      this.activateSectionFromRoute(initialSection ?? "overview");
     }
 
     if (params.get("section") !== "leads" && !params.get("type")) return;
