@@ -13,8 +13,8 @@ export interface PageQuery { page?: number; pageSize?: number; [key: string]: st
 
 export interface CreateChequeRequest { amount: number; sayadNumber: string; ownerName: string; dueDate: string; }
 export interface CreatePromissoryNoteRequest { serialNumber: string; amount: number; dueDate: string; }
-export interface UpdateChequeRequest { amount: number; ownerName: string; }
-export interface UpdatePromissoryNoteRequest { amount: number; }
+export interface UpdateChequeRequest { amount: number; sayadNumber: string; ownerName: string; dueDate: string; }
+export interface UpdatePromissoryNoteRequest { amount: number; serialNumber: string; dueDate: string; }
 export interface CreateFinancialCaseRequest { patientId: PatientGuid; serviceId: number; totalAmount: number; prePaymentAmount: number; depositAmount: number; agreementType: FinancialAgreementType; cheques?: CreateChequeRequest[] | null; promissoryNotes?: CreatePromissoryNoteRequest[] | null; }
 export interface UpdateFinancialCaseRequest { totalAmount: number; prePaymentAmount: number; depositAmount: number; agreementType: FinancialAgreementType; }
 export interface PatientFinancialCase { id: number; patientId: PatientGuid; patientName: string; patientFileNumber?: string | number | null; fileNumber?: string | number | null; patientPhoneNumber: string | null; serviceId: number; serviceName: string; totalAmount: number; prePaymentAmount: number; depositAmount: number; totalPaidAmount: number; remainingAmount: number; totalDebtAmount: number; agreementType: FinancialAgreementType; status: FinancialCaseStatus; createdAt: string; }

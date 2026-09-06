@@ -16,8 +16,8 @@ import { PatientFinanceApiService } from "../../services/patient-finance-api.ser
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
 interface FinancePatientOption { patientFileId: number; financialPatientId: string | null; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
-type ChequeEditForm = FormGroup<{ amount: FormControl<number | null>; ownerName: FormControl<string | null> }>;
-type NoteEditForm = FormGroup<{ amount: FormControl<number | null> }>;
+type ChequeEditForm = FormGroup<{ amount: FormControl<number | null>; sayadNumber: FormControl<string | null>; ownerName: FormControl<string | null>; dueDate: FormControl<Date | null> }>;
+type NoteEditForm = FormGroup<{ amount: FormControl<number | null>; serialNumber: FormControl<string | null>; dueDate: FormControl<Date | null> }>;
 
 const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const SAYAD_NUMBER_PATTERN = /^\d{16}$/;
@@ -105,6 +105,12 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   // The current details modal does not render or populate these arrays.
   readonly chequeEditForms = new FormArray<ChequeEditForm>([]);
   readonly noteEditForms = new FormArray<NoteEditForm>([]);
+  readonly caseEditForm = this.fb.group({
+    totalAmount: [0, Validators.required],
+    prePaymentAmount: [0, Validators.required],
+    depositAmount: [0, Validators.required],
+    agreementType: [FinancialAgreementType.Deposit, Validators.required],
+  }, { validators: agreedAmountsWithinTotal });
 
 
   get activeTabLabel(): string { return this.tabs.find((tab) => tab.id === this.activeTab)?.label ?? ""; }
@@ -304,11 +310,42 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     ).subscribe({ next: ({ details, summary }) => {
       this.details = details;
       this.summary = summary;
+      this.detailCheques = details.cheques ?? [];
+      this.detailNotes = details.promissoryNotes ?? [];
+      this.caseEditForm.reset({
+        totalAmount: details.case.totalAmount,
+        prePaymentAmount: details.case.prePaymentAmount,
+        depositAmount: details.case.depositAmount,
+        agreementType: details.case.agreementType,
+      });
+      this.buildCommitmentEditForms();
     }, error: (e) => this.showError(e) });
   }
-  closeDetails(): void { this.details = null; this.summary = null; }
-  canCancelCase(item: PatientFinancialCase): boolean { return item.status === FinancialCaseStatus.Active && item.agreementType === FinancialAgreementType.Deposit && item.totalPaidAmount === 0; }
-  cancelCase(item: PatientFinancialCase): void { if (!this.canCancelCase(item) || !confirm("ودیعه مالی لغو شود؟ سابقه مالی حذف نخواهد شد.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "ودیعه مالی لغو شد."); }
+  closeDetails(): void { this.details = null; this.summary = null; this.detailCheques = []; this.detailNotes = []; }
+  canCancelCase(item: PatientFinancialCase): boolean { return item.status !== FinancialCaseStatus.Cancelled; }
+  cancelCase(item: PatientFinancialCase): void { if (!this.canCancelCase(item) || !confirm("کل ردیف حسابداری حذف شود؟ ابتدا باید همه چک‌ها و سفته‌ها حذف شده باشند.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "پرونده حسابداری حذف شد."); }
+  saveCaseEdit(): void {
+    if (!this.details || this.caseEditForm.invalid) { this.toast.error("مبالغ پرونده معتبر نیستند."); return; }
+    const value = this.caseEditForm.getRawValue();
+    this.mutate(this.details.case.id, this.api.updateCase(this.details.case.id, {
+      totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount),
+      depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType),
+    }), "حسابداری بیمار و همه جمع‌ها به‌روزرسانی شد.");
+  }
+  saveCheque(index: number): void {
+    const item = this.detailCheques[index], form = this.chequeEditForms.at(index);
+    if (!item || form.invalid) { this.toast.error("اطلاعات چک معتبر نیست."); return; }
+    const value = form.getRawValue();
+    this.mutate(item.id, this.api.updateCheque(item.id, { amount: Number(value.amount), sayadNumber: value.sayadNumber!, ownerName: value.ownerName!, dueDate: this.iso(value.dueDate!) }), "چک و محاسبات مالی به‌روزرسانی شد.");
+  }
+  saveNote(index: number): void {
+    const item = this.detailNotes[index], form = this.noteEditForms.at(index);
+    if (!item || form.invalid) { this.toast.error("اطلاعات سفته معتبر نیست."); return; }
+    const value = form.getRawValue();
+    this.mutate(item.id, this.api.updatePromissoryNote(item.id, { amount: Number(value.amount), serialNumber: value.serialNumber!, dueDate: this.iso(value.dueDate!) }), "سفته و محاسبات مالی به‌روزرسانی شد.");
+  }
+  deleteCheque(item: PatientCheque): void { if (confirm("این چک و اثر آن روی پرداخت یا بدهی حذف شود؟")) this.mutate(item.id, this.api.deleteCheque(item.id), "چک حذف و حسابداری به‌روزرسانی شد."); }
+  deleteNote(item: PatientPromissoryNote): void { if (confirm("این سفته و اثر آن روی پرداخت یا بدهی حذف شود؟")) this.mutate(item.id, this.api.deletePromissoryNote(item.id), "سفته حذف و حسابداری به‌روزرسانی شد."); }
   updateStatus(kind: "cheque" | "note", id: number, status: 2 | 3 | 4, dueDate?: string): void {
     if (dueDate && !this.isCommitmentDue(dueDate)) {
       this.toast.error("ثبت نتیجه پرداخت فقط از روز سررسید امکان‌پذیر است.");
@@ -384,8 +421,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private buildCommitmentEditForms(): void {
     this.chequeEditForms.clear();
     this.noteEditForms.clear();
-    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], ownerName: [item.ownerName, Validators.required] })));
-    this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, Validators.required] })));
+    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], sayadNumber: [item.sayadNumber, Validators.required], ownerName: [item.ownerName, Validators.required], dueDate: [new Date(item.dueDate), Validators.required] })));
+    this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], serialNumber: [item.serialNumber, Validators.required], dueDate: [new Date(item.dueDate), Validators.required] })));
   }
   private requestPatientOptions(searchText: string): void {
     if (this.patientSearchTimer !== null) {

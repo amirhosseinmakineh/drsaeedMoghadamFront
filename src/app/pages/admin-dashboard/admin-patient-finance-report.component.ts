@@ -4,6 +4,9 @@ import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
 import {
   AdminDashboardService,
+  AdminPatientCheque,
+  AdminPatientFinanceDetails,
+  AdminPatientPromissoryNote,
   PatientFinanceReportFilters,
   PatientFinanceReportItem,
   PatientFinanceReportResponse,
@@ -32,6 +35,9 @@ export class AdminPatientFinanceReportComponent implements OnInit {
   editForm: UpdatePatientFinanceRequest = { totalAmount: 0, prePaymentAmount: 0, depositAmount: 0, agreementType: 1 };
   saving = false;
   deletingId: string | null = null;
+  details: AdminPatientFinanceDetails | null = null;
+  detailsLoading = false;
+  commitmentSavingId: number | null = null;
   fromDate?: Date;
   toDate?: Date;
   readonly fromDateLabel = { fa: "از تاریخ ثبت حسابداری", en: "From date" };
@@ -114,7 +120,22 @@ export class AdminPatientFinanceReportComponent implements OnInit {
     };
   }
 
-  cancelEdit(): void { this.editing = null; }
+  cancelEdit(): void { this.editing = null; this.details = null; }
+
+  openDetails(item: PatientFinanceReportItem): void {
+    this.startEdit(item);
+    this.detailsLoading = true;
+    this.api.getPatientFinanceDetails(item.caseId).pipe(finalize(() => {
+      this.detailsLoading = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: response => {
+        if (!response.isSuccess || !response.data) { this.toast.error(response.message); return; }
+        this.details = response.data;
+      },
+      error: error => this.toast.error(error?.message || "دریافت جزئیات انجام نشد"),
+    });
+  }
 
   saveEdit(): void {
     if (!this.editing || this.saving) return;
@@ -153,6 +174,43 @@ export class AdminPatientFinanceReportComponent implements OnInit {
         },
         error: error => this.toast.error(error?.message || "حذف انجام نشد"),
       });
+  }
+
+  saveCheque(item: AdminPatientCheque): void {
+    if (this.commitmentSavingId || item.amount <= 0 || !item.sayadNumber?.trim() || !item.ownerName?.trim() || !item.dueDate) return;
+    this.commitmentSavingId = item.id;
+    this.api.updatePatientCheque(item.id, { amount: item.amount, sayadNumber: item.sayadNumber, ownerName: item.ownerName, dueDate: item.dueDate })
+      .pipe(finalize(() => { this.commitmentSavingId = null; this.cdr.markForCheck(); }))
+      .subscribe({ next: response => this.afterCommitment(response), error: error => this.toast.error(error?.message || "ویرایش چک انجام نشد") });
+  }
+
+  saveNote(item: AdminPatientPromissoryNote): void {
+    if (this.commitmentSavingId || item.amount <= 0 || !item.serialNumber?.trim() || !item.dueDate) return;
+    this.commitmentSavingId = item.id;
+    this.api.updatePatientPromissoryNote(item.id, { amount: item.amount, serialNumber: item.serialNumber, dueDate: item.dueDate })
+      .pipe(finalize(() => { this.commitmentSavingId = null; this.cdr.markForCheck(); }))
+      .subscribe({ next: response => this.afterCommitment(response), error: error => this.toast.error(error?.message || "ویرایش سفته انجام نشد") });
+  }
+
+  deleteCheque(item: AdminPatientCheque): void {
+    if (this.commitmentSavingId || !confirm("چک و اثر مالی آن حذف شود؟")) return;
+    this.commitmentSavingId = item.id;
+    this.api.deletePatientCheque(item.id).pipe(finalize(() => { this.commitmentSavingId = null; this.cdr.markForCheck(); }))
+      .subscribe({ next: response => this.afterCommitment(response), error: error => this.toast.error(error?.message || "حذف چک انجام نشد") });
+  }
+
+  deleteNote(item: AdminPatientPromissoryNote): void {
+    if (this.commitmentSavingId || !confirm("سفته و اثر مالی آن حذف شود؟")) return;
+    this.commitmentSavingId = item.id;
+    this.api.deletePatientPromissoryNote(item.id).pipe(finalize(() => { this.commitmentSavingId = null; this.cdr.markForCheck(); }))
+      .subscribe({ next: response => this.afterCommitment(response), error: error => this.toast.error(error?.message || "حذف سفته انجام نشد") });
+  }
+
+  private afterCommitment(response: { isSuccess: boolean; message: string }): void {
+    if (!response.isSuccess) { this.toast.error(response.message); return; }
+    this.toast.success(response.message);
+    if (this.editing) this.openDetails(this.editing);
+    this.load();
   }
 
   goTo(page: number): void {

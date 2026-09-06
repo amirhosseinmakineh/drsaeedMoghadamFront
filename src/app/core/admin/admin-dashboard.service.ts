@@ -486,6 +486,20 @@ export interface UpdatePatientFinanceRequest {
   agreementType: number;
 }
 
+export interface AdminPatientCheque { id: number; amount: number; sayadNumber: string; ownerName: string; dueDate: string; status: number; }
+export interface AdminPatientPromissoryNote { id: number; amount: number; serialNumber: string; dueDate: string; status: number; }
+export interface AdminPatientFinanceDetails {
+  case: PatientFinanceReportItem;
+  chequeCount: number;
+  chequeAmount: number;
+  promissoryNoteCount: number;
+  promissoryNoteAmount: number;
+  cheques?: AdminPatientCheque[];
+  promissoryNotes?: AdminPatientPromissoryNote[];
+}
+export interface UpdateAdminChequeRequest { amount: number; sayadNumber: string; ownerName: string; dueDate: string; }
+export interface UpdateAdminPromissoryNoteRequest { amount: number; serialNumber: string; dueDate: string; }
+
 export interface LeadFilters {
   profileId?: number;
   leadAssignmentState?: number | null;
@@ -1095,6 +1109,29 @@ export class AdminDashboardService {
     ).pipe(catchError((error) => throwError(() =>
       this.toUserFacingError(error, "حذف حسابداری بیمار انجام نشد"),
     )));
+  }
+
+  getPatientFinanceDetails(caseId: string): Observable<ApiCommandResponse<AdminPatientFinanceDetails>> {
+    return this.http.get<ApiCommandResponse<AdminPatientFinanceDetails>>(
+      `${this.apiBaseUrl}/secretary/patient-financial-cases/${caseId}`,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  updatePatientCheque(id: number, request: UpdateAdminChequeRequest): Observable<ApiCommandResponse> {
+    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/secretary/patient-cheques/${id}`, request, { headers: this.authHeaders() });
+  }
+
+  deletePatientCheque(id: number): Observable<ApiCommandResponse> {
+    return this.http.delete<ApiCommandResponse>(`${this.apiBaseUrl}/secretary/patient-cheques/${id}`, { headers: this.authHeaders() });
+  }
+
+  updatePatientPromissoryNote(id: number, request: UpdateAdminPromissoryNoteRequest): Observable<ApiCommandResponse> {
+    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/secretary/patient-promissory-notes/${id}`, request, { headers: this.authHeaders() });
+  }
+
+  deletePatientPromissoryNote(id: number): Observable<ApiCommandResponse> {
+    return this.http.delete<ApiCommandResponse>(`${this.apiBaseUrl}/secretary/patient-promissory-notes/${id}`, { headers: this.authHeaders() });
   }
 
   exportReservationsReport(

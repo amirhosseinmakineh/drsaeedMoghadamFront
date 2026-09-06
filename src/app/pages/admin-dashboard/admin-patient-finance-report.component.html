@@ -29,7 +29,7 @@
     </div>
 
     <div class="table-wrap"><table><thead><tr><th>بیمار</th><th>پرونده</th><th>خدمت</th><th>مبلغ کل</th><th>پیش‌پرداخت</th><th>ودیعه</th><th>پرداخت</th><th>مانده</th><th>بدهی باز</th><th>چک</th><th>سفته</th><th>توافق</th><th>وضعیت</th><th>ثبت‌کننده</th><th>تاریخ</th><th>عملیات</th></tr></thead><tbody>
-      <tr *ngFor="let item of report.items; trackBy: trackCase"><td><strong>{{ item.patientName }}</strong><small>{{ item.phoneNumber }}</small></td><td>{{ item.fileNumber || "—" }}</td><td>{{ item.serviceName }}</td><td>{{ money(item.totalAmount) }}</td><td>{{ money(item.prePaymentAmount) }}</td><td>{{ money(item.depositAmount) }}</td><td>{{ money(item.paidAmount) }}</td><td>{{ money(item.remainingAmount) }}</td><td>{{ money(item.unpaidDebtAmount) }}</td><td>{{ money(item.chequeAmount) }}</td><td>{{ money(item.promissoryNoteAmount) }}</td><td>{{ agreement(item.agreementType) }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ item.createdBy || "—" }}</td><td>{{ date(item.createdAt) }}</td><td class="row-actions"><button type="button" (click)="startEdit(item)" [disabled]="item.status !== 1">ویرایش</button><button type="button" class="delete" (click)="delete(item)" [disabled]="item.status !== 1 || deletingId === item.caseId">{{ deletingId === item.caseId ? "..." : "حذف" }}</button></td></tr>
+      <tr *ngFor="let item of report.items; trackBy: trackCase"><td><strong>{{ item.patientName }}</strong><small>{{ item.phoneNumber }}</small></td><td>{{ item.fileNumber || "—" }}</td><td>{{ item.serviceName }}</td><td>{{ money(item.totalAmount) }}</td><td>{{ money(item.prePaymentAmount) }}</td><td>{{ money(item.depositAmount) }}</td><td>{{ money(item.paidAmount) }}</td><td>{{ money(item.remainingAmount) }}</td><td>{{ money(item.unpaidDebtAmount) }}</td><td>{{ money(item.chequeAmount) }}</td><td>{{ money(item.promissoryNoteAmount) }}</td><td>{{ agreement(item.agreementType) }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ item.createdBy || "—" }}</td><td>{{ date(item.createdAt) }}</td><td class="row-actions"><button type="button" (click)="openDetails(item)" [disabled]="item.status === 3">ویرایش و جزئیات</button><button type="button" class="delete" (click)="delete(item)" [disabled]="item.status === 3 || item.chequeAmount > 0 || item.promissoryNoteAmount > 0 || deletingId === item.caseId" title="ابتدا تمام چک‌ها و سفته‌ها را حذف کنید">{{ deletingId === item.caseId ? "..." : "حذف" }}</button></td></tr>
     </tbody></table></div>
     @if (!report.items.length) { <p class="empty">پرونده‌ای مطابق فیلتر پیدا نشد.</p> }
     <footer class="pagination"><button type="button" [disabled]="filters.page <= 1" (click)="goTo(filters.page - 1)">قبلی</button><span>صفحه {{ filters.page }} از {{ totalPages }} — {{ report.totalCount }} رکورد</span><button type="button" [disabled]="filters.page >= totalPages" (click)="goTo(filters.page + 1)">بعدی</button></footer>
@@ -46,6 +46,19 @@
         <label>نوع توافق<select [(ngModel)]="editForm.agreementType" name="editAgreementType"><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
         <div class="modal-actions"><button type="button" class="muted" (click)="cancelEdit()">انصراف</button><button type="submit" [disabled]="saving">{{ saving ? "در حال ذخیره..." : "ذخیره تغییرات" }}</button></div>
       </form>
+      @if (detailsLoading) { <p>در حال دریافت چک‌ها و سفته‌ها...</p> }
+      @if (details) {
+        <section class="commitments"><h4>چک‌ها</h4>
+          @for (cheque of details.cheques || []; track cheque.id) {
+            <form class="commitment-row" (ngSubmit)="saveCheque(cheque)"><label>مبلغ<input type="number" min="0.001" step="0.001" [(ngModel)]="cheque.amount" [name]="'chequeAmount' + cheque.id"></label><label>شماره صیاد<input [(ngModel)]="cheque.sayadNumber" [name]="'sayad' + cheque.id"></label><label>صاحب چک<input [(ngModel)]="cheque.ownerName" [name]="'owner' + cheque.id"></label><label>سررسید<input type="date" [(ngModel)]="cheque.dueDate" [name]="'chequeDate' + cheque.id"></label><button type="submit" [disabled]="commitmentSavingId === cheque.id">ذخیره</button><button type="button" class="delete" (click)="deleteCheque(cheque)">حذف</button></form>
+          } @empty { <p class="empty">چکی ثبت نشده است.</p> }
+          <h4>سفته‌ها</h4>
+          @for (note of details.promissoryNotes || []; track note.id) {
+            <form class="commitment-row note" (ngSubmit)="saveNote(note)"><label>مبلغ<input type="number" min="0.001" step="0.001" [(ngModel)]="note.amount" [name]="'noteAmount' + note.id"></label><label>شماره سریال<input [(ngModel)]="note.serialNumber" [name]="'serial' + note.id"></label><label>سررسید<input type="date" [(ngModel)]="note.dueDate" [name]="'noteDate' + note.id"></label><button type="submit" [disabled]="commitmentSavingId === note.id">ذخیره</button><button type="button" class="delete" (click)="deleteNote(note)">حذف</button></form>
+          } @empty { <p class="empty">سفته‌ای ثبت نشده است.</p> }
+          <p class="delete-hint">حذف کل حسابداری فقط بعد از حذف همه چک‌ها و سفته‌ها فعال می‌شود.</p>
+        </section>
+      }
     </section>
   }
 </section>
