@@ -4,7 +4,7 @@ import { Observable } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../auth/auth.service";
 
-export type ConsultantRewardStatus = "WaitingSecretary" | "Pending" | "Approved" | "Rejected";
+export type ConsultantRewardStatus = "WaitingSecretary" | "LegacyNotEligible" | "Pending" | "Approved" | "Rejected";
 export interface ConsultantRewardItem {
   reservationId: number; consultantProfileId: number; consultantUserId: string;
   consultantName: string; patientName: string; patientPhoneNumber?: string;
