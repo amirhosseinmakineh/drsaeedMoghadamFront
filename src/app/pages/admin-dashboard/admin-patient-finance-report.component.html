@@ -9,8 +9,8 @@
     <label>خدمت<select [(ngModel)]="filters.serviceId" name="serviceId"><option [ngValue]="undefined">همه</option><option *ngFor="let service of services" [ngValue]="service.value">{{ service.label }}</option></select></label>
     <label>نوع توافق<select [(ngModel)]="filters.agreementType" name="agreementType"><option [ngValue]="undefined">همه</option><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
     <label>وضعیت<select [(ngModel)]="filters.status" name="status"><option [ngValue]="undefined">همه</option><option [ngValue]="1">فعال</option><option [ngValue]="2">تسویه‌شده</option><option [ngValue]="3">لغوشده</option></select></label>
-    <label>از تاریخ<input type="date" [(ngModel)]="filters.fromDate" name="fromDate" /></label>
-    <label>تا تاریخ<input type="date" [(ngModel)]="filters.toDate" name="toDate" /></label>
+    <div class="date-filter"><app-base-datepicker [label]="fromDateLabel" [selectedDate]="fromDate" [unrestrictedDates]="true" [compact]="true" (dateChange)="setFromDate($event)"></app-base-datepicker></div>
+    <div class="date-filter"><app-base-datepicker [label]="toDateLabel" [selectedDate]="toDate" [unrestrictedDates]="true" [compact]="true" (dateChange)="setToDate($event)"></app-base-datepicker></div>
     <div class="filter-actions"><button type="submit" [disabled]="loading">{{ loading ? "در حال دریافت..." : "اعمال فیلتر" }}</button><button type="button" class="muted" (click)="clear()">پاک‌کردن</button></div>
   </form>
 

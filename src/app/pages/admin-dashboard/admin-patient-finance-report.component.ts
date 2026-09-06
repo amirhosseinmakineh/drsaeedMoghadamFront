@@ -11,12 +11,13 @@ import {
 } from "../../core/admin/admin-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { downloadBlob } from "../../utils/file-download.util";
-import { formatIranDateTime } from "../../utils/iran-datetime.util";
+import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import { formatIranDateTime, toIranDateInputValue } from "../../utils/iran-datetime.util";
 
 @Component({
   selector: "app-admin-patient-finance-report",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent],
   templateUrl: "./admin-patient-finance-report.component.html",
   styleUrl: "./admin-patient-finance-report.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +32,10 @@ export class AdminPatientFinanceReportComponent implements OnInit {
   editForm: UpdatePatientFinanceRequest = { totalAmount: 0, prePaymentAmount: 0, depositAmount: 0, agreementType: 1 };
   saving = false;
   deletingId: string | null = null;
+  fromDate?: Date;
+  toDate?: Date;
+  readonly fromDateLabel = { fa: "از تاریخ ثبت حسابداری", en: "From date" };
+  readonly toDateLabel = { fa: "تا تاریخ ثبت حسابداری", en: "To date" };
 
   readonly services = [
     { value: 1, label: "کامپوزیت" },
@@ -48,6 +53,10 @@ export class AdminPatientFinanceReportComponent implements OnInit {
 
   load(resetPage = false): void {
     if (this.loading) return;
+    if (this.filters.fromDate && this.filters.toDate && this.filters.fromDate > this.filters.toDate) {
+      this.toast.error("تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد");
+      return;
+    }
     if (resetPage) this.filters.page = 1;
     this.loading = true;
     this.errorMessage = "";
@@ -64,7 +73,21 @@ export class AdminPatientFinanceReportComponent implements OnInit {
 
   clear(): void {
     this.filters = { page: 1, pageSize: 20 };
+    this.fromDate = undefined;
+    this.toDate = undefined;
     this.load();
+  }
+
+  setFromDate(date: Date): void {
+    this.fromDate = date;
+    this.filters.fromDate = toIranDateInputValue(date);
+    this.cdr.markForCheck();
+  }
+
+  setToDate(date: Date): void {
+    this.toDate = date;
+    this.filters.toDate = toIranDateInputValue(date);
+    this.cdr.markForCheck();
   }
 
   download(): void {
