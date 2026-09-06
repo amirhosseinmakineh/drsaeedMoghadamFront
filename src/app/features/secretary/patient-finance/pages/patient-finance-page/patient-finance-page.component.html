@@ -101,23 +101,23 @@
     <div class="details-heading"><span>جزئیات حسابداری بیمار</span><strong>{{ serviceLabel(details.case.serviceId, details.case.serviceName) }}</strong></div>
     @if (summary) { <div class="summary-grid"><article><span>مبلغ کل</span><strong>{{ money(summary.totalAmount) }}</strong></article><article class="green"><span>پرداخت قطعی</span><strong>{{ money(summary.totalPaidAmount) }}</strong></article><article class="orange"><span>مانده</span><strong>{{ money(summary.remainingAmount) }}</strong></article><article class="red"><span>بدهی باز</span><strong>{{ money(summary.totalDebtAmount) }}</strong></article></div> }
     <form class="finance-edit-grid" [formGroup]="caseEditForm" (ngSubmit)="saveCaseEdit()">
-      <app-base-number-input label="مبلغ کل" [maxFractionDigits]="3" [value]="caseEditForm.controls.totalAmount.value" (valueChange)="setAmount(caseEditForm.controls.totalAmount, $event)" />
-      <app-base-number-input label="پیش‌پرداخت" [maxFractionDigits]="3" [value]="caseEditForm.controls.prePaymentAmount.value" (valueChange)="setAmount(caseEditForm.controls.prePaymentAmount, $event)" />
-      <app-base-number-input label="ودیعه" [maxFractionDigits]="3" [value]="caseEditForm.controls.depositAmount.value" (valueChange)="setAmount(caseEditForm.controls.depositAmount, $event)" />
+      <app-base-number-input inputId="edit-case-total-amount" label="مبلغ کل" [maxFractionDigits]="3" [value]="caseEditForm.controls.totalAmount.value" (valueChange)="setAmount(caseEditForm.controls.totalAmount, $event)" />
+      <app-base-number-input inputId="edit-case-prepayment-amount" label="پیش‌پرداخت" [maxFractionDigits]="3" [value]="caseEditForm.controls.prePaymentAmount.value" (valueChange)="setAmount(caseEditForm.controls.prePaymentAmount, $event)" />
+      <app-base-number-input inputId="edit-case-deposit-amount" label="ودیعه" [maxFractionDigits]="3" [value]="caseEditForm.controls.depositAmount.value" (valueChange)="setAmount(caseEditForm.controls.depositAmount, $event)" />
       <label>نوع توافق<select formControlName="agreementType"><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
       <button class="primary" type="submit" [disabled]="actionId !== null">ذخیره حسابداری</button>
     </form>
     <section class="commitment-edit-section"><h3>چک‌ها</h3>
       @for (item of detailCheques; track item.id; let index = $index) {
         <form class="commitment-edit-row" [formGroup]="chequeEditForms.at(index)" (ngSubmit)="saveCheque(index)">
-          <app-base-number-input label="مبلغ" [maxFractionDigits]="3" [value]="chequeEditForms.at(index).controls.amount.value" (valueChange)="setAmount(chequeEditForms.at(index).controls.amount, $event)" /><input formControlName="sayadNumber" placeholder="شماره صیادی"><input formControlName="ownerName" placeholder="صاحب چک"><app-base-persian-date-picker label="تاریخ سررسید" [value]="chequeEditForms.at(index).controls.dueDate.value" (valueChange)="chequeEditForms.at(index).controls.dueDate.setValue($event)" /><button type="submit">ویرایش</button><button type="button" class="danger-link" (click)="deleteCheque(item)">حذف</button>
+          <app-base-number-input [inputId]="'edit-cheque-amount-' + item.id" label="مبلغ" [maxFractionDigits]="3" [value]="chequeEditForms.at(index).controls.amount.value" (valueChange)="setAmount(chequeEditForms.at(index).controls.amount, $event)" /><input formControlName="sayadNumber" placeholder="شماره صیادی"><input formControlName="ownerName" placeholder="صاحب چک"><app-base-persian-date-picker label="تاریخ سررسید" [value]="chequeEditForms.at(index).controls.dueDate.value" (valueChange)="chequeEditForms.at(index).controls.dueDate.setValue($event)" /><button type="submit">ویرایش</button><button type="button" class="danger-link" (click)="deleteCheque(item)">حذف</button>
         </form>
       } @empty { <p>چکی ثبت نشده است.</p> }
     </section>
     <section class="commitment-edit-section"><h3>سفته‌ها</h3>
       @for (item of detailNotes; track item.id; let index = $index) {
         <form class="commitment-edit-row" [formGroup]="noteEditForms.at(index)" (ngSubmit)="saveNote(index)">
-          <app-base-number-input label="مبلغ" [maxFractionDigits]="3" [value]="noteEditForms.at(index).controls.amount.value" (valueChange)="setAmount(noteEditForms.at(index).controls.amount, $event)" /><input formControlName="serialNumber" placeholder="شماره سریال"><app-base-persian-date-picker label="تاریخ سررسید" [value]="noteEditForms.at(index).controls.dueDate.value" (valueChange)="noteEditForms.at(index).controls.dueDate.setValue($event)" /><button type="submit">ویرایش</button><button type="button" class="danger-link" (click)="deleteNote(item)">حذف</button>
+          <app-base-number-input [inputId]="'edit-note-amount-' + item.id" label="مبلغ" [maxFractionDigits]="3" [value]="noteEditForms.at(index).controls.amount.value" (valueChange)="setAmount(noteEditForms.at(index).controls.amount, $event)" /><input formControlName="serialNumber" placeholder="شماره سریال"><app-base-persian-date-picker label="تاریخ سررسید" [value]="noteEditForms.at(index).controls.dueDate.value" (valueChange)="noteEditForms.at(index).controls.dueDate.setValue($event)" /><button type="submit">ویرایش</button><button type="button" class="danger-link" (click)="deleteNote(item)">حذف</button>
         </form>
       } @empty { <p>سفته‌ای ثبت نشده است.</p> }
     </section>
