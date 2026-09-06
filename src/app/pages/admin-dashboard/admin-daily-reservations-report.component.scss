@@ -98,8 +98,81 @@ th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-alig
   }
   .table-scroll {
     max-width: 100%;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+    border: 0;
   }
+  table,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+  table {
+    min-width: 0;
+  }
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  tbody {
+    display: grid;
+    gap: 14px;
+  }
+  tr {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px color-mix(in srgb, #000 8%, transparent);
+  }
+  td {
+    display: grid;
+    grid-template-columns: minmax(92px, .75fr) minmax(0, 1.25fr);
+    gap: 12px;
+    align-items: start;
+    padding: 11px 13px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: .78rem;
+    font-weight: 900;
+  }
+  td:first-child {
+    background: color-mix(in srgb, var(--brand) 8%, var(--surface));
+    color: var(--brand);
+    font-weight: 950;
+  }
+  td:last-child {
+    border-bottom: 0;
+  }
+  td.description {
+    max-width: none;
+  }
+  .badge {
+    width: fit-content;
+    max-width: 100%;
+    white-space: normal;
+  }
+  .table-heading {
+    display: grid;
+  }
+  .table-heading b {
+    width: fit-content;
+  }
+}
+
+@media (max-width: 380px) {
+  .daily-report { padding: 10px; }
+  .summary-grid { grid-template-columns: 1fr; }
+  td { grid-template-columns: 1fr; gap: 5px; }
+  .all-reservations-filter { align-items: flex-start; padding: 12px; }
+  .panel-heading h2 { font-size: 1.15rem; }
+  .panel-heading p { font-size: .82rem; line-height: 1.8; }
 }
