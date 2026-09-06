@@ -77,6 +77,14 @@ export const routes: Routes = [
     data: { role: "consultant", initialSection: "leads" },
   },
   {
+    path: "consultant/wallet",
+    canActivate: [authGuard, roleGuard(["consultant"])],
+    loadComponent: () =>
+      import("./pages/consultant-dashboard/consultant-wallet.component").then(
+        (m) => m.ConsultantWalletComponent,
+      ),
+  },
+  {
     path: "dashboard/secretary",
     canActivate: [authGuard, roleGuard(["secretary"])],
     loadComponent: () =>

@@ -518,6 +518,10 @@
           <app-admin-patient-finance-report></app-admin-patient-finance-report>
         }
 
+        @if (activeSection === "consultantRewards") {
+          <app-admin-consultant-rewards></app-admin-consultant-rewards>
+        }
+
       </section>
     } @else {
       <div class="dashboard-hero">
