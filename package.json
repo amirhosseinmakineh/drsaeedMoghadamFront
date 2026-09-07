@@ -12,7 +12,7 @@
     "check:lead-assignment-settings": "node scripts/validate-lead-assignment-settings-ui.mjs",
     "generate:webpush": "node scripts/generate-webpush-config.mjs",
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
-    "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0 --proxy http://127.0.0.1:3000?",
+    "start": "node scripts/serve-spa.mjs",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
     "optimize:images": "python3 scripts/optimize-images.py"
   },
