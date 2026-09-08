@@ -226,6 +226,10 @@ export class AuthService {
     this.clearSession();
   }
 
+  invalidateSession(): void {
+    this.clearSession();
+  }
+
   updateConsultantProfile(profileId: number, isCompleteProfile = true): void {
     const user = this.currentUser();
     if (!user) return;

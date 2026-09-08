@@ -1,5 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import { Router } from "@angular/router";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
@@ -462,6 +463,7 @@ export class ConsultantDashboardService {
   constructor(
     private http: HttpClient,
     private auth: AuthService,
+    private router: Router,
   ) {}
 
   completeProfile(
@@ -1153,6 +1155,19 @@ export class ConsultantDashboardService {
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      Number((error as { status?: unknown }).status) === 401
+    ) {
+      this.auth.invalidateSession();
+      void this.router.navigateByUrl("/");
+      return new Error(
+        "نشست شما منقضی یا نامعتبر شده است؛ لطفاً دوباره وارد شوید.",
+      );
+    }
+
     if (error instanceof Error && error.message) return error;
     if (typeof error === "object" && error !== null && "error" in error) {
       const httpError = error as {
