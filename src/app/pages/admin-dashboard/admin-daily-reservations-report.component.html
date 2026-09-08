@@ -98,6 +98,22 @@
     } @else {
       <div class="table-scroll">
         <table>
+          <colgroup>
+            <col class="col-id" />
+            <col class="col-consultant" />
+            <col class="col-patient" />
+            <col class="col-count" />
+            <col class="col-services" />
+            <col class="col-location" />
+            <col class="col-date" />
+            <col class="col-date" />
+            <col class="col-status" />
+            <col class="col-status" />
+            <col class="col-probability" />
+            <col class="col-cancellation" />
+            <col class="col-announcement" />
+            <col class="col-description" />
+          </colgroup>
           <thead><tr><th>شناسه رزرو</th><th>مشاور</th><th>بیمار</th><th>تعداد بیماران</th><th>خدمات</th><th>شهر و محدوده</th><th>زمان مراجعه بیمار</th><th>زمان ثبت رزرو</th><th>وضعیت بررسی رزرو</th><th>نتیجه مراجعه</th><th>احتمال حضور</th><th>وضعیت لغو</th><th>اعلام منشی</th><th>توضیحات</th></tr></thead>
           <tbody>
             <tr *ngFor="let item of report.items; trackBy: trackReservation" [class.canceled-row]="item.isCanceled">

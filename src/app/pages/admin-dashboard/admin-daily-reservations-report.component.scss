@@ -56,9 +56,23 @@ select { min-height: 48px; padding: 0 12px; border: 1px solid var(--line); borde
 .summary-grid article { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface-muted); }
 .summary-grid small { color: var(--muted); font-weight: 800; }.summary-grid strong { font-size: 1.6rem; }.summary-grid .success strong { color: var(--success); }.summary-grid .danger strong { color: var(--danger); }
 .table-heading b { padding: 7px 12px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
-.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 18px; }
-table { width: 100%; min-width: 1450px; border-collapse: collapse; text-align: right; }
-th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-align: top; } th { background: var(--surface-muted); color: var(--muted); white-space: nowrap; } td small { display: block; margin-top: 5px; color: var(--muted); }
+.table-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 18px; }
+table { width: 100%; min-width: 2110px; table-layout: fixed; border-collapse: collapse; text-align: right; }
+col.col-id { width: 110px; }
+col.col-consultant { width: 155px; }
+col.col-patient { width: 175px; }
+col.col-count { width: 115px; }
+col.col-services { width: 165px; }
+col.col-location { width: 155px; }
+col.col-date { width: 175px; }
+col.col-status { width: 155px; }
+col.col-probability { width: 115px; }
+col.col-cancellation { width: 145px; }
+col.col-announcement { width: 190px; }
+col.col-description { width: 220px; }
+th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { position: sticky; top: 0; z-index: 1; background: var(--surface-muted); color: var(--muted); white-space: normal; line-height: 1.65; }
+td small { display: block; margin-top: 5px; color: var(--muted); }
 .badge { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: var(--surface-muted); white-space: nowrap; font-weight: 800; }.status { color: var(--brand); }.visit { color: #6366f1; }.badge-danger { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }.badge-success { color: var(--success); }.canceled-row { opacity: .78; }.description { max-width: 220px; }.empty-state, .feedback { padding: 22px; border-radius: 18px; text-align: center; background: var(--surface-muted); color: var(--muted); }.feedback.error { color: var(--danger); }
 @media (max-width: 1180px) {
   .filters {
