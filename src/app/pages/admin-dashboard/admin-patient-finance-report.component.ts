@@ -132,7 +132,17 @@ export class AdminPatientFinanceReportComponent implements OnInit {
     })).subscribe({
       next: response => {
         if (!response.isSuccess || !response.data) { this.toast.error(response.message); return; }
-        this.details = response.data;
+        this.details = {
+          ...response.data,
+          cheques: response.data.cheques?.map(item => ({
+            ...item,
+            dueDate: this.toDateInputValue(item.dueDate),
+          })),
+          promissoryNotes: response.data.promissoryNotes?.map(item => ({
+            ...item,
+            dueDate: this.toDateInputValue(item.dueDate),
+          })),
+        };
       },
       error: error => this.toast.error(error?.message || "دریافت جزئیات انجام نشد"),
     });
@@ -213,6 +223,10 @@ export class AdminPatientFinanceReportComponent implements OnInit {
     this.toast.success(response.message);
     if (this.editing) this.openDetails(this.editing);
     this.load();
+  }
+
+  private toDateInputValue(value: string): string {
+    return value?.slice(0, 10) ?? "";
   }
 
   goTo(page: number): void {

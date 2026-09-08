@@ -376,7 +376,6 @@ export interface DailyReservationsSummary {
   canceled: number;
   pendingSecretaryReview: number;
   confirmed: number;
-  rescheduled: number;
   rejected: number;
   uniqueConsultants: number;
 }

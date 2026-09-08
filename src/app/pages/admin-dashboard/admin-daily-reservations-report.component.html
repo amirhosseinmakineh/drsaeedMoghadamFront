@@ -7,7 +7,7 @@
     </div>
     <button class="export-button" type="button" [disabled]="downloading" (click)="download()">
       <span class="button-icon" aria-hidden="true">⇩</span>
-      {{ downloading ? "در حال آماده‌سازی..." : "خروجی اکسل" }}
+      {{ downloading ? "در حال آماده‌سازی..." : "خروجی CSV" }}
     </button>
   </header>
 
@@ -18,7 +18,7 @@
         (ngModelChange)="setIncludeAllReservations($event)" />
       <span>
         نمایش همه رزروها
-        <small>با فعال‌کردن این گزینه، تاریخ، نوع ثبت‌کننده، شخص و وضعیت نادیده گرفته می‌شوند و خروجی اکسل نیز شامل همه رزروها خواهد بود.</small>
+        <small>با فعال‌کردن این گزینه، تاریخ، نوع ثبت‌کننده، شخص و وضعیت نادیده گرفته می‌شوند و خروجی CSV نیز شامل همه رزروها خواهد بود.</small>
       </span>
     </label>
     <label class="date-filter" [class.filter-disabled]="includeAllReservations">

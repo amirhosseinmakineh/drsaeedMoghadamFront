@@ -100,22 +100,6 @@ export class AdminReservationsTableComponent implements OnInit, OnChanges, OnDes
       value: (row) => formatReservationTime(this.reservationAt(row)),
     },
     {
-      key: "secretaryAnnouncement",
-      label: "اعلام منشی",
-      value: (row) =>
-        row.secretaryAnnouncement?.trim() ||
-        row.SecretaryAnnouncement?.trim() ||
-        "-",
-    },
-    {
-      key: "secretaryAnnouncement",
-      label: "اعلام منشی",
-      value: (row) =>
-        row.secretaryAnnouncement?.trim() ||
-        row.SecretaryAnnouncement?.trim() ||
-        "-",
-    },
-    {
       key: "status",
       label: "وضعیت",
       value: (row) => attendanceStatusPresentation(readAttendanceStatus(row)).label,
