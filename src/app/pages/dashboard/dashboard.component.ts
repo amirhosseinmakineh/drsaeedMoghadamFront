@@ -1195,7 +1195,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (day === undefined) continue;
       this.userForm.secretaryAccess[day] = {
         enabled: true,
-        permissions: (item.permissions ?? normalizedItem.Permissions ?? []).map(Number) as SecretaryPermissionType[],
+        permissions: (item.permissions ?? normalizedItem.Permissions ?? [])
+          .map((permission) => this.parseSecretaryPermission(permission))
+          .filter((permission): permission is SecretaryPermissionType => permission !== null),
       };
     }
   }
@@ -1203,6 +1205,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private parseSecretaryType(value: number | string | null | undefined): SecretaryType {
     return value === SecretaryType.Assistant || String(value).toLowerCase() === "assistant" || String(value) === "2"
       ? SecretaryType.Assistant : SecretaryType.Main;
+  }
+
+  private parseSecretaryPermission(value: unknown): SecretaryPermissionType | null {
+    const numericValue = Number(value);
+    if (Number.isInteger(numericValue) && numericValue >= 1 && numericValue <= 7)
+      return numericValue as SecretaryPermissionType;
+
+    const permissionNames: Record<string, SecretaryPermissionType> = {
+      viewreservations: SecretaryPermissionType.ViewReservations,
+      editreservations: SecretaryPermissionType.EditReservations,
+      confirmattendance: SecretaryPermissionType.ConfirmAttendance,
+      secretaryannouncement: SecretaryPermissionType.SecretaryAnnouncement,
+      viewpatients: SecretaryPermissionType.ViewPatients,
+      createreservation: SecretaryPermissionType.CreateReservation,
+      cancelreservation: SecretaryPermissionType.CancelReservation,
+    };
+
+    return permissionNames[String(value).trim().toLowerCase()] ?? null;
   }
 
   private buildSecretaryAccess(user: AdminUser): UserFormModel["secretaryAccess"] {

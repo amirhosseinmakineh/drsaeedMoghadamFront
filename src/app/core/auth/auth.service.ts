@@ -93,7 +93,10 @@ export class AuthService {
   private readonly currentUser = signal<AuthUser | null>(this.readSession());
 
   readonly user = this.currentUser.asReadonly();
-  readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly isAuthenticated = computed(() => {
+    const user = this.currentUser();
+    return user !== null && !this.isTokenExpired(user.token);
+  });
 
   constructor(private http: HttpClient) {}
 
@@ -220,13 +223,7 @@ export class AuthService {
         .subscribe({ error: () => undefined });
     }
 
-    this.currentUser.set(null);
-
-    try {
-      localStorage.removeItem(this.sessionStorageKey);
-    } catch {
-      // Auth state is still cleared in memory when storage is unavailable.
-    }
+    this.clearSession();
   }
 
   updateConsultantProfile(profileId: number, isCompleteProfile = true): void {
@@ -329,9 +326,20 @@ export class AuthService {
 
   authToken(): string | null {
     const currentToken = this.currentUser()?.token;
-    if (currentToken?.trim()) return currentToken;
+    if (currentToken?.trim()) {
+      if (this.isTokenExpired(currentToken)) {
+        this.clearSession();
+        return null;
+      }
+      return currentToken;
+    }
 
-    return this.readStoredToken();
+    const storedToken = this.readStoredToken();
+    if (storedToken && this.isTokenExpired(storedToken)) {
+      this.clearSession();
+      return null;
+    }
+    return storedToken;
   }
 
   roleLabel(role: AuthRole, language: "fa" | "en"): string {
@@ -779,6 +787,24 @@ export class AuthService {
     );
   }
 
+  private isTokenExpired(token: string): boolean {
+    const expiration = this.decodeJwtPayload(token)["exp"];
+    const expirationSeconds =
+      typeof expiration === "number" ? expiration : Number(expiration);
+
+    return Number.isFinite(expirationSeconds) &&
+      expirationSeconds * 1000 <= Date.now();
+  }
+
+  private clearSession(): void {
+    this.currentUser.set(null);
+    try {
+      localStorage.removeItem(this.sessionStorageKey);
+    } catch {
+      // The in-memory session is still cleared when storage is unavailable.
+    }
+  }
+
   private hasJwtRoleClaim(token: string): boolean {
     const claims = this.decodeJwtPayload(token);
     return Boolean(
@@ -798,6 +824,10 @@ export class AuthService {
 
       const session = JSON.parse(rawSession) as StoredSession;
       if (!session.token || !session.user) return null;
+      if (this.isTokenExpired(session.token)) {
+        localStorage.removeItem(this.sessionStorageKey);
+        return null;
+      }
 
       const tokenUser = this.userFromToken(session.token, null);
 

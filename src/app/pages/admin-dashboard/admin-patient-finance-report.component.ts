@@ -134,13 +134,13 @@ export class AdminPatientFinanceReportComponent implements OnInit {
         if (!response.isSuccess || !response.data) { this.toast.error(response.message); return; }
         this.details = {
           ...response.data,
-          cheques: response.data.cheques?.map(item => ({
-            ...item,
-            dueDate: this.toDateInputValue(item.dueDate),
+          cheques: (response.data.cheques ?? []).map((cheque) => ({
+            ...cheque,
+            dueDate: this.toDateInputValue(cheque.dueDate),
           })),
-          promissoryNotes: response.data.promissoryNotes?.map(item => ({
-            ...item,
-            dueDate: this.toDateInputValue(item.dueDate),
+          promissoryNotes: (response.data.promissoryNotes ?? []).map((note) => ({
+            ...note,
+            dueDate: this.toDateInputValue(note.dueDate),
           })),
         };
       },

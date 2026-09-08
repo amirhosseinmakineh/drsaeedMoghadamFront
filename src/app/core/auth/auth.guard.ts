@@ -11,6 +11,16 @@ export const authGuard: CanActivateFn = () => {
   return router.parseUrl("/");
 };
 
+export const dashboardRedirectGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const user = auth.user();
+
+  return user
+    ? router.parseUrl(auth.dashboardUrl(user))
+    : router.parseUrl("/");
+};
+
 export const roleGuard = (allowedRoles: AuthRole[]): CanActivateFn => {
   return () => {
     const auth = inject(AuthService);

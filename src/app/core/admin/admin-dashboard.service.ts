@@ -501,6 +501,7 @@ export interface UpdateAdminPromissoryNoteRequest { amount: number; serialNumber
 
 export interface LeadFilters {
   profileId?: number;
+  searchText?: string;
   leadAssignmentState?: number | null;
   leadAssignmentType?: number | null;
   pageNumber: number;
