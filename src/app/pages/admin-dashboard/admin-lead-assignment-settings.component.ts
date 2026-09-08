@@ -11,6 +11,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { finalize } from "rxjs";
 import { ToastService } from "../../core/toast/toast.service";
 import {
+  ConsultantLeadAssignmentSetting,
   LeadAssignmentSourceType,
 } from "../../features/admin/lead-assignment-settings/lead-assignment-settings.models";
 import { LeadAssignmentSettingsService } from "../../features/admin/lead-assignment-settings/lead-assignment-settings.service";
@@ -30,6 +31,10 @@ export class AdminLeadAssignmentSettingsComponent implements OnInit {
   updatedAt: string | null = null;
   loading = true;
   saving = false;
+  consultantsLoading = true;
+  consultants: ConsultantLeadAssignmentSetting[] = [];
+  search = "";
+  readonly savingConsultantIds = new Set<number>();
 
   private readonly destroyRef = inject(DestroyRef);
 
@@ -40,6 +45,7 @@ export class AdminLeadAssignmentSettingsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadConsultants();
     this.api.get()
       .pipe(
         finalize(() => {
@@ -58,6 +64,84 @@ export class AdminLeadAssignmentSettingsComponent implements OnInit {
           error?.error?.message || "دریافت تنظیمات تخصیص لید انجام نشد.",
         ),
       });
+  }
+
+  get filteredConsultants(): ConsultantLeadAssignmentSetting[] {
+    const query = this.search.trim().toLocaleLowerCase("fa");
+    if (!query) return this.consultants;
+    return this.consultants.filter((consultant) =>
+      `${consultant.fullName} ${consultant.phoneNumber}`
+        .toLocaleLowerCase("fa")
+        .includes(query),
+    );
+  }
+
+  loadConsultants(): void {
+    this.consultantsLoading = true;
+    this.api.getConsultants()
+      .pipe(
+        finalize(() => {
+          this.consultantsLoading = false;
+          this.cdr.markForCheck();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (consultants) => {
+          this.consultants = consultants;
+          this.cdr.markForCheck();
+        },
+        error: (error) => this.toast.error(
+          error?.error?.message || "دریافت تنظیمات مشاوران انجام نشد.",
+        ),
+      });
+  }
+
+  saveConsultant(
+    consultant: ConsultantLeadAssignmentSetting,
+    value: string,
+  ): void {
+    if (this.savingConsultantIds.has(consultant.consultantProfileId)) return;
+    const preferred = value === "default"
+      ? null
+      : Number(value) as LeadAssignmentSourceType;
+    if (preferred !== null &&
+        preferred !== LeadAssignmentSourceType.NewLeads &&
+        preferred !== LeadAssignmentSourceType.BurnedLeads) return;
+
+    this.savingConsultantIds.add(consultant.consultantProfileId);
+    this.cdr.markForCheck();
+    this.api.updateConsultant(consultant.consultantProfileId, preferred)
+      .pipe(
+        finalize(() => {
+          this.savingConsultantIds.delete(consultant.consultantProfileId);
+          this.cdr.markForCheck();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (result) => {
+          if (!result.isSuccess || !result.data) {
+            this.toast.error(result.message || "ذخیره نوع لید مشاور انجام نشد.");
+            return;
+          }
+          this.consultants = this.consultants.map((item) =>
+            item.consultantProfileId === result.data!.consultantProfileId
+              ? result.data!
+              : item,
+          );
+          this.toast.success(result.message || "نوع لید مشاور ذخیره شد.");
+        },
+        error: (error) => this.toast.error(
+          error?.error?.message || "ذخیره نوع لید مشاور انجام نشد.",
+        ),
+      });
+  }
+
+  sourceLabel(source: LeadAssignmentSourceType): string {
+    return source === LeadAssignmentSourceType.NewLeads
+      ? "لید جدید"
+      : "لید سوخته";
   }
 
   save(): void {
@@ -82,6 +166,11 @@ export class AdminLeadAssignmentSettingsComponent implements OnInit {
           this.savedSource = result.data?.assignmentSourceType ?? this.selectedSource;
           this.selectedSource = this.savedSource;
           this.updatedAt = result.data?.updatedAt ?? this.updatedAt;
+          this.consultants = this.consultants.map((consultant) =>
+            consultant.preferredLeadSourceType === null
+              ? { ...consultant, effectiveLeadSourceType: this.savedSource }
+              : consultant,
+          );
           this.toast.success(result.message || "تنظیمات تخصیص لید با موفقیت ذخیره شد.");
         },
         error: (error) => this.toast.error(

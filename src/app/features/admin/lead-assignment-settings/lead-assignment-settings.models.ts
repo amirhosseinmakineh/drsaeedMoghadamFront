@@ -13,3 +13,19 @@ export interface LeadAssignmentSettingResult {
   message: string;
   data?: LeadAssignmentSetting;
 }
+
+export interface ConsultantLeadAssignmentSetting {
+  consultantProfileId: number;
+  fullName: string;
+  phoneNumber: string;
+  isActive: boolean;
+  isOnline: boolean;
+  preferredLeadSourceType: LeadAssignmentSourceType | null;
+  effectiveLeadSourceType: LeadAssignmentSourceType;
+}
+
+export interface ConsultantLeadAssignmentSettingResult {
+  isSuccess: boolean;
+  message: string;
+  data?: ConsultantLeadAssignmentSetting;
+}
