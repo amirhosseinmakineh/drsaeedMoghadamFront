@@ -2,8 +2,8 @@
   <header class="panel-heading">
     <div>
       <span>رزروهای روزانه</span>
-      <h2 id="daily-report-title">{{ includeAllReservations ? "همه رزروهای ثبت‌شده" : "رزروهای ثبت‌شده در روز انتخابی" }}</h2>
-      <p>تاریخ انتخابی بر اساس «زمان ثبت رزرو» در پایگاه داده و به وقت ایران است؛ «زمان مراجعه بیمار» جداگانه در جدول نمایش داده می‌شود.</p>
+      <h2 id="daily-report-title">{{ includeAllReservations ? "همه رزروهای ثبت‌شده" : reservationOwnerType === "Secretary" ? "مراجعه‌های روز انتخابی ثبت‌شده توسط منشی" : "رزروهای ثبت‌شده در روز انتخابی" }}</h2>
+      <p>{{ reservationOwnerType === "Secretary" ? "تاریخ انتخابی بر اساس زمان مراجعه بیمار و به وقت ایران است." : "تاریخ انتخابی بر اساس زمان ثبت رزرو در پایگاه داده و به وقت ایران است؛ زمان مراجعه بیمار جداگانه در جدول نمایش داده می‌شود." }}</p>
     </div>
     <button class="export-button" type="button" [disabled]="downloading" (click)="download()">
       <span class="button-icon" aria-hidden="true">⇩</span>
@@ -22,8 +22,8 @@
       </span>
     </label>
     <label class="date-filter" [class.filter-disabled]="includeAllReservations">
-      تاریخ ثبت رزرو
-      <app-base-datepicker [label]="datePickerLabel" [selectedDate]="selectedDate"
+      {{ reservationOwnerType === "Secretary" ? "تاریخ مراجعه" : "تاریخ ثبت رزرو" }}
+      <app-base-datepicker [label]="reservationOwnerType === 'Secretary' ? appointmentDatePickerLabel : createdDatePickerLabel" [selectedDate]="selectedDate"
         [unrestrictedDates]="true"
         (dateChange)="setDate($event)"></app-base-datepicker>
     </label>
@@ -94,7 +94,7 @@
       <b>{{ report.items.length }} رکورد</b>
     </div>
     @if (!report.items.length && !loading) {
-      <div class="empty-state">رزروی با فیلترهای انتخاب‌شده ثبت نشده است.</div>
+      <div class="empty-state">{{ reservationOwnerType === "Secretary" ? "برای تاریخ مراجعه و منشی انتخاب‌شده رزروی پیدا نشد." : "رزروی با فیلترهای انتخاب‌شده ثبت نشده است." }}</div>
     } @else {
       <div class="table-scroll">
         <table>
