@@ -751,7 +751,7 @@ export class AdminDashboardService {
     return this.http
       .delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User`, {
         headers: this.authHeaders(),
-        params: this.toParams({ Id: userId }),
+        params: this.toParams({ UserId: userId }),
       })
       .pipe(this.ensureCommandSucceeded("حذف کاربر انجام نشد"));
   }
