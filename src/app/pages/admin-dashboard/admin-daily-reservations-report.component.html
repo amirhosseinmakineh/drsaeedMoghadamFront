@@ -2,7 +2,7 @@
   <header class="panel-heading">
     <div>
       <span>رزروهای روزانه</span>
-      <h2 id="daily-report-title">{{ includeAllReservations ? "همه رزروهای ثبت‌شده" : reservationOwnerType === "Secretary" ? "مراجعه‌های روز انتخابی ثبت‌شده توسط منشی" : "رزروهای ثبت‌شده در روز انتخابی" }}</h2>
+      <h2 id="daily-report-title">{{ includeAllReservations ? "همه رزروهای ثبت‌شده" : reservationOwnerType === "Secretary" ? "مراجعه‌های روز انتخابی" : "رزروهای ثبت‌شده در روز انتخابی" }}</h2>
       <p>{{ reservationOwnerType === "Secretary" ? "تاریخ انتخابی بر اساس زمان مراجعه بیمار و به وقت ایران است." : "تاریخ انتخابی بر اساس زمان ثبت رزرو در پایگاه داده و به وقت ایران است؛ زمان مراجعه بیمار جداگانه در جدول نمایش داده می‌شود." }}</p>
     </div>
     <button class="export-button" type="button" [disabled]="downloading" (click)="download()">
