@@ -48,7 +48,8 @@ export class AdminDailyReservationsReportComponent implements OnInit {
   downloading = false;
   errorMessage = "";
 
-  readonly datePickerLabel = { fa: "تاریخ ثبت رزرو", en: "Created date" };
+  readonly createdDatePickerLabel = { fa: "تاریخ ثبت رزرو", en: "Created date" };
+  readonly appointmentDatePickerLabel = { fa: "تاریخ مراجعه", en: "Appointment date" };
   readonly requestStatuses = [
     { value: 1, label: "در انتظار بررسی منشی" },
     { value: 2, label: "تایید شده" },
