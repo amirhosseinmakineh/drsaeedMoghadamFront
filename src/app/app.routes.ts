@@ -26,6 +26,22 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "composite",
+    loadComponent: () =>
+      import("./pages/service-detail/service-detail.component").then(
+        (m) => m.ServiceDetailComponent,
+      ),
+    data: { serviceId: "composite" },
+  },
+  {
+    path: "bleaching",
+    loadComponent: () =>
+      import("./pages/service-detail/service-detail.component").then(
+        (m) => m.ServiceDetailComponent,
+      ),
+    data: { serviceId: "whitening" },
+  },
+  {
     path: "about",
     loadComponent: () =>
       import("./pages/about/about.component").then((m) => m.AboutComponent),
@@ -148,5 +164,11 @@ export const routes: Routes = [
     loadComponent: () => import("./pages/dashboard/dashboard.component").then(m => m.DashboardComponent),
     data: { role: "admin", initialSection: "patientReferrals" },
   },
-  { path: "**", redirectTo: "" },
+  {
+    path: "**",
+    loadComponent: () =>
+      import("./pages/not-found/not-found.component").then(
+        (m) => m.NotFoundComponent,
+      ),
+  },
 ];

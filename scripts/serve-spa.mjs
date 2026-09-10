@@ -28,7 +28,7 @@ const mimeTypes = new Map([
 
 function sendFile(request, response, filePath, fileStat) {
   const extension = extname(filePath).toLowerCase();
-  response.statusCode = 200;
+  if (response.statusCode < 400) response.statusCode = 200;
   response.setHeader("Content-Type", mimeTypes.get(extension) || "application/octet-stream");
   response.setHeader("Content-Length", fileStat.size);
   response.setHeader(
@@ -47,6 +47,17 @@ function sendFile(request, response, filePath, fileStat) {
       response.end();
     })
     .pipe(response);
+}
+
+function isPrivateRoute(pathname) {
+  return ["/admin", "/consultant", "/dashboard", "/secretary", "/select-dashboard"]
+    .some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"));
+}
+
+function isKnownClientRoute(pathname) {
+  if (isPrivateRoute(pathname)) return true;
+  if (["/", "/about", "/bleaching", "/composite", "/contact", "/services"].includes(pathname.replace(/\/$/, "") || "/")) return true;
+  return /^\/services\/[^/]+\/?$/.test(pathname);
 }
 
 async function existingFile(pathname) {
@@ -101,6 +112,8 @@ createServer(async (request, response) => {
 
   try {
     const indexStat = await stat(indexFile);
+    if (isPrivateRoute(pathname)) response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+    if (!isKnownClientRoute(pathname)) response.statusCode = 404;
     sendFile(request, response, indexFile, indexStat);
   } catch {
     response.statusCode = 503;

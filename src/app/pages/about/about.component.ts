@@ -1,7 +1,6 @@
 import { Component } from "@angular/core";
 import { NgFor } from "@angular/common";
 import { RouterLink } from "@angular/router";
-import { Meta, Title } from "@angular/platform-browser";
 import { signal } from "@angular/core";
 import { LanguageCode, pickText, text } from "../../models/clinic.model";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
@@ -51,34 +50,12 @@ export class AboutComponent {
     },
   ];
 
-  constructor(
-    private title: Title,
-    private meta: Meta,
-  ) {
-    this.updateSeo();
-  }
-
   setLanguage(language: LanguageCode): void {
     this.language.set(language);
-    this.updateSeo();
   }
 
   openAuth(): void {
     window.dispatchEvent(new CustomEvent("open-auth-dialog"));
   }
 
-  private updateSeo(): void {
-    const isFa = this.language() === "fa";
-    this.title.setTitle(
-      isFa
-        ? "درباره ما | کلینیک دندان‌پزشکی دکتر سعید مقدم"
-        : "About us | Dr. Saeed Moghaddam Dental Clinic",
-    );
-    this.meta.updateTag({
-      name: "description",
-      content: isFa
-        ? "معرفی کلینیک دندان‌پزشکی دکتر سعید مقدم، ارزش‌ها، رویکرد درمانی و تمرکز بر زیبایی طبیعی و آرامش بیمار."
-        : "About Dr. Saeed Moghaddam Dental Clinic, values, care philosophy and focus on natural aesthetics and patient calm.",
-    });
-  }
 }

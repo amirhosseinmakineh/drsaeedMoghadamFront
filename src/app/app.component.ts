@@ -1,5 +1,5 @@
-import { NgFor, NgIf } from "@angular/common";
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, signal } from "@angular/core";
+import { DOCUMENT, isPlatformBrowser, NgFor, NgIf } from "@angular/common";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Injector, OnDestroy, OnInit, PLATFORM_ID, signal } from "@angular/core";
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { filter, Subscription } from "rxjs";
 import { AuthDialogComponent } from "./auth/auth-dialog.component";
@@ -11,6 +11,8 @@ import { FaIconComponent } from "./shared/ui/fa-icon/fa-icon.component";
 import { ToastContainerComponent } from "./shared/ui/toast-container/toast-container.component";
 import { ReservationsRealtimeService } from "./core/reservation/reservations-realtime.service";
 import { AppUpdateService } from "./core/update/app-update.service";
+import { SeoService } from "./core/seo/seo.service";
+import { AnalyticsService } from "./core/analytics/analytics.service";
 
 interface LanguageAwarePage {
   setLanguage?: (language: LanguageCode) => void;
@@ -46,15 +48,24 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private readonly openAuthFromPage = (): void => this.authOpen.set(true);
   private routerSubscription: Subscription | null = null;
+  private readonly isBrowser: boolean;
 
   constructor(
     private router: Router,
     public auth: AuthService,
-    private pushNotifications: PushNotificationService,
-    private reservationsRealtime: ReservationsRealtimeService,
-    private appUpdates: AppUpdateService,
+    private injector: Injector,
+    private seo: SeoService,
+    private analytics: AnalyticsService,
     private cdr: ChangeDetectorRef,
-  ) {}
+    @Inject(DOCUMENT) private document: Document,
+    @Inject(PLATFORM_ID) platformId: object,
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
+
+  private get pushNotifications(): PushNotificationService {
+    return this.injector.get(PushNotificationService);
+  }
 
   get direction(): "rtl" | "ltr" {
     return this.language() === "fa" ? "rtl" : "ltr";
@@ -100,27 +111,34 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.appUpdates.start();
-    this.reservationsRealtime.start();
     this.applyDocumentState();
-    const user = this.auth.user();
-    if (user?.role === "consultant") {
-      void this.pushNotifications.registerForConsultantOnLogin();
-    } else {
-      void this.pushNotifications.syncForCurrentProfile();
+    if (this.isBrowser) {
+      this.injector.get(AppUpdateService).start();
+      this.analytics.startClickTracking();
+      this.injector.get(ReservationsRealtimeService).start();
+      const user = this.auth.user();
+      if (user?.role === "consultant") {
+        void this.pushNotifications.registerForConsultantOnLogin();
+      } else {
+        void this.pushNotifications.syncForCurrentProfile();
+      }
+      window.addEventListener("open-auth-dialog", this.openAuthFromPage);
     }
-    window.addEventListener("open-auth-dialog", this.openAuthFromPage);
     this.routerSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.applyRouteTheme();
+        this.seo.applyForUrl(this.router.url, this.language());
         this.cdr.markForCheck();
       });
     this.applyRouteTheme();
+    this.seo.applyForUrl(this.router.url, this.language());
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener("open-auth-dialog", this.openAuthFromPage);
+    if (this.isBrowser) {
+      window.removeEventListener("open-auth-dialog", this.openAuthFromPage);
+    }
     this.routerSubscription?.unsubscribe();
   }
 
@@ -134,17 +152,19 @@ export class AppComponent implements OnInit, OnDestroy {
     this.saveSetting("language", this.language());
     this.activePage?.setLanguage?.(this.language());
     this.applyDocumentState();
+    this.seo.applyForUrl(this.router.url, this.language());
   }
 
   private applyDocumentState(): void {
-    document.documentElement.lang = this.language();
-    document.documentElement.dir = this.direction;
+    this.document.documentElement.lang = this.language();
+    this.document.documentElement.dir = this.direction;
     this.applyRouteTheme();
   }
 
   /** Keeps the public website cyan/dark while every authenticated workspace is monochrome. */
   private applyRouteTheme(): void {
-    document.body.dataset["theme"] = this.isDashboardRoute()
+    if (!this.document.body?.dataset) return;
+    this.document.body.dataset["theme"] = this.isDashboardRoute()
       ? "dashboard"
       : "clinic";
   }

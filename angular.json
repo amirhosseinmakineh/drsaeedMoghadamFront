@@ -83,6 +83,19 @@
 
             "index": "src/index.html",
             "browser": "src/main.ts",
+            "server": "src/main.server.ts",
+            "outputMode": "server",
+            "ssr": {
+              "entry": "src/server.ts"
+            },
+            "security": {
+              "allowedHosts": [
+                "drsaeedmoghadam.com",
+                "www.drsaeedmoghadam.com",
+                "localhost",
+                "127.0.0.1"
+              ]
+            },
             "outputPath": "dist/demo",
             "polyfills": [],
             "scripts": [],

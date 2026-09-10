@@ -2,6 +2,9 @@
   "name": "angular-starter",
   "private": true,
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "ng": "ng",
     "build": "npm run optimize:images && node scripts/generate-webpush-config.mjs && ng build --configuration production && node scripts/validate-webpush-config.mjs",
@@ -10,9 +13,13 @@
     "check:patient-finance-template": "node scripts/validate-patient-finance-template.mjs",
     "check:secretary-sales": "node scripts/validate-secretary-sales-ui.mjs",
     "check:lead-assignment-settings": "node scripts/validate-lead-assignment-settings-ui.mjs",
+    "test:seo": "node scripts/validate-seo-foundation.mjs",
+    "test:ssr": "node scripts/validate-ssr-runtime.mjs",
     "generate:webpush": "node scripts/generate-webpush-config.mjs",
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
-    "start": "node scripts/serve-spa.mjs",
+    "start": "node dist/demo/server/server.mjs",
+    "start:csr": "node scripts/serve-spa.mjs",
+    "serve:ssr": "node dist/demo/server/server.mjs",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
     "optimize:images": "python3 scripts/optimize-images.py"
   },
@@ -23,8 +30,11 @@
     "@angular/core": "^20.3.0",
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
+    "@angular/platform-server": "^20.3.30",
     "@angular/router": "^20.3.0",
     "@angular/service-worker": "^20.3.0",
+    "@angular/ssr": "^20.3.36",
+    "express": "^5.2.1",
     "http-server": "^14.1.1",
     "rxjs": "^7.8.1",
     "tslib": "^2.5.0"
@@ -33,6 +43,7 @@
     "@angular/build": "^20.3.0",
     "@angular/cli": "^20.3.0",
     "@angular/compiler-cli": "^20.3.0",
+    "@types/express": "^5.0.6",
     "typescript": "^5.8.2"
   }
 }
