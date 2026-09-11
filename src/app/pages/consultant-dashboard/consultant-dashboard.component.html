@@ -247,6 +247,20 @@
                 <span>تماس‌های امروز</span>
                 <strong>{{ todayCallsCount }}</strong>
               </article>
+              <article class="capacity-card">
+                <span>ظرفیت دریافت لید امروز</span>
+                <strong>{{ remainingDailyCapacity }} از {{ dailyLimit }} باقی‌مانده</strong>
+                <div
+                  class="capacity-progress"
+                  role="progressbar"
+                  aria-label="ظرفیت مصرف‌شده دریافت لید امروز"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-valuenow]="usedCapacityPercent"
+                >
+                  <span [style.width.%]="usedCapacityPercent"></span>
+                </div>
+              </article>
             </div>
             @if (shouldShowPushSetupBanner) {
               <div class="push-setup-banner">
