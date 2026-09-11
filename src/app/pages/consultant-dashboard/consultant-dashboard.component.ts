@@ -306,6 +306,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   reportForm: LeadReportForm = this.emptyLeadReportForm();
   private reportEditOriginalSecondaryPhone: string | null = null;
 
+  closeLeadDialogOpen = false;
+  closeLeadSaving = false;
+  selectedLeadToClose: ConsultantLead | null = null;
+  closeLeadReason = 1;
+  closeLeadDescription = "";
+  readonly closeLeadReasons = [
+    { value: 1, label: "عدم تمایل بیمار" },
+    { value: 2, label: "درخواست عدم تماس مجدد" },
+    { value: 3, label: "عدم پاسخ پس از پیگیری" },
+    { value: 4, label: "اطلاعات لید نامعتبر است" },
+    { value: 5, label: "سایر" },
+  ];
+
   reservationDialogOpen = false;
   reservationDialogMode: ReservationDialogMode = "create";
   reservationSaving = false;
@@ -1706,6 +1719,69 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.reportForm.secondaryPhoneNumber.trim() || null;
     this.reportDialogOpen = true;
     this.markViewDirty();
+  }
+
+  openCloseLeadDialog(lead: ConsultantLead): void {
+    if (!this.leadId(lead) || this.leadHasActiveReservation(lead)) return;
+    this.selectedLeadToClose = lead;
+    this.closeLeadReason = 1;
+    this.closeLeadDescription = "";
+    this.closeLeadDialogOpen = true;
+    this.markViewDirty();
+  }
+
+  closeCloseLeadDialog(): void {
+    if (this.closeLeadSaving) return;
+    this.closeLeadDialogOpen = false;
+    this.selectedLeadToClose = null;
+    this.markViewDirty();
+  }
+
+  submitCloseLead(): void {
+    const leadId = this.selectedLeadToClose
+      ? this.leadId(this.selectedLeadToClose)
+      : null;
+    const description = this.closeLeadDescription.trim();
+    if (!leadId || this.closeLeadSaving) return;
+    if (this.closeLeadReason === 5 && !description) {
+      this.showFeedback("برای گزینه سایر، توضیح را وارد کنید", "error");
+      return;
+    }
+
+    this.closeLeadSaving = true;
+    this.markViewDirty();
+    this.consultantApi
+      .closeLead(leadId, {
+        reason: this.closeLeadReason,
+        description: description || null,
+      })
+      .pipe(
+        finalize(() => {
+          this.closeLeadSaving = false;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          this.leads = this.leads.filter((lead) => this.leadId(lead) !== leadId);
+          this.reportEditLeads = this.reportEditLeads.filter(
+            (lead) => this.leadId(lead) !== leadId,
+          );
+          this.patientLeads = this.patientLeads.filter(
+            (lead) => this.leadId(lead) !== leadId,
+          );
+          this.closeLeadDialogOpen = false;
+          this.selectedLeadToClose = null;
+          this.showFeedback(response.message || "پیگیری این لید بسته شد", "success");
+          this.loadLeads();
+          this.loadReportEditLeads();
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "بستن پیگیری انجام نشد"),
+            "error",
+          ),
+      });
   }
 
   closeReportDialog(
