@@ -198,6 +198,11 @@ export interface LeadCallReportResponse {
   shouldOpenReservationPage?: boolean;
 }
 
+export interface CloseLeadRequest {
+  reason: number;
+  description?: string | null;
+}
+
 export interface ExpireLeadNoCallRequest {
   leadAssignmentId: number;
   consultantProfileId: number;
@@ -688,6 +693,19 @@ export class ConsultantDashboardService {
         },
       )
       .pipe(this.ensureCommandSucceeded("ویرایش گزارش تماس انجام نشد"));
+  }
+
+  closeLead(
+    leadAssignmentId: number,
+    payload: CloseLeadRequest,
+  ): Observable<ApiCommandResponse<unknown>> {
+    return this.http
+      .post<ApiCommandResponse<unknown>>(
+        `${this.apiBaseUrl}/Consultant/leads/${leadAssignmentId}/close`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("بستن پیگیری انجام نشد"));
   }
 
   createReservation(
