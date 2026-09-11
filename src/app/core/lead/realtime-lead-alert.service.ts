@@ -518,7 +518,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.limitNotifiedDates.add(todayKey);
     this.toast.info(
       message ??
-        "سقف روزانه ۱۰ لید پر شده است. امروز دیگر نمی‌توانید لید بردارید.",
+        "در حال حاضر امکان دریافت لید جدید وجود ندارد.",
     );
   }
 
