@@ -749,9 +749,8 @@ export class AdminDashboardService {
 
   deleteUser(userId: string): Observable<ApiCommandResponse<boolean>> {
     return this.http
-      .delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User`, {
+      .delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User/${encodeURIComponent(userId)}`, {
         headers: this.authHeaders(),
-        params: this.toParams({ UserId: userId }),
       })
       .pipe(this.ensureCommandSucceeded("حذف کاربر انجام نشد"));
   }

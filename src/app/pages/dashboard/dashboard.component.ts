@@ -882,7 +882,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   confirmDeleteUser(): void {
     if (!this.userToDelete) return;
 
-    this.adminApi.deleteUser(this.userToDelete.id).subscribe({
+    const userId = this.userToDelete.id || this.userToDelete.Id;
+    if (!userId) {
+      this.showFeedback("شناسه کاربر معتبر نیست؛ فهرست را دوباره بارگذاری کنید", "error");
+      return;
+    }
+
+    this.adminApi.deleteUser(userId).subscribe({
       next: (response) => {
         this.closeDeleteDialog();
         this.showFeedback(response.message || "کاربر حذف شد", "success");
