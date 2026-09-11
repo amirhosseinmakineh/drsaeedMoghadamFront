@@ -521,7 +521,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.limitNotifiedDates.add(todayKey);
     this.toast.info(
       message ??
-        "در حال حاضر امکان دریافت لید جدید وجود ندارد.",
+        "سقف دریافت لید امروز تکمیل شده است.",
     );
   }
 
