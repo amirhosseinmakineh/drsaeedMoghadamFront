@@ -103,61 +103,6 @@
         </dl>
       </article>
 
-      <article class="info-card editable-card">
-        <h3>
-          <app-fa-icon name="clipboard"></app-fa-icon>
-          محدودیت دریافت شماره
-        </h3>
-        <p class="hint">
-          تنها این بخش قابل ویرایش است. مقدار صفر نیز مجاز است و مقدار خالی یعنی استفاده از سقف
-          پیش‌فرض سیستم ({{ profile.effectiveDailyLimit }}).
-        </p>
-        <dl class="stats-row">
-          <div>
-            <dt>سقف فعال امروز</dt>
-            <dd>{{ profile.effectiveDailyLimit }}</dd>
-          </div>
-          <div>
-            <dt>تعداد دریافت امروز</dt>
-            <dd>{{ profile.todayPickupCount }}</dd>
-          </div>
-        </dl>
-        <div class="limit-form">
-          <label>
-            سقف روزانه دریافت شماره
-            <input
-              [(ngModel)]="limitInput"
-              [ngModelOptions]="{ standalone: true }"
-              name="limitNumber"
-              type="number"
-              min="0"
-              max="100"
-              step="1"
-              inputmode="numeric"
-              autocomplete="off"
-              placeholder="پیش‌فرض سیستم"
-            />
-          </label>
-          <div class="limit-actions">
-            <button
-              class="ghost-action"
-              type="button"
-              [disabled]="saving"
-              (click)="resetToDefault()"
-            >
-              پیش‌فرض سیستم
-            </button>
-            <button
-              class="solid-action"
-              type="button"
-              [disabled]="saving || !profileId"
-              (click)="saveLimit()"
-            >
-              {{ saving ? "در حال ذخیره..." : "ذخیره محدودیت" }}
-            </button>
-          </div>
-        </div>
-      </article>
     </div>
   }
 </section>
