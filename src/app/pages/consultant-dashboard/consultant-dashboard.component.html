@@ -635,21 +635,6 @@
                       >
                         رزرو وقت
                       </button>
-                      <button
-                        class="secondary-action compact"
-                        type="button"
-                        [disabled]="!isLeadReportSubmitted(lead) || leadHasActiveReservation(lead)"
-                        [attr.title]="
-                          !isLeadReportSubmitted(lead)
-                            ? 'ابتدا گزارش تماس را ثبت کنید'
-                            : leadHasActiveReservation(lead)
-                              ? 'این لید رزرو فعال دارد'
-                              : null
-                        "
-                        (click)="openCloseLeadDialog(lead)"
-                      >
-                        بستن لید
-                      </button>
                     </div>
                   </article>
                 }
@@ -801,15 +786,6 @@
                       (click)="openReservationDialog(lead)"
                     >
                       رزرو وقت
-                    </button>
-                    <button
-                      class="secondary-action compact"
-                      type="button"
-                      [disabled]="leadHasActiveReservation(lead)"
-                      [attr.title]="leadHasActiveReservation(lead) ? 'این لید رزرو فعال دارد' : null"
-                      (click)="openCloseLeadDialog(lead)"
-                    >
-                      بستن پیگیری
                     </button>
                   </div>
                 </article>
@@ -1152,6 +1128,15 @@
                       (click)="openReservationDialog(lead)"
                     >
                       رزرو وقت
+                    </button>
+                    <button
+                      class="secondary-action compact"
+                      type="button"
+                      [disabled]="leadHasActiveReservation(lead)"
+                      [attr.title]="leadHasActiveReservation(lead) ? 'این لید رزرو فعال دارد' : null"
+                      (click)="openCloseLeadDialog(lead)"
+                    >
+                      کنسل لید
                     </button>
                   </div>
                 </article>
