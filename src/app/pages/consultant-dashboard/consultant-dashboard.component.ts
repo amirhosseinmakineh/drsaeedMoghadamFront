@@ -238,8 +238,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   onlineStatusBlockReason: string | null = null;
   pendingReportCount = 0;
   uncalledWithoutReportCount = 0;
-  followUpCount = 0;
-  maximumAllowedFollowUps = 0;
   isNewLeadBlocked = false;
   shouldShowWorkloadNotification = false;
   workloadNotificationMessage: string | null = null;
@@ -3260,8 +3258,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.pendingReportCount = status.pendingReportCount;
     this.uncalledWithoutReportCount = status.uncalledWithoutReportCount;
-    this.followUpCount = status.followUpCount;
-    this.maximumAllowedFollowUps = status.maximumAllowedFollowUps;
     this.isNewLeadBlocked = status.isNewLeadBlocked;
     this.shouldShowWorkloadNotification =
       status.shouldShowWorkloadNotification;
