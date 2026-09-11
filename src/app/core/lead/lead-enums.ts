@@ -14,6 +14,7 @@ export const LeadAssignmentState = {
   Expired: 6,
   Rejected: 7,
   NoAnswer: 8,
+  ClosedByConsultant: 9,
 } as const;
 
 /** Mirrors `AdminReportPersianLabels.ToPersian(LeadAssignmentState)`. */
@@ -26,6 +27,7 @@ export const LEAD_ASSIGNMENT_STATE_LABELS: Record<number, string> = {
   [LeadAssignmentState.Expired]: "منقضی شده",
   [LeadAssignmentState.Rejected]: "رد شده",
   [LeadAssignmentState.NoAnswer]: "پاسخ نداد",
+  [LeadAssignmentState.ClosedByConsultant]: "بسته‌شده توسط مشاور",
 };
 
 /** Mirrors `AdminReportPersianLabels.ToPersian(LeadAssignmentType)`. */
@@ -51,6 +53,7 @@ const LEAD_ASSIGNMENT_STATE_BY_NAME: Record<string, number> = {
   expired: LeadAssignmentState.Expired,
   rejected: LeadAssignmentState.Rejected,
   noanswer: LeadAssignmentState.NoAnswer,
+  closedbyconsultant: LeadAssignmentState.ClosedByConsultant,
 };
 
 export function resolveLeadAssignmentType(value: unknown): number | null {
@@ -95,6 +98,7 @@ export const ADMIN_LEAD_STATE_FILTER_OPTIONS: ReadonlyArray<{
   { value: LeadAssignmentState.Expired, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.Expired] },
   { value: LeadAssignmentState.Rejected, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.Rejected] },
   { value: LeadAssignmentState.NoAnswer, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.NoAnswer] },
+  { value: LeadAssignmentState.ClosedByConsultant, label: LEAD_ASSIGNMENT_STATE_LABELS[LeadAssignmentState.ClosedByConsultant] },
 ];
 
 export const ADMIN_LEAD_TYPE_FILTER_OPTIONS: ReadonlyArray<{
