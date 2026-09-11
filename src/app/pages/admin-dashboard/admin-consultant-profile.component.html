@@ -103,6 +103,42 @@
         </dl>
       </article>
 
+      <article class="info-card editable-card">
+        <h3>ظرفیت دریافت لید</h3>
+        <p class="hint">
+          مقدار خالی یعنی سقف پیش‌فرض سیستم ({{ profile.effectiveDailyLimit }})؛ مقدار صفر دریافت لید را می‌بندد.
+        </p>
+        <dl class="stats-row">
+          <div><dt>سقف فعال امروز</dt><dd>{{ profile.effectiveDailyLimit }}</dd></div>
+          <div><dt>تعداد دریافت امروز</dt><dd>{{ profile.todayPickupCount }}</dd></div>
+        </dl>
+        <div class="limit-form">
+          <label>
+            سقف روزانه دریافت لید
+            <input
+              [(ngModel)]="limitInput"
+              [ngModelOptions]="{ standalone: true }"
+              name="limitNumber"
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="پیش‌فرض سیستم"
+            />
+          </label>
+          <div class="limit-actions">
+            <button class="ghost-action" type="button" [disabled]="saving" (click)="resetToDefault()">
+              پیش‌فرض سیستم
+            </button>
+            <button class="solid-action" type="button" [disabled]="saving || !profileId" (click)="saveLimit()">
+              {{ saving ? "در حال ذخیره..." : "ذخیره ظرفیت" }}
+            </button>
+          </div>
+        </div>
+      </article>
+
     </div>
   }
 </section>
