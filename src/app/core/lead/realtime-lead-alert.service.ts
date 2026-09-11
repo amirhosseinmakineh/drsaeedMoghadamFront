@@ -156,6 +156,9 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
     this.pollingProfileId = null;
     this.stopAwaitingPickupSounds();
+    for (const leadId of [...this.activeAlerts.keys()]) {
+      this.dismissLead(leadId);
+    }
   }
 
   async tryPickupLead(leadId: number): Promise<void> {
