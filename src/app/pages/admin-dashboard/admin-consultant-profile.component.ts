@@ -16,13 +16,12 @@ import {
 } from "../../core/admin/admin-dashboard.service";
 import { ToastService } from "../../core/toast/toast.service";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
-import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { formatIranDateTime } from "../../utils/iran-datetime.util";
 
 @Component({
   selector: "app-admin-consultant-profile",
   standalone: true,
-  imports: [CommonModule, FormsModule, FaIconComponent],
+  imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./admin-consultant-profile.component.html",
   styleUrl: "./admin-consultant-profile.component.scss",
