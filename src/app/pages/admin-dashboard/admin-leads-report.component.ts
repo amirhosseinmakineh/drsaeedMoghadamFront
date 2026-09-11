@@ -34,6 +34,7 @@ export class AdminLeadsReportComponent implements OnInit {
   readonly assignmentStates = [
     [1, "جدید"], [2, "تخصیص داده شده"], [3, "تماس گرفته شده"],
     [4, "در انتظار"], [5, "تبدیل شده"], [6, "منقضی"], [7, "رد شده"],
+    [8, "پاسخ نداد"], [9, "بسته‌شده توسط مشاور"],
   ];
   readonly assignmentTypes = [[1, "آنی"], [3, "بیمار مشاور"]];
   readonly callResults = [
