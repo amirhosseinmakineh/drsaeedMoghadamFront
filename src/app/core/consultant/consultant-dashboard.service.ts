@@ -62,8 +62,6 @@ export interface ConsultantDashboardStatus {
   remainingDailyCapacity: number;
   pendingReportCount: number;
   uncalledWithoutReportCount: number;
-  followUpCount: number;
-  maximumAllowedFollowUps: number;
   isNewLeadBlocked: boolean;
   shouldShowWorkloadNotification: boolean;
   workloadNotificationMessage: string | null;
@@ -940,14 +938,6 @@ export class ConsultantDashboardService {
           source,
           "uncalledWithoutReportCount",
           "UncalledWithoutReportCount",
-        ) ?? 0,
-      followUpCount:
-        this.readNumber(source, "followUpCount", "FollowUpCount") ?? 0,
-      maximumAllowedFollowUps:
-        this.readNumber(
-          source,
-          "maximumAllowedFollowUps",
-          "MaximumAllowedFollowUps",
         ) ?? 0,
       isNewLeadBlocked:
         this.readBoolean(source, "isNewLeadBlocked", "IsNewLeadBlocked") ??
