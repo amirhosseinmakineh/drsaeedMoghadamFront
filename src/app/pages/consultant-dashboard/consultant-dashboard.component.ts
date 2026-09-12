@@ -2889,11 +2889,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   visibleReportEditLeads(): ConsultantLead[] {
-    const term = this.reportEditSearchTerm.trim().toLowerCase();
-    if (!term) return this.reportEditLeads;
-    return this.reportEditLeads.filter((lead) =>
-      this.reportEditLeadMatchesSearch(lead, term),
-    );
+    return this.reportEditLeads;
   }
 
   applyReportEditFilters(): void {
@@ -3058,29 +3054,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       state === LEAD_STATE.Expired ||
       state === LEAD_STATE.Rejected
     );
-  }
-
-  private reportEditLeadMatchesSearch(
-    lead: ConsultantLead,
-    term: string,
-  ): boolean {
-    const haystack = [
-      this.leadName(lead),
-      this.leadPhone(lead),
-      this.leadReportDescription(lead),
-      this.callResultLabel(lead),
-      this.stateLabel(this.leadState(lead)),
-      this.leadTypeLabel(this.leadType(lead)),
-      lead.patientCity,
-      lead.PatientCity,
-      lead.patientRegion,
-      lead.PatientRegion,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(term);
   }
 
   private syncReportedLeadIdsFromLeads(leads: ConsultantLead[]): void {
@@ -3396,6 +3369,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .getLeads({
         profileId,
         hasSubmittedReport: true,
+        searchText: this.trimmedFilter(this.reportEditSearchTerm),
         phoneNumber: this.trimmedFilter(this.reportEditPhoneFilter),
         from: this.formatFilterDate(this.reportEditFromDate),
         to: this.formatFilterDate(
