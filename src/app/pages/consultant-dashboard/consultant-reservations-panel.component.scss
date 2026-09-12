@@ -345,6 +345,14 @@ textarea {
   font: inherit;
 }
 @media (max-width: 760px) {
+  .tab-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tab-nav button {
+    width: 100%;
+    justify-content: center;
+  }
   .panel-heading,
   .reservation-list header {
     display: grid;
@@ -353,10 +361,21 @@ textarea {
     grid-template-columns: 1fr;
   }
   .reservation-filters {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .reservation-date-filters {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .reservation-filters > * {
+    min-width: 0;
+  }
+  .reservation-date-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .reservation-date-actions button,
+  .reservation-filters > .primary-action {
+    width: 100%;
   }
   .reservation-filters .quick-search-field {
     grid-column: auto;

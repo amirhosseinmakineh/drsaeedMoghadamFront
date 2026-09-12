@@ -978,6 +978,10 @@ input[readonly] {
   .two-col {
     grid-template-columns: 1fr;
   }
+  .lead-filters.patient-filters,
+  .lead-filters.report-edit-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .primary-action,
   .secondary-action,
   .call-action {
