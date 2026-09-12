@@ -12,7 +12,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { Subscription, catchError, finalize, firstValueFrom, map, of, switchMap } from "rxjs";
+import { Subscription, catchError, finalize, firstValueFrom, map, of, retry, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
   CompletePatientProfileRequest,
@@ -1071,10 +1071,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     profileId: number,
     attempt = 0,
   ): void {
+    if (this.loggingOut || this.destroyed) return;
     this.consultantApi
       .setOnlineStatus({ profileId, isOnline: true, isOffline: false })
       .subscribe({
         next: () => {
+          if (this.loggingOut || this.destroyed) return;
           this.isOnline = true;
           this.onlineStatusBlockReason = null;
           void this.ensureLeadPushRegistration(true);
@@ -1084,7 +1086,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.markViewDirty();
         },
         error: () => {
-          if (attempt < 2) {
+          if (attempt < 2 && !this.loggingOut && !this.destroyed) {
             setTimeout(
               () =>
                 this.forceConsultantOnlineAfterReportSubmit(profileId, attempt + 1),
@@ -3212,7 +3214,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.loggingOut = true;
     this.consultantApi
       .setOnlineStatus({ profileId, isOnline: false, isOffline: true })
-      .pipe(finalize(finishLogout))
+      .pipe(retry({ count: 2, delay: 500 }), finalize(finishLogout))
       .subscribe({ error: () => undefined });
   }
 
