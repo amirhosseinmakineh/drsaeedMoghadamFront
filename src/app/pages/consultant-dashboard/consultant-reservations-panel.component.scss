@@ -68,6 +68,14 @@
 .reservation-filters .quick-search-field {
   grid-column: span 2;
 }
+.reservation-date-filters {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+}
+.reservation-date-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .reservation-filters input,
 .reservation-filters select {
   width: 100%;
@@ -345,6 +353,9 @@ textarea {
     grid-template-columns: 1fr;
   }
   .reservation-filters {
+    grid-template-columns: 1fr;
+  }
+  .reservation-date-filters {
     grid-template-columns: 1fr;
   }
   .reservation-filters .quick-search-field {
