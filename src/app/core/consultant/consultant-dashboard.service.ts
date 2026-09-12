@@ -375,6 +375,8 @@ export interface AddPatientLeadResponse {
 
 export interface ReservationFilters {
   consultantProfileId: number;
+  fromDate?: string;
+  toDate?: string;
   searchText?: string;
   patientName?: string;
   patientPhoneNumber?: string;
@@ -722,11 +724,12 @@ export class ConsultantDashboardService {
 
   getDueConfirmations(
     consultantProfileId: number,
+    dates: { fromDate?: string; toDate?: string } = {},
   ): Observable<ConsultantReservation[]> {
     return this.http
       .get<unknown>(`${this.apiBaseUrl}/Reservation/DueConfirmations`, {
         headers: this.authHeaders(),
-        params: this.toParams({ consultantProfileId }),
+        params: this.toParams({ consultantProfileId, ...dates }),
       })
       .pipe(
         map((response) =>

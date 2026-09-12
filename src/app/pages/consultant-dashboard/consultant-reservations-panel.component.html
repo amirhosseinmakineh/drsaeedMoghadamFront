@@ -41,6 +41,40 @@
     </button>
   </nav>
 
+  <form class="reservation-filters reservation-date-filters" (ngSubmit)="applyFilters()">
+    <label>
+      از تاریخ مراجعه
+      <app-base-datepicker
+        [compact]="true"
+        [label]="fromDatePickerLabel"
+        [selectedDate]="fromDate ?? undefined"
+        [unrestrictedDates]="true"
+        (dateChange)="fromDate = $event"
+      ></app-base-datepicker>
+    </label>
+    <label>
+      تا تاریخ مراجعه
+      <app-base-datepicker
+        [compact]="true"
+        [label]="toDatePickerLabel"
+        [selectedDate]="toDate ?? undefined"
+        [minDate]="fromDate ?? undefined"
+        [unrestrictedDates]="true"
+        (dateChange)="toDate = $event"
+      ></app-base-datepicker>
+    </label>
+    <div class="reservation-date-actions">
+      @if (fromDate || toDate) {
+        <button class="secondary-action compact" type="button" (click)="clearDateFilters()">
+          پاک کردن تاریخ‌ها
+        </button>
+      }
+      <button class="primary-action compact" type="submit" [disabled]="loading">
+        اعمال بازه
+      </button>
+    </div>
+  </form>
+
   @if (activeTab !== "pending") {
     <form class="reservation-filters" (ngSubmit)="applyFilters()">
       <label class="quick-search-field">

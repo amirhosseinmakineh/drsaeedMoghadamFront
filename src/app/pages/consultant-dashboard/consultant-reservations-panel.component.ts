@@ -44,6 +44,7 @@ import {
   formatReservationTime,
   nowInIran,
   startOfIranDay,
+  toIranDateInputValue,
   toIranTimeInputValue,
 } from "../../utils/iran-datetime.util";
 
@@ -85,6 +86,10 @@ export class ConsultantReservationsPanelComponent
   patientPhoneFilter = "";
   patientCityFilter = "";
   attendanceStatusFilter: AttendanceConfirmationStatusFilter | "" = "";
+  fromDate: Date | null = null;
+  toDate: Date | null = null;
+  readonly fromDatePickerLabel = { fa: "از تاریخ مراجعه", en: "Visit date from" };
+  readonly toDatePickerLabel = { fa: "تا تاریخ مراجعه", en: "Visit date to" };
   readonly attendanceStatusOptions: ReadonlyArray<{
     value: AttendanceConfirmationStatusFilter;
     label: string;
@@ -200,7 +205,10 @@ export class ConsultantReservationsPanelComponent
 
     if (this.activeTab === "pending") {
       this.loadSubscription = this.consultantApi
-        .getDueConfirmations(this.profileId)
+        .getDueConfirmations(this.profileId, {
+          fromDate: this.fromDate ? toIranDateInputValue(this.fromDate) : undefined,
+          toDate: this.toDate ? toIranDateInputValue(this.toDate) : undefined,
+        })
         .pipe(
           finalize(() => {
             if (requestId === this.loadRequestId) {
@@ -232,6 +240,8 @@ export class ConsultantReservationsPanelComponent
     this.loadSubscription = this.consultantApi
       .getReservations({
         consultantProfileId: this.profileId,
+        fromDate: this.fromDate ? toIranDateInputValue(this.fromDate) : undefined,
+        toDate: this.toDate ? toIranDateInputValue(this.toDate) : undefined,
         searchText: this.cleanFilter(this.searchText),
         patientName: this.cleanFilter(this.patientNameFilter),
         patientPhoneNumber: this.cleanFilter(this.patientPhoneFilter),
@@ -276,8 +286,19 @@ export class ConsultantReservationsPanelComponent
   }
 
   applyFilters(): void {
+    if (this.fromDate && this.toDate &&
+        toIranDateInputValue(this.fromDate) > toIranDateInputValue(this.toDate)) {
+      this.showFeedback("تاریخ شروع نباید بعد از تاریخ پایان باشد", "error");
+      return;
+    }
     this.pageNumber = 1;
     this.load();
+  }
+
+  clearDateFilters(): void {
+    this.fromDate = null;
+    this.toDate = null;
+    this.applyFilters();
   }
 
   onSearchChange(): void {
