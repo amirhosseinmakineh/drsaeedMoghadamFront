@@ -92,6 +92,7 @@
               "allowedHosts": [
                 "drsaeedmoghadam.com",
                 "www.drsaeedmoghadam.com",
+                "stage.drsaeedmoghadam.com",
                 "localhost",
                 "127.0.0.1"
               ]

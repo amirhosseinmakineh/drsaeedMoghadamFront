@@ -2,6 +2,8 @@ import { spawn } from "node:child_process";
 
 const port = 3210;
 const origin = `http://127.0.0.1:${port}`;
+const canonicalOrigin = (process.env.SSR_EXPECTED_SITE_URL || "https://drsaeedmoghadam.com")
+  .replace(/\/$/, "");
 const server = spawn(process.execPath, ["dist/demo/server/server.mjs"], {
   env: { ...process.env, HOST: "127.0.0.1", PORT: String(port) },
   stdio: ["ignore", "pipe", "pipe"],
@@ -25,13 +27,13 @@ async function waitUntilReady() {
 }
 
 const publicRoutes = [
-  ["/", "https://drsaeedmoghadam.com/"],
-  ["/services/", "https://drsaeedmoghadam.com/services/"],
-  ["/composite/", "https://drsaeedmoghadam.com/composite/"],
-  ["/bleaching/", "https://drsaeedmoghadam.com/bleaching/"],
-  ["/services/laminate/", "https://drsaeedmoghadam.com/services/laminate/"],
-  ["/about/", "https://drsaeedmoghadam.com/about/"],
-  ["/contact/", "https://drsaeedmoghadam.com/contact/"],
+  ["/", `${canonicalOrigin}/`],
+  ["/services/", `${canonicalOrigin}/services/`],
+  ["/composite/", `${canonicalOrigin}/composite/`],
+  ["/bleaching/", `${canonicalOrigin}/bleaching/`],
+  ["/services/laminate/", `${canonicalOrigin}/services/laminate/`],
+  ["/about/", `${canonicalOrigin}/about/`],
+  ["/contact/", `${canonicalOrigin}/contact/`],
 ];
 
 try {
