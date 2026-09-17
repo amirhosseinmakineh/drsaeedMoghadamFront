@@ -20,7 +20,9 @@ ENV WEBPUSH_VAPID_PUBLIC_KEY=$WEBPUSH_VAPID_PUBLIC_KEY \
 RUN npm run optimize:images \
     && node scripts/generate-webpush-config.mjs \
     && npx ng build --configuration "$ANGULAR_CONFIGURATION" \
-    && node scripts/validate-webpush-config.mjs
+    && node scripts/validate-webpush-config.mjs \
+    && npm prune --omit=dev --ignore-scripts \
+    && npm cache clean --force
 
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
@@ -29,11 +31,9 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=3000
 
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts \
-    && npm cache clean --force
-
 COPY --from=build --chown=node:node /app/dist ./dist
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/package.json ./package.json
 
 USER node
 EXPOSE 3000
