@@ -10,7 +10,7 @@ import {
   BaseSearchFilterComponent, BaseSelectFilterComponent, BaseTablePaginationComponent,
 } from "../../../basemadual";
 import { ToastService } from "../../../core/toast/toast.service";
-import { EligiblePatient, PatientFile, PatientFileQuery } from "./patient-file.models";
+import { PatientFile, PatientFileQuery } from "./patient-file.models";
 import { PatientFilesService } from "./patient-files.service";
 import { SecretaryAccountShellComponent } from "../account/components/secretary-account-shell/secretary-account-shell.component";
 
@@ -33,16 +33,11 @@ export class PatientFilesPageComponent implements OnInit {
   loading = false;
   loadError = "";
   createOpen = false;
-  eligible: EligiblePatient[] = [];
-  eligibleSearch = "";
-  eligiblePage = 1;
-  eligibleTotal = 0;
-  eligibleLoading = false;
-  selectedPatient: EligiblePatient | null = null;
+  createForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
   creating = false;
   editOpen = false;
   editing: PatientFile | null = null;
-  editForm = { firstName: "", lastName: "", phoneNumber: "" };
+  editForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
   updating = false;
   deleting: PatientFile | null = null;
   deleteLoading = false;
@@ -93,33 +88,38 @@ export class PatientFilesPageComponent implements OnInit {
   debtStatusLabel(value: number): string { return ({ 1: "پرداخت‌نشده", 2: "پرداخت‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
   financialSourceLabel(value: number): string { return value === 1 ? "چک" : value === 2 ? "سفته" : "نامشخص"; }
 
-  openCreate(): void { this.createOpen = true; this.selectedPatient = null; this.eligibleSearch = ""; this.eligiblePage = 1; this.loadEligible(); }
-  closeCreate(): void { if (!this.creating) this.createOpen = false; }
-  loadEligible(): void {
-    this.eligibleLoading = true;
-    this.api.getEligiblePatients({ search: this.eligibleSearch, page: this.eligiblePage, pageSize: 8 })
-      .pipe(finalize(() => { this.eligibleLoading = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: (result) => { this.eligible = result.items; this.eligibleTotal = result.totalCount; },
-        error: (error) => this.toast.error(this.errorMessage(error, "دریافت بیماران واجد شرایط انجام نشد.")) });
+  openCreate(): void {
+    this.createForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
+    this.createOpen = true;
   }
-  searchEligible(value: string): void { this.eligibleSearch = value; this.eligiblePage = 1; this.selectedPatient = null; this.loadEligible(); }
-  selectPatient(patient: EligiblePatient): void { this.selectedPatient = patient; }
+  closeCreate(): void { if (!this.creating) this.createOpen = false; }
   create(): void {
-    if (!this.selectedPatient || this.creating) return;
+    if (this.creating || !this.isCreateValid()) return;
     this.creating = true;
-    this.api.createPatientFile(this.selectedPatient.id).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: (result) => { this.toast.success(`پرونده بیمار با موفقیت ایجاد شد. شماره پرونده: ${result.fileNumber}`); this.createOpen = false; this.loadFiles(); },
-        error: (error) => this.toast.error(this.errorMessage(error, "ایجاد پرونده انجام نشد.")) });
+    const request = {
+      firstName: this.createForm.firstName.trim(),
+      lastName: this.createForm.lastName.trim(),
+      phoneNumber: this.createForm.phoneNumber.trim(),
+      description: this.createForm.description.trim() || undefined,
+    };
+    this.api.createPatientFile(request).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
+      .subscribe({ next: (result) => { this.toast.success(`بیمار با موفقیت ثبت شد. شماره پرونده: ${result.fileNumber}`); this.createOpen = false; this.loadFiles(); },
+        error: (error) => this.toast.error(this.errorMessage(error, "ثبت بیمار انجام نشد.")) });
+  }
+  isCreateValid(): boolean {
+    return !!this.createForm.firstName.trim() &&
+      !!this.createForm.lastName.trim() &&
+      /^09\d{9}$/.test(this.createForm.phoneNumber.trim());
   }
 
   openEdit(file: PatientFile): void {
-    this.editing = file; this.editForm = { firstName: file.firstName, lastName: file.lastName, phoneNumber: file.phoneNumber }; this.editOpen = true;
+    this.editing = file; this.editForm = { firstName: file.firstName, lastName: file.lastName, phoneNumber: file.phoneNumber, description: file.description ?? "" }; this.editOpen = true;
   }
   closeEdit(): void { if (!this.updating) this.editOpen = false; }
   update(): void {
     if (!this.editing || this.updating || !this.editForm.firstName.trim() || !this.editForm.lastName.trim() || !this.editForm.phoneNumber.trim()) return;
     this.updating = true;
-    const body = { firstName: this.editForm.firstName.trim(), lastName: this.editForm.lastName.trim(), phoneNumber: this.editForm.phoneNumber.trim() };
+    const body = { firstName: this.editForm.firstName.trim(), lastName: this.editForm.lastName.trim(), phoneNumber: this.editForm.phoneNumber.trim(), description: this.editForm.description.trim() || undefined };
     this.api.updatePatientFile(this.editing.id, body).pipe(finalize(() => { this.updating = false; this.cdr.markForCheck(); }))
       .subscribe({ next: () => { this.toast.success("اطلاعات پرونده با موفقیت ویرایش شد."); this.editOpen = false; this.loadFiles(); },
         error: (error) => this.toast.error(this.errorMessage(error, "ویرایش پرونده انجام نشد.")) });
