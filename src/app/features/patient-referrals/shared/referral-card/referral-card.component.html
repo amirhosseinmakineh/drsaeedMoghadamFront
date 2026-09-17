@@ -1,0 +1,16 @@
+<article class="referral-card">
+  <header><div><h3>{{referral.firstName}} {{referral.lastName}}</h3><a [href]="'tel:'+referral.phoneNumber" dir="ltr">{{referral.phoneNumber}}</a></div><app-referral-status-badge [status]="referral.status" /></header>
+  <dl>
+    <div *ngIf="showReferrer"><dt>معرفی‌کننده</dt><dd>{{referral.referrerFullName || ((referral.referrerFirstName || '')+' '+(referral.referrerLastName || '')) || '—'}}</dd></div>
+    <div><dt>تاریخ معرفی</dt><dd>{{referral.createdAt | date:'yyyy/MM/dd، HH:mm'}}</dd></div>
+    <div><dt>تماس منشی</dt><dd>{{referral.contactedAt ? (referral.contactedAt | date:'yyyy/MM/dd، HH:mm') : '—'}}</dd></div>
+    <div><dt>رزرو</dt><dd>{{referral.reservationAt ? (referral.reservationAt | date:'yyyy/MM/dd، HH:mm') : '—'}}</dd></div>
+    <div><dt>بررسی ادمین</dt><dd>{{referral.reviewedAt ? (referral.reviewedAt | date:'yyyy/MM/dd، HH:mm') : '—'}}</dd></div>
+    <div *ngIf="referral.secretaryFullName"><dt>منشی پیگیری‌کننده</dt><dd>{{referral.secretaryFullName}}</dd></div>
+    <div><dt>پاداش</dt><dd>{{(referral.rewardAmount || 0) | number:'1.0-0'}} تومان</dd></div>
+  </dl>
+  <p *ngIf="referral.description" class="description">{{referral.description}}</p>
+  <p *ngIf="referral.rejectionReason" class="rejection">دلیل رد: {{referral.rejectionReason}}</p>
+  <app-referral-timeline *ngIf="showTimeline" [referral]="referral" />
+  <footer><ng-content /></footer>
+</article>
