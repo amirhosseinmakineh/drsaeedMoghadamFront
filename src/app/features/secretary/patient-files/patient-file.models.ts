@@ -8,6 +8,7 @@ export interface PatientFile {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  description?: string | null;
   sourceType: PatientFileSourceType;
   createdAt?: string;
   finance: PatientFinance | null;
@@ -61,4 +62,11 @@ export interface CreatePatientFileResult {
 export interface ImportPatientFilesResult {
   success: boolean;
   importedCount: number;
+}
+
+export interface CreatePatientFileRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  description?: string;
 }

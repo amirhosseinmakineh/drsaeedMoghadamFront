@@ -45,19 +45,21 @@
 </app-base-page-shell>
 </app-secretary-account-shell>
 
-<app-base-modal [open]="createOpen" title="ایجاد پرونده جدید" [closeOnBackdrop]="!creating" (close)="closeCreate()">
-  <app-base-search-filter label="جستجوی بیمار" placeholder="نام، نام خانوادگی یا شماره تماس" [value]="eligibleSearch" (valueChange)="searchEligible($event)" />
-  @if (eligibleLoading) { <app-base-loading label="در حال دریافت بیماران واجد شرایط…" /> }
-  @else if (!eligible.length) { <app-base-empty-state title="بیمار دارای رزرو بدون پرونده‌ای برای ایجاد پرونده جدید وجود ندارد." /> }
-  @else { <div class="patient-list">@for (patient of eligible; track patient.id) {
-    <button type="button" [class.selected]="selectedPatient?.id === patient.id" (click)="selectPatient(patient)"><strong>{{ patient.firstName }} {{ patient.lastName }}</strong><span dir="ltr">{{ patient.phoneNumber }}</span></button>
-  }</div><app-base-table-pagination [currentPage]="eligiblePage" [pageSize]="8" [totalCount]="eligibleTotal" (pageChange)="eligiblePage = $event; loadEligible()" /> }
-  @if (selectedPatient) { <section class="selected-summary"><h3>بیمار انتخاب‌شده</h3><dl><div><dt>نام</dt><dd>{{ selectedPatient.firstName }}</dd></div><div><dt>نام خانوادگی</dt><dd>{{ selectedPatient.lastName }}</dd></div><div><dt>شماره تماس</dt><dd dir="ltr">{{ selectedPatient.phoneNumber }}</dd></div></dl><p>شماره پرونده پس از ثبت توسط سیستم صادر می‌شود.</p></section> }
-  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeCreate()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">ثبت پرونده</app-base-button></div>
+<app-base-modal [open]="createOpen" title="افزودن بیمار" [closeOnBackdrop]="!creating" (close)="closeCreate()">
+  <form class="create-form" (ngSubmit)="create()">
+    <label>نام<input required maxlength="100" [(ngModel)]="createForm.firstName" name="createFirstName" /></label>
+    <label>نام خانوادگی<input required maxlength="100" [(ngModel)]="createForm.lastName" name="createLastName" /></label>
+    <label>شماره موبایل<input required maxlength="11" inputmode="numeric" dir="ltr" placeholder="09xxxxxxxxx"
+      pattern="09[0-9]{9}" [(ngModel)]="createForm.phoneNumber" name="createPhoneNumber" /></label>
+    <label class="full-width">توضیحات<textarea maxlength="2000" rows="4"
+      [(ngModel)]="createForm.description" name="createDescription"></textarea></label>
+    <p class="form-hint">این بیمار فقط در فهرست شما ثبت می‌شود و به هیچ مشاوری متصل نخواهد شد.</p>
+  </form>
+  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeCreate()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="create()">ثبت بیمار</app-base-button></div>
 </app-base-modal>
 
 <app-base-modal [open]="editOpen" title="ویرایش پرونده" [closeOnBackdrop]="!updating" (close)="closeEdit()">
-  @if (editing) { <form class="edit-form" (ngSubmit)="update()"><label>شماره پرونده<input readonly [value]="editing.fileNumber" /></label><label>نوع پرونده<input readonly [value]="sourceLabel(editing.sourceType)" /></label><label>نام<input required [(ngModel)]="editForm.firstName" name="firstName" /></label><label>نام خانوادگی<input required [(ngModel)]="editForm.lastName" name="lastName" /></label><label>شماره تماس<input required dir="ltr" [(ngModel)]="editForm.phoneNumber" name="phoneNumber" /></label></form> }
+  @if (editing) { <form class="edit-form" (ngSubmit)="update()"><label>شماره پرونده<input readonly [value]="editing.fileNumber" /></label><label>نوع پرونده<input readonly [value]="sourceLabel(editing.sourceType)" /></label><label>نام<input required [(ngModel)]="editForm.firstName" name="firstName" /></label><label>نام خانوادگی<input required [(ngModel)]="editForm.lastName" name="lastName" /></label><label>شماره تماس<input required dir="ltr" [(ngModel)]="editForm.phoneNumber" name="phoneNumber" /></label><label class="full-width">توضیحات<textarea maxlength="2000" rows="4" [(ngModel)]="editForm.description" name="description"></textarea></label></form> }
   <div baseModalFooter><app-base-button variant="secondary" [disabled]="updating" (pressed)="closeEdit()">انصراف</app-base-button><app-base-button [loading]="updating" (pressed)="update()">ذخیره تغییرات</app-base-button></div>
 </app-base-modal>
 

@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
 import { environment } from "../../../../environments/environment";
 import {
+  CreatePatientFileRequest,
   CreatePatientFileResult,
   EligiblePatient,
   EligiblePatientQuery,
@@ -34,11 +35,11 @@ export class PatientFilesService {
     );
   }
 
-  createPatientFile(patientId: number): Observable<CreatePatientFileResult> {
-    return this.http.post<unknown>(this.endpoint, { patientId }).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
+  createPatientFile(request: CreatePatientFileRequest): Observable<CreatePatientFileResult> {
+    return this.http.post<unknown>(this.endpoint, request).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
   }
 
-  updatePatientFile(id: number, body: Pick<PatientFile, "firstName" | "lastName" | "phoneNumber">): Observable<PatientFile> {
+  updatePatientFile(id: number, body: Pick<PatientFile, "firstName" | "lastName" | "phoneNumber" | "description">): Observable<PatientFile> {
     return this.http.put<unknown>(`${this.endpoint}/${id}`, body).pipe(map((response) => this.data<PatientFile>(response)));
   }
 
