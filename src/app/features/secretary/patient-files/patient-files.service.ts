@@ -1,6 +1,7 @@
-import { HttpClient, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
+import { AuthService } from "../../../core/auth/auth.service";
 import { environment } from "../../../../environments/environment";
 import {
   CreatePatientFileRequest,
@@ -16,40 +17,59 @@ import {
 export class PatientFilesService {
   private readonly endpoint = `${environment.apiBaseUrl}/secretary/patient-files`;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly auth: AuthService,
+  ) {}
 
   getPatientFiles(query: PatientFileQuery): Observable<PagedResult<PatientFile>> {
-    return this.http.get<unknown>(this.endpoint, { params: this.params(query) }).pipe(
+    return this.http.get<unknown>(this.endpoint, {
+      headers: this.authHeaders(),
+      params: this.params(query),
+    }).pipe(
       map((response) => this.page<PatientFile>(response, query.page, query.pageSize)),
     );
   }
 
   getPatientFileById(id: number): Observable<PatientFile> {
-    return this.http.get<unknown>(`${this.endpoint}/${id}`).pipe(map((response) => this.data<PatientFile>(response)));
+    return this.http.get<unknown>(`${this.endpoint}/${id}`, { headers: this.authHeaders() })
+      .pipe(map((response) => this.data<PatientFile>(response)));
   }
 
   createPatientFile(request: CreatePatientFileRequest): Observable<CreatePatientFileResult> {
-    return this.http.post<unknown>(this.endpoint, request).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
+    return this.http.post<unknown>(this.endpoint, request, { headers: this.authHeaders() })
+      .pipe(map((response) => this.data<CreatePatientFileResult>(response)));
   }
 
   ensureFinancialIdentity(patientFileId: number): Observable<PatientFileFinancialIdentity> {
-    return this.http.post<unknown>(`${this.endpoint}/${patientFileId}/financial-identity`, {}).pipe(
+    return this.http.post<unknown>(`${this.endpoint}/${patientFileId}/financial-identity`, {}, {
+      headers: this.authHeaders(),
+    }).pipe(
       map((response) => this.data<PatientFileFinancialIdentity>(response)),
     );
   }
 
   updatePatientFile(id: number, body: Pick<PatientFile, "firstName" | "lastName" | "phoneNumber" | "description">): Observable<PatientFile> {
-    return this.http.put<unknown>(`${this.endpoint}/${id}`, body).pipe(map((response) => this.data<PatientFile>(response)));
+    return this.http.put<unknown>(`${this.endpoint}/${id}`, body, { headers: this.authHeaders() })
+      .pipe(map((response) => this.data<PatientFile>(response)));
   }
 
   deletePatientFile(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.endpoint}/${id}`);
+    return this.http.delete<void>(`${this.endpoint}/${id}`, { headers: this.authHeaders() });
   }
 
   importLegacyPatientFiles(file: File): Observable<ImportPatientFilesResult> {
     const form = new FormData();
     form.append("file", file, file.name);
-    return this.http.post<unknown>(`${this.endpoint}/import`, form).pipe(map((response) => this.data<ImportPatientFilesResult>(response)));
+    return this.http.post<unknown>(`${this.endpoint}/import`, form, { headers: this.authHeaders() })
+      .pipe(map((response) => this.data<ImportPatientFilesResult>(response)));
+  }
+
+  private authHeaders(): HttpHeaders {
+    const token = this.auth.user()?.token;
+    return token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
   }
 
   private params(query: object): HttpParams {
