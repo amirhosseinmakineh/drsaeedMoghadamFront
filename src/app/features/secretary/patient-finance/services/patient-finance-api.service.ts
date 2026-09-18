@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
 import { AuthService } from "../../../../core/auth/auth.service";
 import { environment } from "../../../../../environments/environment";
-import { ApiResult, CreateChequeRequest, CreateFinancialCaseRequest, CreatePromissoryNoteRequest, IdResponse, PageQuery, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote, UpdateChequeRequest, UpdateFinancialCaseRequest, UpdatePromissoryNoteRequest } from "../models/patient-finance.models";
+import { ApiResult, CreateChequeRequest, CreateFinancialCaseRequest, CreatePromissoryNoteRequest, IdResponse, PageQuery, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseId, PatientFinancialCaseIdResponse, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote, UpdateChequeRequest, UpdateFinancialCaseRequest, UpdatePromissoryNoteRequest } from "../models/patient-finance.models";
 
 @Injectable({ providedIn: "root" })
 export class PatientFinanceApiService {
@@ -24,13 +24,13 @@ export class PatientFinanceApiService {
     return params;
   }
   getCases(query: PageQuery) { return this.get<PaginatedResult<PatientFinancialCase>>(`${this.baseUrl}/patient-financial-cases`, query); }
-  getCase(id: number) { return this.get<PatientFinancialCaseDetails>(`${this.baseUrl}/patient-financial-cases/${id}`); }
-  getCaseSummary(id: number) { return this.get<PatientFinancialCaseSummary>(`${this.baseUrl}/patient-financial-cases/${id}/summary`); }
-  createCase(body: CreateFinancialCaseRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases`, body, this.options()); }
-  updateCase(id: number, body: UpdateFinancialCaseRequest) { return this.http.put<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}`, body, this.options()); }
-  cancelCase(id: number) { return this.http.delete<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}`, this.options()); }
-  addCheque(caseId: number, body: CreateChequeRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/cheques`, body, this.options()); }
-  addPromissoryNote(caseId: number, body: CreatePromissoryNoteRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/promissory-notes`, body, this.options()); }
+  getCase(id: PatientFinancialCaseId) { return this.get<PatientFinancialCaseDetails>(`${this.baseUrl}/patient-financial-cases/${id}`); }
+  getCaseSummary(id: PatientFinancialCaseId) { return this.get<PatientFinancialCaseSummary>(`${this.baseUrl}/patient-financial-cases/${id}/summary`); }
+  createCase(body: CreateFinancialCaseRequest) { return this.http.post<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases`, body, this.options()); }
+  updateCase(id: PatientFinancialCaseId, body: UpdateFinancialCaseRequest) { return this.http.put<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}`, body, this.options()); }
+  cancelCase(id: PatientFinancialCaseId) { return this.http.delete<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}`, this.options()); }
+  addCheque(caseId: PatientFinancialCaseId, body: CreateChequeRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/cheques`, body, this.options()); }
+  addPromissoryNote(caseId: PatientFinancialCaseId, body: CreatePromissoryNoteRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/promissory-notes`, body, this.options()); }
   getCheques(query: PageQuery) { return this.get<PaginatedResult<PatientCheque>>(`${this.baseUrl}/patient-cheques`, query); }
   updateCheque(id: number, body: UpdateChequeRequest) { return this.http.put<ApiResult<IdResponse>>(`${this.baseUrl}/patient-cheques/${id}`, body, this.options()); }
   deleteCheque(id: number) { return this.http.delete<ApiResult<IdResponse>>(`${this.baseUrl}/patient-cheques/${id}`, this.options()); }

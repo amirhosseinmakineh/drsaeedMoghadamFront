@@ -3,9 +3,8 @@ import { Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
 import { environment } from "../../../../environments/environment";
 import {
+  CreatePatientFileRequest,
   CreatePatientFileResult,
-  EligiblePatient,
-  EligiblePatientQuery,
   ImportPatientFilesResult,
   PagedResult,
   PatientFile,
@@ -29,14 +28,8 @@ export class PatientFilesService {
     return this.http.get<unknown>(`${this.endpoint}/${id}`).pipe(map((response) => this.data<PatientFile>(response)));
   }
 
-  getEligiblePatients(query: EligiblePatientQuery): Observable<PagedResult<EligiblePatient>> {
-    return this.http.get<unknown>(`${this.endpoint}/eligible-patients`, { params: this.params(query) }).pipe(
-      map((response) => this.page<EligiblePatient>(response, query.page, query.pageSize)),
-    );
-  }
-
-  createPatientFile(patientId: number, description: string | null): Observable<CreatePatientFileResult> {
-    return this.http.post<unknown>(this.endpoint, { patientId, description }).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
+  createPatientFile(request: CreatePatientFileRequest): Observable<CreatePatientFileResult> {
+    return this.http.post<unknown>(this.endpoint, request).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
   }
 
   ensureFinancialIdentity(patientFileId: number): Observable<PatientFileFinancialIdentity> {
