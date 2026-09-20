@@ -171,7 +171,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "secretarySaleServices", label: "خدمات فروش منشی", icon: "list" },
     { id: "secretarySales", label: "فروش‌های منشی‌ها", icon: "wallet" },
     { id: "leadAssignmentSettings", label: "مدیریت تخصیص لیدها", icon: "clipboard" },
-    { id: "patientFinanceReport", label: "گزارش حسابداری بیماران", icon: "wallet" },
+    { id: "patientFinanceReport", label: "گزارش مالی بیماران", icon: "wallet" },
     { id: "consultantRewards", label: "پاداش مشاوران", icon: "wallet" },
     { id: "patientReferrals", label: "گزارش رفرال بیماران", icon: "users" },
   ];
