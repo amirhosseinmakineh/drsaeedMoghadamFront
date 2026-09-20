@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
 import {
   AdminDashboardService,
+  AdminPatientFinanceFile,
   AdminPatientCheque,
   AdminPatientFinanceDetails,
   AdminPatientPromissoryNote,
@@ -16,11 +17,13 @@ import { ToastService } from "../../core/toast/toast.service";
 import { downloadBlob } from "../../utils/file-download.util";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { formatIranDateTime, toIranDateInputValue } from "../../utils/iran-datetime.util";
+import { BaseModalComponent } from "../../basemadual";
+import { PatientFinanceDetailsComponent } from "../../shared/patient-finance/patient-finance-details.component";
 
 @Component({
   selector: "app-admin-patient-finance-report",
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseDatepickerComponent],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent, BaseModalComponent, PatientFinanceDetailsComponent],
   templateUrl: "./admin-patient-finance-report.component.html",
   styleUrl: "./admin-patient-finance-report.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +45,9 @@ export class AdminPatientFinanceReportComponent implements OnInit {
   toDate?: Date;
   readonly fromDateLabel = { fa: "از تاریخ ثبت حسابداری", en: "From date" };
   readonly toDateLabel = { fa: "تا تاریخ ثبت حسابداری", en: "To date" };
+  statementsFile: AdminPatientFinanceFile | null = null;
+  statementsLoading = false;
+  statementsError = "";
 
   readonly services = [
     { value: 1, label: "کامپوزیت" },
@@ -108,6 +114,50 @@ export class AdminPatientFinanceReportComponent implements OnInit {
         },
         error: error => this.toast.error(error?.message || "دریافت فایل انجام نشد"),
       });
+  }
+
+  openStatements(item: PatientFinanceReportItem): void {
+    this.statementsFile = {
+      id: 0,
+      fileNumber: Number(item.fileNumber),
+      firstName: item.patientName,
+      lastName: "",
+      phoneNumber: item.phoneNumber,
+      finance: null,
+    };
+    this.loadStatements(item.fileNumber);
+  }
+
+  retryStatements(): void {
+    if (this.statementsFile) this.loadStatements(String(this.statementsFile.fileNumber));
+  }
+
+  closeStatements(): void {
+    this.statementsFile = null;
+    this.statementsError = "";
+    this.statementsLoading = false;
+  }
+
+  private loadStatements(fileNumber: string): void {
+    if (!fileNumber || this.statementsLoading) {
+      if (!fileNumber) this.statementsError = "شماره پرونده بیمار برای دریافت صورت‌حساب موجود نیست.";
+      return;
+    }
+    this.statementsLoading = true;
+    this.statementsError = "";
+    this.api.getPatientFinanceFile(fileNumber).pipe(finalize(() => {
+      this.statementsLoading = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: file => {
+        if (!file) {
+          this.statementsError = "پرونده بیمار یافت نشد.";
+          return;
+        }
+        this.statementsFile = file;
+      },
+      error: error => this.statementsError = error?.message || "دریافت صورت‌حساب‌های بیمار انجام نشد",
+    });
   }
 
   startEdit(item: PatientFinanceReportItem): void {
