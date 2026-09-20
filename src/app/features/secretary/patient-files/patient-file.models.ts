@@ -1,4 +1,26 @@
+import {
+  AgreementType,
+  CommitmentStatus,
+  DebtStatus,
+  FinancialCaseDetails,
+  FinancialCaseStatus,
+  FinancialSourceType,
+  PatientChequeDetails,
+  PatientDebtDetails,
+  PatientFinanceDetails,
+  PatientPromissoryNoteDetails,
+  PatientTransactionDetails,
+} from "../../../shared/patient-finance/patient-finance-details.models";
+
 export type PatientFileSourceType = "System" | "Legacy";
+
+export type {
+  AgreementType,
+  CommitmentStatus,
+  DebtStatus,
+  FinancialCaseStatus,
+  FinancialSourceType,
+};
 
 export interface PatientFile {
   id: number;
@@ -11,20 +33,15 @@ export interface PatientFile {
   description?: string | null;
   sourceType: PatientFileSourceType;
   createdAt?: string;
-  finance: PatientFinance | null;
+  finance: PatientFinanceDetails | null;
 }
 
-export type AgreementType = 1 | 2;
-export type FinancialCaseStatus = 1 | 2 | 3;
-export type CommitmentStatus = 1 | 2 | 3 | 4;
-export type DebtStatus = 1 | 2 | 3;
-export type FinancialSourceType = 1 | 2;
-export interface PatientFinance { financialPatientId: number; totalTreatmentAmount: number; totalPaidAmount: number; remainingAmount: number; totalDebtAmount: number; activeFinancialCasesCount: number; unpaidChequesCount: number; unpaidPromissoryNotesCount: number; cases: FinancialCase[]; }
-export interface FinancialCase { id: number; serviceId: number; serviceName: string; totalAmount: number; totalPaidAmount: number; remainingAmount: number; totalDebtAmount: number; agreementType: AgreementType; status: FinancialCaseStatus; createdAt: string; cheques: Cheque[]; promissoryNotes: PromissoryNote[]; debts: Debt[]; transactions: Transaction[]; }
-export interface Cheque { id: number; amount: number; sayadNumber: string; ownerName: string; dueDate: string; status: CommitmentStatus; }
-export interface PromissoryNote { id: number; serialNumber: string; amount: number; dueDate: string; status: CommitmentStatus; }
-export interface Debt { id: number; amount: number; sourceType: FinancialSourceType; sourceId: number; dueDate: string; status: DebtStatus; }
-export interface Transaction { id: number; amount: number; type: 1; sourceType: FinancialSourceType; sourceId: number; createdAt: string; }
+export type PatientFinance = PatientFinanceDetails;
+export type FinancialCase = FinancialCaseDetails;
+export type Cheque = PatientChequeDetails;
+export type PromissoryNote = PatientPromissoryNoteDetails;
+export type Debt = PatientDebtDetails;
+export type Transaction = PatientTransactionDetails;
 
 export interface PagedResult<T> {
   items: T[];
