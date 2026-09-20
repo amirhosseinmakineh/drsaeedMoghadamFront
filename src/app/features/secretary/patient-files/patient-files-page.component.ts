@@ -13,6 +13,7 @@ import { ToastService } from "../../../core/toast/toast.service";
 import { PatientFile, PatientFileQuery } from "./patient-file.models";
 import { PatientFilesService } from "./patient-files.service";
 import { SecretaryAccountShellComponent } from "../account/components/secretary-account-shell/secretary-account-shell.component";
+import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/patient-finance-details.component";
 
 @Component({
   selector: "app-patient-files-page",
@@ -21,7 +22,7 @@ import { SecretaryAccountShellComponent } from "../account/components/secretary-
     BaseConfirmDialogComponent, BaseContentContainerComponent, BaseEmptyStateComponent,
     BaseFilterBarComponent, BaseLoadingComponent, BaseModalComponent, BasePageHeaderComponent,
     BasePageShellComponent, BaseSearchFilterComponent, BaseSelectFilterComponent,
-    BaseTablePaginationComponent, SecretaryAccountShellComponent],
+    BaseTablePaginationComponent, SecretaryAccountShellComponent, PatientFinanceDetailsComponent],
   templateUrl: "./patient-files-page.component.html",
   styleUrl: "./patient-files-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,14 +81,6 @@ export class PatientFilesPageComponent implements OnInit {
         error: (error) => this.financeError = this.errorMessage(error, "دریافت اطلاعات مالی انجام نشد.") });
   }
   closeFinance(): void { this.financeFile = null; this.financeError = ""; this.financeRefreshing = false; }
-  money(value: number): string { return `${new Intl.NumberFormat("fa-IR").format(value)} تومان`; }
-  date(value: string): string { const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? "—" : new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(parsed); }
-  agreementLabel(value: number): string { return ({ 1: "پیش‌پرداخت", 2: "بیعانه" } as Record<number, string>)[value] ?? "نامشخص"; }
-  caseStatusLabel(value: number): string { return ({ 1: "فعال", 2: "تکمیل‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
-  commitmentStatusLabel(value: number): string { return ({ 1: "در انتظار", 2: "وصول/پرداخت‌شده", 3: "برگشتی/پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
-  debtStatusLabel(value: number): string { return ({ 1: "پرداخت‌نشده", 2: "پرداخت‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
-  financialSourceLabel(value: number): string { return value === 1 ? "چک" : value === 2 ? "سفته" : "نامشخص"; }
-
   openCreate(): void {
     this.createForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
     this.createOpen = true;
