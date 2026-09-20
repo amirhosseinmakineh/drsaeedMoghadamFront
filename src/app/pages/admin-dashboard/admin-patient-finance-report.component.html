@@ -1,11 +1,12 @@
 <section class="finance-report" aria-labelledby="patient-finance-report-title">
   <header class="report-header">
-    <div><span>گزارش مالی</span><h2 id="patient-finance-report-title">حسابداری تمام بیماران</h2><p>جمع مبالغ و خروجی اکسل دقیقاً مطابق فیلترهای انتخاب‌شده محاسبه می‌شود.</p></div>
+    <div><span>گزارش مالی</span><h2 id="patient-finance-report-title">گزارش مالی بیماران</h2><p>هر بیمار یک‌بار در فهرست نمایش داده می‌شود و خروجی اکسل مطابق فیلترهای انتخاب‌شده است.</p></div>
     <button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button>
   </header>
 
   <form class="filters" (ngSubmit)="load(true)">
-    <label>جست‌وجوی بیمار<input [(ngModel)]="filters.search" name="search" placeholder="نام، موبایل یا شماره پرونده" /></label>
+    <label>نام بیمار<input [(ngModel)]="filters.patientName" name="patientName" placeholder="نام یا نام خانوادگی بیمار" /></label>
+    <label>شماره پرونده<input type="number" min="1" inputmode="numeric" [(ngModel)]="filters.fileNumber" name="fileNumber" placeholder="شماره پرونده" /></label>
     <label>خدمت<select [(ngModel)]="filters.serviceId" name="serviceId"><option [ngValue]="undefined">همه</option><option *ngFor="let service of services" [ngValue]="service.value">{{ service.label }}</option></select></label>
     <label>نوع توافق<select [(ngModel)]="filters.agreementType" name="agreementType"><option [ngValue]="undefined">همه</option><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
     <label>وضعیت<select [(ngModel)]="filters.status" name="status"><option [ngValue]="undefined">همه</option><option [ngValue]="1">فعال</option><option [ngValue]="2">تسویه‌شده</option><option [ngValue]="3">لغوشده</option></select></label>
@@ -28,12 +29,20 @@
       <article><small>مجموع سفته‌ها</small><strong>{{ money(report.summary.promissoryNoteAmount) }}</strong></article>
     </div>
 
-    <div class="table-wrap"><table><thead><tr><th>بیمار</th><th>پرونده</th><th>خدمت</th><th>مبلغ کل</th><th>پیش‌پرداخت</th><th>ودیعه</th><th>پرداخت</th><th>مانده</th><th>بدهی باز</th><th>چک</th><th>سفته</th><th>توافق</th><th>وضعیت</th><th>ثبت‌کننده</th><th>تاریخ</th><th>عملیات</th></tr></thead><tbody>
-      <tr *ngFor="let item of report.items; trackBy: trackCase"><td><strong>{{ item.patientName }}</strong><small>{{ item.phoneNumber }}</small></td><td>{{ item.fileNumber || "—" }}</td><td>{{ item.serviceName }}</td><td>{{ money(item.totalAmount) }}</td><td>{{ money(item.prePaymentAmount) }}</td><td>{{ money(item.depositAmount) }}</td><td>{{ money(item.paidAmount) }}</td><td>{{ money(item.remainingAmount) }}</td><td>{{ money(item.unpaidDebtAmount) }}</td><td>{{ money(item.chequeAmount) }}</td><td>{{ money(item.promissoryNoteAmount) }}</td><td>{{ agreement(item.agreementType) }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ item.createdBy || "—" }}</td><td>{{ date(item.createdAt) }}</td><td class="row-actions"><button type="button" (click)="openDetails(item)" [disabled]="item.status === 3">ویرایش و جزئیات</button><button type="button" class="delete" (click)="delete(item)" [disabled]="item.status === 3 || item.chequeAmount > 0 || item.promissoryNoteAmount > 0 || deletingId === item.caseId" title="ابتدا تمام چک‌ها و سفته‌ها را حذف کنید">{{ deletingId === item.caseId ? "..." : "حذف" }}</button></td></tr>
+    <div class="table-wrap"><table><thead><tr><th>نام بیمار</th><th>شماره پرونده</th><th>شماره تماس</th><th>آخرین خدمت مالی</th><th>آخرین وضعیت</th><th>آخرین ثبت</th><th>عملیات</th></tr></thead><tbody>
+      <tr *ngFor="let item of report.items; trackBy: trackCase"><td><strong>{{ item.patientName }}</strong></td><td>{{ item.fileNumber || "—" }}</td><td dir="ltr">{{ item.phoneNumber }}</td><td>{{ item.serviceName }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ date(item.createdAt) }}</td><td class="row-actions"><button type="button" (click)="openStatements(item)">مشاهده صورت‌حساب‌ها</button><button type="button" class="secondary" (click)="openDetails(item)" [disabled]="item.status === 3">ویرایش آخرین پرونده مالی</button></td></tr>
     </tbody></table></div>
     @if (!report.items.length) { <p class="empty">پرونده‌ای مطابق فیلتر پیدا نشد.</p> }
     <footer class="pagination"><button type="button" [disabled]="filters.page <= 1" (click)="goTo(filters.page - 1)">قبلی</button><span>صفحه {{ filters.page }} از {{ totalPages }} — {{ report.totalCount }} رکورد</span><button type="button" [disabled]="filters.page >= totalPages" (click)="goTo(filters.page + 1)">بعدی</button></footer>
   }
+
+  <app-base-modal class="statements-modal" [open]="!!statementsFile" [title]="'صورت‌حساب‌های ' + (statementsFile?.firstName ?? '') + ' ' + (statementsFile?.lastName ?? '')" (close)="closeStatements()">
+    @if (statementsFile) {
+      <div class="patient-meta"><span>شماره پرونده: <b>{{ statementsFile.fileNumber }}</b></span><span dir="ltr">{{ statementsFile.phoneNumber }}</span></div>
+      <app-patient-finance-details [finance]="statementsFile.finance" [loading]="statementsLoading" [error]="statementsError" (retry)="retryStatements()" />
+    }
+    <div baseModalFooter><button type="button" class="muted" (click)="closeStatements()">بستن</button></div>
+  </app-base-modal>
 
   @if (editing) {
     <div class="modal-backdrop" (click)="cancelEdit()"></div>
