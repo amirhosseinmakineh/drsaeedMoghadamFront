@@ -26,13 +26,6 @@ export interface PromissoryNote { id: number; serialNumber: string; amount: numb
 export interface Debt { id: number; amount: number; sourceType: FinancialSourceType; sourceId: number; dueDate: string; status: DebtStatus; }
 export interface Transaction { id: number; amount: number; type: 1; sourceType: FinancialSourceType; sourceId: number; createdAt: string; }
 
-export interface EligiblePatient {
-  id: number;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-}
-
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;
@@ -44,12 +37,6 @@ export interface PatientFileQuery {
   search: string;
   fileNumber: string;
   sourceType: "" | PatientFileSourceType;
-  page: number;
-  pageSize: number;
-}
-
-export interface EligiblePatientQuery {
-  search: string;
   page: number;
   pageSize: number;
 }
@@ -66,4 +53,11 @@ export interface PatientFileFinancialIdentity {
 export interface ImportPatientFilesResult {
   success: boolean;
   importedCount: number;
+}
+
+export interface CreatePatientFileRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  description?: string;
 }

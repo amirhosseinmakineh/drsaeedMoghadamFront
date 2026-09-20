@@ -10,7 +10,7 @@ import { BaseNumberInputComponent } from "../../../../../basemadual/forms/number
 import { BaseModalComponent } from "../../../../../basemadual/overlays/modal/modal.component";
 import { SecretaryAccountShellComponent } from "../../../account/components/secretary-account-shell/secretary-account-shell.component";
 import { PatientFilesService } from "../../../patient-files/patient-files.service";
-import { CommitmentStatus, DebtStatus, FinancialAgreementType, FinancialCaseStatus, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientGuid, PatientPromissoryNote } from "../../models/patient-finance.models";
+import { ApiResult, CommitmentStatus, DebtStatus, FinancialAgreementType, FinancialCaseStatus, IdResponse, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseId, PatientFinancialCaseIdResponse, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientGuid, PatientPromissoryNote } from "../../models/patient-finance.models";
 import { PatientFinanceApiService } from "../../services/patient-finance-api.service";
 
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
@@ -72,7 +72,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   loading = false;
   submitting = false;
   createSubmitAttempted = false;
-  actionId: number | null = null;
+  actionId: number | PatientFinancialCaseId | null = null;
   details: PatientFinancialCaseDetails | null = null;
   summary: PatientFinancialCaseSummary | null = null;
   detailCheques: PatientCheque[] = [];
@@ -86,7 +86,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   commitmentModalItems: Array<PatientCheque | PatientPromissoryNote> = [];
   commitmentModalLoading = false;
   debtEligibilityLoading = false;
-  readonly debtCaseIdsWithPendingCommitments = new Set<number>();
+  readonly debtCaseIdsWithPendingCommitments = new Set<PatientFinancialCaseId>();
   private selectedFinancialPatientId: PatientGuid | null = null;
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
@@ -302,7 +302,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
-  openDetails(id: number): void {
+  openDetails(id: PatientFinancialCaseId): void {
     this.loading = true;
     forkJoin({ details: this.api.getCase(id), summary: this.api.getCaseSummary(id) }).pipe(
       finalize(() => { this.loading = false; this.cdr.markForCheck(); }),
@@ -464,6 +464,6 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       error: (error: HttpErrorResponse) => this.showError(error),
     });
   }
-  private mutate(id: number, request: ReturnType<PatientFinanceApiService["payDebt"]>, success: string): void { if (this.actionId !== null) return; this.actionId = id; request.pipe(finalize(() => { this.actionId = null; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: r => { if (!r.isSuccess) { this.toast.error(r.message); return; } this.toast.success(r.message || success); this.load(); if (this.details) this.openDetails(this.details.case.id); }, error: e => this.showError(e) }); }
+  private mutate(id: number | PatientFinancialCaseId, request: Observable<ApiResult<IdResponse | PatientFinancialCaseIdResponse>>, success: string): void { if (this.actionId !== null) return; this.actionId = id; request.pipe(finalize(() => { this.actionId = null; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: r => { if (!r.isSuccess) { this.toast.error(r.message); return; } this.toast.success(r.message || success); this.load(); if (this.details) this.openDetails(this.details.case.id); }, error: e => this.showError(e) }); }
   private showError(error: HttpErrorResponse): void { this.toast.error(error.error?.message || error.message || "ارتباط با سرور انجام نشد."); }
 }
