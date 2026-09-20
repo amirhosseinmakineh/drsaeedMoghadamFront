@@ -1,0 +1,34 @@
+@if (loading) {
+  <div class="status loading" role="status">در حال دریافت صورت‌حساب‌های بیمار…</div>
+}
+@if (error) {
+  <div class="status error" role="alert"><p>{{ error }}</p><button type="button" (click)="retry.emit()">تلاش دوباره</button></div>
+} @else if (!loading && !finance) {
+  <div class="empty"><span aria-hidden="true">💳</span><strong>صورت‌حسابی برای این بیمار ثبت نشده است</strong></div>
+} @else if (finance; as details) {
+  <section class="summary-grid" aria-label="خلاصه صورت‌حساب بیمار">
+    <article><span>مبلغ کل درمان</span><strong>{{ money(details.totalTreatmentAmount) }}</strong></article>
+    <article class="paid"><span>پرداخت‌شده</span><strong>{{ money(details.totalPaidAmount) }}</strong></article>
+    <article><span>مانده</span><strong>{{ money(details.remainingAmount) }}</strong></article>
+    <article class="debt"><span>بدهی باز</span><strong>{{ money(details.totalDebtAmount) }}</strong></article>
+    <article><span>پرونده فعال</span><strong>{{ details.activeFinancialCasesCount }}</strong></article>
+    <article><span>چک پرداخت‌نشده</span><strong>{{ details.unpaidChequesCount }}</strong></article>
+    <article><span>سفته پرداخت‌نشده</span><strong>{{ details.unpaidPromissoryNotesCount }}</strong></article>
+  </section>
+
+  <div class="financial-cases">
+    @if (!details.cases.length) { <div class="empty"><strong>پرونده مالی ثبت نشده است</strong></div> }
+    @for (financialCase of details.cases; track financialCase.id) {
+      <details class="financial-case" open>
+        <summary><div><strong>{{ financialCase.serviceName }}</strong><small>{{ date(financialCase.createdAt) }}</small></div><div class="case-tags"><span>{{ caseStatusLabel(financialCase.status) }}</span><span>{{ agreementLabel(financialCase.agreementType) }}</span></div></summary>
+        <div class="case-body">
+          <dl class="case-amounts"><div><dt>مبلغ کل</dt><dd>{{ money(financialCase.totalAmount) }}</dd></div><div><dt>پرداخت‌شده</dt><dd>{{ money(financialCase.totalPaidAmount) }}</dd></div><div><dt>مانده</dt><dd>{{ money(financialCase.remainingAmount) }}</dd></div><div><dt>بدهی</dt><dd>{{ money(financialCase.totalDebtAmount) }}</dd></div></dl>
+          <section class="finance-section"><h3>چک‌ها</h3>@if (!financialCase.cheques.length) { <p class="section-empty">چکی ثبت نشده است</p> } @for (item of financialCase.cheques; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>شماره صیاد</dt><dd class="copy-value" dir="ltr">{{ item.sayadNumber }}</dd></div><div><dt>صاحب چک</dt><dd>{{ item.ownerName }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ commitmentStatusLabel(item.status) }}</dd></div></dl></article> }</section>
+          <section class="finance-section"><h3>سفته‌ها</h3>@if (!financialCase.promissoryNotes.length) { <p class="section-empty">سفته‌ای ثبت نشده است</p> } @for (item of financialCase.promissoryNotes; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>شماره سریال</dt><dd class="copy-value" dir="ltr">{{ item.serialNumber }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ commitmentStatusLabel(item.status) }}</dd></div></dl></article> }</section>
+          <section class="finance-section"><h3>بدهی‌ها</h3>@if (!financialCase.debts.length) { <p class="section-empty">بدهی ثبت نشده است</p> } @for (item of financialCase.debts; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>منبع</dt><dd>{{ financialSourceLabel(item.sourceType) }} #{{ item.sourceId }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ debtStatusLabel(item.status) }}</dd></div></dl></article> }</section>
+          <section class="finance-section"><h3>تراکنش‌ها</h3>@if (!financialCase.transactions.length) { <p class="section-empty">تراکنشی ثبت نشده است</p> } @for (item of financialCase.transactions; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ پرداخت</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>منبع</dt><dd>{{ financialSourceLabel(item.sourceType) }} #{{ item.sourceId }}</dd></div><div><dt>تاریخ ثبت</dt><dd>{{ date(item.createdAt) }}</dd></div><div><dt>نوع</dt><dd>پرداخت</dd></div></dl></article> }</section>
+        </div>
+      </details>
+    }
+  </div>
+}
