@@ -5,6 +5,7 @@ import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
 import { ReservationDto } from "../reservation/reservation.model";
 import { ensureCsvBlob } from "../../utils/file-download.util";
+import { PatientFinanceDetails } from "../../shared/patient-finance/patient-finance-details.models";
 
 export interface ApiCommandResponse<T = unknown> {
   isSuccess: boolean;
@@ -427,6 +428,8 @@ export interface DailyReservationsReport {
 
 export interface PatientFinanceReportFilters {
   search?: string;
+  patientName?: string;
+  fileNumber?: number;
   serviceId?: number;
   agreementType?: number;
   status?: number;
@@ -434,6 +437,15 @@ export interface PatientFinanceReportFilters {
   toDate?: string;
   page: number;
   pageSize: number;
+}
+
+export interface AdminPatientFinanceFile {
+  id: number;
+  fileNumber: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  finance: PatientFinanceDetails | null;
 }
 
 export interface PatientFinanceReportItem {
@@ -1089,6 +1101,20 @@ export class AdminDashboardService {
     ).pipe(catchError((error) => throwError(() =>
       this.toUserFacingError(error, "دریافت خروجی اکسل حسابداری انجام نشد"),
     )));
+  }
+
+  getPatientFinanceFile(fileNumber: string): Observable<AdminPatientFinanceFile | null> {
+    return this.http.get<AdminPatientFinanceFile>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/files/${fileNumber}`,
+      {
+        headers: this.authHeaders(),
+      },
+    ).pipe(
+      map(response => response ?? null),
+      catchError(error => throwError(() =>
+        this.toUserFacingError(error, "دریافت صورت‌حساب‌های بیمار انجام نشد"),
+      )),
+    );
   }
 
   updatePatientFinance(caseId: string, request: UpdatePatientFinanceRequest): Observable<ApiCommandResponse> {
