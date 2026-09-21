@@ -41,6 +41,7 @@ import { AdminLeadAssignmentSettingsComponent } from "../admin-dashboard/admin-l
 import { AdminPatientFinanceReportComponent } from "../admin-dashboard/admin-patient-finance-report.component";
 import { AdminConsultantRewardsComponent } from "../admin-dashboard/admin-consultant-rewards.component";
 import { AdminPatientReferralsComponent } from "../../features/patient-referrals/admin/pages/admin-patient-referrals/admin-patient-referrals.component";
+import { AdminAccountingCenterComponent } from "../admin-dashboard/admin-accounting-center.component";
 import { PatientReferralDashboardComponent } from "../../features/patient-referrals/patient/pages/patient-referral-dashboard/patient-referral-dashboard.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
@@ -78,6 +79,7 @@ type DashboardSection =
   | "secretarySales"
   | "leadAssignmentSettings"
   | "patientFinanceReport"
+  | "accountingCenter"
   | "consultantRewards"
   | "patientReferrals";
 type UserDialogMode = "add" | "edit";
@@ -121,6 +123,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "secretarySales",
   "leadAssignmentSettings",
   "patientFinanceReport",
+  "accountingCenter",
   "consultantRewards",
   "patientReferrals",
 ];
@@ -145,6 +148,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminSecretarySalesApprovalComponent,
     AdminLeadAssignmentSettingsComponent,
     AdminPatientFinanceReportComponent,
+    AdminAccountingCenterComponent,
     AdminConsultantRewardsComponent,
     AdminPatientReferralsComponent,
     PatientReferralDashboardComponent,
@@ -172,6 +176,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "secretarySales", label: "فروش‌های منشی‌ها", icon: "wallet" },
     { id: "leadAssignmentSettings", label: "مدیریت تخصیص لیدها", icon: "clipboard" },
     { id: "patientFinanceReport", label: "گزارش مالی بیماران", icon: "wallet" },
+    { id: "accountingCenter", label: "حسابداری جامع", icon: "wallet" },
     { id: "consultantRewards", label: "پاداش مشاوران", icon: "wallet" },
     { id: "patientReferrals", label: "گزارش رفرال بیماران", icon: "users" },
   ];
