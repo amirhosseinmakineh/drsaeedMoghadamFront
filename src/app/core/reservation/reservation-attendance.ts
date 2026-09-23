@@ -211,6 +211,8 @@ export function isSecretaryReviewCompleted(
 }
 
 export function canConsultantEditReservation(reservation: {
+  reservationAt?: string | null;
+  ReservationAt?: string | null;
   isCanceled?: boolean | null;
   IsCanceled?: boolean | null;
   attendanceConfirmationStatus?: number | null;
@@ -223,6 +225,16 @@ export function canConsultantEditReservation(reservation: {
   const isCanceled =
     (reservation.isCanceled ?? reservation.IsCanceled) === true;
   if (isCanceled) return false;
+
+  // Consultants may edit an appointment only before its scheduled time.
+  // Attendance confirmation after the appointment has a separate workflow.
+  const rawReservationAt =
+    reservation.reservationAt ?? reservation.ReservationAt ?? "";
+  if (!rawReservationAt) return false;
+  const reservationTime = new Date(rawReservationAt).getTime();
+  if (!Number.isFinite(reservationTime) || reservationTime <= Date.now()) {
+    return false;
+  }
 
   const status = readAttendanceStatus(
     reservation,
