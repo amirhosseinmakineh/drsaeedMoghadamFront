@@ -32,6 +32,15 @@
         @if (createForm.controls.agreementType.value === 1) { <app-base-number-input inputId="pre-payment-amount" label="مبلغ پیش‌پرداخت" suffix="تومان" [maxFractionDigits]="3" [value]="createForm.controls.prePaymentAmount.value" (valueChange)="setAmount(createForm.controls.prePaymentAmount, $event)" /> }
         @if (createForm.controls.agreementType.value === 2) { <app-base-number-input inputId="deposit-amount" label="مبلغ ودیعه" suffix="تومان" [maxFractionDigits]="3" [value]="createForm.controls.depositAmount.value" (valueChange)="setAmount(createForm.controls.depositAmount, $event)" /> }
         <label>نوع توافق<select formControlName="agreementType" (change)="onCreateAgreementChange()"><option [ngValue]="1">پیش‌پرداخت (نیازمند تعهد)</option><option [ngValue]="2">ودیعه</option></select></label>
+      <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
+      <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
+      <label>سند تضمین<input  formControlName="guaranteeDocument"></label>
+      <label>تاریخ ضمانت<input type="date" formControlName="guaranteeDate"></label>
+      <label>مبلغ ضمانت<input type="number" min="0" formControlName="guaranteeAmount"></label>
+      <label>ثبت چک ضمانت<input  formControlName="guaranteeChequeRegistration"></label>
+      <label>توضیحات<input  formControlName="notes"></label>
+      <label>نام مشاور<input  formControlName="consultantName"></label>
+      <label>مواردی که باید چک شود<input  formControlName="reviewItems"></label>
       </div>
       @if (createForm.hasError('agreedAmountsExceedTotal')) { <p class="validation">مجموع پیش‌پرداخت و ودیعه نباید از مبلغ کل درمان بیشتر باشد.</p> }
       <div class="row commitment-counters create-commitment-actions"><button type="button" class="secondary" (click)="addCheque()">+ افزودن چک <span>{{ cheques.length }}</span></button><button type="button" class="secondary" (click)="addNote()">+ افزودن سفته <span>{{ notes.length }}</span></button></div>
@@ -62,8 +71,8 @@
       <div class="section-title"><div><h2>{{ activeTabLabel }}</h2><p>{{ totalCount }} پرونده</p></div><div class="row">@if (activeTab === 'cases') { <button class="primary" (click)="selectTab('create')">پرونده جدید</button> }</div></div>
       @if (loading) { <div class="empty">در حال دریافت اطلاعات…</div> }
       @else if (!items.length) { <div class="empty"><strong>رکوردی پیدا نشد</strong><span>فیلترها را تغییر دهید یا رکورد جدید بسازید.</span></div> }
-      @else { <div class="table-wrap"><table><thead><tr><th>بیمار / پرونده</th><th>شرح</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>
-        @for (item of items; track item.id) { <tr>
+      @else { <div class="table-wrap"><table><thead><tr><th>ردیف</th><th>بیمار / پرونده</th><th>شرح</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>
+        @for (item of items; track item.id; let i = $index) { <tr><td>{{ (page - 1) * pageSize + i + 1 }}</td>
           @if (activeTab === 'cases' || isCommitmentTab) { <td><strong>{{ patientReference(caseItem(item).patientName, recordFileNumber(caseItem(item))) }}</strong><small>{{ caseItem(item).patientPhoneNumber || 'بدون تلفن' }}</small></td><td>{{ serviceLabel(caseItem(item).serviceId, caseItem(item).serviceName) }}</td><td><strong>{{ money(caseItem(item).totalAmount) }}</strong></td><td>{{ date(caseItem(item).createdAt) }}</td><td><span class="badge case-status s{{caseItem(item).status}}" [class.case-active]="caseItem(item).status === FinancialCaseStatus.Active">{{ caseItem(item).status === 1 ? 'فعال' : caseItem(item).status === 2 ? 'تسویه‌شده' : 'لغوشده' }}</span></td><td><div class="actions">@if (isCommitmentTab) { <button class="primary mini" (click)="showPatientCommitments(caseItem(item))">نمایش {{ activeTab === 'cheques' ? 'چک‌های' : 'سفته‌های' }} این بیمار</button> } @else { <button (click)="openDetails(caseItem(item).id)">ویرایش و جزئیات</button>@if (canCancelCase(caseItem(item))) { <button class="danger-link" [disabled]="actionId === caseItem(item).id" (click)="cancelCase(caseItem(item))">حذف حسابداری</button> } }</div></td> }
           @if (activeTab === 'debts') { <td><strong>{{ patientReference(debtItem(item).patientName, recordFileNumber(debtItem(item))) }}</strong><small>{{ debtItem(item).patientPhoneNumber || '—' }}</small></td><td>{{ serviceLabel(debtItem(item).serviceId, debtItem(item).serviceName) }}<small>{{ debtItem(item).sourceType === 1 ? 'چک' : 'سفته' }} #{{ debtItem(item).sourceId }}</small></td><td>{{ money(debtItem(item).amount) }}</td><td>{{ date(debtItem(item).dueDate) }}</td><td><span class="badge s{{debtItem(item).status}}">{{ debtItem(item).status === 1 ? 'بدهی باز' : debtItem(item).status === 2 ? 'تسویه‌شده' : 'لغوشده' }}</span></td><td>@if (debtItem(item).status === 1) { <div class="debt-payment-action"><button class="primary mini" [disabled]="actionId === item.id || !canPayDebt(debtItem(item))" [title]="canPayDebt(debtItem(item)) ? 'ثبت تسویه کامل بدهی' : 'تا تعیین تکلیف همه چک‌ها و سفته‌های در گردش غیرفعال است'" (click)="payDebt(debtItem(item))">تسویه کامل بدهی</button>@if (!canPayDebt(debtItem(item))) { <small>پس از تعیین تکلیف همه تعهدات فعال می‌شود</small> }</div> }</td> }
           @if (activeTab === 'transactions') { <td><strong>{{ patientReference(transactionItem(item).patientName, recordFileNumber(transactionItem(item))) }}</strong></td><td>پرداخت قطعی<small>{{ transactionItem(item).sourceType === 1 ? 'چک' : 'سفته' }} #{{ transactionItem(item).sourceId }}</small></td><td>{{ money(transactionItem(item).amount) }}</td><td>{{ date(transactionItem(item).createdAt) }}</td><td><span class="badge s2">ثبت‌شده</span></td><td>—</td> }
@@ -98,13 +107,23 @@
 
   <app-base-modal class="finance-details-modal" [open]="!!details" [title]="details ? patientReference(details.case.patientName, recordFileNumber(details.case)) : 'جزئیات حسابداری بیمار'" (close)="closeDetails()">
   @if (details) {
-    <div class="details-heading"><span>جزئیات حسابداری بیمار</span><strong>{{ serviceLabel(details.case.serviceId, details.case.serviceName) }}</strong></div>
+    <div class="details-heading"><span>جزئیات حسابداری بیمار</span><small>تاریخ: {{ date(details.case.createdAt) }}</small><strong>{{ serviceLabel(details.case.serviceId, details.case.serviceName) }}</strong></div>
     @if (summary) { <div class="summary-grid"><article><span>مبلغ کل</span><strong>{{ money(summary.totalAmount) }}</strong></article><article class="green"><span>پرداخت قطعی</span><strong>{{ money(summary.totalPaidAmount) }}</strong></article><article class="orange"><span>مانده</span><strong>{{ money(summary.remainingAmount) }}</strong></article><article class="red"><span>بدهی باز</span><strong>{{ money(summary.totalDebtAmount) }}</strong></article></div> }
+    <p>مانده بدهکاری/بستانکاری: {{ money(details.case.balanceAmount) }}</p>
     <form class="finance-edit-grid" [formGroup]="caseEditForm" (ngSubmit)="saveCaseEdit()">
       <app-base-number-input inputId="edit-case-total-amount" label="مبلغ کل" [maxFractionDigits]="3" [value]="caseEditForm.controls.totalAmount.value" (valueChange)="setAmount(caseEditForm.controls.totalAmount, $event)" />
       <app-base-number-input inputId="edit-case-prepayment-amount" label="پیش‌پرداخت" [maxFractionDigits]="3" [value]="caseEditForm.controls.prePaymentAmount.value" (valueChange)="setAmount(caseEditForm.controls.prePaymentAmount, $event)" />
       <app-base-number-input inputId="edit-case-deposit-amount" label="ودیعه" [maxFractionDigits]="3" [value]="caseEditForm.controls.depositAmount.value" (valueChange)="setAmount(caseEditForm.controls.depositAmount, $event)" />
       <label>نوع توافق<select formControlName="agreementType"><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
+      <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
+      <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
+      <label>سند تضمین<input  formControlName="guaranteeDocument"></label>
+      <label>تاریخ ضمانت<input type="date" formControlName="guaranteeDate"></label>
+      <label>مبلغ ضمانت<input type="number" min="0" formControlName="guaranteeAmount"></label>
+      <label>ثبت چک ضمانت<input  formControlName="guaranteeChequeRegistration"></label>
+      <label>توضیحات<input  formControlName="notes"></label>
+      <label>نام مشاور<input  formControlName="consultantName"></label>
+      <label>مواردی که باید چک شود<input  formControlName="reviewItems"></label>
       <button class="primary" type="submit" [disabled]="actionId !== null">ذخیره حسابداری</button>
     </form>
     <section class="commitment-edit-section"><h3>چک‌ها</h3>

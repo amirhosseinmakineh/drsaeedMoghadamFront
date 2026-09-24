@@ -17,6 +17,16 @@ export interface PatientFinanceDetails {
 }
 
 export interface FinancialCaseDetails {
+  balanceAmount?: number;
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  guaranteeDocument?: string | null;
+  guaranteeDate?: string | null;
+  guaranteeAmount?: number | null;
+  guaranteeChequeRegistration?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  reviewItems?: string | null;
   id: string;
   serviceId: number;
   serviceName: string;
