@@ -32,6 +32,15 @@
         @if (createForm.controls.agreementType.value === 1) { <app-base-number-input inputId="pre-payment-amount" label="مبلغ پیش‌پرداخت" suffix="تومان" [maxFractionDigits]="3" [value]="createForm.controls.prePaymentAmount.value" (valueChange)="setAmount(createForm.controls.prePaymentAmount, $event)" /> }
         @if (createForm.controls.agreementType.value === 2) { <app-base-number-input inputId="deposit-amount" label="مبلغ ودیعه" suffix="تومان" [maxFractionDigits]="3" [value]="createForm.controls.depositAmount.value" (valueChange)="setAmount(createForm.controls.depositAmount, $event)" /> }
         <label>نوع توافق<select formControlName="agreementType" (change)="onCreateAgreementChange()"><option [ngValue]="1">پیش‌پرداخت (نیازمند تعهد)</option><option [ngValue]="2">ودیعه</option></select></label>
+      <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
+      <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
+      <label>سند تضمین<input  formControlName="guaranteeDocument"></label>
+      <label>تاریخ ضمانت<input type="date" formControlName="guaranteeDate"></label>
+      <label>مبلغ ضمانت<input type="number" min="0" formControlName="guaranteeAmount"></label>
+      <label>ثبت چک ضمانت<input  formControlName="guaranteeChequeRegistration"></label>
+      <label>توضیحات<input  formControlName="notes"></label>
+      <label>نام مشاور<input  formControlName="consultantName"></label>
+      <label>مواردی که باید چک شود<input  formControlName="reviewItems"></label>
       </div>
       @if (createForm.hasError('agreedAmountsExceedTotal')) { <p class="validation">مجموع پیش‌پرداخت و ودیعه نباید از مبلغ کل درمان بیشتر باشد.</p> }
       <div class="row commitment-counters create-commitment-actions"><button type="button" class="secondary" (click)="addCheque()">+ افزودن چک <span>{{ cheques.length }}</span></button><button type="button" class="secondary" (click)="addNote()">+ افزودن سفته <span>{{ notes.length }}</span></button></div>
@@ -100,11 +109,21 @@
   @if (details) {
     <div class="details-heading"><span>جزئیات حسابداری بیمار</span><strong>{{ serviceLabel(details.case.serviceId, details.case.serviceName) }}</strong></div>
     @if (summary) { <div class="summary-grid"><article><span>مبلغ کل</span><strong>{{ money(summary.totalAmount) }}</strong></article><article class="green"><span>پرداخت قطعی</span><strong>{{ money(summary.totalPaidAmount) }}</strong></article><article class="orange"><span>مانده</span><strong>{{ money(summary.remainingAmount) }}</strong></article><article class="red"><span>بدهی باز</span><strong>{{ money(summary.totalDebtAmount) }}</strong></article></div> }
+    <p>مانده بدهکاری/بستانکاری: {{ money(details.case.balanceAmount) }}</p>
     <form class="finance-edit-grid" [formGroup]="caseEditForm" (ngSubmit)="saveCaseEdit()">
       <app-base-number-input inputId="edit-case-total-amount" label="مبلغ کل" [maxFractionDigits]="3" [value]="caseEditForm.controls.totalAmount.value" (valueChange)="setAmount(caseEditForm.controls.totalAmount, $event)" />
       <app-base-number-input inputId="edit-case-prepayment-amount" label="پیش‌پرداخت" [maxFractionDigits]="3" [value]="caseEditForm.controls.prePaymentAmount.value" (valueChange)="setAmount(caseEditForm.controls.prePaymentAmount, $event)" />
       <app-base-number-input inputId="edit-case-deposit-amount" label="ودیعه" [maxFractionDigits]="3" [value]="caseEditForm.controls.depositAmount.value" (valueChange)="setAmount(caseEditForm.controls.depositAmount, $event)" />
       <label>نوع توافق<select formControlName="agreementType"><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
+      <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
+      <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
+      <label>سند تضمین<input  formControlName="guaranteeDocument"></label>
+      <label>تاریخ ضمانت<input type="date" formControlName="guaranteeDate"></label>
+      <label>مبلغ ضمانت<input type="number" min="0" formControlName="guaranteeAmount"></label>
+      <label>ثبت چک ضمانت<input  formControlName="guaranteeChequeRegistration"></label>
+      <label>توضیحات<input  formControlName="notes"></label>
+      <label>نام مشاور<input  formControlName="consultantName"></label>
+      <label>مواردی که باید چک شود<input  formControlName="reviewItems"></label>
       <button class="primary" type="submit" [disabled]="actionId !== null">ذخیره حسابداری</button>
     </form>
     <section class="commitment-edit-section"><h3>چک‌ها</h3>

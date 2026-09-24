@@ -167,6 +167,15 @@ export class AdminPatientFinanceReportComponent implements OnInit {
       prePaymentAmount: item.prePaymentAmount,
       depositAmount: item.depositAmount,
       agreementType: item.agreementType,
+      paymentMethod: item.paymentMethod ?? null,
+      installmentStatus: item.installmentStatus ?? null,
+      guaranteeDocument: item.guaranteeDocument ?? null,
+      guaranteeDate: item.guaranteeDate?.slice(0, 10) ?? null,
+      guaranteeAmount: item.guaranteeAmount ?? null,
+      guaranteeChequeRegistration: item.guaranteeChequeRegistration ?? null,
+      notes: item.notes ?? null,
+      consultantName: item.consultantName ?? null,
+      reviewItems: item.reviewItems ?? null,
     };
   }
 

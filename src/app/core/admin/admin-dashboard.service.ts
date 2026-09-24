@@ -449,6 +449,18 @@ export interface AdminPatientFinanceFile {
 }
 
 export interface PatientFinanceReportItem {
+  balanceAmount: number;
+  chequeDate?: string | null;
+  chequeRegistration?: string | null;
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  guaranteeDocument?: string | null;
+  guaranteeDate?: string | null;
+  guaranteeAmount?: number | null;
+  guaranteeChequeRegistration?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  reviewItems?: string | null;
   caseId: string;
   patientId: string;
   patientName: string;
@@ -491,6 +503,15 @@ export interface PatientFinanceReportResponse {
 }
 
 export interface UpdatePatientFinanceRequest {
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  guaranteeDocument?: string | null;
+  guaranteeDate?: string | null;
+  guaranteeAmount?: number | null;
+  guaranteeChequeRegistration?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  reviewItems?: string | null;
   totalAmount: number;
   prePaymentAmount: number;
   depositAmount: number;
