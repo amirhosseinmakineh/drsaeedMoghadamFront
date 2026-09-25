@@ -449,6 +449,8 @@ export interface AdminPatientFinanceFile {
 }
 
 export interface PatientFinanceReportItem {
+  chequeDates?: string[];
+  chequeRegistrations?: string[];
   balanceAmount: number;
   chequeDate?: string | null;
   chequeRegistration?: string | null;

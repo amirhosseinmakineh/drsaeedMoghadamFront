@@ -247,7 +247,6 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", [Validators.required, Validators.pattern(PROMISSORY_NOTE_SERIAL_PATTERN)]], amount: [null, Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
-  onCreateAgreementChange(): void { this.clearInactiveAgreementAmount(this.createForm); }
   applyFilters(): void {
     this.page = 1; this.load();
   }
@@ -410,6 +409,9 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     control.markAsTouched();
   }
   date(value: string | null | undefined): string { return value ? new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(value)) : "—"; }
+  chequeDatesLabel(item: PatientFinancialCase): string {
+    return item.chequeDates?.map(value => this.date(value)).join("، ") || "—";
+  }
   statusLabel(value: number): string { return ({ 1: "در انتظار", 2: "پرداخت‌شده", 3: "پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
   isCommitmentDue(value: string | null | undefined): boolean {
     if (!value) return false;
@@ -441,10 +443,6 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     const month = String(value.getMonth() + 1).padStart(2, "0");
     const day = String(value.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
-  }
-  private clearInactiveAgreementAmount(form: typeof this.createForm): void {
-    if (form.controls.agreementType.value === FinancialAgreementType.PrePayment) form.controls.depositAmount.setValue(0);
-    else form.controls.prePaymentAmount.setValue(0);
   }
   private buildCommitmentEditForms(): void {
     this.chequeEditForms.clear();
