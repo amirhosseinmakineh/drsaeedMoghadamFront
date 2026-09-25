@@ -108,6 +108,7 @@
   <app-base-modal class="finance-details-modal" [open]="!!details" [title]="details ? patientReference(details.case.patientName, recordFileNumber(details.case)) : 'جزئیات حسابداری بیمار'" (close)="closeDetails()">
   @if (details) {
     <div class="details-heading"><span>جزئیات حسابداری بیمار</span><small>تاریخ: {{ date(details.case.createdAt) }}</small><strong>{{ serviceLabel(details.case.serviceId, details.case.serviceName) }}</strong></div>
+    <h3 class="worksheet-title">اطلاعات حسابداری پرونده</h3>
     <dl class="case-amounts worksheet-fields">
       <div><dt>ردیف</dt><dd>{{ caseRowNumber(details.case.id) }}</dd></div>
       <div><dt>تاریخ</dt><dd>{{ optionalDate(details.case.createdAt) }}</dd></div>
@@ -128,6 +129,8 @@
       <div><dt>توضیحات</dt><dd>{{ details.case.notes || "" }}</dd></div>
       <div><dt>نام مشاور</dt><dd>{{ details.case.consultantName || "" }}</dd></div>
       <div><dt>مواردی که باید چک شود</dt><dd>{{ details.case.reviewItems || "" }}</dd></div>
+      <div><dt>شماره چک صیادی</dt><dd dir="ltr">{{ detailChequeRegistrations() }}</dd></div>
+      <div><dt>شماره سفته</dt><dd dir="ltr">{{ detailNoteSerialNumbers() }}</dd></div>
     </dl>
     @if (summary) { <div class="summary-grid"><article><span>مبلغ کل</span><strong>{{ money(summary.totalAmount) }}</strong></article><article class="green"><span>مبلغ پرداختی</span><strong>{{ money(summary.totalPaidAmount) }}</strong></article><article class="orange"><span>مانده</span><strong>{{ money(summary.remainingAmount) }}</strong></article><article class="red"><span>بدهی باز</span><strong>{{ money(summary.totalDebtAmount) }}</strong></article></div> }
     <form class="finance-edit-grid" [formGroup]="caseEditForm" (ngSubmit)="saveCaseEdit()">
