@@ -17,6 +17,8 @@ export interface PatientFinanceDetails {
 }
 
 export interface FinancialCaseDetails {
+  prePaymentAmount?: number;
+  depositAmount?: number;
   balanceAmount?: number;
   paymentMethod?: string | null;
   installmentStatus?: string | null;

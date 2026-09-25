@@ -1,6 +1,6 @@
 <section class="finance-report" aria-labelledby="patient-finance-report-title">
   <header class="report-header">
-    <div><span>گزارش مالی</span><h2 id="patient-finance-report-title">گزارش مالی بیماران</h2><p>هر بیمار یک‌بار در فهرست نمایش داده می‌شود و خروجی اکسل مطابق فیلترهای انتخاب‌شده است.</p></div>
+    <div><span>گزارش مالی</span><h2 id="patient-finance-report-title">گزارش مالی بیماران</h2><p>هر پرونده مالی جداگانه در فهرست نمایش داده می‌شود و خروجی اکسل مطابق فیلترهای انتخاب‌شده است.</p></div>
     <button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button>
   </header>
 
@@ -22,15 +22,15 @@
       <article><small>مبلغ کل</small><strong>{{ money(report.summary.totalAmount) }}</strong></article>
       <article><small>پیش‌پرداخت</small><strong>{{ money(report.summary.prePaymentAmount) }}</strong></article>
       <article><small>ودیعه</small><strong>{{ money(report.summary.depositAmount) }}</strong></article>
-      <article class="success"><small>پرداخت قطعی</small><strong>{{ money(report.summary.paidAmount) }}</strong></article>
+      <article class="success"><small>مبلغ پرداختی</small><strong>{{ money(report.summary.paidAmount) }}</strong></article>
       <article class="warning"><small>مانده</small><strong>{{ money(report.summary.remainingAmount) }}</strong></article>
       <article class="danger"><small>بدهی باز</small><strong>{{ money(report.summary.unpaidDebtAmount) }}</strong></article>
       <article><small>مجموع چک‌ها</small><strong>{{ money(report.summary.chequeAmount) }}</strong></article>
       <article><small>مجموع سفته‌ها</small><strong>{{ money(report.summary.promissoryNoteAmount) }}</strong></article>
     </div>
 
-    <div class="table-wrap"><table><thead><tr><th>ردیف</th><th>نام بیمار</th><th>شماره پرونده</th><th>شماره تماس</th><th>آخرین خدمت مالی</th><th>آخرین وضعیت</th><th>آخرین ثبت</th><th>نحوه پرداخت</th><th>وضعیت اقساط</th><th>تاریخ چک</th><th>ثبت چک</th><th>مبلغ خدمات</th><th>مبلغ پرداختی</th><th>بیعانه</th><th>مانده بدهکاری/بستانکاری</th><th>سند تضمین</th><th>تاریخ ضمانت</th><th>مبلغ ضمانت</th><th>ثبت چک ضمانت</th><th>توضیحات</th><th>نام مشاور</th><th>مواردی که باید چک شود</th><th>عملیات</th></tr></thead><tbody>
-      <tr *ngFor="let item of report.items; let i = index; trackBy: trackCase"><td>{{ (filters.page - 1) * filters.pageSize + i + 1 }}</td><td><strong>{{ item.patientName }}</strong></td><td>{{ item.fileNumber || "—" }}</td><td dir="ltr">{{ item.phoneNumber }}</td><td>{{ item.serviceName }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ date(item.createdAt) }}</td><td>{{ item.paymentMethod || "—" }}</td><td>{{ item.installmentStatus || "—" }}</td><td>{{ item.chequeDate ? date(item.chequeDate) : "—" }}</td><td>{{ item.chequeRegistration || "—" }}</td><td>{{ money(item.totalAmount) || "—" }}</td><td>{{ money(item.paidAmount) || "—" }}</td><td>{{ money(item.depositAmount) || "—" }}</td><td>{{ money(item.balanceAmount) }}</td><td>{{ item.guaranteeDocument || "—" }}</td><td>{{ item.guaranteeDate ? date(item.guaranteeDate) : "—" }}</td><td>{{ item.guaranteeAmount == null ? "—" : money(item.guaranteeAmount) }}</td><td>{{ item.guaranteeChequeRegistration || "—" }}</td><td>{{ item.notes || "—" }}</td><td>{{ item.consultantName || "—" }}</td><td>{{ item.reviewItems || "—" }}</td><td class="row-actions"><button type="button" (click)="openStatements(item)">مشاهده صورت‌حساب‌ها</button><button type="button" class="secondary" (click)="openDetails(item)" [disabled]="item.status === 3">ویرایش آخرین پرونده مالی</button></td></tr>
+    <div class="table-wrap"><table><thead><tr><th>ردیف</th><th>نام بیمار</th><th>شماره پرونده</th><th>شماره تماس</th><th>شرح خدمات</th><th>آخرین وضعیت</th><th>تاریخ</th><th>نحوه پرداخت</th><th>وضعیت اقساط</th><th>تاریخ چک</th><th>ثبت چک</th><th>مبلغ خدمات</th><th>مبلغ پرداختی</th><th>بیعانه</th><th>مانده بدهکاری/بستانکاری</th><th>سند تضمین</th><th>تاریخ ضمانت</th><th>مبلغ ضمانت</th><th>ثبت چک ضمانت</th><th>توضیحات</th><th>نام مشاور</th><th>مواردی که باید چک شود</th><th>عملیات</th></tr></thead><tbody>
+      <tr *ngFor="let item of report.items; let i = index; trackBy: trackCase"><td>{{ (filters.page - 1) * filters.pageSize + i + 1 }}</td><td><strong>{{ item.patientName }}</strong></td><td>{{ item.fileNumber || "—" }}</td><td dir="ltr">{{ item.phoneNumber }}</td><td>{{ item.serviceName }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ date(item.createdAt) }}</td><td>{{ item.paymentMethod || "—" }}</td><td>{{ item.installmentStatus || "—" }}</td><td>{{ chequeDatesLabel(item) }}</td><td>{{ item.chequeRegistrations?.join("، ") || "—" }}</td><td>{{ money(item.totalAmount) || "—" }}</td><td>{{ money(item.paidAmount) || "—" }}</td><td>{{ money(item.depositAmount) || "—" }}</td><td>{{ money(item.balanceAmount) }}</td><td>{{ item.guaranteeDocument || "—" }}</td><td>{{ item.guaranteeDate ? date(item.guaranteeDate) : "—" }}</td><td>{{ item.guaranteeAmount == null ? "—" : money(item.guaranteeAmount) }}</td><td>{{ item.guaranteeChequeRegistration || "—" }}</td><td>{{ item.notes || "—" }}</td><td>{{ item.consultantName || "—" }}</td><td>{{ item.reviewItems || "—" }}</td><td class="row-actions"><button type="button" (click)="openStatements(item)">مشاهده صورت‌حساب‌ها</button><button type="button" class="secondary" (click)="openDetails(item)" [disabled]="item.status === 3">ویرایش پرونده مالی</button></td></tr>
     </tbody></table></div>
     @if (!report.items.length) { <p class="empty">پرونده‌ای مطابق فیلتر پیدا نشد.</p> }
     <footer class="pagination"><button type="button" [disabled]="filters.page <= 1" (click)="goTo(filters.page - 1)">قبلی</button><span>صفحه {{ filters.page }} از {{ totalPages }} — {{ report.totalCount }} رکورد</span><button type="button" [disabled]="filters.page >= totalPages" (click)="goTo(filters.page + 1)">بعدی</button></footer>
@@ -51,7 +51,7 @@
       <form (ngSubmit)="saveEdit()">
         <label>مبلغ کل<input type="number" min="0.001" step="0.001" [(ngModel)]="editForm.totalAmount" name="totalAmount" required /></label>
         <label>پیش‌پرداخت<input type="number" min="0" step="0.001" [(ngModel)]="editForm.prePaymentAmount" name="prePaymentAmount" /></label>
-        <label>ودیعه<input type="number" min="0" step="0.001" [(ngModel)]="editForm.depositAmount" name="depositAmount" /></label>
+        <label>بیعانه (ودیعه)<input type="number" min="0" step="0.001" [(ngModel)]="editForm.depositAmount" name="depositAmount" /></label>
         <label>نوع توافق<select [(ngModel)]="editForm.agreementType" name="editAgreementType"><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
         <label>نحوه پرداخت<input  [(ngModel)]="editForm.paymentMethod" name="paymentMethod" /></label>
         <label>وضعیت اقساط<input  [(ngModel)]="editForm.installmentStatus" name="installmentStatus" /></label>

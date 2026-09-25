@@ -301,6 +301,9 @@ export class AdminPatientFinanceReportComponent implements OnInit {
   agreement(value: number): string { return value === 1 ? "پیش‌پرداخت" : value === 2 ? "ودیعه" : "—"; }
   status(value: number): string { return value === 1 ? "فعال" : value === 2 ? "تسویه‌شده" : value === 3 ? "لغوشده" : "—"; }
   date(value: string): string { return formatIranDateTime(value); }
+  chequeDatesLabel(item: PatientFinanceReportItem): string {
+    return item.chequeDates?.map(value => this.date(value)).join("، ") || "—";
+  }
   trackCase(_: number, item: { caseId: string }): string { return item.caseId; }
 
   get totalPages(): number {
