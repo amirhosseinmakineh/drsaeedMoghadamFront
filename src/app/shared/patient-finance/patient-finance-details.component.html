@@ -42,6 +42,8 @@
             <div><dt>توضیحات</dt><dd>{{ financialCase.notes || "" }}</dd></div>
             <div><dt>نام مشاور</dt><dd>{{ financialCase.consultantName || "" }}</dd></div>
             <div><dt>مواردی که باید چک شود</dt><dd>{{ financialCase.reviewItems || "" }}</dd></div>
+            <div><dt>شماره چک صیادی</dt><dd class="copy-value" dir="ltr">{{ chequeRegistrations(financialCase) }}</dd></div>
+            <div><dt>شماره سفته</dt><dd class="copy-value" dir="ltr">{{ noteSerialNumbers(financialCase) }}</dd></div>
           </dl>
           <dl class="case-amounts"><div><dt>پیش‌پرداخت</dt><dd>{{ optionalMoney(financialCase.prePaymentAmount) }}</dd></div><div><dt>مانده</dt><dd>{{ money(financialCase.remainingAmount) }}</dd></div><div><dt>بدهی</dt><dd>{{ money(financialCase.totalDebtAmount) }}</dd></div></dl>
           <section class="finance-section"><h3>چک‌ها</h3>@if (!financialCase.cheques.length) { <p class="section-empty">چکی ثبت نشده است</p> } @for (item of financialCase.cheques; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>شماره صیاد</dt><dd class="copy-value" dir="ltr">{{ item.sayadNumber }}</dd></div><div><dt>صاحب چک</dt><dd>{{ item.ownerName }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ commitmentStatusLabel(item.status) }}</dd></div></dl></article> }</section>
