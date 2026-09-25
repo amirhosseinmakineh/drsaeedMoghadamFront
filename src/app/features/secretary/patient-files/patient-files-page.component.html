@@ -67,7 +67,7 @@
 <app-base-modal class="finance-modal" [open]="!!financeFile" [title]="'صورت‌حساب‌های ' + (financeFile?.firstName ?? '') + ' ' + (financeFile?.lastName ?? '')" (close)="closeFinance()">
   @if (financeFile) {
     <div class="finance-subtitle"><span>شماره پرونده: <b>{{ financeFile.fileNumber }}</b></span><span dir="ltr">{{ financeFile.phoneNumber }}</span></div>
-    <app-patient-finance-details [finance]="financeFile.finance" [loading]="financeRefreshing" [error]="financeError" (retry)="refreshFinance()" />
+    <app-patient-finance-details [finance]="financeFile.finance" [patientName]="financeFile.firstName + ' ' + financeFile.lastName" [loading]="financeRefreshing" [error]="financeError" (retry)="refreshFinance()" />
   }
   <div baseModalFooter><app-base-button variant="secondary" (pressed)="closeFinance()">بستن</app-base-button></div>
 </app-base-modal>

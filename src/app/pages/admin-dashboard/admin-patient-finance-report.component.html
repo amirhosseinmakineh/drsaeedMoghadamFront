@@ -39,7 +39,7 @@
   <app-base-modal class="statements-modal" [open]="!!statementsFile" [title]="'صورت‌حساب‌های ' + (statementsFile?.firstName ?? '') + ' ' + (statementsFile?.lastName ?? '')" (close)="closeStatements()">
     @if (statementsFile) {
       <div class="patient-meta"><span>شماره پرونده: <b>{{ statementsFile.fileNumber }}</b></span><span dir="ltr">{{ statementsFile.phoneNumber }}</span></div>
-      <app-patient-finance-details [finance]="statementsFile.finance" [loading]="statementsLoading" [error]="statementsError" (retry)="retryStatements()" />
+      <app-patient-finance-details [finance]="statementsFile.finance" [patientName]="statementsFile.firstName + ' ' + statementsFile.lastName" [loading]="statementsLoading" [error]="statementsError" (retry)="retryStatements()" />
     }
     <div baseModalFooter><button type="button" class="muted" (click)="closeStatements()">بستن</button></div>
   </app-base-modal>

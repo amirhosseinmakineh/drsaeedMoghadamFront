@@ -10,6 +10,7 @@ import { PatientFinanceDetails } from "./patient-finance-details.models";
 })
 export class PatientFinanceDetailsComponent {
   @Input() finance: PatientFinanceDetails | null = null;
+  @Input() patientName = "";
   @Input() loading = false;
   @Input() error = "";
   @Output() readonly retry = new EventEmitter<void>();
@@ -23,6 +24,14 @@ export class PatientFinanceDetailsComponent {
     return Number.isNaN(parsed.getTime())
       ? "—"
       : new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(parsed);
+  }
+  optionalDate(value: string | null | undefined): string { return value ? this.date(value) : ""; }
+  optionalMoney(value: number | null | undefined): string { return value == null ? "" : this.money(value); }
+  chequeDates(value: PatientFinanceDetails["cases"][number]): string {
+    return value.cheques.filter(item => item.status !== 4).map(item => this.optionalDate(item.dueDate)).filter(Boolean).join("، ");
+  }
+  chequeRegistrations(value: PatientFinanceDetails["cases"][number]): string {
+    return value.cheques.filter(item => item.status !== 4).map(item => item.sayadNumber).filter(Boolean).join("، ");
   }
 
   agreementLabel(value: number): string { return value === 1 ? "پیش‌پرداخت" : value === 2 ? "ودیعه" : "نامشخص"; }

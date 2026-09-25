@@ -108,9 +108,28 @@
   <app-base-modal class="finance-details-modal" [open]="!!details" [title]="details ? patientReference(details.case.patientName, recordFileNumber(details.case)) : 'جزئیات حسابداری بیمار'" (close)="closeDetails()">
   @if (details) {
     <div class="details-heading"><span>جزئیات حسابداری بیمار</span><small>تاریخ: {{ date(details.case.createdAt) }}</small><strong>{{ serviceLabel(details.case.serviceId, details.case.serviceName) }}</strong></div>
+    <dl class="case-amounts worksheet-fields">
+      <div><dt>ردیف</dt><dd>{{ caseRowNumber(details.case.id) }}</dd></div>
+      <div><dt>تاریخ</dt><dd>{{ optionalDate(details.case.createdAt) }}</dd></div>
+      <div><dt>نام و نام خانوادگی</dt><dd>{{ details.case.patientName || "" }}</dd></div>
+      <div><dt>شرح خدمات</dt><dd>{{ serviceLabel(details.case.serviceId, details.case.serviceName) }}</dd></div>
+      <div><dt>مبلغ خدمات</dt><dd>{{ money(details.case.totalAmount) }}</dd></div>
+      <div><dt>نحوه پرداخت</dt><dd>{{ details.case.paymentMethod || "" }}</dd></div>
+      <div><dt>وضعیت اقساط</dt><dd>{{ details.case.installmentStatus || "" }}</dd></div>
+      <div><dt>تاریخ چک</dt><dd>{{ detailChequeDates() }}</dd></div>
+      <div><dt>ثبت چک</dt><dd>{{ detailChequeRegistrations() }}</dd></div>
+      <div><dt>مبلغ پرداختی</dt><dd>{{ money(details.case.totalPaidAmount) }}</dd></div>
+      <div><dt>بیعانه</dt><dd>{{ optionalMoney(details.case.depositAmount) }}</dd></div>
+      <div><dt>مانده بدهکاری/بستانکاری</dt><dd>{{ optionalMoney(details.case.balanceAmount) }}</dd></div>
+      <div><dt>سند تضمین</dt><dd>{{ details.case.guaranteeDocument || "" }}</dd></div>
+      <div><dt>تاریخ ضمانت</dt><dd>{{ optionalDate(details.case.guaranteeDate) }}</dd></div>
+      <div><dt>مبلغ ضمانت</dt><dd>{{ optionalMoney(details.case.guaranteeAmount) }}</dd></div>
+      <div><dt>ثبت چک ضمانت</dt><dd>{{ details.case.guaranteeChequeRegistration || "" }}</dd></div>
+      <div><dt>توضیحات</dt><dd>{{ details.case.notes || "" }}</dd></div>
+      <div><dt>نام مشاور</dt><dd>{{ details.case.consultantName || "" }}</dd></div>
+      <div><dt>مواردی که باید چک شود</dt><dd>{{ details.case.reviewItems || "" }}</dd></div>
+    </dl>
     @if (summary) { <div class="summary-grid"><article><span>مبلغ کل</span><strong>{{ money(summary.totalAmount) }}</strong></article><article class="green"><span>مبلغ پرداختی</span><strong>{{ money(summary.totalPaidAmount) }}</strong></article><article class="orange"><span>مانده</span><strong>{{ money(summary.remainingAmount) }}</strong></article><article class="red"><span>بدهی باز</span><strong>{{ money(summary.totalDebtAmount) }}</strong></article></div> }
-    <p>بیعانه: {{ money(details.case.depositAmount) }} | مبلغ پرداختی: {{ money(details.case.totalPaidAmount) }}</p>
-    <p>مانده بدهکاری/بستانکاری: {{ money(details.case.balanceAmount) }}</p>
     <form class="finance-edit-grid" [formGroup]="caseEditForm" (ngSubmit)="saveCaseEdit()">
       <app-base-number-input inputId="edit-case-total-amount" label="مبلغ کل" [maxFractionDigits]="3" [value]="caseEditForm.controls.totalAmount.value" (valueChange)="setAmount(caseEditForm.controls.totalAmount, $event)" />
       <app-base-number-input inputId="edit-case-prepayment-amount" label="پیش‌پرداخت" [maxFractionDigits]="3" [value]="caseEditForm.controls.prePaymentAmount.value" (valueChange)="setAmount(caseEditForm.controls.prePaymentAmount, $event)" />

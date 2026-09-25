@@ -409,6 +409,21 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     control.markAsTouched();
   }
   date(value: string | null | undefined): string { return value ? new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(value)) : "—"; }
+  optionalDate(value: string | null | undefined): string { return value ? this.date(value) : ""; }
+  optionalMoney(value: number | null | undefined): string { return value == null ? "" : this.money(value); }
+  caseRowNumber(id: PatientFinancialCaseId): string {
+    if (this.activeTab !== "cases") return "";
+    const index = this.items.findIndex(item => item.id === id);
+    return index < 0 ? "" : String((this.page - 1) * this.pageSize + index + 1);
+  }
+  detailChequeDates(): string {
+    return this.detailCheques.filter(item => item.status !== CommitmentStatus.Cancelled)
+      .map(item => this.optionalDate(item.dueDate)).filter(Boolean).join("، ");
+  }
+  detailChequeRegistrations(): string {
+    return this.detailCheques.filter(item => item.status !== CommitmentStatus.Cancelled)
+      .map(item => item.sayadNumber).filter(Boolean).join("، ");
+  }
   chequeDatesLabel(item: PatientFinancialCase): string {
     return item.chequeDates?.map(value => this.date(value)).join("، ") || "—";
   }
