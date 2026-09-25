@@ -424,6 +424,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     return this.detailCheques.filter(item => item.status !== CommitmentStatus.Cancelled)
       .map(item => item.sayadNumber).filter(Boolean).join("، ");
   }
+  detailNoteSerialNumbers(): string {
+    return this.detailNotes.filter(item => item.status !== CommitmentStatus.Cancelled)
+      .map(item => item.serialNumber).filter(Boolean).join("، ");
+  }
   chequeDatesLabel(item: PatientFinancialCase): string {
     return item.chequeDates?.map(value => this.date(value)).join("، ") || "—";
   }

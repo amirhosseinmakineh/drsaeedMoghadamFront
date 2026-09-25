@@ -33,6 +33,9 @@ export class PatientFinanceDetailsComponent {
   chequeRegistrations(value: PatientFinanceDetails["cases"][number]): string {
     return value.cheques.filter(item => item.status !== 4).map(item => item.sayadNumber).filter(Boolean).join("، ");
   }
+  noteSerialNumbers(value: PatientFinanceDetails["cases"][number]): string {
+    return value.promissoryNotes.filter(item => item.status !== 4).map(item => item.serialNumber).filter(Boolean).join("، ");
+  }
 
   agreementLabel(value: number): string { return value === 1 ? "پیش‌پرداخت" : value === 2 ? "ودیعه" : "نامشخص"; }
   caseStatusLabel(value: number): string { return ({ 1: "فعال", 2: "تسویه‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
