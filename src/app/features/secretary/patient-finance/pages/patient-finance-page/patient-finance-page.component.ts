@@ -84,7 +84,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientDropdownOpen = false;
   newPatientOpen = false;
   creatingPatient = false;
-  private pendingNewPatientFileId: number | null = null;
+  private pendingNewPatientFile: { id: number; fileNumber: number } | null = null;
   private pendingNewPatientKey: string | null = null;
   commitmentModalCase: PatientFinancialCase | null = null;
   commitmentModalItems: Array<PatientCheque | PatientPromissoryNote> = [];
@@ -246,12 +246,12 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       phoneNumber: value.phoneNumber!.trim(),
     };
     const patientKey = JSON.stringify(patient);
-    if (this.pendingNewPatientKey !== patientKey) this.pendingNewPatientFileId = null;
+    if (this.pendingNewPatientKey !== patientKey) this.pendingNewPatientFile = null;
     this.creatingPatient = true;
-    const fileRequest = this.pendingNewPatientFileId
-      ? of({ id: this.pendingNewPatientFileId, fileNumber: 0 })
+    const fileRequest = this.pendingNewPatientFile
+      ? of(this.pendingNewPatientFile)
       : this.patientFilesApi.createPatientFile(patient).pipe(tap(file => {
-        this.pendingNewPatientFileId = file.id;
+        this.pendingNewPatientFile = file;
         this.pendingNewPatientKey = patientKey;
       }));
     fileRequest.pipe(
@@ -269,7 +269,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
         const option: FinancePatientOption = { patientFileId: file.id, financialPatientId: identity.financialPatientId, fileNumber: file.fileNumber, ...patient };
         this.patientOptions = [option, ...this.patientOptions.filter(item => item.patientFileId !== file.id)];
         this.applySelectedPatient(option, identity.financialPatientId);
-        this.pendingNewPatientFileId = null;
+        this.pendingNewPatientFile = null;
         this.pendingNewPatientKey = null;
         this.newPatientForm.reset();
         this.newPatientOpen = false;
