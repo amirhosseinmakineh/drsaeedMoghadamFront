@@ -183,7 +183,11 @@
             </button>
             <button type="button" (click)="setSection('patientFinanceReport')">
               <span><app-fa-icon name="wallet"></app-fa-icon></span>
-              <strong>گزارش حسابداری بیماران</strong>
+              <strong>گزارش مالی بیماران</strong>
+            </button>
+            <button type="button" (click)="setSection('accountingCenter')">
+              <span><app-fa-icon name="wallet"></app-fa-icon></span>
+              <strong>حسابداری جامع</strong>
             </button>
             <button type="button" (click)="setSection('consultantRewards')">
               <span><app-fa-icon name="wallet"></app-fa-icon></span>
@@ -492,6 +496,10 @@
 
         @if (activeSection === "patientFinanceReport") {
           <app-admin-patient-finance-report></app-admin-patient-finance-report>
+        }
+
+        @if (activeSection === "accountingCenter") {
+          <app-admin-accounting-center></app-admin-accounting-center>
         }
 
         @if (activeSection === "consultantRewards") {
