@@ -10,7 +10,7 @@ import {
   BaseSearchFilterComponent, BaseSelectFilterComponent, BaseTablePaginationComponent,
 } from "../../../basemadual";
 import { ToastService } from "../../../core/toast/toast.service";
-import { PatientFile, PatientFileQuery } from "./patient-file.models";
+import { EligiblePatient, PatientFile, PatientFileQuery } from "./patient-file.models";
 import { PatientFilesService } from "./patient-files.service";
 import { SecretaryAccountShellComponent } from "../account/components/secretary-account-shell/secretary-account-shell.component";
 import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/patient-finance-details.component";
@@ -34,6 +34,13 @@ export class PatientFilesPageComponent implements OnInit {
   loading = false;
   loadError = "";
   createOpen = false;
+  eligible: EligiblePatient[] = [];
+  eligibleSearch = "";
+  eligiblePage = 1;
+  eligibleTotal = 0;
+  eligibleLoading = false;
+  selectedPatient: EligiblePatient | null = null;
+  newPatientOpen = false;
   createForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
   creating = false;
   editOpen = false;
@@ -82,11 +89,35 @@ export class PatientFilesPageComponent implements OnInit {
   }
   closeFinance(): void { this.financeFile = null; this.financeError = ""; this.financeRefreshing = false; }
   openCreate(): void {
-    this.createForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
     this.createOpen = true;
+    this.selectedPatient = null;
+    this.eligibleSearch = "";
+    this.eligiblePage = 1;
+    this.loadEligible();
   }
   closeCreate(): void { if (!this.creating) this.createOpen = false; }
+  loadEligible(): void {
+    this.eligibleLoading = true;
+    this.api.getEligiblePatients({ search: this.eligibleSearch, page: this.eligiblePage, pageSize: 8 })
+      .pipe(finalize(() => { this.eligibleLoading = false; this.cdr.markForCheck(); }))
+      .subscribe({ next: (result) => { this.eligible = result.items; this.eligibleTotal = result.totalCount; },
+        error: (error) => this.toast.error(this.errorMessage(error, "دریافت بیماران دارای رزرو انجام نشد.")) });
+  }
+  searchEligible(value: string): void { this.eligibleSearch = value; this.eligiblePage = 1; this.selectedPatient = null; this.loadEligible(); }
+  selectPatient(patient: EligiblePatient): void { this.selectedPatient = patient; }
   create(): void {
+    if (this.creating || !this.selectedPatient) return;
+    this.creating = true;
+    this.api.createFromReservation(this.selectedPatient.id).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
+      .subscribe({ next: (result) => { this.toast.success(`پرونده با شماره ${result.fileNumber} ثبت شد.`); this.createOpen = false; this.loadFiles(); },
+        error: (error) => this.toast.error(this.errorMessage(error, "ثبت پرونده انجام نشد.")) });
+  }
+  openNewPatient(): void {
+    this.createForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
+    this.newPatientOpen = true;
+  }
+  closeNewPatient(): void { if (!this.creating) this.newPatientOpen = false; }
+  createNewPatient(): void {
     if (this.creating || !this.isCreateValid()) return;
     this.creating = true;
     const request = {
@@ -96,7 +127,7 @@ export class PatientFilesPageComponent implements OnInit {
       description: this.createForm.description.trim() || undefined,
     };
     this.api.createPatientFile(request).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: (result) => { this.toast.success(`بیمار با موفقیت ثبت شد. شماره پرونده: ${result.fileNumber}`); this.createOpen = false; this.loadFiles(); },
+      .subscribe({ next: (result) => { this.toast.success(`بیمار با موفقیت ثبت شد. شماره پرونده: ${result.fileNumber}`); this.newPatientOpen = false; this.loadFiles(); },
         error: (error) => this.toast.error(this.errorMessage(error, "ثبت بیمار انجام نشد.")) });
   }
   isCreateValid(): boolean {

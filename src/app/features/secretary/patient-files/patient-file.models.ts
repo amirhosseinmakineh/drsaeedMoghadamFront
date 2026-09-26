@@ -78,3 +78,16 @@ export interface CreatePatientFileRequest {
   phoneNumber: string;
   description?: string;
 }
+
+export interface EligiblePatient {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+}
+
+export interface EligiblePatientQuery {
+  search: string;
+  page: number;
+  pageSize: number;
+}
