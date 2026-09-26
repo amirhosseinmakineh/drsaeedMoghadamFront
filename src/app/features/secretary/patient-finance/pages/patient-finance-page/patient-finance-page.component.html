@@ -27,6 +27,17 @@
           }
           @if (createForm.controls.patientId.touched && createForm.controls.patientId.invalid) { <small class="field-error">انتخاب بیمار الزامی است.</small> }
         </label>
+        <div class="new-patient-entry">
+          <button type="button" class="secondary" (click)="newPatientOpen = !newPatientOpen; patientDropdownOpen = false" [disabled]="creatingPatient">{{ newPatientOpen ? 'بستن ثبت بیمار جدید' : '+ بیمار جدید در فهرست نیست؟' }}</button>
+          @if (newPatientOpen) {
+            <div class="new-patient-fields" [formGroup]="newPatientForm">
+              <label>نام<input formControlName="firstName" autocomplete="given-name" maxlength="100"></label>
+              <label>نام خانوادگی<input formControlName="lastName" autocomplete="family-name" maxlength="100"></label>
+              <label>شماره موبایل<input formControlName="phoneNumber" type="tel" inputmode="numeric" autocomplete="tel" placeholder="09123456789" maxlength="11"></label>
+              <button type="button" class="primary" (click)="createNewPatient()" [disabled]="creatingPatient">{{ creatingPatient ? 'در حال ثبت بیمار…' : 'ثبت و انتخاب بیمار' }}</button>
+            </div>
+          }
+        </div>
         <label>خدمت<select formControlName="serviceId"><option [ngValue]="null">انتخاب خدمت</option>@for (service of services; track service.id) { <option [ngValue]="service.id">{{ service.label }}</option> }</select></label>
         <app-base-number-input inputId="total-amount" label="مبلغ کل درمان" suffix="تومان" [maxFractionDigits]="3" [value]="createForm.controls.totalAmount.value" (valueChange)="setAmount(createForm.controls.totalAmount, $event)" />
         <app-base-number-input inputId="pre-payment-amount" label="مبلغ پیش‌پرداخت" suffix="تومان" [maxFractionDigits]="3" [value]="createForm.controls.prePaymentAmount.value" (valueChange)="setAmount(createForm.controls.prePaymentAmount, $event)" />
@@ -56,7 +67,7 @@
           {{ createFormErrorMessage }}
         </p>
       }
-      <div class="form-actions"><button class="primary" type="submit" [disabled]="submitting">{{ submitting ? 'در حال ثبت…' : 'ثبت پرونده مالی' }}</button><button class="secondary" type="button" (click)="selectTab('cases')">انصراف</button></div>
+      <div class="form-actions"><button class="primary" type="submit" [disabled]="submitting || creatingPatient || resolvingPatientFileId !== null">{{ submitting ? 'در حال ثبت…' : 'ثبت پرونده مالی' }}</button><button class="secondary" type="button" (click)="selectTab('cases')">انصراف</button></div>
     </form>
   } @else {
     <section class="card filters" [formGroup]="filters">
