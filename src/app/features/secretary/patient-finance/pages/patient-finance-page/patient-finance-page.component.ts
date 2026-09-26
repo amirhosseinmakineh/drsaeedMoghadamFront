@@ -3,7 +3,7 @@ import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
-import { finalize, forkJoin, map, Observable, of, Subscription, switchMap } from "rxjs";
+import { finalize, forkJoin, map, Observable, of, Subscription, switchMap, tap } from "rxjs";
 import { ToastService } from "../../../../../core/toast/toast.service";
 import { PersianDatePickerComponent } from "../../../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
 import { BaseNumberInputComponent } from "../../../../../basemadual/forms/number-input/number-input.component";
@@ -82,6 +82,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   patientOptionsLoading = false;
   resolvingPatientFileId: number | null = null;
   patientDropdownOpen = false;
+  newPatientOpen = false;
+  creatingPatient = false;
+  private pendingNewPatientFileId: number | null = null;
+  private pendingNewPatientKey: string | null = null;
   commitmentModalCase: PatientFinancialCase | null = null;
   commitmentModalItems: Array<PatientCheque | PatientPromissoryNote> = [];
   commitmentModalLoading = false;
@@ -92,6 +96,11 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private patientSearchSubscription: Subscription | null = null;
 
   readonly filters = this.fb.group({ search: [""], status: [null as number | null], sourceType: [null as number | null], fromDate: [null as Date | null], toDate: [null as Date | null] });
+  readonly newPatientForm = this.fb.group({
+    firstName: ["", [Validators.required, Validators.maxLength(100)]],
+    lastName: ["", [Validators.required, Validators.maxLength(100)]],
+    phoneNumber: ["", [Validators.required, Validators.pattern(/^09\d{9}$/)]],
+  });
   readonly createForm = this.fb.group({
     patientId: this.fb.control<string | null>(null, [Validators.required, Validators.pattern(GUID_PATTERN)]),
     serviceId: [null as number | null, Validators.required],
@@ -223,6 +232,52 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       error: (error: HttpErrorResponse) => this.showError(error),
     });
   }
+  createNewPatient(): void {
+    if (this.creatingPatient) return;
+    if (this.newPatientForm.invalid) {
+      this.newPatientForm.markAllAsTouched();
+      this.toast.error("نام، نام خانوادگی و شماره موبایل ۱۱ رقمی بیمار را وارد کنید.");
+      return;
+    }
+    const value = this.newPatientForm.getRawValue();
+    const patient = {
+      firstName: value.firstName!.trim(),
+      lastName: value.lastName!.trim(),
+      phoneNumber: value.phoneNumber!.trim(),
+    };
+    const patientKey = JSON.stringify(patient);
+    if (this.pendingNewPatientKey !== patientKey) this.pendingNewPatientFileId = null;
+    this.creatingPatient = true;
+    const fileRequest = this.pendingNewPatientFileId
+      ? of({ id: this.pendingNewPatientFileId, fileNumber: 0 })
+      : this.patientFilesApi.createPatientFile(patient).pipe(tap(file => {
+        this.pendingNewPatientFileId = file.id;
+        this.pendingNewPatientKey = patientKey;
+      }));
+    fileRequest.pipe(
+      switchMap(file => this.patientFilesApi.ensureFinancialIdentity(file.id).pipe(
+        map(identity => ({ file, identity })),
+      )),
+      finalize(() => { this.creatingPatient = false; this.cdr.markForCheck(); }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: ({ file, identity }) => {
+        if (!GUID_PATTERN.test(identity.financialPatientId)) {
+          this.toast.error("شناسه مالی معتبر برای بیمار ایجاد نشد. دوباره تلاش کنید.");
+          return;
+        }
+        const option: FinancePatientOption = { patientFileId: file.id, financialPatientId: identity.financialPatientId, fileNumber: file.fileNumber, ...patient };
+        this.patientOptions = [option, ...this.patientOptions.filter(item => item.patientFileId !== file.id)];
+        this.applySelectedPatient(option, identity.financialPatientId);
+        this.pendingNewPatientFileId = null;
+        this.pendingNewPatientKey = null;
+        this.newPatientForm.reset();
+        this.newPatientOpen = false;
+        this.toast.success("بیمار ثبت و برای پرونده مالی انتخاب شد.");
+      },
+      error: (error: HttpErrorResponse) => this.showError(error),
+    });
+  }
   private applySelectedPatient(patient: FinancePatientOption, financialPatientId: PatientGuid): void {
     this.selectedFinancialPatientId = financialPatientId;
     this.createForm.controls.patientId.setValue(financialPatientId);
@@ -306,7 +361,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   }
 
   submitCase(): void {
-    if (this.submitting) return;
+    if (this.submitting || this.creatingPatient || this.resolvingPatientFileId !== null) return;
     this.createSubmitAttempted = true;
     if (!this.selectedFinancialPatientId || !GUID_PATTERN.test(this.selectedFinancialPatientId) || this.createForm.invalid) {
       this.createForm.markAllAsTouched();
