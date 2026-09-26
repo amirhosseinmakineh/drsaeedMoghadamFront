@@ -99,6 +99,15 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     prePaymentAmount: [0, Validators.required],
     depositAmount: [0, Validators.required],
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
+    paymentMethod: [null as string | null],
+    installmentStatus: [null as string | null],
+    guaranteeDocument: [null as string | null],
+    guaranteeDate: [null as string | null],
+    guaranteeAmount: [null as number | null],
+    guaranteeChequeRegistration: [null as string | null],
+    notes: [null as string | null],
+    consultantName: [null as string | null],
+    reviewItems: [null as string | null],
     cheques: this.fb.array([]), promissoryNotes: this.fb.array([]),
   }, { validators: [commitmentRequired, agreedAmountsWithinTotal] });
   // Kept as typed compatibility containers so older merged templates/helpers compile safely.
@@ -110,6 +119,15 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     prePaymentAmount: [0, Validators.required],
     depositAmount: [0, Validators.required],
     agreementType: [FinancialAgreementType.Deposit, Validators.required],
+    paymentMethod: [null as string | null],
+    installmentStatus: [null as string | null],
+    guaranteeDocument: [null as string | null],
+    guaranteeDate: [null as string | null],
+    guaranteeAmount: [null as number | null],
+    guaranteeChequeRegistration: [null as string | null],
+    notes: [null as string | null],
+    consultantName: [null as string | null],
+    reviewItems: [null as string | null],
   }, { validators: agreedAmountsWithinTotal });
 
 
@@ -229,7 +247,6 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   addNote(): void { this.notes.push(this.fb.group({ serialNumber: ["", [Validators.required, Validators.pattern(PROMISSORY_NOTE_SERIAL_PATTERN)]], amount: [null, Validators.required], dueDate: [null as Date | null, [Validators.required, todayOrLater]] })); this.createForm.updateValueAndValidity(); }
   removeCheque(index: number): void { this.cheques.removeAt(index); this.createForm.updateValueAndValidity(); }
   removeNote(index: number): void { this.notes.removeAt(index); this.createForm.updateValueAndValidity(); }
-  onCreateAgreementChange(): void { this.clearInactiveAgreementAmount(this.createForm); }
   applyFilters(): void {
     this.page = 1; this.load();
   }
@@ -299,7 +316,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, guaranteeDate: value.guaranteeDate, guaranteeAmount: value.guaranteeAmount, guaranteeChequeRegistration: value.guaranteeChequeRegistration, notes: value.notes, consultantName: value.consultantName, reviewItems: value.reviewItems, cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: PatientFinancialCaseId): void {
@@ -317,6 +334,15 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
         prePaymentAmount: details.case.prePaymentAmount,
         depositAmount: details.case.depositAmount,
         agreementType: details.case.agreementType,
+        paymentMethod: details.case.paymentMethod ?? null,
+        installmentStatus: details.case.installmentStatus ?? null,
+        guaranteeDocument: details.case.guaranteeDocument ?? null,
+        guaranteeDate: details.case.guaranteeDate?.slice(0, 10) ?? null,
+        guaranteeAmount: details.case.guaranteeAmount ?? null,
+        guaranteeChequeRegistration: details.case.guaranteeChequeRegistration ?? null,
+        notes: details.case.notes ?? null,
+        consultantName: details.case.consultantName ?? null,
+        reviewItems: details.case.reviewItems ?? null,
       });
       this.buildCommitmentEditForms();
     }, error: (e) => this.showError(e) });
@@ -330,6 +356,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.mutate(this.details.case.id, this.api.updateCase(this.details.case.id, {
       totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount),
       depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType),
+      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, guaranteeDate: value.guaranteeDate, guaranteeAmount: value.guaranteeAmount, guaranteeChequeRegistration: value.guaranteeChequeRegistration, notes: value.notes, consultantName: value.consultantName, reviewItems: value.reviewItems,
     }), "حسابداری بیمار و همه جمع‌ها به‌روزرسانی شد.");
   }
   saveCheque(index: number): void {
@@ -382,6 +409,28 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     control.markAsTouched();
   }
   date(value: string | null | undefined): string { return value ? new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(value)) : "—"; }
+  optionalDate(value: string | null | undefined): string { return value ? this.date(value) : ""; }
+  optionalMoney(value: number | null | undefined): string { return value == null ? "" : this.money(value); }
+  caseRowNumber(id: PatientFinancialCaseId): string {
+    if (this.activeTab !== "cases") return "";
+    const index = this.items.findIndex(item => item.id === id);
+    return index < 0 ? "" : String((this.page - 1) * this.pageSize + index + 1);
+  }
+  detailChequeDates(): string {
+    return this.detailCheques.filter(item => item.status !== CommitmentStatus.Cancelled)
+      .map(item => this.optionalDate(item.dueDate)).filter(Boolean).join("، ");
+  }
+  detailChequeRegistrations(): string {
+    return this.detailCheques.filter(item => item.status !== CommitmentStatus.Cancelled)
+      .map(item => item.sayadNumber).filter(Boolean).join("، ");
+  }
+  detailNoteSerialNumbers(): string {
+    return this.detailNotes.filter(item => item.status !== CommitmentStatus.Cancelled)
+      .map(item => item.serialNumber).filter(Boolean).join("، ");
+  }
+  chequeDatesLabel(item: PatientFinancialCase): string {
+    return item.chequeDates?.map(value => this.date(value)).join("، ") || "—";
+  }
   statusLabel(value: number): string { return ({ 1: "در انتظار", 2: "پرداخت‌شده", 3: "پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
   isCommitmentDue(value: string | null | undefined): boolean {
     if (!value) return false;
@@ -413,10 +462,6 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     const month = String(value.getMonth() + 1).padStart(2, "0");
     const day = String(value.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
-  }
-  private clearInactiveAgreementAmount(form: typeof this.createForm): void {
-    if (form.controls.agreementType.value === FinancialAgreementType.PrePayment) form.controls.depositAmount.setValue(0);
-    else form.controls.prePaymentAmount.setValue(0);
   }
   private buildCommitmentEditForms(): void {
     this.chequeEditForms.clear();

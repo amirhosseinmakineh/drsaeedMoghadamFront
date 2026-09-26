@@ -6,6 +6,8 @@ import { environment } from "../../../../environments/environment";
 import {
   CreatePatientFileRequest,
   CreatePatientFileResult,
+  EligiblePatient,
+  EligiblePatientQuery,
   ImportPatientFilesResult,
   PagedResult,
   PatientFile,
@@ -39,6 +41,18 @@ export class PatientFilesService {
   createPatientFile(request: CreatePatientFileRequest): Observable<CreatePatientFileResult> {
     return this.http.post<unknown>(this.endpoint, request, { headers: this.authHeaders() })
       .pipe(map((response) => this.data<CreatePatientFileResult>(response)));
+  }
+
+  getEligiblePatients(query: EligiblePatientQuery): Observable<PagedResult<EligiblePatient>> {
+    return this.http.get<unknown>(`${this.endpoint}/eligible-patients`, {
+      headers: this.authHeaders(), params: this.params(query),
+    }).pipe(map((response) => this.page<EligiblePatient>(response, query.page, query.pageSize)));
+  }
+
+  createFromReservation(patientId: number): Observable<CreatePatientFileResult> {
+    return this.http.post<unknown>(`${this.endpoint}/from-reservation`, { patientId }, {
+      headers: this.authHeaders(),
+    }).pipe(map((response) => this.data<CreatePatientFileResult>(response)));
   }
 
   ensureFinancialIdentity(patientFileId: number): Observable<PatientFileFinancialIdentity> {
