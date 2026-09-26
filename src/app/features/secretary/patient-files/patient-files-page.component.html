@@ -4,6 +4,7 @@
     <app-base-page-header title="پرونده‌های بیمار" subtitle="مدیریت پرونده‌های جدید و قدیمی بیماران" (back)="location.back()">
       <app-base-button variant="secondary" (pressed)="importOpen = true; importFile = null; importErrors = []">ورود پرونده‌های قدیمی از اکسل</app-base-button>
       <app-base-button (pressed)="openCreate()">ایجاد پرونده جدید</app-base-button>
+      <app-base-button variant="secondary" (pressed)="openNewPatient()">افزودن بیمار جدید</app-base-button>
     </app-base-page-header>
 
     <app-base-filter-bar [disabled]="loading" (apply)="loadFiles()" (reset)="resetFilters()">
@@ -46,8 +47,19 @@
 </app-base-page-shell>
 </app-secretary-account-shell>
 
-<app-base-modal [open]="createOpen" title="افزودن بیمار" [closeOnBackdrop]="!creating" (close)="closeCreate()">
-  <form class="create-form" (ngSubmit)="create()">
+<app-base-modal [open]="createOpen" title="ایجاد پرونده جدید" [closeOnBackdrop]="!creating" (close)="closeCreate()">
+  <app-base-search-filter label="جستجوی بیمار" placeholder="نام، نام خانوادگی یا شماره تماس" [value]="eligibleSearch" (valueChange)="searchEligible($event)" />
+  @if (eligibleLoading) { <app-base-loading label="در حال دریافت بیماران دارای رزرو…" /> }
+  @else if (!eligible.length) { <app-base-empty-state title="بیمار دارای رزرو بدون پرونده‌ای پیدا نشد." /> }
+  @else { <div class="patient-list">@for (patient of eligible; track patient.id) {
+    <button type="button" [class.selected]="selectedPatient?.id === patient.id" (click)="selectPatient(patient)"><strong>{{ patient.firstName }} {{ patient.lastName }}</strong><span dir="ltr">{{ patient.phoneNumber }}</span></button>
+  }</div><app-base-table-pagination [currentPage]="eligiblePage" [pageSize]="8" [totalCount]="eligibleTotal" (pageChange)="eligiblePage = $event; loadEligible()" /> }
+  @if (selectedPatient) { <section class="selected-summary"><h3>بیمار انتخاب‌شده</h3><dl><div><dt>نام</dt><dd>{{ selectedPatient.firstName }}</dd></div><div><dt>نام خانوادگی</dt><dd>{{ selectedPatient.lastName }}</dd></div><div><dt>شماره تماس</dt><dd dir="ltr">{{ selectedPatient.phoneNumber }}</dd></div></dl><p>شماره پرونده پس از ثبت توسط سیستم صادر می‌شود.</p></section> }
+  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeCreate()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">ثبت پرونده</app-base-button></div>
+</app-base-modal>
+
+<app-base-modal [open]="newPatientOpen" title="افزودن بیمار" [closeOnBackdrop]="!creating" (close)="closeNewPatient()">
+  <form class="create-form" (ngSubmit)="createNewPatient()">
     <label>نام<input required maxlength="100" [(ngModel)]="createForm.firstName" name="createFirstName" /></label>
     <label>نام خانوادگی<input required maxlength="100" [(ngModel)]="createForm.lastName" name="createLastName" /></label>
     <label>شماره موبایل<input required maxlength="11" inputmode="numeric" dir="ltr" placeholder="09xxxxxxxxx"
@@ -56,7 +68,7 @@
       [(ngModel)]="createForm.description" name="createDescription"></textarea></label>
     <p class="form-hint">این بیمار فقط در فهرست شما ثبت می‌شود و به هیچ مشاوری متصل نخواهد شد.</p>
   </form>
-  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeCreate()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="create()">ثبت بیمار</app-base-button></div>
+  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeNewPatient()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="createNewPatient()">ثبت بیمار</app-base-button></div>
 </app-base-modal>
 
 <app-base-modal [open]="editOpen" title="ویرایش پرونده" [closeOnBackdrop]="!updating" (close)="closeEdit()">
