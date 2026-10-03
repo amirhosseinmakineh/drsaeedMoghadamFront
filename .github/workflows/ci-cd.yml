@@ -1,0 +1,49 @@
+name: Frontend CI/CD - Liara
+
+on:
+  pull_request:
+  push:
+    branches: [stage, production]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Build and validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:seo
+      - run: npx ng build demo --configuration ${{ github.ref_name == 'stage' && 'stage' || 'production' }}
+
+  deploy:
+    name: Deploy to Liara
+    needs: ci
+    if: github.event_name == 'push' && (github.ref_name == 'stage' || github.ref_name == 'production')
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --global @liara/cli@latest
+      - name: Deploy frontend SSR app
+        env:
+          LIARA_TOKEN: ${{ secrets.LIARA_API_TOKEN }}
+          LIARA_APP: ${{ vars.LIARA_FRONTEND_APP }}
+        run: |
+          test -n "$LIARA_TOKEN" || (echo 'Missing LIARA_API_TOKEN' && exit 1)
+          test -n "$LIARA_APP" || (echo 'Missing LIARA_FRONTEND_APP' && exit 1)
+          liara deploy --api-token="$LIARA_TOKEN" --app="$LIARA_APP" --platform=node --port=3000 --detach
