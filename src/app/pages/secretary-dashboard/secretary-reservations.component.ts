@@ -30,6 +30,7 @@ import { createCoalescedMarkForCheck } from "../../shared/change-detection/coale
 import { SecretaryDashboardPreset } from "./secretary-overview.component";
 import { formatReservationTime } from "../../utils/iran-datetime.util";
 import { ReservationSyncService } from "../../core/reservation/reservation-sync.service";
+import { BaseDatepickerComponent } from "../../shared/base";
 
 export type SecretaryReservationTab =
   | "queue"
@@ -41,7 +42,7 @@ export type SecretaryReservationTab =
 @Component({
   selector: "app-secretary-reservations",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-reservations.component.html",
   styleUrl: "./secretary-reservations.component.scss",
@@ -64,6 +65,8 @@ export class SecretaryReservationsComponent
   feedbackType: "success" | "error" = "success";
   statusFilter: AttendanceConfirmationStatus | null = null;
   reservationTypeFilter: ReservationType | null = null;
+    fromDate: Date | null = null;
+    toDate: Date | null = null;
   readonly reservationTypeOptions = [
     { value: ReservationType.Regular, label: "رزرو عادی" },
     { value: ReservationType.AfterSalesService, label: "خدمات پس از درمان" },
@@ -169,10 +172,16 @@ export class SecretaryReservationsComponent
     const expected = preset === "secretary-confirmed" ? "Confirmed" :
       preset === "secretary-no-answer" ? "NoAnswer" :
       preset === "secretary-cancelled" ? "CancelledByPatient" : "NotCalled";
-    return activeItems.filter((item) =>
-      (item.secretaryAnnouncementStatus ?? item.SecretaryAnnouncementStatus ?? "NotCalled") === expected,
-    );
-  }
+      const from = this.toDateParam(this.fromDate);
+      const to = this.toDateParam(this.toDate);
+      return activeItems.filter((item) => {
+          const status = item.secretaryAnnouncementStatus ?? item.SecretaryAnnouncementStatus ?? "NotCalled";
+          if (status !== expected) return false;
+          if (!from && !to) return true;
+          const day = this.reservationDay(item);
+          return !!day && (!from || day >= from) && (!to || day <= to);
+      }
+      )}
 
   setTab(tab: SecretaryReservationTab): void {
     if (this.activeTab === tab) return;
@@ -196,7 +205,59 @@ export class SecretaryReservationsComponent
     }
     this.pageNumber = 1;
     this.load();
-  }
+    }
+
+    onFromDateChange(date: Date | null): void {
+        this.fromDate = date;
+        this.applyDateFilters();
+    }
+
+    onToDateChange(date: Date | null): void {
+        this.toDate= date;
+        this.applyDateFilters();
+    }
+
+    clearDateFilters(): void {
+        this.fromDate = null;
+        this.toDate = null;
+        this.applyFilters({});
+    }
+
+    dateFilterLabel(): string {
+        if (this.fromDate && this.toDate) return "بازه تاریخ انتخاب شده";
+        if (this.fromDate || this.toDate) return "یک تاریخ انتخاب شده";
+        return "فیلتر تاریخ";
+    }
+
+    applyDateFilters(): void {
+        const from = this.toDateParam(this.fromDate);
+        const to = this.toDateParam(this.toDate);
+        if (from && to && from > to) {
+            this.showFeedback("تاریخ شروع نباید بعد از تاریخ پایان باشد", "error");
+            return;
+        }
+        this.applyFilters({});
+    }
+
+    private toDateParam(value: Date | null): string | undefined {
+        if (!value) return undefined;
+        const year = value.getFullYear();
+        const month = `${value.getMonth() + 1}`.padStart(2, "0");
+        const day = `${value.getDate()}`.padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    private dateParam() {
+        const from = this.toDateParam(this.fromDate);
+        const to = this.toDateParam(this.toDate);
+        return { fromDate: from, toDate: to,from,to };
+    }
+
+    private reservationDay(item: SecretaryReservation): string {
+        const date = new Date(this.reservationAt(item));
+        return Number.isFinite(date.getTime())
+            ? date.toLocaleDateString("en-CA", { timeZone: "Asia/Tehran" }) : "";
+    }
 
   load(): void {
     if (!this.profileReady) return;
@@ -248,7 +309,8 @@ export class SecretaryReservationsComponent
           pageSize: this.pageSize,
           searchText: this.searchText.trim() || undefined,
           attendanceConfirmationStatus: this.statusFilter,
-          reservationType: this.reservationTypeFilter,
+            reservationType: this.reservationTypeFilter,
+            ...this.dateParam(),
         })
         .pipe(
           finalize(() => {
@@ -277,12 +339,16 @@ export class SecretaryReservationsComponent
         approved: this.secretaryApi.getReservations({
           includeCanceled: false,
           pageNumber: this.pageNumber,
-          pageSize: this.pageSize,
+            pageSize: this.pageSize,
+            ...this.dateParam(),
+
         }),
         rejected: this.secretaryApi.getReservations({
           includeCanceled: false,
           pageNumber: this.pageNumber,
-          pageSize: this.pageSize,
+            pageSize: this.pageSize,
+            ...this.dateParam(),
+
         }),
       })
         .pipe(
@@ -337,7 +403,9 @@ export class SecretaryReservationsComponent
             : this.activeTab === "after-sales"
               ? ReservationType.AfterSalesService
               : null,
-        sortDirection: "asc",
+          sortDirection: "asc",
+          ...this.dateParam(),
+
       })
       .pipe(
         finalize(() => {
