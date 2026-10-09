@@ -9,7 +9,7 @@
     "check:secretary-template": "node scripts/validate-secretary-reservations-template.mjs",
     "generate:webpush": "node scripts/generate-webpush-config.mjs",
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
-    "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
+    "start": "node dist/demo/server/server.mjs",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
     "optimize:images": "python3 scripts/optimize-images.py"
   },
