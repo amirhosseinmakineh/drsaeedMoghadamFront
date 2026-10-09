@@ -1,1 +1,42 @@
-<section class="lead-sheets admin-panel"><header><div><span class="eyebrow">مدیریت لید</span><h2>شیت لید ادمین</h2><p>لیدها پس از ثبت، به‌صورت خودکار وارد چرخه تخصیص سیستم می‌شوند.</p></div></header><div class="sheet-grid"><form (ngSubmit)="createSheet()"><h3>ساخت شیت جدید</h3><label>نام شیت<input name="sheetName" [(ngModel)]="sheetName" placeholder="مثلاً کمپین مهر" required></label><button class="primary-filter" [disabled]="saving">ساخت شیت</button></form><form (ngSubmit)="addLead()"><h3>افزودن لید</h3><label>شناسه شیت<input type="number" name="sheetId" [(ngModel)]="selectedSheetId" required></label><label>شماره تلفن<input name="phone" [(ngModel)]="phoneNumber" inputmode="tel" required></label><div class="two"><label>نام<input name="first" [(ngModel)]="firstName" required></label><label>نام خانوادگی<input name="last" [(ngModel)]="lastName" required></label></div><button class="primary-filter" [disabled]="!selectedSheetId">ثبت لید</button></form></div>@if(createdSheet){<div class="created">شیت فعال: <strong>{{createdSheet.name}}</strong> — شناسه {{createdSheet.id}}</div>}</section>
+<section class="lead-sheets admin-panel">
+  <header class="section-header">
+    <div>
+      <span class="eyebrow">مدیریت لید</span>
+      <h2>شیت لید ادمین</h2>
+      <p>شماره‌های ثبت‌شده پس از پردازش، با همان چرخه تخصیص لید یکتانت به مشاوران ارسال می‌شوند.</p>
+    </div>
+  </header>
+
+  <div class="sheet-grid">
+    <form class="panel-card" (ngSubmit)="createSheet()">
+      <h3>ساخت شیت جدید</h3>
+      <p class="hint">ابتدا یک شیت برای کمپین یا منبع موردنظر بسازید.</p>
+      <label>نام شیت
+        <input name="sheetName" [(ngModel)]="sheetName" placeholder="مثلاً کمپین مهر" maxlength="150" required>
+      </label>
+      <button class="primary-filter" type="submit" [disabled]="creatingSheet || !sheetName.trim()">
+        {{ creatingSheet ? "در حال ساخت..." : "ساخت شیت" }}
+      </button>
+    </form>
+
+    <form class="panel-card" (ngSubmit)="addLead()">
+      <h3>افزودن لید به شیت فعال</h3>
+      @if (activeSheet) {
+        <div class="active-sheet"><span>شیت فعال</span><strong>{{ activeSheet.name }}</strong><small>شناسه: {{ activeSheet.id }}</small></div>
+        <label>شماره تلفن
+          <input name="phone" [(ngModel)]="phoneNumber" inputmode="tel" dir="ltr" placeholder="09123456789" required>
+        </label>
+        <div class="two">
+          <label>نام<input name="firstName" [(ngModel)]="firstName" required></label>
+          <label>نام خانوادگی<input name="lastName" [(ngModel)]="lastName" required></label>
+        </div>
+        <p class="hint">اگر شماره قبلاً در LeadAssignments باشد، بک‌اند خطای تکراری برمی‌گرداند.</p>
+        <button class="primary-filter" type="submit" [disabled]="addingLead || !isLeadValid()">
+          {{ addingLead ? "در حال ثبت..." : "ثبت لید" }}
+        </button>
+      } @else {
+        <div class="empty-state">برای افزودن لید، ابتدا شیت جدید بسازید.</div>
+      }
+    </form>
+  </div>
+</section>
