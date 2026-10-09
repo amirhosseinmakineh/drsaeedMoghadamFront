@@ -463,13 +463,14 @@ export interface PatientFinanceReportItem {
   notes?: string | null;
   consultantName?: string | null;
   reviewItems?: string | null;
+  toothUnitCount?: number | null;
   caseId: string;
   patientId: string;
   patientName: string;
   phoneNumber: string;
   fileNumber: string;
-  serviceId: number;
-  serviceName: string;
+  serviceIds: number[];
+  serviceNames: string[];
   totalAmount: number;
   prePaymentAmount: number;
   depositAmount: number;
@@ -514,6 +515,7 @@ export interface UpdatePatientFinanceRequest {
   notes?: string | null;
   consultantName?: string | null;
   reviewItems?: string | null;
+  toothUnitCount?: number | null;
   totalAmount: number;
   prePaymentAmount: number;
   depositAmount: number;
