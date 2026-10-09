@@ -181,6 +181,10 @@
               <span><app-fa-icon name="clipboard"></app-fa-icon></span>
               <strong>مدیریت تخصیص لیدها</strong>
             </button>
+            <button type="button" (click)="setSection('leadSheets')">
+              <span><app-fa-icon name="table"></app-fa-icon></span>
+              <strong>شیت‌های لید ادمین</strong>
+            </button>
             <button type="button" (click)="setSection('patientFinanceReport')">
               <span><app-fa-icon name="wallet"></app-fa-icon></span>
               <strong>گزارش مالی بیماران</strong>
@@ -492,6 +496,10 @@
 
         @if (activeSection === "leadAssignmentSettings") {
           <app-admin-lead-assignment-settings></app-admin-lead-assignment-settings>
+        }
+
+        @if (activeSection === "leadSheets") {
+          <app-admin-lead-sheets></app-admin-lead-sheets>
         }
 
         @if (activeSection === "patientFinanceReport") {

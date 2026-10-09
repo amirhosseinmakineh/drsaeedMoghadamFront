@@ -38,6 +38,7 @@ import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consul
 import { AdminSecretarySaleServicesComponent } from "../admin-dashboard/admin-secretary-sale-services.component";
 import { AdminSecretarySalesApprovalComponent } from "../admin-dashboard/admin-secretary-sales-approval.component";
 import { AdminLeadAssignmentSettingsComponent } from "../admin-dashboard/admin-lead-assignment-settings.component";
+import { AdminLeadSheetsComponent } from "../admin-dashboard/admin-lead-sheets.component";
 import { AdminPatientFinanceReportComponent } from "../admin-dashboard/admin-patient-finance-report.component";
 import { AdminConsultantRewardsComponent } from "../admin-dashboard/admin-consultant-rewards.component";
 import { AdminPatientReferralsComponent } from "../../features/patient-referrals/admin/pages/admin-patient-referrals/admin-patient-referrals.component";
@@ -81,7 +82,8 @@ type DashboardSection =
   | "patientFinanceReport"
   | "accountingCenter"
   | "consultantRewards"
-  | "patientReferrals";
+  | "patientReferrals"
+  | "leadSheets";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -126,6 +128,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "accountingCenter",
   "consultantRewards",
   "patientReferrals",
+  "leadSheets",
 ];
 
 @Component({
@@ -147,6 +150,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminSecretarySaleServicesComponent,
     AdminSecretarySalesApprovalComponent,
     AdminLeadAssignmentSettingsComponent,
+    AdminLeadSheetsComponent,
     AdminPatientFinanceReportComponent,
     AdminAccountingCenterComponent,
     AdminConsultantRewardsComponent,
@@ -175,6 +179,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "secretarySaleServices", label: "خدمات فروش منشی", icon: "list" },
     { id: "secretarySales", label: "فروش‌های منشی‌ها", icon: "wallet" },
     { id: "leadAssignmentSettings", label: "مدیریت تخصیص لیدها", icon: "clipboard" },
+    { id: "leadSheets", label: "شیت‌های لید ادمین", icon: "table" },
     { id: "patientFinanceReport", label: "گزارش مالی بیماران", icon: "wallet" },
     { id: "accountingCenter", label: "حسابداری جامع", icon: "wallet" },
     { id: "consultantRewards", label: "پاداش مشاوران", icon: "wallet" },
