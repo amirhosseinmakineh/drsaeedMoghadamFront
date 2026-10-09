@@ -52,7 +52,7 @@
       <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
       <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
       <label>سند تضمین<input  formControlName="guaranteeDocument"></label>
-      <label>تاریخ ضمانت<input type="date" formControlName="guaranteeDate"></label>
+      <app-base-persian-date-picker label="تاریخ ضمانت" [value]="datePickerValue(createForm.controls.guaranteeDate.value)" (valueChange)="setDateControl(createForm.controls.guaranteeDate, $event)" />
       <label>مبلغ ضمانت<input type="number" min="0" formControlName="guaranteeAmount"></label>
       <label>ثبت چک ضمانت<input  formControlName="guaranteeChequeRegistration"></label>
       <label>توضیحات<input  formControlName="notes"></label>
@@ -160,7 +160,7 @@
       <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
       <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
       <label>سند تضمین<input  formControlName="guaranteeDocument"></label>
-      <label>تاریخ ضمانت<input type="date" formControlName="guaranteeDate"></label>
+      <app-base-persian-date-picker label="تاریخ ضمانت" [value]="datePickerValue(caseEditForm.controls.guaranteeDate.value)" (valueChange)="setDateControl(caseEditForm.controls.guaranteeDate, $event)" />
       <label>مبلغ ضمانت<input type="number" min="0" formControlName="guaranteeAmount"></label>
       <label>ثبت چک ضمانت<input  formControlName="guaranteeChequeRegistration"></label>
       <label>توضیحات<input  formControlName="notes"></label>

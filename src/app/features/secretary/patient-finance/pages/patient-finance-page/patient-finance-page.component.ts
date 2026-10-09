@@ -472,6 +472,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     if (labels.length) return labels.join("، ");
     return (serviceNames ?? []).filter(Boolean).join("، ") || "—";
   }
+  datePickerValue(value: string | null): Date | null { return value ? new Date(value) : null; }
+
+  setDateControl(control: AbstractControl, value: Date | null): void { control.setValue(value ? value.toISOString() : null); }
+
   private iso(value: Date): string { return value.toISOString(); }
   private apiDate(value: Date | null): string | null {
     if (!value) return null;
