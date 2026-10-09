@@ -421,6 +421,7 @@ export interface DailyReservationsReport {
 }
 
 export interface LeadFilters {
+  searchText?: string;
   profileId?: number;
   leadAssignmentState?: number | null;
   leadAssignmentType?: number | null;
