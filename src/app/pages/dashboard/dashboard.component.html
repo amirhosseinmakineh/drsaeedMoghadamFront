@@ -169,34 +169,6 @@
               <span><app-fa-icon name="table"></app-fa-icon></span>
               <strong>رزروهای روزانه</strong>
             </button>
-            <button type="button" (click)="setSection('secretarySaleServices')">
-              <span><app-fa-icon name="list"></app-fa-icon></span>
-              <strong>خدمات فروش منشی</strong>
-            </button>
-            <button type="button" (click)="setSection('secretarySales')">
-              <span><app-fa-icon name="wallet"></app-fa-icon></span>
-              <strong>تأیید فروش‌های منشی</strong>
-            </button>
-            <button type="button" (click)="setSection('leadAssignmentSettings')">
-              <span><app-fa-icon name="clipboard"></app-fa-icon></span>
-              <strong>مدیریت تخصیص لیدها</strong>
-            </button>
-            <button type="button" (click)="setSection('patientFinanceReport')">
-              <span><app-fa-icon name="wallet"></app-fa-icon></span>
-              <strong>گزارش مالی بیماران</strong>
-            </button>
-            <button type="button" (click)="setSection('accountingCenter')">
-              <span><app-fa-icon name="wallet"></app-fa-icon></span>
-              <strong>حسابداری جامع</strong>
-            </button>
-            <button type="button" (click)="setSection('consultantRewards')">
-              <span><app-fa-icon name="wallet"></app-fa-icon></span>
-              <strong>تأیید پاداش مشاوران</strong>
-            </button>
-            <button type="button" (click)="setSection('patientReferrals')">
-              <span><app-fa-icon name="users"></app-fa-icon></span>
-              <strong>گزارش رفرال بیماران</strong>
-            </button>
           </section>
         }
 
@@ -467,7 +439,10 @@
         }
 
         @if (activeSection === "leads") {
-          <app-admin-leads-table mode="system" title="مدیریت همه درخواست‌های مشاوره"></app-admin-leads-table>
+          <app-admin-leads-table
+            mode="system"
+            title="مدیریت همه درخواست‌های مشاوره"
+          ></app-admin-leads-table>
         }
 
         @if (activeSection === "leadReports") {
@@ -478,41 +453,16 @@
           <app-admin-leads-report></app-admin-leads-report>
         }
 
+        @if (activeSection === "leadSheets") {
+          <app-admin-lead-sheets></app-admin-lead-sheets>
+        }
+
         @if (activeSection === "dailyReservationsReport") {
           <app-admin-daily-reservations-report></app-admin-daily-reservations-report>
         }
 
-        @if (activeSection === "secretarySaleServices") {
-          <app-admin-secretary-sale-services></app-admin-secretary-sale-services>
-        }
-
-        @if (activeSection === "secretarySales") {
-          <app-admin-secretary-sales-approval></app-admin-secretary-sales-approval>
-        }
-
-        @if (activeSection === "leadAssignmentSettings") {
-          <app-admin-lead-assignment-settings></app-admin-lead-assignment-settings>
-        }
-
-        @if (activeSection === "patientFinanceReport") {
-          <app-admin-patient-finance-report></app-admin-patient-finance-report>
-        }
-
-        @if (activeSection === "accountingCenter") {
-          <app-admin-accounting-center></app-admin-accounting-center>
-        }
-
-        @if (activeSection === "consultantRewards") {
-          <app-admin-consultant-rewards></app-admin-consultant-rewards>
-        }
-
-        @if (activeSection === "patientReferrals") {
-          <app-admin-patient-referrals></app-admin-patient-referrals>
-        }
-
       </section>
     } @else {
-      @if (activeSection === "overview") {
       <div class="dashboard-hero">
         <span>{{ roleLabel() }}</span>
         <h2>{{ displayName() }}</h2>
@@ -537,11 +487,6 @@
           <strong>{{ dashboardTitle() }}</strong>
         </article>
       </div>
-      }
-
-      @if (activeSection === "patientReferrals") {
-        <app-patient-referral-dashboard></app-patient-referral-dashboard>
-      }
     }
   </main>
 

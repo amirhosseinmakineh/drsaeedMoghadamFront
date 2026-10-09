@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 10365)
+Total output lines: 1261
+
 import { CommonModule } from "@angular/common";
 import {
   ChangeDetectionStrategy,
@@ -35,14 +38,7 @@ import { AdminDailyReservationsReportComponent } from "../admin-dashboard/admin-
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
 import { AdminLeadsReportComponent } from "../admin-dashboard/admin-leads-report.component";
 import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consultant-profile.component";
-import { AdminSecretarySaleServicesComponent } from "../admin-dashboard/admin-secretary-sale-services.component";
-import { AdminSecretarySalesApprovalComponent } from "../admin-dashboard/admin-secretary-sales-approval.component";
-import { AdminLeadAssignmentSettingsComponent } from "../admin-dashboard/admin-lead-assignment-settings.component";
-import { AdminPatientFinanceReportComponent } from "../admin-dashboard/admin-patient-finance-report.component";
-import { AdminConsultantRewardsComponent } from "../admin-dashboard/admin-consultant-rewards.component";
-import { AdminPatientReferralsComponent } from "../../features/patient-referrals/admin/pages/admin-patient-referrals/admin-patient-referrals.component";
-import { AdminAccountingCenterComponent } from "../admin-dashboard/admin-accounting-center.component";
-import { PatientReferralDashboardComponent } from "../../features/patient-referrals/patient/pages/patient-referral-dashboard/patient-referral-dashboard.component";
+import { AdminLeadSheetsComponent } from "../admin-dashboard/admin-lead-sheets.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -75,13 +71,7 @@ type DashboardSection =
   | "leadReports"
   | "leadsReport"
   | "dailyReservationsReport"
-  | "secretarySaleServices"
-  | "secretarySales"
-  | "leadAssignmentSettings"
-  | "patientFinanceReport"
-  | "accountingCenter"
-  | "consultantRewards"
-  | "patientReferrals";
+  | "leadSheets";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -119,13 +109,6 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "leadReports",
   "leadsReport",
   "dailyReservationsReport",
-  "secretarySaleServices",
-  "secretarySales",
-  "leadAssignmentSettings",
-  "patientFinanceReport",
-  "accountingCenter",
-  "consultantRewards",
-  "patientReferrals",
 ];
 
 @Component({
@@ -144,14 +127,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminDailyReservationsReportComponent,
     AdminAttendanceTableComponent,
     AdminConsultantProfileComponent,
-    AdminSecretarySaleServicesComponent,
-    AdminSecretarySalesApprovalComponent,
-    AdminLeadAssignmentSettingsComponent,
-    AdminPatientFinanceReportComponent,
-    AdminAccountingCenterComponent,
-    AdminConsultantRewardsComponent,
-    AdminPatientReferralsComponent,
-    PatientReferralDashboardComponent,
+    AdminLeadSheetsComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -172,17 +148,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "leadReports", label: "گزارش تماس درخواست‌ها", icon: "clipboard" },
     { id: "leadsReport", label: "گزارش لیدها", icon: "table" },
     { id: "dailyReservationsReport", label: "رزروهای روزانه", icon: "calendar" },
-    { id: "secretarySaleServices", label: "خدمات فروش منشی", icon: "list" },
-    { id: "secretarySales", label: "فروش‌های منشی‌ها", icon: "wallet" },
-    { id: "leadAssignmentSettings", label: "مدیریت تخصیص لیدها", icon: "clipboard" },
-    { id: "patientFinanceReport", label: "گزارش مالی بیماران", icon: "wallet" },
-    { id: "accountingCenter", label: "حسابداری جامع", icon: "wallet" },
-    { id: "consultantRewards", label: "پاداش مشاوران", icon: "wallet" },
-    { id: "patientReferrals", label: "گزارش رفرال بیماران", icon: "users" },
+    { id: "leadSheets", label: "شیت لید ادمین", icon: "clipboard" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
-    { id: "patientReferrals", label: "معرفی بیمار و کیف پول", icon: "users" },
   ];
 
   readonly displayName = computed(() => {
@@ -576,8 +545,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const initialSection = this.route.snapshot.data["initialSection"] as DashboardSection | undefined;
-    this.activateSectionFromRoute(initialSection && ADMIN_DASHBOARD_SECTIONS.includes(initialSection) ? initialSection : "overview");
+    this.activateSectionFromRoute("overview");
   }
 
   toggleMobileSidebar(): void {
@@ -647,52 +615,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   onSecretarySearchChange(value: string): void {
     this.secretaryFilters.search = value;
-    this.secretarySearchChanges.next(value.trim());
-  }
-
-  applySecretaryFilters(): void {
-    this.secretaryFilters.pageNumber = 1;
-    this.loadSecretaries();
-  }
-
-  changeSecretariesPage(page: number): void {
-    this.secretaryFilters.pageNumber = page;
-    this.loadSecretaries();
-  }
-
-  loadSecretaries(): void {
-    const requestId = ++this.secretariesLoadRequestId;
-    this.secretariesLoading = true;
-    this.clearFeedback();
-    this.markDirty();
-
-    this.adminApi.getSecretaries(this.secretaryFilters)
-      .pipe(finalize(() => {
-        if (requestId === this.secretariesLoadRequestId) {
-          this.secretariesLoading = false;
-          this.markDirty();
-        }
-      }))
-      .subscribe({
-        next: (response) => {
-          if (requestId !== this.secretariesLoadRequestId) return;
-          this.secretaries = (response.items ?? []).map((user) => this.normalizeUser(user));
-          this.secretariesTotalCount = response.totalCount ?? this.secretaries.length;
-          this.secretariesTotalPages = Math.max(
-            1,
-            response.totalPages || Math.ceil(this.secretariesTotalCount / this.secretaryFilters.pageSize),
-          );
-          this.markDirty();
-        },
-        error: (error) => this.showFeedback(
-          this.errorMessage(error, "دریافت فهرست منشی‌ها انجام نشد"),
-          "error",
-        ),
-      });
-  }
-
-  handleSecretaryAction(event: TableActionClick<AdminUser>): void {
-    if (event.action === "edit") {
+    this.secretarySearchChanges.ne…365 tokens truncated…dit") {
       this.openEditSecretaryDialog(event.row);
       return;
     }
@@ -887,13 +810,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   confirmDeleteUser(): void {
     if (!this.userToDelete) return;
 
-    const userId = this.userToDelete.id || this.userToDelete.Id;
-    if (!userId) {
-      this.showFeedback("شناسه کاربر معتبر نیست؛ فهرست را دوباره بارگذاری کنید", "error");
-      return;
-    }
-
-    this.adminApi.deleteUser(userId).subscribe({
+    this.adminApi.deleteUser(this.userToDelete.id).subscribe({
       next: (response) => {
         this.closeDeleteDialog();
         this.showFeedback(response.message || "کاربر حذف شد", "success");
@@ -1206,9 +1123,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (day === undefined) continue;
       this.userForm.secretaryAccess[day] = {
         enabled: true,
-        permissions: (item.permissions ?? normalizedItem.Permissions ?? [])
-          .map((permission) => this.parseSecretaryPermission(permission))
-          .filter((permission): permission is SecretaryPermissionType => permission !== null),
+        permissions: (item.permissions ?? normalizedItem.Permissions ?? []).map(Number) as SecretaryPermissionType[],
       };
     }
   }
@@ -1216,24 +1131,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private parseSecretaryType(value: number | string | null | undefined): SecretaryType {
     return value === SecretaryType.Assistant || String(value).toLowerCase() === "assistant" || String(value) === "2"
       ? SecretaryType.Assistant : SecretaryType.Main;
-  }
-
-  private parseSecretaryPermission(value: unknown): SecretaryPermissionType | null {
-    const numericValue = Number(value);
-    if (Number.isInteger(numericValue) && numericValue >= 1 && numericValue <= 7)
-      return numericValue as SecretaryPermissionType;
-
-    const permissionNames: Record<string, SecretaryPermissionType> = {
-      viewreservations: SecretaryPermissionType.ViewReservations,
-      editreservations: SecretaryPermissionType.EditReservations,
-      confirmattendance: SecretaryPermissionType.ConfirmAttendance,
-      secretaryannouncement: SecretaryPermissionType.SecretaryAnnouncement,
-      viewpatients: SecretaryPermissionType.ViewPatients,
-      createreservation: SecretaryPermissionType.CreateReservation,
-      cancelreservation: SecretaryPermissionType.CancelReservation,
-    };
-
-    return permissionNames[String(value).trim().toLowerCase()] ?? null;
   }
 
   private buildSecretaryAccess(user: AdminUser): UserFormModel["secretaryAccess"] {
