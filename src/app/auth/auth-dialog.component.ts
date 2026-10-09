@@ -108,7 +108,8 @@ export class AuthDialogComponent {
     }
   }
 
-  submit(): void {
+    submit(): void {
+        (document.activeElement as HTMLElement | null)?.blur();
     this.feedback.set(null);
 
     const validationError = this.validate();

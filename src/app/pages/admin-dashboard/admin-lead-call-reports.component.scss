@@ -82,6 +82,11 @@ label {
   background: color-mix(in srgb, var(--success) 14%, var(--surface));
   color: #166534;
 }
+@container dashboard-content (max-width: 860px) {
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 980px) {
   .filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -2,6 +2,7 @@
 :host {
   @include foundation.host-tokens;
   display: block;
+  min-width: 0;
 }
 nav {
   display: flex;
@@ -24,4 +25,14 @@ span {
   font-size: 0.875rem;
   color: var(--bm-muted);
   text-align: center;
+}
+@media (max-width: 420px) {
+  nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  span {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
 }

@@ -63,13 +63,13 @@ const createFlowMembers = [
   "createReservation",
   "loadCreateOptions",
   "filteredPatientOptions",
-  "filteredConsultantOptions",
+  "selectedPatientOption",
   "patientOptionId",
   "patientOptionName",
   "patientOptionPhone",
-  "consultantOptionId",
-  "consultantOptionName",
-  "consultantOptionPhone",
+  "onPatientSelected",
+  "patientConsultantName",
+  "patientConsultantPhone",
   "normalizeSearch",
 ];
 
@@ -88,8 +88,8 @@ for (const memberName of createFlowMembers) {
 }
 
 for (const declaration of [
-  "consultantSearch = \"\";",
-  "consultantOptions: SecretaryConsultantOption[] = [];",
+  "patientSearch = \"\";",
+  "patientOptions: SecretaryPatientOption[] = [];",
 ]) {
   if (!requestsComponent.includes(declaration)) {
     throw new Error(
@@ -98,15 +98,15 @@ for (const declaration of [
   }
 }
 
-if (!requestsComponent.includes("SecretaryConsultantOption,")) {
+if (!requestsComponent.includes("SecretaryPatientOption,")) {
   throw new Error(
-    "Secretary reservation requests component must import SecretaryConsultantOption",
+    "Secretary reservation requests component must import SecretaryPatientOption",
   );
 }
 
-if (!/^  getConsultantOptions\(\): Observable<SecretaryConsultantOption\[]> \{$/m.test(secretaryService)) {
+if (!/^  getPatientOptions\(\): Observable<SecretaryPatientOption\[]> \{$/m.test(secretaryService)) {
   throw new Error(
-    "Secretary dashboard service must expose getConsultantOptions for the create flow",
+    "Secretary dashboard service must expose getPatientOptions for the create flow",
   );
 }
 

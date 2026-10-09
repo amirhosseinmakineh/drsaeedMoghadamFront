@@ -156,6 +156,9 @@ export class RealtimeLeadAlertService implements OnDestroy {
     }
     this.pollingProfileId = null;
     this.stopAwaitingPickupSounds();
+    for (const leadId of [...this.activeAlerts.keys()]) {
+      this.dismissLead(leadId);
+    }
   }
 
   async tryPickupLead(leadId: number): Promise<void> {
@@ -518,7 +521,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
     this.limitNotifiedDates.add(todayKey);
     this.toast.info(
       message ??
-        "سقف روزانه ۱۰ لید پر شده است. امروز دیگر نمی‌توانید لید بردارید.",
+        "سقف دریافت لید امروز تکمیل شده است.",
     );
   }
 

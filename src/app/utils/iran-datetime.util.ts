@@ -1,5 +1,23 @@
 export const IRAN_TIME_ZONE = "Asia/Tehran";
 const IRAN_UTC_OFFSET = "+03:30";
+const IRAN_DATE_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: IRAN_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const IRAN_TIME_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: IRAN_TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+const RESERVATION_TIME_FORMATTER = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "UTC",
+});
 
 export function nowInIran(): Date {
   return new Date(
@@ -16,12 +34,7 @@ export function parseIranDateParts(date: Date): {
   month: number;
   day: number;
 } {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: IRAN_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
+  const parts = IRAN_DATE_PARTS_FORMATTER.formatToParts(date);
 
   return {
     year: Number(parts.find((part) => part.type === "year")?.value),
@@ -34,12 +47,7 @@ export function parseIranTimeParts(date: Date): {
   hours: number;
   minutes: number;
 } {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: IRAN_TIME_ZONE,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(date);
+  const parts = IRAN_TIME_PARTS_FORMATTER.formatToParts(date);
 
   return {
     hours: Number(parts.find((part) => part.type === "hour")?.value),
@@ -127,12 +135,7 @@ export function formatReservationTime(value?: string | Date | null): string {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "UTC",
-  }).format(date);
+  return RESERVATION_TIME_FORMATTER.format(date);
 }
 
 export function createRelativeYearDateInIran(yearsOffset: number): Date {

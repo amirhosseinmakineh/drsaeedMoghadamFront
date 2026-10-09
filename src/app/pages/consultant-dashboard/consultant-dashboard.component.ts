@@ -12,7 +12,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, ParamMap, Router, RouterLink } from "@angular/router";
-import { Subscription, catchError, finalize, firstValueFrom, map, of, switchMap } from "rxjs";
+import { Subscription, catchError, finalize, firstValueFrom, map, of, retry, switchMap } from "rxjs";
 import { AuthService, RegisterRequest } from "../../core/auth/auth.service";
 import {
   CompletePatientProfileRequest,
@@ -37,6 +37,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ConsultantReservationsPanelComponent } from "./consultant-reservations-panel.component";
 import { SecretaryFollowUpsListComponent } from "./secretary-follow-ups-list.component";
+import { ConsultantWalletComponent } from "./consultant-wallet.component";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
 import { createCoalescedMarkForCheck } from "../../shared/change-detection/coalesce-mark-for-check";
 import { bindDashboardMobileSidebar } from "../../shared/dashboard/dashboard-mobile-sidebar";
@@ -150,7 +151,8 @@ type ConsultantDashboardSection =
   | "patients"
   | "patient-profiles"
   | "secretary-follow-ups"
-  | "reservations";
+  | "reservations"
+  | "wallet";
 
 type ReportDialogMode = "create" | "edit";
 type ReservationDialogMode = "create" | "edit";
@@ -173,6 +175,7 @@ interface ConsultantDashboardLink {
     FaIconComponent,
     ConsultantReservationsPanelComponent,
     SecretaryFollowUpsListComponent,
+    ConsultantWalletComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./consultant-dashboard.component.html",
@@ -192,6 +195,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     { id: "patient-profiles", label: "پرونده‌ها", icon: "clipboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "secretary-follow-ups", label: "پیگیری‌های منشی", icon: "clipboard" },
+    { id: "wallet", label: "کیف پول من", icon: "wallet" },
   ];
 
   readonly displayName = computed(() => {
@@ -225,6 +229,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   canGoOnlineFromStatus = false;
   dashboardStatusLoaded = false;
   todayReservationsCount = 0;
+  totalReservationsCount = 0;
+  totalReservedPatientsCount = 0;
   todayCallsCount = 0;
   dailyLimit = 0;
   todayPickupCount = 0;
@@ -232,8 +238,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   onlineStatusBlockReason: string | null = null;
   pendingReportCount = 0;
   uncalledWithoutReportCount = 0;
-  followUpCount = 0;
-  maximumAllowedFollowUps = 0;
   isNewLeadBlocked = false;
   shouldShowWorkloadNotification = false;
   workloadNotificationMessage: string | null = null;
@@ -299,6 +303,19 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   selectedLead: ConsultantLead | null = null;
   reportForm: LeadReportForm = this.emptyLeadReportForm();
   private reportEditOriginalSecondaryPhone: string | null = null;
+
+  closeLeadDialogOpen = false;
+  closeLeadSaving = false;
+  selectedLeadToClose: ConsultantLead | null = null;
+  closeLeadReason = 1;
+  closeLeadDescription = "";
+  readonly closeLeadReasons = [
+    { value: 1, label: "عدم تمایل بیمار" },
+    { value: 2, label: "درخواست عدم تماس مجدد" },
+    { value: 3, label: "عدم پاسخ پس از پیگیری" },
+    { value: 4, label: "اطلاعات لید نامعتبر است" },
+    { value: 5, label: "سایر" },
+  ];
 
   reservationDialogOpen = false;
   reservationDialogMode: ReservationDialogMode = "create";
@@ -524,6 +541,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       "leads",
       "patients",
       "reservations",
+      "wallet",
     ];
     return primarySections
       .map((section) => this.visibleDashboardLinks.find((item) => item.id === section))
@@ -539,8 +557,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.closeMobileSidebar();
-    if (this.route.snapshot.data["initialSection"] === "leads") {
-      this.activeSection = "leads";
+    const initialSection = this.route.snapshot.data["initialSection"] as ConsultantDashboardSection | undefined;
+    if (initialSection) {
+      this.activeSection = initialSection;
     }
     this.profileId = this.currentProfileId();
     this.timerStarts = this.readJson<Record<string, number>>(
@@ -698,7 +717,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         section === "patients" ||
         section === "patient-profiles" ||
         section === "secretary-follow-ups" ||
-        section === "reservations") &&
+        section === "reservations" ||
+        section === "wallet") &&
       !this.isProfileReady()
     ) {
       return "profile";
@@ -1051,10 +1071,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     profileId: number,
     attempt = 0,
   ): void {
+    if (this.loggingOut || this.destroyed) return;
     this.consultantApi
       .setOnlineStatus({ profileId, isOnline: true, isOffline: false })
       .subscribe({
         next: () => {
+          if (this.loggingOut || this.destroyed) return;
           this.isOnline = true;
           this.onlineStatusBlockReason = null;
           void this.ensureLeadPushRegistration(true);
@@ -1064,7 +1086,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
           this.markViewDirty();
         },
         error: () => {
-          if (attempt < 2) {
+          if (attempt < 2 && !this.loggingOut && !this.destroyed) {
             setTimeout(
               () =>
                 this.forceConsultantOnlineAfterReportSubmit(profileId, attempt + 1),
@@ -1323,13 +1345,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
         "patient-profiles",
         "secretary-follow-ups",
         "reservations",
+        "wallet",
       ].includes(section)
     ) {
       this.activateSectionFromRoute(section);
     } else if (params.get("type")) {
       this.activateSectionFromRoute("leads");
     } else {
-      this.activateSectionFromRoute("overview");
+      const initialSection = this.route.snapshot.data["initialSection"] as ConsultantDashboardSection | undefined;
+      this.activateSectionFromRoute(initialSection ?? "overview");
     }
 
     if (params.get("section") !== "leads" && !params.get("type")) return;
@@ -1695,6 +1719,69 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       this.reportForm.secondaryPhoneNumber.trim() || null;
     this.reportDialogOpen = true;
     this.markViewDirty();
+  }
+
+  openCloseLeadDialog(lead: ConsultantLead): void {
+    if (!this.leadId(lead) || this.leadHasActiveReservation(lead)) return;
+    this.selectedLeadToClose = lead;
+    this.closeLeadReason = 1;
+    this.closeLeadDescription = "";
+    this.closeLeadDialogOpen = true;
+    this.markViewDirty();
+  }
+
+  closeCloseLeadDialog(): void {
+    if (this.closeLeadSaving) return;
+    this.closeLeadDialogOpen = false;
+    this.selectedLeadToClose = null;
+    this.markViewDirty();
+  }
+
+  submitCloseLead(): void {
+    const leadId = this.selectedLeadToClose
+      ? this.leadId(this.selectedLeadToClose)
+      : null;
+    const description = this.closeLeadDescription.trim();
+    if (!leadId || this.closeLeadSaving) return;
+    if (this.closeLeadReason === 5 && !description) {
+      this.showFeedback("برای گزینه سایر، توضیح را وارد کنید", "error");
+      return;
+    }
+
+    this.closeLeadSaving = true;
+    this.markViewDirty();
+    this.consultantApi
+      .closeLead(leadId, {
+        reason: this.closeLeadReason,
+        description: description || null,
+      })
+      .pipe(
+        finalize(() => {
+          this.closeLeadSaving = false;
+          this.markViewDirty();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          this.leads = this.leads.filter((lead) => this.leadId(lead) !== leadId);
+          this.reportEditLeads = this.reportEditLeads.filter(
+            (lead) => this.leadId(lead) !== leadId,
+          );
+          this.patientLeads = this.patientLeads.filter(
+            (lead) => this.leadId(lead) !== leadId,
+          );
+          this.closeLeadDialogOpen = false;
+          this.selectedLeadToClose = null;
+          this.showFeedback(response.message || "پیگیری این لید بسته شد", "success");
+          this.loadLeads();
+          this.loadReportEditLeads();
+        },
+        error: (error) =>
+          this.showFeedback(
+            this.errorMessage(error, "بستن پیگیری انجام نشد"),
+            "error",
+          ),
+      });
   }
 
   closeReportDialog(
@@ -2802,11 +2889,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   visibleReportEditLeads(): ConsultantLead[] {
-    const term = this.reportEditSearchTerm.trim().toLowerCase();
-    if (!term) return this.reportEditLeads;
-    return this.reportEditLeads.filter((lead) =>
-      this.reportEditLeadMatchesSearch(lead, term),
-    );
+    return this.reportEditLeads;
   }
 
   applyReportEditFilters(): void {
@@ -2973,29 +3056,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  private reportEditLeadMatchesSearch(
-    lead: ConsultantLead,
-    term: string,
-  ): boolean {
-    const haystack = [
-      this.leadName(lead),
-      this.leadPhone(lead),
-      this.leadReportDescription(lead),
-      this.callResultLabel(lead),
-      this.stateLabel(this.leadState(lead)),
-      this.leadTypeLabel(this.leadType(lead)),
-      lead.patientCity,
-      lead.PatientCity,
-      lead.patientRegion,
-      lead.PatientRegion,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(term);
-  }
-
   private syncReportedLeadIdsFromLeads(leads: ConsultantLead[]): void {
     leads.forEach((lead) => {
       const leadAssignmentId = this.leadId(lead);
@@ -3127,7 +3187,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.loggingOut = true;
     this.consultantApi
       .setOnlineStatus({ profileId, isOnline: false, isOffline: true })
-      .pipe(finalize(finishLogout))
+      .pipe(retry({ count: 2, delay: 500 }), finalize(finishLogout))
       .subscribe({ error: () => undefined });
   }
 
@@ -3160,6 +3220,8 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.isOnline = status.isOnline;
     this.canGoOnlineFromStatus = status.canGoOnline;
     this.todayReservationsCount = status.todayReservationsCount ?? 0;
+    this.totalReservationsCount = status.totalReservationsCount ?? 0;
+    this.totalReservedPatientsCount = status.totalReservedPatientsCount ?? 0;
     this.todayCallsCount = status.todayCallsCount ?? 0;
     this.dailyLimit = status.dailyLimit ?? 0;
     this.todayPickupCount = status.todayPickupCount ?? 0;
@@ -3171,8 +3233,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.onlineStatusBlockReason = status.onlineStatusBlockReason;
     this.pendingReportCount = status.pendingReportCount;
     this.uncalledWithoutReportCount = status.uncalledWithoutReportCount;
-    this.followUpCount = status.followUpCount;
-    this.maximumAllowedFollowUps = status.maximumAllowedFollowUps;
     this.isNewLeadBlocked = status.isNewLeadBlocked;
     this.shouldShowWorkloadNotification =
       status.shouldShowWorkloadNotification;
@@ -3309,6 +3369,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       .getLeads({
         profileId,
         hasSubmittedReport: true,
+        searchText: this.trimmedFilter(this.reportEditSearchTerm),
         phoneNumber: this.trimmedFilter(this.reportEditPhoneFilter),
         from: this.formatFilterDate(this.reportEditFromDate),
         to: this.formatFilterDate(
@@ -4307,10 +4368,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     const reservationAt = this.selectedReservationDateTime();
     const reservationTimeChanged = this.isReservationTimeChanged(reservationAt);
+    if (!reservationAt || !Number.isFinite(reservationAt.getTime()))
+      return "زمان رزرو معتبر نیست";
     if (
-      !reservationAt ||
-      !Number.isFinite(reservationAt.getTime()) ||
-      (reservationTimeChanged && reservationAt.getTime() <= Date.now())
+      this.isReservationEditMode() &&
+      reservationTimeChanged &&
+      reservationAt.getTime() <= Date.now()
     )
       return "زمان رزرو باید در آینده باشد";
 

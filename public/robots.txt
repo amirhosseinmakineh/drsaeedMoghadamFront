@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /consultant/
+Disallow: /dashboard/
+Disallow: /secretary/
+Disallow: /select-dashboard/
+
+Sitemap: https://drsaeedmoghadam.com/sitemap.xml

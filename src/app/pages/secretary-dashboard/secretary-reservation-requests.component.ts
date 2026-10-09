@@ -455,10 +455,6 @@ export class SecretaryReservationRequestsComponent
       return;
     }
     const reservationAt = this.combineDateTime(this.createDate, this.createTime);
-    if (new Date(reservationAt).getTime() <= Date.now()) {
-      this.toast.error("زمان مراجعه باید در آینده باشد");
-      return;
-    }
     this.saving = true;
     this.api.createReservation({
       leadAssignmentId: this.createLeadAssignmentId,

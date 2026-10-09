@@ -35,6 +35,7 @@ import { AdminDailyReservationsReportComponent } from "../admin-dashboard/admin-
 import { AdminLeadsTableComponent } from "../admin-dashboard/admin-leads-table.component";
 import { AdminLeadsReportComponent } from "../admin-dashboard/admin-leads-report.component";
 import { AdminConsultantProfileComponent } from "../admin-dashboard/admin-consultant-profile.component";
+import { AdminLeadSheetsComponent } from "../admin-dashboard/admin-lead-sheets.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import {
@@ -66,7 +67,8 @@ type DashboardSection =
   | "leads"
   | "leadReports"
   | "leadsReport"
-  | "dailyReservationsReport";
+  | "dailyReservationsReport"
+  | "leadSheets";
 type UserDialogMode = "add" | "edit";
 
 interface DashboardLink {
@@ -122,6 +124,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminDailyReservationsReportComponent,
     AdminAttendanceTableComponent,
     AdminConsultantProfileComponent,
+    AdminLeadSheetsComponent,
     FaIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -142,6 +145,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "leadReports", label: "گزارش تماس درخواست‌ها", icon: "clipboard" },
     { id: "leadsReport", label: "گزارش لیدها", icon: "table" },
     { id: "dailyReservationsReport", label: "رزروهای روزانه", icon: "calendar" },
+    { id: "leadSheets", label: "شیت لید ادمین", icon: "clipboard" },
   ];
   readonly regularLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },

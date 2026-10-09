@@ -25,7 +25,7 @@
   display: grid;
   align-content: start;
   gap: 18px;
-  min-height: calc(100vh - 72px);
+  min-height: calc(100dvh - 72px);
   padding: 20px;
   border-radius: 34px;
 }
@@ -977,6 +977,10 @@ input[readonly] {
   .lead-actions,
   .two-col {
     grid-template-columns: 1fr;
+  }
+  .lead-filters.patient-filters,
+  .lead-filters.report-edit-filters {
+    grid-template-columns: minmax(0, 1fr);
   }
   .primary-action,
   .secondary-action,

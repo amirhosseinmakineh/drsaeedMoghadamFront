@@ -60,7 +60,6 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   exporting = false;
   feedback = "";
   phoneFilter = "";
-  checkedLeadIds = new Set<number>();
   totalCount = 0;
   totalPages = 1;
   filters: LeadFilters = {
@@ -98,12 +97,6 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       value: (row) => this.formatDateTime(this.leadContactedAt(row)),
     },
     {
-      key: "checked",
-      label: "بررسی",
-      value: (row) => (this.isLeadChecked(row) ? "بررسی شد" : "بررسی نشده"),
-      badge: (row) => (this.isLeadChecked(row) ? "success" : "warn"),
-    },
-    {
       key: "leadAssignmentState",
       label: "وضعیت",
       value: (row) => leadAssignmentStatePresentation(this.leadState(row)).label,
@@ -137,19 +130,6 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   applyFilters(): void {
     this.filters.pageNumber = 1;
     this.load();
-  }
-
-  toggleLeadChecked(row: LeadAssignmentItem): void {
-    const id = this.leadId(row);
-    if (!id) return;
-    if (this.checkedLeadIds.has(id)) this.checkedLeadIds.delete(id);
-    else this.checkedLeadIds.add(id);
-    this.cdr.markForCheck();
-  }
-
-  isLeadChecked(row: LeadAssignmentItem): boolean {
-    const id = this.leadId(row);
-    return id ? this.checkedLeadIds.has(id) : false;
   }
 
   leadPhoneHref(row: LeadAssignmentItem): string | null {
@@ -208,6 +188,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
 
     const query: LeadFilters = {
       ...this.filters,
+      searchText: this.phoneFilter.trim() || undefined,
       profileId:
         this.mode === "consultant" ? (this.profileId ?? undefined) : undefined,
     };
@@ -229,15 +210,8 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
       .subscribe({
         next: (response) => {
           if (requestId !== this.loadRequestId) return;
-          const items = response.items ?? [];
-          this.items = this.phoneFilter.trim()
-            ? items.filter((row) =>
-                this.leadPhone(row).includes(this.phoneFilter.trim()),
-              )
-            : items;
-          this.totalCount = this.phoneFilter.trim()
-            ? this.items.length
-            : (response.totalCount ?? this.items.length);
+          this.items = response.items ?? [];
+          this.totalCount = response.totalCount ?? this.items.length;
           this.totalPages = Math.max(
             1,
             response.totalPages ||

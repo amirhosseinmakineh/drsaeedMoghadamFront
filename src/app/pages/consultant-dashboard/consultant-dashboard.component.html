@@ -152,10 +152,6 @@
             <ul>
               <li>بدون گزارش: {{ pendingReportCount }}</li>
               <li>بدون تماس و گزارش: {{ uncalledWithoutReportCount }}</li>
-              <li>
-                نیازمند پیگیری: {{ followUpCount }} از سقف
-                {{ maximumAllowedFollowUps }}
-              </li>
             </ul>
           </div>
           <button class="primary-action compact" type="button" (click)="setSection('leads')">
@@ -237,6 +233,14 @@
                 <span>رزروهای امروز</span>
                 <strong>{{ todayReservationsCount }}</strong>
               </div>
+              <div>
+                <span>کل رزروها</span>
+                <strong>{{ totalReservationsCount }}</strong>
+              </div>
+              <div>
+                <span>تعداد نفرات رزروشده</span>
+                <strong>{{ totalReservedPatientsCount }}</strong>
+              </div>
             </div>
             <div class="daily-capacity-summary">
               <article>
@@ -244,14 +248,12 @@
                 <strong>{{ todayCallsCount }}</strong>
               </article>
               <article class="capacity-card">
-                <span>ظرفیت روزانه</span>
-                <strong>
-                  {{ remainingDailyCapacity }} از {{ dailyLimit }} باقی‌مانده
-                </strong>
+                <span>ظرفیت دریافت لید امروز</span>
+                <strong>{{ remainingDailyCapacity }} از {{ dailyLimit }} باقی‌مانده</strong>
                 <div
                   class="capacity-progress"
                   role="progressbar"
-                  aria-label="ظرفیت مصرف‌شده امروز"
+                  aria-label="ظرفیت مصرف‌شده دریافت لید امروز"
                   aria-valuemin="0"
                   aria-valuemax="100"
                   [attr.aria-valuenow]="usedCapacityPercent"
@@ -1141,6 +1143,15 @@
                     >
                       رزرو وقت
                     </button>
+                    <button
+                      class="secondary-action compact"
+                      type="button"
+                      [disabled]="leadHasActiveReservation(lead)"
+                      [attr.title]="leadHasActiveReservation(lead) ? 'این لید رزرو فعال دارد' : null"
+                      (click)="openCloseLeadDialog(lead)"
+                    >
+                      کنسل لید
+                    </button>
                   </div>
                 </article>
               }
@@ -1201,8 +1212,64 @@
       @if (activeSection === "secretary-follow-ups" && isProfileReady()) {
         <app-secretary-follow-ups-list></app-secretary-follow-ups-list>
       }
+
+      @if (activeSection === "wallet" && isProfileReady()) {
+        <app-consultant-wallet></app-consultant-wallet>
+      }
+
     </section>
   </main>
+
+  <app-base-dialog
+    [open]="closeLeadDialogOpen"
+    title="بستن پیگیری لید"
+    subtitle="این لید در مالکیت شما باقی می‌ماند و به مشاور دیگری تخصیص داده نمی‌شود."
+    (closed)="closeCloseLeadDialog()"
+  >
+    <form class="dialog-form" (ngSubmit)="submitCloseLead()">
+      <label>
+        دلیل بستن
+        <select
+          name="closeLeadReason"
+          [(ngModel)]="closeLeadReason"
+          [disabled]="closeLeadSaving"
+          required
+        >
+          @for (reason of closeLeadReasons; track reason.value) {
+            <option [ngValue]="reason.value">{{ reason.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        توضیحات
+        <textarea
+          name="closeLeadDescription"
+          [(ngModel)]="closeLeadDescription"
+          [required]="closeLeadReason === 5"
+          maxlength="500"
+          rows="4"
+          [disabled]="closeLeadSaving"
+          placeholder="در صورت نیاز، نتیجه آخرین پیگیری را بنویسید"
+        ></textarea>
+      </label>
+      <p class="field-hint">
+        پس از تأیید، این شماره در فهرست لیدهای فعال و شماره‌های سوخته نمایش داده نخواهد شد.
+      </p>
+      <div class="dialog-actions">
+        <button
+          class="secondary-action"
+          type="button"
+          [disabled]="closeLeadSaving"
+          (click)="closeCloseLeadDialog()"
+        >
+          انصراف
+        </button>
+        <button class="primary-action" type="submit" [disabled]="closeLeadSaving">
+          {{ closeLeadSaving ? "در حال ثبت..." : "تأیید و بستن پیگیری" }}
+        </button>
+      </div>
+    </form>
+  </app-base-dialog>
 
   <app-base-dialog
     [open]="reportDialogOpen"
@@ -1343,7 +1410,7 @@
         <app-base-datepicker
           [label]="reservationDatePickerLabel"
           [selectedDate]="reservationForm.reservationDate ?? undefined"
-          [minDate]="minimumReservationDate()"
+          [unrestrictedDates]="true"
           [allowToday]="true"
           (dateChange)="setReservationDate($event)"
         ></app-base-datepicker>

@@ -1,0 +1,60 @@
+<section class="accounting-center" dir="rtl">
+  <header class="accounting-header">
+    <div>
+      <span>مرکز مالی ادمین</span>
+      <h2>حسابداری جامع</h2>
+      <p>گزارش یکپارچه فروش منشی‌ها، پاداش مشاوران و رفرال بیماران</p>
+    </div>
+    <button type="button" class="export" [disabled]="exporting" (click)="export()">
+      {{ exporting ? "در حال ساخت خروجی..." : "خروجی CSV گزارش پرسنل" }}
+    </button>
+  </header>
+
+  <nav class="tabs" aria-label="بخش‌های حسابداری">
+    <button type="button" [class.active]="tab === 'overview'" (click)="selectTab('overview')">نمای مالی</button>
+    <button type="button" [class.active]="tab === 'secretaries'" (click)="selectTab('secretaries')">حسابداری منشی‌ها</button>
+    <button type="button" [class.active]="tab === 'consultants'" (click)="selectTab('consultants')">حسابداری مشاوران</button>
+    <button type="button" [class.active]="tab === 'referrals'" (click)="selectTab('referrals')">رفرال بیماران</button>
+  </nav>
+
+  @if (tab === "overview") {
+    <form class="filters" (ngSubmit)="load()">
+      <label>جست‌وجوی پرسنل<input name="search" [(ngModel)]="filters.search" placeholder="نام منشی یا مشاور" /></label>
+      <app-base-datepicker [label]="fromDateLabel" [selectedDate]="fromDate" [unrestrictedDates]="true" [compact]="true" (dateChange)="setFromDate($event)"></app-base-datepicker>
+      <app-base-datepicker [label]="toDateLabel" [selectedDate]="toDate" [unrestrictedDates]="true" [compact]="true" (dateChange)="setToDate($event)"></app-base-datepicker>
+      <button type="submit" class="primary">اعمال فیلتر</button>
+      <button type="button" (click)="clearFilters()">پاک‌کردن</button>
+    </form>
+
+    @if (report; as data) {
+      <div class="summary-grid">
+        <article><small>فروش تأییدشده منشی‌ها</small><strong>{{ money(data.summary.approvedSalesAmount) }}</strong></article>
+        <article><small>پاداش پرداخت‌شده منشی‌ها</small><strong>{{ money(data.summary.approvedSecretaryRewards) }}</strong><span>{{ data.summary.pendingSecretarySalesCount }} مورد منتظر تأیید</span></article>
+        <article><small>پاداش پرداخت‌شده مشاوران</small><strong>{{ money(data.summary.approvedConsultantRewards) }}</strong><span>{{ data.summary.pendingConsultantRewardsCount }} مورد منتظر تأیید</span></article>
+        <article><small>پاداش پرداخت‌شده رفرال</small><strong>{{ money(data.summary.paidReferralRewards) }}</strong><span>{{ data.summary.pendingReferralRewardsCount }} مورد منتظر تأیید</span></article>
+        <article class="pending"><small>تعهد باز منشی‌ها</small><strong>{{ money(data.summary.pendingSecretaryRewards) }}</strong></article>
+        <article class="pending"><small>تعهد باز مشاوران</small><strong>{{ money(data.summary.pendingConsultantRewards) }}</strong></article>
+        <article class="pending"><small>تعهد باز رفرال</small><strong>{{ money(data.summary.pendingReferralRewards) }}</strong></article>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>نام</th><th>نقش</th><th>موارد تأییدشده</th><th>در انتظار</th><th>فروش ناخالص</th><th>پاداش پرداخت‌شده</th><th>پاداش در انتظار</th><th>آخرین فعالیت</th></tr></thead>
+          <tbody>
+            @for (row of data.staff; track row.role + row.userId) {
+              <tr><td data-label="نام"><strong>{{ row.fullName }}</strong></td><td data-label="نقش">{{ roleLabel(row.role) }}</td><td data-label="تأییدشده">{{ row.approvedItemsCount }}</td><td data-label="در انتظار">{{ row.pendingItemsCount }}</td><td data-label="فروش ناخالص">{{ money(row.grossAmount) }}</td><td data-label="پاداش پرداخت‌شده">{{ money(row.approvedRewardAmount) }}</td><td data-label="پاداش در انتظار">{{ money(row.pendingRewardAmount) }}</td><td data-label="آخرین فعالیت">{{ date(row.lastActivityAt) }}</td></tr>
+            } @empty {
+              <tr><td colspan="8" class="empty">رکوردی مطابق فیلتر پیدا نشد.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="loading">{{ loading ? "در حال دریافت گزارش..." : "گزارشی دریافت نشد." }}</p>
+    }
+  }
+
+  @if (tab === "secretaries") { <app-admin-secretary-sales-approval /> }
+  @if (tab === "consultants") { <app-admin-consultant-rewards /> }
+  @if (tab === "referrals") { <app-admin-patient-referrals /> }
+</section>

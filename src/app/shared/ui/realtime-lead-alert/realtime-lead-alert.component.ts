@@ -1,10 +1,13 @@
-import { CommonModule } from "@angular/common";
+import { CommonModule, isPlatformBrowser } from "@angular/common";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  Inject,
+  Injector,
   OnDestroy,
   OnInit,
+  PLATFORM_ID,
 } from "@angular/core";
 import { Subscription } from "rxjs";
 import {
@@ -30,13 +33,22 @@ export class RealtimeLeadAlertComponent implements OnInit, OnDestroy {
 
   alerts: readonly RealtimeLeadAlert[] = [];
   private subscription: Subscription | null = null;
+  private readonly isBrowser: boolean;
 
   constructor(
-    private readonly alertService: RealtimeLeadAlertService,
+    private readonly injector: Injector,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+    @Inject(PLATFORM_ID) platformId: object,
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
+
+  private get alertService(): RealtimeLeadAlertService {
+    return this.injector.get(RealtimeLeadAlertService);
+  }
 
   ngOnInit(): void {
+    if (!this.isBrowser) return;
     this.alertService.initialize();
     this.subscription = this.alertService.alerts$.subscribe((alerts) => {
       this.alerts = alerts;

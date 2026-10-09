@@ -583,9 +583,19 @@ interface LeadPerson {
   Mobile?: string | null;
 }
 
+export interface AdminLeadSheet { id: number; name: string; isActive: boolean; createdAt: string; }
+
 @Injectable({ providedIn: "root" })
 export class AdminDashboardService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
+  createAdminLeadSheet(name: string): Observable<AdminLeadSheet> {
+    return this.http.post<AdminLeadSheet>(`${this.apiBaseUrl}/admin/lead-sheets`, { name }, { headers: this.authHeaders() });
+  }
+
+  addAdminSheetLead(sheetId: number, lead: { phoneNumber: string; firstName: string; lastName: string }): Observable<unknown> {
+    return this.http.post(`${this.apiBaseUrl}/admin/lead-sheets/${sheetId}/leads`, lead, { headers: this.authHeaders() });
+  }
+
 
   constructor(
     private http: HttpClient,

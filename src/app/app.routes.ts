@@ -1,5 +1,9 @@
 import { Routes } from "@angular/router";
-import { authGuard, roleGuard } from "./core/auth/auth.guard";
+import {
+  authGuard,
+  dashboardRedirectGuard,
+  roleGuard,
+} from "./core/auth/auth.guard";
 
 export const routes: Routes = [
   {
@@ -20,6 +24,22 @@ export const routes: Routes = [
       import("./pages/service-detail/service-detail.component").then(
         (m) => m.ServiceDetailComponent,
       ),
+  },
+  {
+    path: "composite",
+    loadComponent: () =>
+      import("./pages/service-detail/service-detail.component").then(
+        (m) => m.ServiceDetailComponent,
+      ),
+    data: { serviceId: "composite" },
+  },
+  {
+    path: "bleaching",
+    loadComponent: () =>
+      import("./pages/service-detail/service-detail.component").then(
+        (m) => m.ServiceDetailComponent,
+      ),
+    data: { serviceId: "whitening" },
   },
   {
     path: "about",
@@ -43,7 +63,7 @@ export const routes: Routes = [
   },
   {
     path: "dashboard",
-    canActivate: [authGuard],
+    canActivate: [authGuard, dashboardRedirectGuard],
     loadComponent: () =>
       import("./pages/dashboard/dashboard.component").then(
         (m) => m.DashboardComponent,
@@ -75,6 +95,15 @@ export const routes: Routes = [
         (m) => m.ConsultantDashboardComponent,
       ),
     data: { role: "consultant", initialSection: "leads" },
+  },
+  {
+    path: "consultant/wallet",
+    canActivate: [authGuard, roleGuard(["consultant"])],
+    loadComponent: () =>
+      import("./pages/consultant-dashboard/consultant-dashboard.component").then(
+        (m) => m.ConsultantDashboardComponent,
+      ),
+    data: { role: "consultant", initialSection: "wallet" },
   },
   {
     path: "dashboard/secretary",
@@ -123,5 +152,23 @@ export const routes: Routes = [
       ),
     data: { role: "patient" },
   },
-  { path: "**", redirectTo: "" },
+  {
+    path: "secretary/patient-referrals",
+    canActivate: [authGuard, roleGuard(["secretary"])],
+    loadComponent: () => import("./pages/secretary-dashboard/secretary-dashboard.component").then(m => m.SecretaryDashboardComponent),
+    data: { role: "secretary", initialSection: "patientReferrals" },
+  },
+  {
+    path: "admin/patient-referrals",
+    canActivate: [authGuard, roleGuard(["admin"])],
+    loadComponent: () => import("./pages/dashboard/dashboard.component").then(m => m.DashboardComponent),
+    data: { role: "admin", initialSection: "patientReferrals" },
+  },
+  {
+    path: "**",
+    loadComponent: () =>
+      import("./pages/not-found/not-found.component").then(
+        (m) => m.NotFoundComponent,
+      ),
+  },
 ];

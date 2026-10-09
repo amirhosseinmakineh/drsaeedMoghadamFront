@@ -1,5 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import { Router } from "@angular/router";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
@@ -53,14 +54,14 @@ export interface ConsultantDashboardStatus {
   canGoOnline: boolean;
   onlineStatusBlockReason: string | null;
   todayReservationsCount: number;
+  totalReservationsCount: number;
+  totalReservedPatientsCount: number;
   todayCallsCount: number;
   dailyLimit: number;
   todayPickupCount: number;
   remainingDailyCapacity: number;
   pendingReportCount: number;
   uncalledWithoutReportCount: number;
-  followUpCount: number;
-  maximumAllowedFollowUps: number;
   isNewLeadBlocked: boolean;
   shouldShowWorkloadNotification: boolean;
   workloadNotificationMessage: string | null;
@@ -193,6 +194,11 @@ export interface LeadCallReportResponse {
   callResult: number;
   isConsultantOnline: boolean;
   shouldOpenReservationPage?: boolean;
+}
+
+export interface CloseLeadRequest {
+  reason: number;
+  description?: string | null;
 }
 
 export interface ExpireLeadNoCallRequest {
@@ -369,6 +375,8 @@ export interface AddPatientLeadResponse {
 
 export interface ReservationFilters {
   consultantProfileId: number;
+  fromDate?: string;
+  toDate?: string;
   searchText?: string;
   patientName?: string;
   patientPhoneNumber?: string;
@@ -460,6 +468,7 @@ export class ConsultantDashboardService {
   constructor(
     private http: HttpClient,
     private auth: AuthService,
+    private router: Router,
   ) {}
 
   completeProfile(
@@ -686,6 +695,19 @@ export class ConsultantDashboardService {
       .pipe(this.ensureCommandSucceeded("ویرایش گزارش تماس انجام نشد"));
   }
 
+  closeLead(
+    leadAssignmentId: number,
+    payload: CloseLeadRequest,
+  ): Observable<ApiCommandResponse<unknown>> {
+    return this.http
+      .post<ApiCommandResponse<unknown>>(
+        `${this.apiBaseUrl}/Consultant/leads/${leadAssignmentId}/close`,
+        payload,
+        { headers: this.authHeaders() },
+      )
+      .pipe(this.ensureCommandSucceeded("بستن پیگیری انجام نشد"));
+  }
+
   createReservation(
     payload: CreateReservationRequest,
   ): Observable<ApiCommandResponse<ConsultantReservation>> {
@@ -702,11 +724,12 @@ export class ConsultantDashboardService {
 
   getDueConfirmations(
     consultantProfileId: number,
+    dates: { fromDate?: string; toDate?: string } = {},
   ): Observable<ConsultantReservation[]> {
     return this.http
       .get<unknown>(`${this.apiBaseUrl}/Reservation/DueConfirmations`, {
         headers: this.authHeaders(),
-        params: this.toParams({ consultantProfileId }),
+        params: this.toParams({ consultantProfileId, ...dates }),
       })
       .pipe(
         map((response) =>
@@ -888,6 +911,18 @@ export class ConsultantDashboardService {
           "todayReservationsCount",
           "TodayReservationsCount",
         ) ?? 0,
+      totalReservationsCount:
+        this.readNumber(
+          source,
+          "totalReservationsCount",
+          "TotalReservationsCount",
+        ) ?? 0,
+      totalReservedPatientsCount:
+        this.readNumber(
+          source,
+          "totalReservedPatientsCount",
+          "TotalReservedPatientsCount",
+        ) ?? 0,
       todayCallsCount:
         this.readNumber(source, "todayCallsCount", "TodayCallsCount") ?? 0,
       dailyLimit: this.readNumber(source, "dailyLimit", "DailyLimit") ?? 0,
@@ -906,14 +941,6 @@ export class ConsultantDashboardService {
           source,
           "uncalledWithoutReportCount",
           "UncalledWithoutReportCount",
-        ) ?? 0,
-      followUpCount:
-        this.readNumber(source, "followUpCount", "FollowUpCount") ?? 0,
-      maximumAllowedFollowUps:
-        this.readNumber(
-          source,
-          "maximumAllowedFollowUps",
-          "MaximumAllowedFollowUps",
         ) ?? 0,
       isNewLeadBlocked:
         this.readBoolean(source, "isNewLeadBlocked", "IsNewLeadBlocked") ??
@@ -1139,6 +1166,19 @@ export class ConsultantDashboardService {
   }
 
   private toUserFacingError(error: unknown, fallback: string): Error {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      Number((error as { status?: unknown }).status) === 401
+    ) {
+      this.auth.invalidateSession();
+      void this.router.navigateByUrl("/");
+      return new Error(
+        "نشست شما منقضی یا نامعتبر شده است؛ لطفاً دوباره وارد شوید.",
+      );
+    }
+
     if (error instanceof Error && error.message) return error;
     if (typeof error === "object" && error !== null && "error" in error) {
       const httpError = error as {

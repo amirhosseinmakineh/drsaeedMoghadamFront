@@ -215,7 +215,7 @@ export interface SecretaryReservationFilters {
 export interface ReviewAttendanceRequest {
   reservationId: number;
   patientReceivedService: boolean;
-  doctorName: string;
+  doctorName: string | null;
   note: string | null;
 }
 
@@ -338,10 +338,21 @@ export class SecretaryDashboardService {
   getReservations(
     filters: SecretaryReservationFilters,
   ): Observable<PaginatedResponse<SecretaryReservation>> {
+    const {
+      searchText,
+      attendanceConfirmationStatus,
+      ...reservationFilters
+    } = filters;
+    const requestFilters = {
+      ...reservationFilters,
+      search: searchText,
+      attendanceStatus: attendanceConfirmationStatus,
+    };
+
     return this.http
       .get<unknown>(`${this.apiBaseUrl}/Reservation/SecretaryReservations`, {
         headers: this.authHeaders(),
-        params: this.toParams(filters),
+        params: this.toParams(requestFilters),
       })
       .pipe(
         map((response) =>

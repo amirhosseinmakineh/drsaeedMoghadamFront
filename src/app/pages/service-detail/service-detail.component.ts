@@ -1,7 +1,6 @@
 import { NgFor } from "@angular/common";
 import { Component, signal } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
-import { Meta, Title } from "@angular/platform-browser";
 import {
   ClinicImage,
   DENTAL_SERVICES,
@@ -12,6 +11,7 @@ import {
   publicClinicImage,
 } from "../../models/clinic.model";
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
+import { servicePath } from "../../shared/routing/service-path";
 
 interface ResultVisual {
   before: ClinicImage;
@@ -191,26 +191,25 @@ export class ServiceDetailComponent {
   service: DentalService;
   relatedServices: DentalService[];
   protected readonly pickText = pickText;
+  protected readonly servicePath = servicePath;
 
   constructor(
     route: ActivatedRoute,
-    private title: Title,
-    private meta: Meta,
   ) {
     const serviceId =
-      route.snapshot.paramMap.get("id") ?? DENTAL_SERVICES[0].id;
+      route.snapshot.data["serviceId"] ??
+      route.snapshot.paramMap.get("id") ??
+      DENTAL_SERVICES[0].id;
     this.service =
       DENTAL_SERVICES.find((item) => item.id === serviceId) ??
       DENTAL_SERVICES[0];
     this.relatedServices = DENTAL_SERVICES.filter((item) =>
       this.service.relatedIds.includes(item.id),
     );
-    this.updateSeo();
   }
 
   setLanguage(language: LanguageCode): void {
     this.language.set(language);
-    this.updateSeo();
   }
 
   resultVisual(): ResultVisual {
@@ -247,19 +246,4 @@ export class ServiceDetailComponent {
     return DETAIL_COPY[this.service.id] ?? DETAIL_COPY["composite"];
   }
 
-  private updateSeo(): void {
-    this.title.setTitle(pickText(this.service.seo.title, this.language()));
-    this.meta.updateTag({
-      name: "description",
-      content: pickText(this.service.seo.description, this.language()),
-    });
-    this.meta.updateTag({
-      property: "og:title",
-      content: pickText(this.service.seo.title, this.language()),
-    });
-    this.meta.updateTag({
-      property: "og:description",
-      content: pickText(this.service.seo.description, this.language()),
-    });
-  }
 }

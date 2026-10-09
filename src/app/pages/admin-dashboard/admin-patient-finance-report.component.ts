@@ -1,0 +1,312 @@
+import { CommonModule } from "@angular/common";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { finalize } from "rxjs";
+import {
+  AdminDashboardService,
+  AdminPatientFinanceFile,
+  AdminPatientCheque,
+  AdminPatientFinanceDetails,
+  AdminPatientPromissoryNote,
+  PatientFinanceReportFilters,
+  PatientFinanceReportItem,
+  PatientFinanceReportResponse,
+  UpdatePatientFinanceRequest,
+} from "../../core/admin/admin-dashboard.service";
+import { ToastService } from "../../core/toast/toast.service";
+import { downloadBlob } from "../../utils/file-download.util";
+import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
+import { formatIranDateTime, toIranDateInputValue } from "../../utils/iran-datetime.util";
+import { BaseModalComponent } from "../../basemadual";
+import { PatientFinanceDetailsComponent } from "../../shared/patient-finance/patient-finance-details.component";
+
+@Component({
+  selector: "app-admin-patient-finance-report",
+  standalone: true,
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent, BaseModalComponent, PatientFinanceDetailsComponent],
+  templateUrl: "./admin-patient-finance-report.component.html",
+  styleUrl: "./admin-patient-finance-report.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AdminPatientFinanceReportComponent implements OnInit {
+  filters: PatientFinanceReportFilters = { page: 1, pageSize: 20 };
+  report: PatientFinanceReportResponse | null = null;
+  loading = false;
+  downloading = false;
+  errorMessage = "";
+  editing: PatientFinanceReportItem | null = null;
+  editForm: UpdatePatientFinanceRequest = { totalAmount: 0, prePaymentAmount: 0, depositAmount: 0, agreementType: 1 };
+  saving = false;
+  deletingId: string | null = null;
+  details: AdminPatientFinanceDetails | null = null;
+  detailsLoading = false;
+  commitmentSavingId: number | null = null;
+  fromDate?: Date;
+  toDate?: Date;
+  readonly fromDateLabel = { fa: "از تاریخ ثبت حسابداری", en: "From date" };
+  readonly toDateLabel = { fa: "تا تاریخ ثبت حسابداری", en: "To date" };
+  statementsFile: AdminPatientFinanceFile | null = null;
+  statementsLoading = false;
+  statementsError = "";
+
+  readonly services = [
+    { value: 1, label: "کامپوزیت" },
+    { value: 2, label: "ایمپلنت" },
+    { value: 3, label: "لمینت" },
+  ];
+
+  constructor(
+    private readonly api: AdminDashboardService,
+    private readonly toast: ToastService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void { this.load(); }
+
+  load(resetPage = false): void {
+    if (this.loading) return;
+    if (this.filters.fromDate && this.filters.toDate && this.filters.fromDate > this.filters.toDate) {
+      this.toast.error("تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد");
+      return;
+    }
+    if (resetPage) this.filters.page = 1;
+    this.loading = true;
+    this.errorMessage = "";
+    this.api.getPatientFinanceReport(this.filters)
+      .pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: report => { this.report = report; this.cdr.markForCheck(); },
+        error: error => {
+          this.errorMessage = error?.message || "دریافت گزارش انجام نشد";
+          this.toast.error(this.errorMessage);
+        },
+      });
+  }
+
+  clear(): void {
+    this.filters = { page: 1, pageSize: 20 };
+    this.fromDate = undefined;
+    this.toDate = undefined;
+    this.load();
+  }
+
+  setFromDate(date: Date): void {
+    this.fromDate = date;
+    this.filters.fromDate = toIranDateInputValue(date);
+    this.cdr.markForCheck();
+  }
+
+  setToDate(date: Date): void {
+    this.toDate = date;
+    this.filters.toDate = toIranDateInputValue(date);
+    this.cdr.markForCheck();
+  }
+
+  download(): void {
+    if (this.downloading) return;
+    this.downloading = true;
+    this.api.exportPatientFinanceReport(this.filters)
+      .pipe(finalize(() => { this.downloading = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: blob => {
+          downloadBlob(blob, `patient-finance-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
+          this.toast.success("خروجی اکسل حسابداری بیماران دانلود شد");
+        },
+        error: error => this.toast.error(error?.message || "دریافت فایل انجام نشد"),
+      });
+  }
+
+  openStatements(item: PatientFinanceReportItem): void {
+    this.statementsFile = {
+      id: 0,
+      fileNumber: Number(item.fileNumber),
+      firstName: item.patientName,
+      lastName: "",
+      phoneNumber: item.phoneNumber,
+      finance: null,
+    };
+    this.loadStatements(item.fileNumber);
+  }
+
+  retryStatements(): void {
+    if (this.statementsFile) this.loadStatements(String(this.statementsFile.fileNumber));
+  }
+
+  closeStatements(): void {
+    this.statementsFile = null;
+    this.statementsError = "";
+    this.statementsLoading = false;
+  }
+
+  private loadStatements(fileNumber: string): void {
+    if (!fileNumber || this.statementsLoading) {
+      if (!fileNumber) this.statementsError = "شماره پرونده بیمار برای دریافت صورت‌حساب موجود نیست.";
+      return;
+    }
+    this.statementsLoading = true;
+    this.statementsError = "";
+    this.api.getPatientFinanceFile(fileNumber).pipe(finalize(() => {
+      this.statementsLoading = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: file => {
+        if (!file) {
+          this.statementsError = "پرونده بیمار یافت نشد.";
+          return;
+        }
+        this.statementsFile = file;
+      },
+      error: error => this.statementsError = error?.message || "دریافت صورت‌حساب‌های بیمار انجام نشد",
+    });
+  }
+
+  startEdit(item: PatientFinanceReportItem): void {
+    this.editing = item;
+    this.editForm = {
+      totalAmount: item.totalAmount,
+      prePaymentAmount: item.prePaymentAmount,
+      depositAmount: item.depositAmount,
+      agreementType: item.agreementType,
+      paymentMethod: item.paymentMethod ?? null,
+      installmentStatus: item.installmentStatus ?? null,
+      guaranteeDocument: item.guaranteeDocument ?? null,
+      guaranteeDate: item.guaranteeDate?.slice(0, 10) ?? null,
+      guaranteeAmount: item.guaranteeAmount ?? null,
+      guaranteeChequeRegistration: item.guaranteeChequeRegistration ?? null,
+      notes: item.notes ?? null,
+      consultantName: item.consultantName ?? null,
+      reviewItems: item.reviewItems ?? null,
+    };
+  }
+
+  cancelEdit(): void { this.editing = null; this.details = null; }
+
+  openDetails(item: PatientFinanceReportItem): void {
+    this.startEdit(item);
+    this.details = null;
+    this.detailsLoading = true;
+    this.api.getPatientFinanceDetails(item.caseId).pipe(finalize(() => {
+      this.detailsLoading = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: response => {
+        if (!response.isSuccess || !response.data) { this.toast.error(response.message); return; }
+        this.details = {
+          ...response.data,
+          cheques: (response.data.cheques ?? []).map((cheque) => ({
+            ...cheque,
+            dueDate: this.toDateInputValue(cheque.dueDate),
+          })),
+          promissoryNotes: (response.data.promissoryNotes ?? []).map((note) => ({
+            ...note,
+            dueDate: this.toDateInputValue(note.dueDate),
+          })),
+        };
+      },
+      error: error => this.toast.error(error?.message || "دریافت جزئیات انجام نشد"),
+    });
+  }
+
+  saveEdit(): void {
+    if (!this.editing || this.saving) return;
+    if (this.editForm.totalAmount <= 0 || this.editForm.prePaymentAmount < 0 || this.editForm.depositAmount < 0) {
+      this.toast.error("مبالغ واردشده معتبر نیستند");
+      return;
+    }
+    if (this.editForm.prePaymentAmount + this.editForm.depositAmount > this.editForm.totalAmount) {
+      this.toast.error("مجموع پیش‌پرداخت و ودیعه نمی‌تواند بیشتر از مبلغ کل باشد");
+      return;
+    }
+    this.saving = true;
+    this.api.updatePatientFinance(this.editing.caseId, this.editForm)
+      .pipe(finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: response => {
+          if (!response.isSuccess) { this.toast.error(response.message); return; }
+          this.toast.success(response.message || "حسابداری بیمار ویرایش شد");
+          this.editing = null;
+          this.load();
+        },
+        error: error => this.toast.error(error?.message || "ویرایش انجام نشد"),
+      });
+  }
+
+  delete(item: PatientFinanceReportItem): void {
+    if (this.deletingId || !confirm(`حسابداری ${item.patientName} حذف شود؟`)) return;
+    this.deletingId = item.caseId;
+    this.api.deletePatientFinance(item.caseId)
+      .pipe(finalize(() => { this.deletingId = null; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: response => {
+          if (!response.isSuccess) { this.toast.error(response.message); return; }
+          this.toast.success(response.message || "حسابداری بیمار حذف شد");
+          this.cancelEdit();
+          this.load();
+        },
+        error: error => this.toast.error(error?.message || "حذف انجام نشد"),
+      });
+  }
+
+  saveCheque(item: AdminPatientCheque): void {
+    if (this.commitmentSavingId || item.amount <= 0 || !item.sayadNumber?.trim() || !item.ownerName?.trim() || !item.dueDate) return;
+    this.commitmentSavingId = item.id;
+    this.api.updatePatientCheque(item.id, { amount: item.amount, sayadNumber: item.sayadNumber, ownerName: item.ownerName, dueDate: item.dueDate })
+      .pipe(finalize(() => { this.commitmentSavingId = null; this.cdr.markForCheck(); }))
+      .subscribe({ next: response => this.afterCommitment(response), error: error => this.toast.error(error?.message || "ویرایش چک انجام نشد") });
+  }
+
+  saveNote(item: AdminPatientPromissoryNote): void {
+    if (this.commitmentSavingId || item.amount <= 0 || !item.serialNumber?.trim() || !item.dueDate) return;
+    this.commitmentSavingId = item.id;
+    this.api.updatePatientPromissoryNote(item.id, { amount: item.amount, serialNumber: item.serialNumber, dueDate: item.dueDate })
+      .pipe(finalize(() => { this.commitmentSavingId = null; this.cdr.markForCheck(); }))
+      .subscribe({ next: response => this.afterCommitment(response), error: error => this.toast.error(error?.message || "ویرایش سفته انجام نشد") });
+  }
+
+  deleteCheque(item: AdminPatientCheque): void {
+    if (this.commitmentSavingId || !confirm("چک و اثر مالی آن حذف شود؟")) return;
+    this.commitmentSavingId = item.id;
+    this.api.deletePatientCheque(item.id).pipe(finalize(() => { this.commitmentSavingId = null; this.cdr.markForCheck(); }))
+      .subscribe({ next: response => this.afterCommitment(response), error: error => this.toast.error(error?.message || "حذف چک انجام نشد") });
+  }
+
+  deleteNote(item: AdminPatientPromissoryNote): void {
+    if (this.commitmentSavingId || !confirm("سفته و اثر مالی آن حذف شود؟")) return;
+    this.commitmentSavingId = item.id;
+    this.api.deletePatientPromissoryNote(item.id).pipe(finalize(() => { this.commitmentSavingId = null; this.cdr.markForCheck(); }))
+      .subscribe({ next: response => this.afterCommitment(response), error: error => this.toast.error(error?.message || "حذف سفته انجام نشد") });
+  }
+
+  private afterCommitment(response: { isSuccess: boolean; message: string }): void {
+    if (!response.isSuccess) { this.toast.error(response.message); return; }
+    this.toast.success(response.message);
+    if (this.editing) this.openDetails(this.editing);
+    this.load();
+  }
+
+  private toDateInputValue(value: string): string {
+    return value?.slice(0, 10) ?? "";
+  }
+
+  goTo(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.filters.page) return;
+    this.filters.page = page;
+    this.load();
+  }
+
+  money(value: number): string {
+    return `${new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 3 }).format(value || 0)} تومان`;
+  }
+
+  agreement(value: number): string { return value === 1 ? "پیش‌پرداخت" : value === 2 ? "ودیعه" : "—"; }
+  status(value: number): string { return value === 1 ? "فعال" : value === 2 ? "تسویه‌شده" : value === 3 ? "لغوشده" : "—"; }
+  date(value: string): string { return formatIranDateTime(value); }
+  chequeDatesLabel(item: PatientFinanceReportItem): string {
+    return item.chequeDates?.map(value => this.date(value)).join("، ") || "—";
+  }
+  trackCase(_: number, item: { caseId: string }): string { return item.caseId; }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil((this.report?.totalCount || 0) / this.filters.pageSize));
+  }
+}

@@ -457,6 +457,10 @@
           <app-admin-daily-reservations-report></app-admin-daily-reservations-report>
         }
 
+        @if (activeSection === "leadSheets") {
+          <app-admin-lead-sheets></app-admin-lead-sheets>
+        }
+
       </section>
     } @else {
       <div class="dashboard-hero">

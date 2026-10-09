@@ -20,6 +20,7 @@ import { SecretaryAccessResult, SecretaryDashboardService, SecretaryPermission }
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { SecretaryReservationsComponent } from "./secretary-reservations.component";
 import { SecretaryReservationRequestsComponent } from "./secretary-reservation-requests.component";
+import { SecretaryPatientReferralsComponent } from "../../features/patient-referrals/secretary/pages/secretary-patient-referrals/secretary-patient-referrals.component";
 import {
   SecretaryDashboardPreset,
   SecretaryOverviewComponent,
@@ -28,7 +29,8 @@ import {
 type SecretaryDashboardSection =
   | "overview"
   | "reservations"
-  | "reviews";
+  | "reviews"
+  | "patientReferrals";
 
 interface SecretaryDashboardLink {
   id: SecretaryDashboardSection;
@@ -40,6 +42,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
   "overview",
   "reservations",
   "reviews",
+  "patientReferrals",
 ];
 
 @Component({
@@ -52,6 +55,7 @@ const SECRETARY_DASHBOARD_SECTIONS: SecretaryDashboardSection[] = [
     SecretaryReservationsComponent,
     SecretaryReservationRequestsComponent,
     SecretaryOverviewComponent,
+    SecretaryPatientReferralsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./secretary-dashboard.component.html",
@@ -67,6 +71,7 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
     { id: "reservations", label: "رزروها", icon: "calendar" },
     { id: "reviews", label: "تایید حضور", icon: "check" },
+    { id: "patientReferrals", label: "بیماران معرفی‌شده", icon: "users" },
   ];
 
   readonly displayName = computed(() => {
@@ -220,7 +225,8 @@ export class SecretaryDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.activateSectionFromRoute("overview");
+    const initialSection = this.route.snapshot.data["initialSection"] as SecretaryDashboardSection | undefined;
+    this.activateSectionFromRoute(initialSection && SECRETARY_DASHBOARD_SECTIONS.includes(initialSection) ? initialSection : "overview");
   }
 
   toggleMobileSidebar(): void {

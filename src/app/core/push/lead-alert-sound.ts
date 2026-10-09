@@ -5,8 +5,8 @@ const CHIME_ONE_SHOT_CLOSE_MS = 2800;
 
 let audioContext: AudioContext | null = null;
 const loopingLeadIds = new Set<number>();
-const leadSoundTimers = new Map<number, ReturnType<typeof setInterval>>();
-let closeContextTimer: ReturnType<typeof setTimeout> | null = null;
+const leadSoundTimers = new Map<number, number>();
+let closeContextTimer: number | null = null;
 let activeOscillators: OscillatorNode[] = [];
 
 /** Call after a user gesture so iOS/Android allow loud alert audio later. */

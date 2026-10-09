@@ -1,7 +1,6 @@
 import { Component, signal } from "@angular/core";
 import { NgFor, NgIf } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { Meta, Title } from "@angular/platform-browser";
 import {
   ContactFormModel,
   DENTAL_SERVICES,
@@ -12,6 +11,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
 import { FaIconComponent } from "../../shared/ui/fa-icon/fa-icon.component";
 import { ToastService } from "../../core/toast/toast.service";
 import { NG_MODEL_UPDATE_ON_BLUR } from "../../shared/forms/ng-model-options";
+import { AnalyticsService } from "../../core/analytics/analytics.service";
 
 @Component({
   selector: "app-contact",
@@ -62,26 +62,24 @@ export class ContactComponent {
   ];
 
   constructor(
-    private title: Title,
-    private meta: Meta,
     private toast: ToastService,
-  ) {
-    this.updateSeo();
-  }
+    private analytics: AnalyticsService,
+  ) {}
 
   setLanguage(language: LanguageCode): void {
     this.language.set(language);
-    this.updateSeo();
   }
 
   submit(): void {
     const validationError = this.validateContactForm();
     if (validationError) {
+      this.analytics.track("consultation_form_submit", { service_name: this.form.serviceId, cta_location: "contact_form", result: "failure" });
       this.showFeedback(validationError, "error");
       return;
     }
 
     this.sent.set(true);
+    this.analytics.track("consultation_form_submit", { service_name: this.form.serviceId, cta_location: "contact_form", result: "success" });
     this.showFeedback(
       this.language() === "fa"
         ? "درخواست شما ثبت شد."
@@ -123,18 +121,4 @@ export class ContactComponent {
     window.dispatchEvent(new CustomEvent("open-auth-dialog"));
   }
 
-  private updateSeo(): void {
-    const isFa = this.language() === "fa";
-    this.title.setTitle(
-      isFa
-        ? "تماس با ما | کلینیک دندان‌پزشکی دکتر سعید مقدم"
-        : "Contact us | Dr. Saeed Moghaddam Dental Clinic",
-    );
-    this.meta.updateTag({
-      name: "description",
-      content: isFa
-        ? "فرم درخواست تماس مشاور، ساعات پاسخگویی و راهنمای هماهنگی مراجعه کلینیک دندان‌پزشکی دکتر سعید مقدم."
-        : "Consultant call request form, response hours and visit coordination guidance for Dr. Saeed Moghaddam Dental Clinic.",
-    });
-  }
 }

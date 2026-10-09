@@ -11,10 +11,10 @@ export interface BaseTableColumn<T extends object> {
   primaryOnMobile?: boolean;
 }
 
-export type BaseCardVariant = "default" | "elevated" | "interactive" | "flat";
+export type BaseCardVariant = "default" |  "elevated" | "interactive" | "flat";
 export type BaseBadgeVariant =
   | "success"
-  | "danger"
+  | "danger" 
   | "warning"
   | "info"
   | "neutral";

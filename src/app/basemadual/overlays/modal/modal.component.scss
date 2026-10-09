@@ -8,6 +8,8 @@
   inset: 0;
   display: grid;
   background: rgb(0 0 0 / 45%);
+  height: 100dvh;
+  padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
 }
 section {
   display: grid;
@@ -16,6 +18,8 @@ section {
   height: 100%;
   background: var(--bm-surface);
   color: var(--bm-text);
+  min-width: 0;
+  max-width: 100%;
 }
 header,
 footer {
@@ -59,12 +63,14 @@ main {
   section {
     width: min(48rem, 100%);
     height: auto;
-    max-height: min(90vh, 50rem);
+    max-height: min(90dvh, 50rem);
     border-radius: var(--bm-radius-lg);
     overflow: hidden;
   }
 }
 @media (max-width: 639px) {
-  section { border-radius: 0; }
+  section { height: 100%; max-height: 100dvh; border-radius: 0; }
   main { padding: var(--bm-space-3); }
+  footer { flex-wrap: wrap; }
+  footer ::ng-deep > * { flex: 1 1 100%; }
 }

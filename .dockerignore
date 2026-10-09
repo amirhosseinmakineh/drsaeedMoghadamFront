@@ -1,0 +1,14 @@
+.git
+.github
+.angular
+node_modules
+dist
+coverage
+docs
+*.zip
+*.log
+.env
+.env.*
+!.env.example
+Dockerfile*
+docker-compose*
