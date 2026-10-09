@@ -53,10 +53,7 @@ app.use((_request, response) => {
 if (isMainModule(import.meta.url) || process.env["pm_id"]) {
   const port = Number(process.env["PORT"] || 3000);
   const host = process.env["HOST"] || "0.0.0.0";
-  app.listen(port, host, (error) => {
-    if (error) throw error;
-    console.log(`Angular SSR server listening on http://${host}:${port}`);
-  });
+  app.listen(port, host);
 }
 
 export const reqHandler = createNodeRequestHandler(app);

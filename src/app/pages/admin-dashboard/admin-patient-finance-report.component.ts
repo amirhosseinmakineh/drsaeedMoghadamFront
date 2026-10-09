@@ -53,6 +53,10 @@ export class AdminPatientFinanceReportComponent implements OnInit {
     { value: 1, label: "کامپوزیت" },
     { value: 2, label: "ایمپلنت" },
     { value: 3, label: "لمینت" },
+    { value: 4, label: "روکش" },
+    { value: 5, label: "عصب کشی" },
+    { value: 6, label: "ترمیم" },
+    { value: 7, label: "کشیدن دندان" },
   ];
 
   constructor(
@@ -176,6 +180,7 @@ export class AdminPatientFinanceReportComponent implements OnInit {
       notes: item.notes ?? null,
       consultantName: item.consultantName ?? null,
       reviewItems: item.reviewItems ?? null,
+      toothUnitCount: item.toothUnitCount ?? null,
     };
   }
 
