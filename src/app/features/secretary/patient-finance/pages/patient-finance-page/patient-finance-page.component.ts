@@ -102,7 +102,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     paymentMethod: [null as string | null],
     installmentStatus: [null as string | null],
     guaranteeDocument: [null as string | null],
-    guaranteeDate: [null as string | null],
+    guaranteeDate: [null as Date | null],
     guaranteeAmount: [null as number | null],
     guaranteeChequeRegistration: [null as string | null],
     notes: [null as string | null],
@@ -123,7 +123,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     paymentMethod: [null as string | null],
     installmentStatus: [null as string | null],
     guaranteeDocument: [null as string | null],
-    guaranteeDate: [null as string | null],
+    guaranteeDate: [null as Date | null],
     guaranteeAmount: [null as number | null],
     guaranteeChequeRegistration: [null as string | null],
     notes: [null as string | null],
@@ -333,7 +333,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceIds: this.serviceIds.controls.map(c => Number(c.value)), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, guaranteeDate: value.guaranteeDate, guaranteeAmount: value.guaranteeAmount, guaranteeChequeRegistration: value.guaranteeChequeRegistration, notes: value.notes, consultantName: value.consultantName, reviewItems: value.reviewItems, toothUnitCount: value.toothUnitCount ?? null, cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.serviceIds.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceIds: this.serviceIds.controls.map(c => Number(c.value)), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, guaranteeDate: value.guaranteeDate ? this.iso(value.guaranteeDate) : null, guaranteeAmount: value.guaranteeAmount, guaranteeChequeRegistration: value.guaranteeChequeRegistration, notes: value.notes, consultantName: value.consultantName, reviewItems: value.reviewItems, toothUnitCount: value.toothUnitCount ?? null, cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.serviceIds.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: PatientFinancialCaseId): void {
@@ -354,7 +354,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
         paymentMethod: details.case.paymentMethod ?? null,
         installmentStatus: details.case.installmentStatus ?? null,
         guaranteeDocument: details.case.guaranteeDocument ?? null,
-        guaranteeDate: details.case.guaranteeDate?.slice(0, 10) ?? null,
+        guaranteeDate: details.case.guaranteeDate ? new Date(details.case.guaranteeDate) : null,
         guaranteeAmount: details.case.guaranteeAmount ?? null,
         guaranteeChequeRegistration: details.case.guaranteeChequeRegistration ?? null,
         notes: details.case.notes ?? null,
@@ -374,7 +374,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.mutate(this.details.case.id, this.api.updateCase(this.details.case.id, {
       totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount),
       depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType),
-      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, guaranteeDate: value.guaranteeDate, guaranteeAmount: value.guaranteeAmount, guaranteeChequeRegistration: value.guaranteeChequeRegistration, notes: value.notes, consultantName: value.consultantName, reviewItems: value.reviewItems, toothUnitCount: value.toothUnitCount ?? null,
+      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, guaranteeDate: value.guaranteeDate ? this.iso(value.guaranteeDate) : null, guaranteeAmount: value.guaranteeAmount, guaranteeChequeRegistration: value.guaranteeChequeRegistration, notes: value.notes, consultantName: value.consultantName, reviewItems: value.reviewItems, toothUnitCount: value.toothUnitCount ?? null,
     }), "حسابداری بیمار و همه جمع‌ها به‌روزرسانی شد.");
   }
   saveCheque(index: number): void {
