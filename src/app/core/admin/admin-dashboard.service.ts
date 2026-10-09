@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 10491)
-Total output lines: 1415
-
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, catchError, forkJoin, from, map, switchMap, throwError } from "rxjs";
@@ -586,7 +583,6 @@ interface LeadPerson {
   Mobile?: string | null;
 }
 
-@Injectable({ providedIn: "root" })
 export interface AdminLeadSheet { id: number; name: string; isActive: boolean; createdAt: string; }
 
 export class AdminDashboardService {
@@ -706,7 +702,65 @@ export class AdminDashboardService {
     );
   }
 
-  getConsultantsList…491 tokens truncated…LastName || "",
+  getConsultantsList(
+    filters: ConsultantFilters = { pageNumber: 1, pageSize: 500 },
+  ): Observable<PaginatedResponse<Consultant>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
+        headers: this.authHeaders(),
+        params: this.toParams(filters),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<Consultant>(response, filters),
+        ),
+        catchError((error) =>
+          throwError(() =>
+            this.toUserFacingError(error, "دریافت فهرست مشاوران انجام نشد"),
+          ),
+        ),
+      );
+  }
+
+  private fetchConsultantProfiles(): Observable<PaginatedResponse<Consultant>> {
+    return this.http
+      .get<unknown>(`${this.apiBaseUrl}/Consultant/GetConsultants`, {
+        headers: this.authHeaders(),
+        params: this.toParams({ pageNumber: 1, pageSize: 500 }),
+      })
+      .pipe(
+        map((response) =>
+          this.normalizePaginatedResponse<Consultant>(response, {
+            pageNumber: 1,
+            pageSize: 500,
+          }),
+        ),
+      );
+  }
+
+  private mergeConsultantsFromUsers(
+    users: AdminUser[],
+    profiles: Consultant[],
+  ): Consultant[] {
+    const profileByUserId = new Map<string, Consultant>();
+    const profileByPhone = new Map<string, Consultant>();
+
+    profiles.forEach((profile) => {
+      const userId = profile.id || profile.Id || "";
+      const phone = profile.phoneNumber || profile.PhoneNumber || "";
+      if (userId) profileByUserId.set(userId, profile);
+      if (phone) profileByPhone.set(phone, profile);
+    });
+
+    return users.map((user) => {
+      const userId = user.id || user.Id || "";
+      const phone = user.phoneNumber || user.PhoneNumber || "";
+      const profile = profileByUserId.get(userId) ?? profileByPhone.get(phone);
+
+      return {
+        id: userId,
+        firstName: user.firstName || user.FirstName || "",
+        lastName: user.lastName || user.LastName || "",
         phoneNumber: phone,
         profileId:
           user.consultantProfileId ??
