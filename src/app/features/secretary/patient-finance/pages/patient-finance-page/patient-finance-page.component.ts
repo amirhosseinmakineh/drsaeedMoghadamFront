@@ -80,7 +80,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   readonly pageSize = 20;
   loading = false;
   submitting = false;
-  actionId: number | null = null;
+  actionId: string | number | null = null;
   details: PatientFinancialCaseDetails | null = null;
   summary: PatientFinancialCaseSummary | null = null;
   detailCheques: PatientCheque[] = [];
@@ -93,7 +93,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   commitmentModalItems: Array<PatientCheque | PatientPromissoryNote> = [];
   commitmentModalLoading = false;
   debtEligibilityLoading = false;
-  readonly debtCaseIdsWithPendingCommitments = new Set<number>();
+  readonly debtCaseIdsWithPendingCommitments = new Set<string | number>();
   private selectedFinancialPatientId: PatientGuid | null = null;
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
@@ -262,7 +262,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceId: Number(value.serviceId), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
-  openDetails(id: number): void {
+  openDetails(id: string | number): void {
     this.loading = true;
     forkJoin({ details: this.api.getCase(id), summary: this.api.getCaseSummary(id) }).pipe(
       finalize(() => { this.loading = false; this.cdr.markForCheck(); }),
@@ -329,9 +329,11 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   }
   patientReference(name: string | null | undefined, fileNumber: string | number | null | undefined): string { return `${name?.trim() || "بیمار"} به شماره پرونده ${fileNumber || "—"}`; }
   recordFileNumber(item: { patientFileNumber?: string | number | null; fileNumber?: string | number | null }): string | number | null { return item.patientFileNumber ?? item.fileNumber ?? null; }
-  serviceLabel(serviceId: number | null | undefined, serviceName: string | null | undefined): string {
-    const byId = this.services.find(service => service.id === Number(serviceId))?.label;
-    if (byId) return byId;
+  serviceLabel(serviceId: number | number[] | null | undefined, serviceName: string | null | undefined): string {
+    const ids = Array.isArray(serviceId) ? serviceId : serviceId == null ? [] : [serviceId];
+    const byId = this.services.filter(service => ids.includes(service.id)).map(service => service.label);
+    if (byId.length) return byId.join("، ");
+    if (byId.length) return byId.join("، ");
     const normalized = serviceName?.trim().toLowerCase();
     return ({ composite: "کامپوزیت", implant: "ایمپلنت", laminate: "لمینت", crown: "روکش", rootcanal: "عصب‌کشی", filling: "ترمیم", toothextraction: "کشیدن دندان" } as Record<string, string>)[normalized?.replace(/[\s-]/g, "") ?? ""] ?? serviceName ?? "—";
   }
@@ -393,6 +395,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       error: (error: HttpErrorResponse) => this.showError(error),
     });
   }
-  private mutate(id: number, request: ReturnType<PatientFinanceApiService["payDebt"]>, success: string): void { if (this.actionId !== null) return; this.actionId = id; request.pipe(finalize(() => { this.actionId = null; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: r => { if (!r.isSuccess) { this.toast.error(r.message); return; } this.toast.success(r.message || success); this.load(); if (this.details) this.openDetails(this.details.case.id); }, error: e => this.showError(e) }); }
+  private mutate(id: string | number, request: ReturnType<PatientFinanceApiService["payDebt"]>, success: string): void { if (this.actionId !== null) return; this.actionId = id; request.pipe(finalize(() => { this.actionId = null; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: r => { if (!r.isSuccess) { this.toast.error(r.message); return; } this.toast.success(r.message || success); this.load(); if (this.details) this.openDetails(this.details.case.id); }, error: e => this.showError(e) }); }
   private showError(error: HttpErrorResponse): void { this.toast.error(error.error?.message || error.message || "ارتباط با سرور انجام نشد."); }
 }
+
