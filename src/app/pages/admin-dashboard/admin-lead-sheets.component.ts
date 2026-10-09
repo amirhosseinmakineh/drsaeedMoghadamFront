@@ -20,12 +20,24 @@ export class AdminLeadSheetsComponent {
   private readonly cdr = inject(ChangeDetectorRef);
 
   sheetName = "";
+  sheets: AdminLeadSheet[] = [];
   activeSheet: AdminLeadSheet | null = null;
   phoneNumber = "";
   firstName = "";
   lastName = "";
   creatingSheet = false;
+  loadingSheets = false;
   addingLead = false;
+
+  ngOnInit(): void { this.loadSheets(); }
+
+  loadSheets(): void {
+    this.loadingSheets = true;
+    this.api.getAdminLeadSheets().pipe(finalize(() => { this.loadingSheets = false; this.cdr.markForCheck(); }))
+      .subscribe({ next: (sheets) => { this.sheets = sheets; if (!this.activeSheet && sheets.length) this.activeSheet = sheets[0]; }, error: (error) => this.toast.error(this.errorMessage(error, "دریافت شیت‌ها انجام نشد.")) });
+  }
+
+  selectSheet(sheet: AdminLeadSheet): void { this.activeSheet = sheet; }
 
   createSheet(): void {
     const name = this.sheetName.trim();
@@ -33,7 +45,7 @@ export class AdminLeadSheetsComponent {
     this.creatingSheet = true;
     this.api.createAdminLeadSheet(name).pipe(finalize(() => { this.creatingSheet = false; this.cdr.markForCheck(); }))
       .subscribe({
-        next: (sheet) => { this.activeSheet = sheet; this.sheetName = ""; this.toast.success("شیت با موفقیت ساخته شد."); },
+        next: (sheet) => { this.sheets = [sheet, ...this.sheets]; this.activeSheet = sheet; this.sheetName = ""; this.toast.success("شیت با موفقیت ساخته شد."); },
         error: (error) => this.toast.error(this.errorMessage(error, "ساخت شیت انجام نشد.")),
       });
   }

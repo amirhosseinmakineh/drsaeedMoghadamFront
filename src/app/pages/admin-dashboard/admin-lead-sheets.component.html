@@ -7,6 +7,12 @@
     </div>
   </header>
 
+  <div class="sheet-list">
+    <div class="list-title">شیت‌های موجود</div>
+    @if (loadingSheets) { <span class="hint">در حال دریافت...</span> }
+    @else if (!sheets.length) { <span class="hint">هنوز شیتی ساخته نشده است.</span> }
+    @else { <div class="sheet-tabs"> @for (sheet of sheets; track sheet.id) { <button type="button" [class.selected]="activeSheet?.id === sheet.id" (click)="selectSheet(sheet)">{{ sheet.name }} <small>#{{ sheet.id }}</small></button> } </div> }
+  </div>
   <div class="sheet-grid">
     <form class="panel-card" (ngSubmit)="createSheet()">
       <h3>ساخت شیت جدید</h3>
