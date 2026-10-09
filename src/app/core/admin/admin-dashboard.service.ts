@@ -5,11 +5,18 @@ import { AuthService } from "../auth/auth.service";
 import { environment } from "../../../environments/environment";
 import { ReservationDto } from "../reservation/reservation.model";
 import { ensureCsvBlob } from "../../utils/file-download.util";
+import { PatientFinanceDetails } from "../../shared/patient-finance/patient-finance-details.models";
 
 export interface ApiCommandResponse<T = unknown> {
   isSuccess: boolean;
   message: string;
   data?: T;
+}
+
+export type LeadAssignmentSourceType = 1 | 2;
+export interface LeadAssignmentSettingResponse {
+  assignmentSourceType: LeadAssignmentSourceType;
+  updatedAt?: string | null;
 }
 
 export interface PaginatedResponse<T> {
@@ -370,7 +377,6 @@ export interface DailyReservationsSummary {
   canceled: number;
   pendingSecretaryReview: number;
   confirmed: number;
-  rescheduled: number;
   rejected: number;
   uniqueConsultants: number;
 }
@@ -420,9 +426,121 @@ export interface DailyReservationsReport {
   items: DailyReservationReportItem[];
 }
 
+export interface PatientFinanceReportFilters {
+  search?: string;
+  patientName?: string;
+  fileNumber?: number;
+  serviceId?: number;
+  agreementType?: number;
+  status?: number;
+  fromDate?: string;
+  toDate?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface AdminPatientFinanceFile {
+  id: number;
+  fileNumber: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  finance: PatientFinanceDetails | null;
+}
+
+export interface PatientFinanceReportItem {
+  chequeDates?: string[];
+  chequeRegistrations?: string[];
+  balanceAmount: number;
+  chequeDate?: string | null;
+  chequeRegistration?: string | null;
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  guaranteeDocument?: string | null;
+  guaranteeDate?: string | null;
+  guaranteeAmount?: number | null;
+  guaranteeChequeRegistration?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  reviewItems?: string | null;
+  toothUnitCount?: number | null;
+  caseId: string;
+  patientId: string;
+  patientName: string;
+  phoneNumber: string;
+  fileNumber: string;
+  serviceIds: number[];
+  serviceNames: string[];
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  unpaidDebtAmount: number;
+  chequeAmount: number;
+  promissoryNoteAmount: number;
+  agreementType: number;
+  status: number;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface PatientFinanceReportSummary {
+  caseCount: number;
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  unpaidDebtAmount: number;
+  chequeAmount: number;
+  promissoryNoteAmount: number;
+}
+
+export interface PatientFinanceReportResponse {
+  items: PatientFinanceReportItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  summary: PatientFinanceReportSummary;
+}
+
+export interface UpdatePatientFinanceRequest {
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  guaranteeDocument?: string | null;
+  guaranteeDate?: string | null;
+  guaranteeAmount?: number | null;
+  guaranteeChequeRegistration?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  reviewItems?: string | null;
+  toothUnitCount?: number | null;
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  agreementType: number;
+}
+
+export interface AdminPatientCheque { id: number; amount: number; sayadNumber: string; ownerName: string; dueDate: string; status: number; }
+export interface AdminPatientPromissoryNote { id: number; amount: number; serialNumber: string; dueDate: string; status: number; }
+export interface AdminPatientFinanceDetails {
+  case: PatientFinanceReportItem;
+  chequeCount: number;
+  chequeAmount: number;
+  promissoryNoteCount: number;
+  promissoryNoteAmount: number;
+  cheques?: AdminPatientCheque[];
+  promissoryNotes?: AdminPatientPromissoryNote[];
+}
+export interface UpdateAdminChequeRequest { amount: number; sayadNumber: string; ownerName: string; dueDate: string; }
+export interface UpdateAdminPromissoryNoteRequest { amount: number; serialNumber: string; dueDate: string; }
+
+export interface AdminLeadSheet { id: number; name: string; isActive: boolean; createdAt: string; }
+
 export interface LeadFilters {
-  searchText?: string;
   profileId?: number;
+  searchText?: string;
   leadAssignmentState?: number | null;
   leadAssignmentType?: number | null;
   pageNumber: number;
@@ -584,11 +702,8 @@ interface LeadPerson {
   Mobile?: string | null;
 }
 
-export interface AdminLeadSheet { id: number; name: string; isActive: boolean; createdAt: string; }
-
 @Injectable({ providedIn: "root" })
 export class AdminDashboardService {
-  private readonly apiBaseUrl = environment.apiBaseUrl;
   getAdminLeadSheets(): Observable<AdminLeadSheet[]> {
     return this.http.get<AdminLeadSheet[]>(`${this.apiBaseUrl}/admin/lead-sheets`, { headers: this.authHeaders() });
   }
@@ -601,11 +716,24 @@ export class AdminDashboardService {
     return this.http.post(`${this.apiBaseUrl}/admin/lead-sheets/${sheetId}/leads`, lead, { headers: this.authHeaders() });
   }
 
+  private readonly apiBaseUrl = environment.apiBaseUrl;
 
   constructor(
     private http: HttpClient,
     private auth: AuthService,
   ) {}
+
+  getLeadAssignmentSetting(): Observable<LeadAssignmentSettingResponse> {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/admin/lead-assignment-settings`, {
+      headers: this.authHeaders(),
+    }).pipe(map((response) => this.unwrap<LeadAssignmentSettingResponse>(response)));
+  }
+
+  updateLeadAssignmentSetting(assignmentSourceType: LeadAssignmentSourceType): Observable<LeadAssignmentSettingResponse> {
+    return this.http.put<unknown>(`${this.apiBaseUrl}/admin/lead-assignment-settings`, { assignmentSourceType }, {
+      headers: this.authHeaders(),
+    }).pipe(map((response) => this.unwrap<LeadAssignmentSettingResponse>(response)));
+  }
 
   getUsers(filters: UserFilters): Observable<PaginatedResponse<AdminUser>> {
     return this.http
@@ -672,9 +800,8 @@ export class AdminDashboardService {
 
   deleteUser(userId: string): Observable<ApiCommandResponse<boolean>> {
     return this.http
-      .delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User`, {
+      .delete<ApiCommandResponse<boolean>>(`${this.apiBaseUrl}/User/${encodeURIComponent(userId)}`, {
         headers: this.authHeaders(),
-        params: this.toParams({ Id: userId }),
       })
       .pipe(this.ensureCommandSucceeded("حذف کاربر انجام نشد"));
   }
@@ -987,6 +1114,90 @@ export class AdminDashboardService {
     return this.exportCsvReport("daily-reservations/export", filters);
   }
 
+  getPatientFinanceReport(
+    filters: PatientFinanceReportFilters,
+  ): Observable<PatientFinanceReportResponse> {
+    return this.http.get<PatientFinanceReportResponse>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances`,
+      { headers: this.authHeaders(), params: this.toParams(filters) },
+    ).pipe(catchError((error) => throwError(() =>
+      this.toUserFacingError(error, "دریافت گزارش حسابداری بیماران انجام نشد"),
+    )));
+  }
+
+  exportPatientFinanceReport(filters: PatientFinanceReportFilters): Observable<Blob> {
+    const { page: _page, pageSize: _pageSize, ...exportFilters } = filters;
+    return this.http.get(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/export`,
+      {
+        headers: this.authHeaders().set(
+          "Accept",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
+        params: this.toParams(exportFilters),
+        responseType: "blob",
+      },
+    ).pipe(catchError((error) => throwError(() =>
+      this.toUserFacingError(error, "دریافت خروجی اکسل حسابداری انجام نشد"),
+    )));
+  }
+
+  getPatientFinanceFile(fileNumber: string): Observable<AdminPatientFinanceFile | null> {
+    return this.http.get<AdminPatientFinanceFile>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/files/${fileNumber}`,
+      {
+        headers: this.authHeaders(),
+      },
+    ).pipe(
+      map(response => response ?? null),
+      catchError(error => throwError(() =>
+        this.toUserFacingError(error, "دریافت صورت‌حساب‌های بیمار انجام نشد"),
+      )),
+    );
+  }
+
+  updatePatientFinance(caseId: string, request: UpdatePatientFinanceRequest): Observable<ApiCommandResponse> {
+    return this.http.put<ApiCommandResponse>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/${caseId}`,
+      request,
+      { headers: this.authHeaders() },
+    ).pipe(catchError((error) => throwError(() =>
+      this.toUserFacingError(error, "ویرایش حسابداری بیمار انجام نشد"),
+    )));
+  }
+
+  deletePatientFinance(caseId: string): Observable<ApiCommandResponse> {
+    return this.http.delete<ApiCommandResponse>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/${caseId}`,
+      { headers: this.authHeaders() },
+    ).pipe(catchError((error) => throwError(() =>
+      this.toUserFacingError(error, "حذف حسابداری بیمار انجام نشد"),
+    )));
+  }
+
+  getPatientFinanceDetails(caseId: string): Observable<ApiCommandResponse<AdminPatientFinanceDetails>> {
+    return this.http.get<ApiCommandResponse<AdminPatientFinanceDetails>>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/${caseId}/details`,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  updatePatientCheque(id: number, request: UpdateAdminChequeRequest): Observable<ApiCommandResponse> {
+    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/admin/reports/patient-finances/cheques/${id}`, request, { headers: this.authHeaders() });
+  }
+
+  deletePatientCheque(id: number): Observable<ApiCommandResponse> {
+    return this.http.delete<ApiCommandResponse>(`${this.apiBaseUrl}/admin/reports/patient-finances/cheques/${id}`, { headers: this.authHeaders() });
+  }
+
+  updatePatientPromissoryNote(id: number, request: UpdateAdminPromissoryNoteRequest): Observable<ApiCommandResponse> {
+    return this.http.put<ApiCommandResponse>(`${this.apiBaseUrl}/admin/reports/patient-finances/promissory-notes/${id}`, request, { headers: this.authHeaders() });
+  }
+
+  deletePatientPromissoryNote(id: number): Observable<ApiCommandResponse> {
+    return this.http.delete<ApiCommandResponse>(`${this.apiBaseUrl}/admin/reports/patient-finances/promissory-notes/${id}`, { headers: this.authHeaders() });
+  }
+
   exportReservationsReport(
     filters: { from?: string; to?: string; consultantProfileId?: number } = {},
   ): Observable<Blob> {
@@ -1127,6 +1338,11 @@ export class AdminDashboardService {
           ),
         ),
       );
+  }
+
+  private unwrap<T>(response: unknown): T {
+    const wrapper = response as { data?: T; result?: T };
+    return wrapper?.data ?? wrapper?.result ?? response as T;
   }
 
   private authHeaders(): HttpHeaders {
