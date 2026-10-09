@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 10365)
-Total output lines: 1261
-
 import { CommonModule } from "@angular/common";
 import {
   ChangeDetectionStrategy,
@@ -615,7 +612,52 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   onSecretarySearchChange(value: string): void {
     this.secretaryFilters.search = value;
-    this.secretarySearchChanges.ne…365 tokens truncated…dit") {
+    this.secretarySearchChanges.next(value.trim());
+  }
+
+  applySecretaryFilters(): void {
+    this.secretaryFilters.pageNumber = 1;
+    this.loadSecretaries();
+  }
+
+  changeSecretariesPage(page: number): void {
+    this.secretaryFilters.pageNumber = page;
+    this.loadSecretaries();
+  }
+
+  loadSecretaries(): void {
+    const requestId = ++this.secretariesLoadRequestId;
+    this.secretariesLoading = true;
+    this.clearFeedback();
+    this.markDirty();
+
+    this.adminApi.getSecretaries(this.secretaryFilters)
+      .pipe(finalize(() => {
+        if (requestId === this.secretariesLoadRequestId) {
+          this.secretariesLoading = false;
+          this.markDirty();
+        }
+      }))
+      .subscribe({
+        next: (response) => {
+          if (requestId !== this.secretariesLoadRequestId) return;
+          this.secretaries = (response.items ?? []).map((user) => this.normalizeUser(user));
+          this.secretariesTotalCount = response.totalCount ?? this.secretaries.length;
+          this.secretariesTotalPages = Math.max(
+            1,
+            response.totalPages || Math.ceil(this.secretariesTotalCount / this.secretaryFilters.pageSize),
+          );
+          this.markDirty();
+        },
+        error: (error) => this.showFeedback(
+          this.errorMessage(error, "دریافت فهرست منشی‌ها انجام نشد"),
+          "error",
+        ),
+      });
+  }
+
+  handleSecretaryAction(event: TableActionClick<AdminUser>): void {
+    if (event.action === "edit") {
       this.openEditSecretaryDialog(event.row);
       return;
     }
