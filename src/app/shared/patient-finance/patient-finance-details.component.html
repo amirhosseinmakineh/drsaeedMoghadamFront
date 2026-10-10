@@ -36,12 +36,8 @@
             <div><dt>بیعانه</dt><dd>{{ optionalMoney(financialCase.depositAmount) }}</dd></div>
             <div><dt>مانده بدهکاری/بستانکاری</dt><dd>{{ optionalMoney(financialCase.balanceAmount) }}</dd></div>
             <div><dt>سند تضمین</dt><dd>{{ financialCase.guaranteeDocument || "" }}</dd></div>
-            <div><dt>تاریخ ضمانت</dt><dd>{{ optionalDate(financialCase.guaranteeDate) }}</dd></div>
-            <div><dt>مبلغ ضمانت</dt><dd>{{ optionalMoney(financialCase.guaranteeAmount) }}</dd></div>
-            <div><dt>ثبت چک ضمانت</dt><dd>{{ financialCase.guaranteeChequeRegistration || "" }}</dd></div>
             <div><dt>توضیحات</dt><dd>{{ financialCase.notes || "" }}</dd></div>
             <div><dt>نام مشاور</dt><dd>{{ financialCase.consultantName || "" }}</dd></div>
-            <div><dt>مواردی که باید چک شود</dt><dd>{{ financialCase.reviewItems || "" }}</dd></div>
             <div><dt>شماره چک صیادی</dt><dd class="copy-value" dir="ltr">{{ chequeRegistrations(financialCase) }}</dd></div>
             <div><dt>شماره سفته</dt><dd class="copy-value" dir="ltr">{{ noteSerialNumbers(financialCase) }}</dd></div>
           </dl>

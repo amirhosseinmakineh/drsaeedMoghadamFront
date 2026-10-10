@@ -29,8 +29,8 @@
       <article><small>مجموع سفته‌ها</small><strong>{{ money(report.summary.promissoryNoteAmount) }}</strong></article>
     </div>
 
-    <div class="table-wrap"><table><thead><tr><th>ردیف</th><th>نام بیمار</th><th>شماره پرونده</th><th>شماره تماس</th><th>شرح خدمات</th><th>واحد دندان</th><th>آخرین وضعیت</th><th>تاریخ</th><th>نحوه پرداخت</th><th>وضعیت اقساط</th><th>تاریخ چک</th><th>ثبت چک</th><th>مبلغ خدمات</th><th>مبلغ پرداختی</th><th>بیعانه</th><th>مانده بدهکاری/بستانکاری</th><th>سند تضمین</th><th>تاریخ ضمانت</th><th>مبلغ ضمانت</th><th>ثبت چک ضمانت</th><th>توضیحات</th><th>نام مشاور</th><th>مواردی که باید چک شود</th><th>عملیات</th></tr></thead><tbody>
-      <tr *ngFor="let item of report.items; let i = index; trackBy: trackCase"><td>{{ (filters.page - 1) * filters.pageSize + i + 1 }}</td><td><strong>{{ item.patientName }}</strong></td><td>{{ item.fileNumber || "—" }}</td><td dir="ltr">{{ item.phoneNumber }}</td><td>{{ item.serviceNames?.join('، ') || "—" }}</td><td>{{ item.toothUnitCount ?? "—" }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ date(item.createdAt) }}</td><td>{{ item.paymentMethod || "—" }}</td><td>{{ item.installmentStatus || "—" }}</td><td>{{ chequeDatesLabel(item) }}</td><td>{{ item.chequeRegistrations?.join("، ") || "—" }}</td><td>{{ money(item.totalAmount) || "—" }}</td><td>{{ money(item.paidAmount) || "—" }}</td><td>{{ money(item.depositAmount) || "—" }}</td><td>{{ money(item.balanceAmount) }}</td><td>{{ item.guaranteeDocument || "—" }}</td><td>{{ item.guaranteeDate ? date(item.guaranteeDate) : "—" }}</td><td>{{ item.guaranteeAmount == null ? "—" : money(item.guaranteeAmount) }}</td><td>{{ item.guaranteeChequeRegistration || "—" }}</td><td>{{ item.notes || "—" }}</td><td>{{ item.consultantName || "—" }}</td><td>{{ item.reviewItems || "—" }}</td><td class="row-actions"><button type="button" (click)="openStatements(item)">مشاهده صورت‌حساب‌ها</button><button type="button" class="secondary" (click)="openDetails(item)" [disabled]="item.status === 3">ویرایش پرونده مالی</button></td></tr>
+    <div class="table-wrap"><table><thead><tr><th>ردیف</th><th>نام بیمار</th><th>شماره پرونده</th><th>شماره تماس</th><th>شرح خدمات</th><th>واحد دندان</th><th>آخرین وضعیت</th><th>تاریخ</th><th>نحوه پرداخت</th><th>وضعیت اقساط</th><th>تاریخ چک</th><th>ثبت چک</th><th>مبلغ خدمات</th><th>مبلغ پرداختی</th><th>بیعانه</th><th>مانده بدهکاری/بستانکاری</th><th>سند تضمین</th><th>توضیحات</th><th>نام مشاور</th><th>عملیات</th></tr></thead><tbody>
+      <tr *ngFor="let item of report.items; let i = index; trackBy: trackCase"><td>{{ (filters.page - 1) * filters.pageSize + i + 1 }}</td><td><strong>{{ item.patientName }}</strong></td><td>{{ item.fileNumber || "—" }}</td><td dir="ltr">{{ item.phoneNumber }}</td><td>{{ item.serviceNames?.join('، ') || "—" }}</td><td>{{ item.toothUnitCount ?? "—" }}</td><td><span class="badge">{{ status(item.status) }}</span></td><td>{{ date(item.createdAt) }}</td><td>{{ item.paymentMethod || "—" }}</td><td>{{ item.installmentStatus || "—" }}</td><td>{{ chequeDatesLabel(item) }}</td><td>{{ item.chequeRegistrations?.join("، ") || "—" }}</td><td>{{ money(item.totalAmount) || "—" }}</td><td>{{ money(item.paidAmount) || "—" }}</td><td>{{ money(item.depositAmount) || "—" }}</td><td>{{ money(item.balanceAmount) }}</td><td>@if (isDocumentFile(item.guaranteeDocument)) { <a [href]="documentUrl(item.guaranteeDocument!)" target="_blank" rel="noopener"><img [src]="documentUrl(item.guaranteeDocument!)" alt="سند تضمین" class="doc-thumb"></a> } @else { {{ item.guaranteeDocument || "—" }} }</td><td>{{ item.notes || "—" }}</td><td>{{ item.consultantName || "—" }}</td><td class="row-actions"><button type="button" (click)="openStatements(item)">مشاهده صورت‌حساب‌ها</button><button type="button" class="secondary" (click)="openDetails(item)" [disabled]="item.status === 3">ویرایش پرونده مالی</button></td></tr>
     </tbody></table></div>
     @if (!report.items.length) { <p class="empty">پرونده‌ای مطابق فیلتر پیدا نشد.</p> }
     <footer class="pagination"><button type="button" [disabled]="filters.page <= 1" (click)="goTo(filters.page - 1)">قبلی</button><span>صفحه {{ filters.page }} از {{ totalPages }} — {{ report.totalCount }} رکورد</span><button type="button" [disabled]="filters.page >= totalPages" (click)="goTo(filters.page + 1)">بعدی</button></footer>
@@ -55,13 +55,30 @@
         <label>نوع توافق<select [(ngModel)]="editForm.agreementType" name="editAgreementType"><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
         <label>نحوه پرداخت<input  [(ngModel)]="editForm.paymentMethod" name="paymentMethod" /></label>
         <label>وضعیت اقساط<input  [(ngModel)]="editForm.installmentStatus" name="installmentStatus" /></label>
-        <label>سند تضمین<input  [(ngModel)]="editForm.guaranteeDocument" name="guaranteeDocument" /></label>
-        <label>تاریخ ضمانت<input type="date" [(ngModel)]="editForm.guaranteeDate" name="guaranteeDate" /></label>
-        <label>مبلغ ضمانت<input type="number" min="0" [(ngModel)]="editForm.guaranteeAmount" name="guaranteeAmount" /></label>
-        <label>ثبت چک ضمانت<input  [(ngModel)]="editForm.guaranteeChequeRegistration" name="guaranteeChequeRegistration" /></label>
-        <label>توضیحات<input  [(ngModel)]="editForm.notes" name="notes" /></label>
+        <div class="guarantee-document-field">
+          <span class="field-label">سند تضمین</span>
+          @if (details && isDocumentFile(details.case.guaranteeDocument)) {
+            <div class="document-preview">
+              <img [src]="documentUrl(details.case.guaranteeDocument!)" alt="سند تضمین" class="document-img">
+              <div class="document-actions">
+                <label class="secondary document-replace-btn">
+                  {{ uploadingDocument ? "در حال آپلود..." : "جایگزینی" }}
+                  <input type="file" accept="image/jpeg,image/jpg,image/png" [disabled]="uploadingDocument || deletingDocument" (change)="onDocumentFileSelected($event, editing!.caseId)" hidden>
+                </label>
+                <button type="button" class="danger-link" [disabled]="deletingDocument || uploadingDocument" (click)="deleteDocument(editing!.caseId)">{{ deletingDocument ? "در حال حذف..." : "حذف سند" }}</button>
+              </div>
+            </div>
+          } @else {
+            <label class="document-upload-btn">
+              {{ uploadingDocument ? "در حال آپلود..." : "انتخاب تصویر (jpg, png)" }}
+              <input type="file" accept="image/jpeg,image/jpg,image/png" [disabled]="uploadingDocument || !details" (change)="editing && onDocumentFileSelected($event, editing!.caseId)" hidden>
+            </label>
+            @if (details?.case?.guaranteeDocument) {
+              <small class="document-legacy-value">{{ details!.case.guaranteeDocument }}</small>
+            }
+          }
+        </div>
         <label>نام مشاور<input  [(ngModel)]="editForm.consultantName" name="consultantName" /></label>
-        <label>مواردی که باید چک شود<input  [(ngModel)]="editForm.reviewItems" name="reviewItems" /></label>
         <label>تعداد واحد دندان<input type="number" min="1" [(ngModel)]="editForm.toothUnitCount" name="toothUnitCount" /></label>
         <div class="modal-actions"><button type="button" class="muted" (click)="cancelEdit()">انصراف</button><button type="submit" [disabled]="saving">{{ saving ? "در حال ذخیره..." : "ذخیره تغییرات" }}</button></div>
       </form>

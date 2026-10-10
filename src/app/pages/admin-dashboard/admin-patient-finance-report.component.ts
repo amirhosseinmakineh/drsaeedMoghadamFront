@@ -19,6 +19,7 @@ import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-
 import { formatIranDateTime, toIranDateInputValue } from "../../utils/iran-datetime.util";
 import { BaseModalComponent } from "../../basemadual";
 import { PatientFinanceDetailsComponent } from "../../shared/patient-finance/patient-finance-details.component";
+import { environment } from "../../../environments/environment";
 
 @Component({
   selector: "app-admin-patient-finance-report",
@@ -48,6 +49,8 @@ export class AdminPatientFinanceReportComponent implements OnInit {
   statementsFile: AdminPatientFinanceFile | null = null;
   statementsLoading = false;
   statementsError = "";
+  uploadingDocument = false;
+  deletingDocument = false;
 
   readonly services = [
     { value: 1, label: "کامپوزیت" },
@@ -79,7 +82,15 @@ export class AdminPatientFinanceReportComponent implements OnInit {
     this.api.getPatientFinanceReport(this.filters)
       .pipe(finalize(() => { this.loading = false; this.cdr.markForCheck(); }))
       .subscribe({
-        next: report => { this.report = report; this.cdr.markForCheck(); },
+        next: report => {
+          this.report = report;
+          // اگر modal باز است، editing را با داده جدید sync کن
+          if (this.editing) {
+            const updated = report.items.find(i => i.caseId === this.editing!.caseId);
+            if (updated) this.editing = updated;
+          }
+          this.cdr.markForCheck();
+        },
         error: error => {
           this.errorMessage = error?.message || "دریافت گزارش انجام نشد";
           this.toast.error(this.errorMessage);
@@ -174,12 +185,8 @@ export class AdminPatientFinanceReportComponent implements OnInit {
       paymentMethod: item.paymentMethod ?? null,
       installmentStatus: item.installmentStatus ?? null,
       guaranteeDocument: item.guaranteeDocument ?? null,
-      guaranteeDate: item.guaranteeDate?.slice(0, 10) ?? null,
-      guaranteeAmount: item.guaranteeAmount ?? null,
-      guaranteeChequeRegistration: item.guaranteeChequeRegistration ?? null,
       notes: item.notes ?? null,
       consultantName: item.consultantName ?? null,
-      reviewItems: item.reviewItems ?? null,
       toothUnitCount: item.toothUnitCount ?? null,
     };
   }
@@ -190,7 +197,12 @@ export class AdminPatientFinanceReportComponent implements OnInit {
     this.startEdit(item);
     this.details = null;
     this.detailsLoading = true;
-    this.api.getPatientFinanceDetails(item.caseId).pipe(finalize(() => {
+    this.fetchDetails(item.caseId);
+  }
+
+  private fetchDetails(caseId: string): void {
+    this.detailsLoading = true;
+    this.api.getPatientFinanceDetails(caseId).pipe(finalize(() => {
       this.detailsLoading = false;
       this.cdr.markForCheck();
     })).subscribe({
@@ -223,14 +235,16 @@ export class AdminPatientFinanceReportComponent implements OnInit {
       return;
     }
     this.saving = true;
-    this.api.updatePatientFinance(this.editing.caseId, this.editForm)
+    const caseId = this.editing.caseId;
+    this.api.updatePatientFinance(caseId, this.editForm)
       .pipe(finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: response => {
           if (!response.isSuccess) { this.toast.error(response.message); return; }
           this.toast.success(response.message || "حسابداری بیمار ویرایش شد");
-          this.editing = null;
+          // modal را نمی‌بندیم — فقط لیست و details را refresh می‌کنیم
           this.load();
+          this.fetchDetails(caseId);
         },
         error: error => this.toast.error(error?.message || "ویرایش انجام نشد"),
       });
@@ -285,8 +299,59 @@ export class AdminPatientFinanceReportComponent implements OnInit {
   private afterCommitment(response: { isSuccess: boolean; message: string }): void {
     if (!response.isSuccess) { this.toast.error(response.message); return; }
     this.toast.success(response.message);
-    if (this.editing) this.openDetails(this.editing);
+    if (this.editing) this.fetchDetails(this.editing.caseId);
     this.load();
+  }
+
+  isDocumentFile(value?: string | null): boolean {
+    return typeof value === "string" && value.startsWith("/uploads/");
+  }
+
+  documentUrl(relativePath: string): string {
+    return `${environment.apiBaseUrl.replace("/api", "")}${relativePath}`;
+  }
+
+  onDocumentFileSelected(event: Event, caseId: string): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || this.uploadingDocument) return;
+    this.uploadingDocument = true;
+    this.api.uploadGuaranteeDocument(caseId, file)
+      .pipe(finalize(() => { this.uploadingDocument = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: result => {
+          if (!result.isSuccess) { this.toast.error(result.message); return; }
+          this.toast.success("سند تضمین با موفقیت آپلود شد");
+          const path = result.data?.guaranteeDocument ?? null;
+          this.patchGuaranteeDocument(path);
+        },
+        error: err => this.toast.error(err?.message || "آپلود سند تضمین انجام نشد"),
+      });
+  }
+
+  deleteDocument(caseId: string): void {
+    if (this.deletingDocument || !confirm("سند تضمین حذف شود؟")) return;
+    this.deletingDocument = true;
+    this.api.deleteGuaranteeDocument(caseId)
+      .pipe(finalize(() => { this.deletingDocument = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: result => {
+          if (!result.isSuccess) { this.toast.error(result.message); return; }
+          this.toast.success("سند تضمین حذف شد");
+          this.patchGuaranteeDocument(null);
+        },
+        error: err => this.toast.error(err?.message || "حذف سند تضمین انجام نشد"),
+      });
+  }
+
+  private patchGuaranteeDocument(path: string | null): void {
+    if (this.details) {
+      this.details = { ...this.details, case: { ...this.details.case, guaranteeDocument: path } };
+    }
+    if (this.editing) {
+      this.editing = { ...this.editing, guaranteeDocument: path };
+    }
+    this.editForm = { ...this.editForm, guaranteeDocument: path };
+    this.cdr.markForCheck();
   }
 
   private toDateInputValue(value: string): string {

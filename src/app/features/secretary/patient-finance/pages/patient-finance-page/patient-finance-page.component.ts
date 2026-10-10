@@ -12,6 +12,7 @@ import { SecretaryAccountShellComponent } from "../../../account/components/secr
 import { PatientFilesService } from "../../../patient-files/patient-files.service";
 import { ApiResult, CommitmentStatus, DebtStatus, FinancialAgreementType, FinancialCaseStatus, IdResponse, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseId, PatientFinancialCaseIdResponse, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientGuid, PatientPromissoryNote } from "../../models/patient-finance.models";
 import { PatientFinanceApiService } from "../../services/patient-finance-api.service";
+import { environment } from "../../../../../../environments/environment";
 
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
@@ -87,6 +88,9 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   commitmentModalLoading = false;
   debtEligibilityLoading = false;
   readonly debtCaseIdsWithPendingCommitments = new Set<PatientFinancialCaseId>();
+  uploadingDocument = false;
+  deletingDocument = false;
+  pendingDocumentCaseId: PatientFinancialCaseId | null = null;
   private selectedFinancialPatientId: PatientGuid | null = null;
   private patientSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private patientSearchSubscription: Subscription | null = null;
@@ -102,12 +106,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     paymentMethod: [null as string | null],
     installmentStatus: [null as string | null],
     guaranteeDocument: [null as string | null],
-    guaranteeDate: [null as string | null],
-    guaranteeAmount: [null as number | null],
-    guaranteeChequeRegistration: [null as string | null],
     notes: [null as string | null],
     consultantName: [null as string | null],
-    reviewItems: [null as string | null],
     toothUnitCount: [null as number | null],
     cheques: this.fb.array([]), promissoryNotes: this.fb.array([]),
   }, { validators: [commitmentRequired, agreedAmountsWithinTotal] });
@@ -123,12 +123,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     paymentMethod: [null as string | null],
     installmentStatus: [null as string | null],
     guaranteeDocument: [null as string | null],
-    guaranteeDate: [null as string | null],
-    guaranteeAmount: [null as number | null],
-    guaranteeChequeRegistration: [null as string | null],
     notes: [null as string | null],
     consultantName: [null as string | null],
-    reviewItems: [null as string | null],
     toothUnitCount: [null as number | null],
   }, { validators: agreedAmountsWithinTotal });
 
@@ -333,7 +329,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceIds: this.serviceIds.controls.map(c => Number(c.value)), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, guaranteeDate: value.guaranteeDate, guaranteeAmount: value.guaranteeAmount, guaranteeChequeRegistration: value.guaranteeChequeRegistration, notes: value.notes, consultantName: value.consultantName, reviewItems: value.reviewItems, toothUnitCount: value.toothUnitCount ?? null, cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.serviceIds.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceIds: this.serviceIds.controls.map(c => Number(c.value)), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, notes: value.notes, consultantName: value.consultantName, toothUnitCount: value.toothUnitCount ?? null, cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.serviceIds.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: PatientFinancialCaseId): void {
@@ -354,18 +350,78 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
         paymentMethod: details.case.paymentMethod ?? null,
         installmentStatus: details.case.installmentStatus ?? null,
         guaranteeDocument: details.case.guaranteeDocument ?? null,
-        guaranteeDate: details.case.guaranteeDate?.slice(0, 10) ?? null,
-        guaranteeAmount: details.case.guaranteeAmount ?? null,
-        guaranteeChequeRegistration: details.case.guaranteeChequeRegistration ?? null,
         notes: details.case.notes ?? null,
         consultantName: details.case.consultantName ?? null,
-        reviewItems: details.case.reviewItems ?? null,
         toothUnitCount: details.case.toothUnitCount ?? null,
       });
       this.buildCommitmentEditForms();
     }, error: (e) => this.showError(e) });
   }
   closeDetails(): void { this.details = null; this.summary = null; this.detailCheques = []; this.detailNotes = []; }
+
+  isDocumentFile(value: string | null | undefined): boolean {
+    return typeof value === "string" && value.startsWith("/uploads/");
+  }
+
+  documentUrl(relativePath: string): string {
+    return `${environment.apiBaseUrl.replace("/api", "")}${relativePath}`;
+  }
+
+  onDocumentFileSelected(event: Event, caseId: PatientFinancialCaseId): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const allowed = ["image/jpeg", "image/jpg", "image/png"];
+    if (!allowed.includes(file.type)) {
+      this.toast.error("فقط فایل‌های jpg و png مجاز هستند");
+      input.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.toast.error("حجم فایل نباید بیشتر از ۵ مگابایت باشد");
+      input.value = "";
+      return;
+    }
+    this.uploadDocument(caseId, file);
+    input.value = "";
+  }
+
+  uploadDocument(caseId: PatientFinancialCaseId, file: File): void {
+    if (this.uploadingDocument) return;
+    this.uploadingDocument = true;
+    this.pendingDocumentCaseId = caseId;
+    this.api.uploadGuaranteeDocument(caseId, file)
+      .pipe(
+        finalize(() => { this.uploadingDocument = false; this.pendingDocumentCaseId = null; this.cdr.markForCheck(); }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: result => {
+          if (!result.isSuccess) { this.toast.error(result.message); return; }
+          this.toast.success("سند تضمین با موفقیت آپلود شد");
+          if (this.details) this.openDetails(this.details.case.id);
+        },
+        error: (e: HttpErrorResponse) => this.showError(e),
+      });
+  }
+
+  deleteDocument(caseId: PatientFinancialCaseId): void {
+    if (this.deletingDocument || !confirm("سند تضمین حذف شود؟")) return;
+    this.deletingDocument = true;
+    this.api.deleteGuaranteeDocument(caseId)
+      .pipe(
+        finalize(() => { this.deletingDocument = false; this.cdr.markForCheck(); }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: result => {
+          if (!result.isSuccess) { this.toast.error(result.message); return; }
+          this.toast.success("سند تضمین حذف شد");
+          if (this.details) this.openDetails(this.details.case.id);
+        },
+        error: (e: HttpErrorResponse) => this.showError(e),
+      });
+  }
   canCancelCase(item: PatientFinancialCase): boolean { return item.status !== FinancialCaseStatus.Cancelled; }
   cancelCase(item: PatientFinancialCase): void { if (!this.canCancelCase(item) || !confirm("کل ردیف حسابداری حذف شود؟ ابتدا باید همه چک‌ها و سفته‌ها حذف شده باشند.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "پرونده حسابداری حذف شد."); }
   saveCaseEdit(): void {
@@ -374,7 +430,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.mutate(this.details.case.id, this.api.updateCase(this.details.case.id, {
       totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount),
       depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType),
-      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, guaranteeDate: value.guaranteeDate, guaranteeAmount: value.guaranteeAmount, guaranteeChequeRegistration: value.guaranteeChequeRegistration, notes: value.notes, consultantName: value.consultantName, reviewItems: value.reviewItems, toothUnitCount: value.toothUnitCount ?? null,
+      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, notes: value.notes, consultantName: value.consultantName, toothUnitCount: value.toothUnitCount ?? null,
     }), "حسابداری بیمار و همه جمع‌ها به‌روزرسانی شد.");
   }
   saveCheque(index: number): void {

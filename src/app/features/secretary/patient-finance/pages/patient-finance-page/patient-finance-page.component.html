@@ -51,13 +51,8 @@
         <label>نوع توافق<select formControlName="agreementType"><option [ngValue]="1">پیش‌پرداخت (نیازمند تعهد)</option><option [ngValue]="2">ودیعه</option></select></label>
       <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
       <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
-      <label>سند تضمین<input  formControlName="guaranteeDocument"></label>
-      <label>تاریخ ضمانت<input type="date" formControlName="guaranteeDate"></label>
-      <label>مبلغ ضمانت<input type="number" min="0" formControlName="guaranteeAmount"></label>
-      <label>ثبت چک ضمانت<input  formControlName="guaranteeChequeRegistration"></label>
       <label>توضیحات<input  formControlName="notes"></label>
       <label>نام مشاور<input  formControlName="consultantName"></label>
-      <label>مواردی که باید چک شود<input  formControlName="reviewItems"></label>
       <label>تعداد واحد دندان<input type="number" min="1" formControlName="toothUnitCount"></label>
       </div>
       @if (createForm.hasError('agreedAmountsExceedTotal')) { <p class="validation">مجموع پیش‌پرداخت و ودیعه نباید از مبلغ کل درمان بیشتر باشد.</p> }
@@ -89,9 +84,9 @@
       <div class="section-title"><div><h2>{{ activeTabLabel }}</h2><p>{{ totalCount }} پرونده</p></div><div class="row">@if (activeTab === 'cases') { <button class="primary" (click)="selectTab('create')">پرونده جدید</button> }</div></div>
       @if (loading) { <div class="empty">در حال دریافت اطلاعات…</div> }
       @else if (!items.length) { <div class="empty"><strong>رکوردی پیدا نشد</strong><span>فیلترها را تغییر دهید یا رکورد جدید بسازید.</span></div> }
-      @else { <div class="table-wrap"><table><thead><tr><th>ردیف</th><th>بیمار / پرونده</th><th>شرح</th><th>واحد دندان</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th>@if (activeTab === 'cases') { <th>نحوه پرداخت</th><th>وضعیت اقساط</th><th>تاریخ چک‌ها</th><th>ثبت چک‌ها</th><th>مبلغ پرداختی</th><th>بیعانه</th><th>مانده بدهکاری/بستانکاری</th><th>سند تضمین</th><th>تاریخ ضمانت</th><th>مبلغ ضمانت</th><th>ثبت چک ضمانت</th><th>توضیحات</th><th>نام مشاور</th><th>مواردی که باید چک شود</th> }<th>عملیات</th></tr></thead><tbody>
+      @else { <div class="table-wrap"><table><thead><tr><th>ردیف</th><th>بیمار / پرونده</th><th>شرح</th><th>واحد دندان</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th>@if (activeTab === 'cases') { <th>نحوه پرداخت</th><th>وضعیت اقساط</th><th>تاریخ چک‌ها</th><th>ثبت چک‌ها</th><th>مبلغ پرداختی</th><th>بیعانه</th><th>مانده بدهکاری/بستانکاری</th><th>سند تضمین</th><th>توضیحات</th><th>نام مشاور</th> }<th>عملیات</th></tr></thead><tbody>
         @for (item of items; track item.id; let i = $index) { <tr><td>{{ (page - 1) * pageSize + i + 1 }}</td>
-          @if (activeTab === 'cases' || isCommitmentTab) { <td><strong>{{ patientReference(caseItem(item).patientName, recordFileNumber(caseItem(item))) }}</strong><small>{{ caseItem(item).patientPhoneNumber || 'بدون تلفن' }}</small></td><td>{{ serviceLabel(caseItem(item).serviceIds, caseItem(item).serviceNames) }}</td><td>{{ caseItem(item).toothUnitCount ?? "—" }}</td><td><strong>{{ money(caseItem(item).totalAmount) }}</strong></td><td>{{ date(caseItem(item).createdAt) }}</td><td><span class="badge case-status s{{caseItem(item).status}}" [class.case-active]="caseItem(item).status === FinancialCaseStatus.Active">{{ caseItem(item).status === 1 ? 'فعال' : caseItem(item).status === 2 ? 'تسویه‌شده' : 'لغوشده' }}</span></td>@if (activeTab === 'cases') { <td>{{ caseItem(item).paymentMethod || "—" }}</td><td>{{ caseItem(item).installmentStatus || "—" }}</td><td>{{ chequeDatesLabel(caseItem(item)) }}</td><td>{{ caseItem(item).chequeRegistrations?.join("، ") || "—" }}</td><td>{{ money(caseItem(item).totalPaidAmount) }}</td><td>{{ money(caseItem(item).depositAmount) }}</td><td>{{ money(caseItem(item).balanceAmount) }}</td><td>{{ caseItem(item).guaranteeDocument || "—" }}</td><td>{{ caseItem(item).guaranteeDate ? date(caseItem(item).guaranteeDate!) : "—" }}</td><td>{{ caseItem(item).guaranteeAmount == null ? "—" : money(caseItem(item).guaranteeAmount!) }}</td><td>{{ caseItem(item).guaranteeChequeRegistration || "—" }}</td><td>{{ caseItem(item).notes || "—" }}</td><td>{{ caseItem(item).consultantName || "—" }}</td><td>{{ caseItem(item).reviewItems || "—" }}</td> }<td><div class="actions">@if (isCommitmentTab) { <button class="primary mini" (click)="showPatientCommitments(caseItem(item))">نمایش {{ activeTab === 'cheques' ? 'چک‌های' : 'سفته‌های' }} این بیمار</button> } @else { <button (click)="openDetails(caseItem(item).id)">ویرایش و جزئیات</button>@if (canCancelCase(caseItem(item))) { <button class="danger-link" [disabled]="actionId === caseItem(item).id" (click)="cancelCase(caseItem(item))">حذف حسابداری</button> } }</div></td> }
+          @if (activeTab === 'cases' || isCommitmentTab) { <td><strong>{{ patientReference(caseItem(item).patientName, recordFileNumber(caseItem(item))) }}</strong><small>{{ caseItem(item).patientPhoneNumber || 'بدون تلفن' }}</small></td><td>{{ serviceLabel(caseItem(item).serviceIds, caseItem(item).serviceNames) }}</td><td>{{ caseItem(item).toothUnitCount ?? "—" }}</td><td><strong>{{ money(caseItem(item).totalAmount) }}</strong></td><td>{{ date(caseItem(item).createdAt) }}</td><td><span class="badge case-status s{{caseItem(item).status}}" [class.case-active]="caseItem(item).status === FinancialCaseStatus.Active">{{ caseItem(item).status === 1 ? 'فعال' : caseItem(item).status === 2 ? 'تسویه‌شده' : 'لغوشده' }}</span></td>@if (activeTab === 'cases') { <td>{{ caseItem(item).paymentMethod || "—" }}</td><td>{{ caseItem(item).installmentStatus || "—" }}</td><td>{{ chequeDatesLabel(caseItem(item)) }}</td><td>{{ caseItem(item).chequeRegistrations?.join("، ") || "—" }}</td><td>{{ money(caseItem(item).totalPaidAmount) }}</td><td>{{ money(caseItem(item).depositAmount) }}</td><td>{{ money(caseItem(item).balanceAmount) }}</td><td>@if (isDocumentFile(caseItem(item).guaranteeDocument)) { <a [href]="documentUrl(caseItem(item).guaranteeDocument!)" target="_blank" rel="noopener"><img [src]="documentUrl(caseItem(item).guaranteeDocument!)" alt="سند تضمین" class="document-thumb"></a> } @else { {{ caseItem(item).guaranteeDocument || "—" }} }</td><td>{{ caseItem(item).notes || "—" }}</td><td>{{ caseItem(item).consultantName || "—" }}</td> }<td><div class="actions">@if (isCommitmentTab) { <button class="primary mini" (click)="showPatientCommitments(caseItem(item))">نمایش {{ activeTab === 'cheques' ? 'چک‌های' : 'سفته‌های' }} این بیمار</button> } @else { <button (click)="openDetails(caseItem(item).id)">ویرایش و جزئیات</button>@if (canCancelCase(caseItem(item))) { <button class="danger-link" [disabled]="actionId === caseItem(item).id" (click)="cancelCase(caseItem(item))">حذف حسابداری</button> } }</div></td> }
           @if (activeTab === 'debts') { <td><strong>{{ patientReference(debtItem(item).patientName, recordFileNumber(debtItem(item))) }}</strong><small>{{ debtItem(item).patientPhoneNumber || '—' }}</small></td><td>{{ serviceLabel(debtItem(item).serviceIds, debtItem(item).serviceNames) }}<small>{{ debtItem(item).sourceType === 1 ? 'چک' : 'سفته' }} #{{ debtItem(item).sourceId }}</small></td><td>{{ money(debtItem(item).amount) }}</td><td>{{ date(debtItem(item).dueDate) }}</td><td><span class="badge s{{debtItem(item).status}}">{{ debtItem(item).status === 1 ? 'بدهی باز' : debtItem(item).status === 2 ? 'تسویه‌شده' : 'لغوشده' }}</span></td><td>@if (debtItem(item).status === 1) { <div class="debt-payment-action"><button class="primary mini" [disabled]="actionId === item.id || !canPayDebt(debtItem(item))" [title]="canPayDebt(debtItem(item)) ? 'ثبت تسویه کامل بدهی' : 'تا تعیین تکلیف همه چک‌ها و سفته‌های در گردش غیرفعال است'" (click)="payDebt(debtItem(item))">تسویه کامل بدهی</button>@if (!canPayDebt(debtItem(item))) { <small>پس از تعیین تکلیف همه تعهدات فعال می‌شود</small> }</div> }</td> }
           @if (activeTab === 'transactions') { <td><strong>{{ patientReference(transactionItem(item).patientName, recordFileNumber(transactionItem(item))) }}</strong></td><td>پرداخت قطعی<small>{{ transactionItem(item).sourceType === 1 ? 'چک' : 'سفته' }} #{{ transactionItem(item).sourceId }}</small></td><td>{{ money(transactionItem(item).amount) }}</td><td>{{ date(transactionItem(item).createdAt) }}</td><td><span class="badge s2">ثبت‌شده</span></td><td>—</td> }
           @if (activeTab === 'due') { <td><strong>{{ patientReference(dueItem(item).patientName, recordFileNumber(dueItem(item))) }}</strong></td><td>{{ dueItem(item).type === 1 ? 'چک' : 'سفته' }}</td><td>{{ money(dueItem(item).amount) }}</td><td>{{ date(dueItem(item).dueDate) }}</td><td><span class="badge s1">در انتظار</span></td><td><ng-container *ngTemplateOutlet="statusActions; context: {$implicit: item, kind: dueItem(item).type === 1 ? 'cheque' : 'note'}"></ng-container></td> }
@@ -140,13 +135,17 @@
       <div><dt>مبلغ پرداختی</dt><dd>{{ money(details.case.totalPaidAmount) }}</dd></div>
       <div><dt>بیعانه</dt><dd>{{ optionalMoney(details.case.depositAmount) }}</dd></div>
       <div><dt>مانده بدهکاری/بستانکاری</dt><dd>{{ optionalMoney(details.case.balanceAmount) }}</dd></div>
-      <div><dt>سند تضمین</dt><dd>{{ details.case.guaranteeDocument || "" }}</dd></div>
-      <div><dt>تاریخ ضمانت</dt><dd>{{ optionalDate(details.case.guaranteeDate) }}</dd></div>
-      <div><dt>مبلغ ضمانت</dt><dd>{{ optionalMoney(details.case.guaranteeAmount) }}</dd></div>
-      <div><dt>ثبت چک ضمانت</dt><dd>{{ details.case.guaranteeChequeRegistration || "" }}</dd></div>
+      <div><dt>سند تضمین</dt><dd>
+        @if (isDocumentFile(details.case.guaranteeDocument)) {
+          <a [href]="documentUrl(details.case.guaranteeDocument!)" target="_blank" rel="noopener">
+            <img [src]="documentUrl(details.case.guaranteeDocument!)" alt="سند تضمین" class="document-thumb">
+          </a>
+        } @else {
+          {{ details.case.guaranteeDocument || "" }}
+        }
+      </dd></div>
       <div><dt>توضیحات</dt><dd>{{ details.case.notes || "" }}</dd></div>
       <div><dt>نام مشاور</dt><dd>{{ details.case.consultantName || "" }}</dd></div>
-      <div><dt>مواردی که باید چک شود</dt><dd>{{ details.case.reviewItems || "" }}</dd></div>
       <div><dt>تعداد واحد دندان</dt><dd>{{ details.case.toothUnitCount ?? "" }}</dd></div>
       <div><dt>شماره چک صیادی</dt><dd dir="ltr">{{ detailChequeRegistrations() }}</dd></div>
       <div><dt>شماره سفته</dt><dd dir="ltr">{{ detailNoteSerialNumbers() }}</dd></div>
@@ -159,13 +158,31 @@
       <label>نوع توافق<select formControlName="agreementType"><option [ngValue]="1">پیش‌پرداخت</option><option [ngValue]="2">ودیعه</option></select></label>
       <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
       <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
-      <label>سند تضمین<input  formControlName="guaranteeDocument"></label>
-      <label>تاریخ ضمانت<input type="date" formControlName="guaranteeDate"></label>
-      <label>مبلغ ضمانت<input type="number" min="0" formControlName="guaranteeAmount"></label>
-      <label>ثبت چک ضمانت<input  formControlName="guaranteeChequeRegistration"></label>
+      <div class="guarantee-document-field">
+        <span class="field-label">سند تضمین</span>
+        @if (details && isDocumentFile(details.case.guaranteeDocument)) {
+          <div class="document-preview">
+            <img [src]="documentUrl(details.case.guaranteeDocument!)" alt="سند تضمین" class="document-img">
+            <div class="document-actions">
+              <label class="secondary document-replace-btn">
+                {{ uploadingDocument ? 'در حال آپلود...' : 'جایگزینی' }}
+                <input type="file" accept="image/jpeg,image/jpg,image/png" [disabled]="uploadingDocument || deletingDocument" (change)="onDocumentFileSelected($event, details!.case.id)" hidden>
+              </label>
+              <button type="button" class="danger-link" [disabled]="deletingDocument || uploadingDocument" (click)="deleteDocument(details.case.id)">{{ deletingDocument ? 'در حال حذف...' : 'حذف سند' }}</button>
+            </div>
+          </div>
+        } @else {
+          <label class="document-upload-btn">
+            {{ uploadingDocument ? 'در حال آپلود...' : 'انتخاب تصویر (jpg, png)' }}
+            <input type="file" accept="image/jpeg,image/jpg,image/png" [disabled]="uploadingDocument" (change)="onDocumentFileSelected($event, details!.case.id)" hidden>
+          </label>
+          @if (details?.case?.guaranteeDocument) {
+            <small class="document-legacy-value">{{ details!.case.guaranteeDocument }}</small>
+          }
+        }
+      </div>
       <label>توضیحات<input  formControlName="notes"></label>
       <label>نام مشاور<input  formControlName="consultantName"></label>
-      <label>مواردی که باید چک شود<input  formControlName="reviewItems"></label>
       <label>تعداد واحد دندان<input type="number" min="1" formControlName="toothUnitCount"></label>
       <button class="primary" type="submit" [disabled]="actionId !== null">ذخیره حسابداری</button>
     </form>

@@ -457,12 +457,8 @@ export interface PatientFinanceReportItem {
   paymentMethod?: string | null;
   installmentStatus?: string | null;
   guaranteeDocument?: string | null;
-  guaranteeDate?: string | null;
-  guaranteeAmount?: number | null;
-  guaranteeChequeRegistration?: string | null;
   notes?: string | null;
   consultantName?: string | null;
-  reviewItems?: string | null;
   toothUnitCount?: number | null;
   caseId: string;
   patientId: string;
@@ -509,12 +505,8 @@ export interface UpdatePatientFinanceRequest {
   paymentMethod?: string | null;
   installmentStatus?: string | null;
   guaranteeDocument?: string | null;
-  guaranteeDate?: string | null;
-  guaranteeAmount?: number | null;
-  guaranteeChequeRegistration?: string | null;
   notes?: string | null;
   consultantName?: string | null;
-  reviewItems?: string | null;
   toothUnitCount?: number | null;
   totalAmount: number;
   prePaymentAmount: number;
@@ -524,8 +516,36 @@ export interface UpdatePatientFinanceRequest {
 
 export interface AdminPatientCheque { id: number; amount: number; sayadNumber: string; ownerName: string; dueDate: string; status: number; }
 export interface AdminPatientPromissoryNote { id: number; amount: number; serialNumber: string; dueDate: string; status: number; }
+export interface AdminFinancialCaseDto {
+  id: string;
+  guaranteeDocument?: string | null;
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  toothUnitCount?: number | null;
+  patientId: string;
+  patientName: string;
+  patientFileNumber?: string | null;
+  patientPhoneNumber?: string | null;
+  serviceIds: number[];
+  serviceNames: string[];
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  totalPaidAmount: number;
+  remainingAmount: number;
+  totalDebtAmount: number;
+  balanceAmount: number;
+  agreementType: number;
+  status: number;
+  createdAt: string;
+  chequeDates?: string[];
+  chequeRegistrations?: string[];
+}
+
 export interface AdminPatientFinanceDetails {
-  case: PatientFinanceReportItem;
+  case: AdminFinancialCaseDto;
   chequeCount: number;
   chequeAmount: number;
   promissoryNoteCount: number;
@@ -1153,6 +1173,23 @@ export class AdminDashboardService {
       catchError(error => throwError(() =>
         this.toUserFacingError(error, "دریافت صورت‌حساب‌های بیمار انجام نشد"),
       )),
+    );
+  }
+
+  uploadGuaranteeDocument(caseId: string, file: File): Observable<ApiCommandResponse<{ id: string; guaranteeDocument: string | null }>> {
+    const body = new FormData();
+    body.append("file", file);
+    return this.http.post<ApiCommandResponse<{ id: string; guaranteeDocument: string | null }>>(
+      `${this.apiBaseUrl}/secretary/patient-financial-cases/${caseId}/guarantee-document`,
+      body,
+      { headers: this.authHeaders() },
+    );
+  }
+
+  deleteGuaranteeDocument(caseId: string): Observable<ApiCommandResponse<{ id: string; guaranteeDocument: string | null }>> {
+    return this.http.delete<ApiCommandResponse<{ id: string; guaranteeDocument: string | null }>>(
+      `${this.apiBaseUrl}/secretary/patient-financial-cases/${caseId}/guarantee-document`,
+      { headers: this.authHeaders() },
     );
   }
 

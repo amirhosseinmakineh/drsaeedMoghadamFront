@@ -29,6 +29,14 @@ export class PatientFinanceApiService {
   createCase(body: CreateFinancialCaseRequest) { return this.http.post<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases`, body, this.options()); }
   updateCase(id: PatientFinancialCaseId, body: UpdateFinancialCaseRequest) { return this.http.put<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}`, body, this.options()); }
   cancelCase(id: PatientFinancialCaseId) { return this.http.delete<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}`, this.options()); }
+  uploadGuaranteeDocument(id: PatientFinancialCaseId, file: File): Observable<ApiResult<PatientFinancialCaseIdResponse>> {
+    const token = this.auth.user()?.token;
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
+    const body = new FormData();
+    body.append("file", file);
+    return this.http.post<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}/guarantee-document`, body, { headers });
+  }
+  deleteGuaranteeDocument(id: PatientFinancialCaseId) { return this.http.delete<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}/guarantee-document`, this.options()); }
   addCheque(caseId: PatientFinancialCaseId, body: CreateChequeRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/cheques`, body, this.options()); }
   addPromissoryNote(caseId: PatientFinancialCaseId, body: CreatePromissoryNoteRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/promissory-notes`, body, this.options()); }
   getCheques(query: PageQuery) { return this.get<PaginatedResult<PatientCheque>>(`${this.baseUrl}/patient-cheques`, query); }
