@@ -73,7 +73,7 @@ export function combineIranDateAndTime(date: Date, time: string): Date | null {
   const dateValue = toIranDateInputValue(date);
   // Keep the reservation contract in strict 24-hour HH:mm format.
   // Native time inputs can display AM/PM depending on the user's locale.
-  if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
     return null;
   }
 
