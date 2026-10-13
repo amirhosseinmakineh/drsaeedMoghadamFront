@@ -120,6 +120,7 @@
 
   <app-base-modal class="finance-details-modal" [open]="!!details" [title]="details ? patientReference(details.case.patientName, recordFileNumber(details.case)) : 'جزئیات حسابداری بیمار'" (close)="closeDetails()">
   @if (details) {
+    <app-patient-additional-documents [caseId]="details.case.id" />
     <div class="details-heading"><span>جزئیات حسابداری بیمار</span><small>تاریخ: {{ date(details.case.createdAt) }}</small><strong>{{ serviceLabel(details.case.serviceIds, details.case.serviceNames) }}</strong></div>
     <h3 class="worksheet-title">اطلاعات حسابداری پرونده</h3>
     <dl class="case-amounts worksheet-fields">
