@@ -621,7 +621,17 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private buildCommitmentEditForms(): void {
     this.chequeEditForms.clear();
     this.noteEditForms.clear();
-    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], sayadNumber: [item.sayadNumber, Validators.required], ownerName: [item.ownerName, Validators.required], dueDate: [new Date(item.dueDate), Validators.required], isGuarantee: this.fb.nonNullable.control(item.isGuarantee ?? false) })));
+    this.detailCheques.forEach((item) => {
+      const form = this.fb.group({
+        amount: [item.amount, Validators.required],
+        sayadNumber: [item.sayadNumber, Validators.required],
+        ownerName: [item.ownerName, Validators.required],
+        dueDate: [new Date(item.dueDate), Validators.required],
+        isGuarantee: this.fb.nonNullable.control(item.isGuarantee ?? false),
+      });
+
+      this.chequeEditForms.push(form);
+    });
     this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], serialNumber: [item.serialNumber, Validators.required], dueDate: [new Date(item.dueDate), Validators.required] })));
   }
   private requestPatientOptions(searchText: string): void {
