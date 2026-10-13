@@ -85,6 +85,8 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   summary: PatientFinancialCaseSummary | null = null;
   detailCheques: PatientCheque[] = [];
   detailNotes: PatientPromissoryNote[] = [];
+  createServiceUnits: Record<number, number> = {};
+  editServiceUnits: Record<number, number> = {};
   patientOptions: FinancePatientOption[] = [];
   patientSearch = "";
   patientOptionsLoading = false;
@@ -185,9 +187,75 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   closeServiceDropdown(): void { setTimeout(() => { this.serviceDropdownOpen = false; this.cdr.markForCheck(); }, 150); }
   toggleService(id: number): void {
     const index = this.serviceIds.controls.findIndex(c => c.value === id);
-    if (index >= 0) { this.serviceIds.removeAt(index); } else { this.serviceIds.push(this.fb.control(id)); }
+    if (index >= 0) {
+      this.serviceIds.removeAt(index);
+      delete this.createServiceUnits[id];
+    } else {
+      this.serviceIds.push(this.fb.control(id));
+      this.createServiceUnits[id] = 1;
+    }
     this.createForm.updateValueAndValidity();
   }
+  updateServiceUnits(
+    target: "create" | "edit",
+    serviceId: number,
+    event: Event,
+  ): void {
+    const input = event.target as HTMLInputElement;
+    const value = Number(input.value);
+    const counts = target === "create"
+      ? this.createServiceUnits
+      : this.editServiceUnits;
+
+    counts[serviceId] = Number.isInteger(value) ? value : 0;
+  }
+
+  serviceUnitsValid(
+    serviceIds: readonly number[],
+    counts: Record<number, number>,
+  ): boolean {
+    return serviceIds.every((id) => {
+      const value = counts[id];
+      return Number.isInteger(value) && value >= 1 && value <= 100;
+    });
+  }
+
+  parseServiceUnits(value: string | null | undefined): Record<number, number> {
+    if (!value) {
+      return {};
+    }
+
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        return {};
+      }
+
+      const counts: Record<number, number> = {};
+      for (const [key, rawCount] of Object.entries(parsed)) {
+        const serviceId = Number(key);
+        if (Number.isInteger(serviceId) && typeof rawCount === "number") {
+          counts[serviceId] = rawCount;
+        }
+      }
+      return counts;
+    } catch {
+      return {};
+    }
+  }
+
+  formatServiceUnitCounts(financialCase: PatientFinancialCase): string {
+    const counts = this.parseServiceUnits(financialCase.serviceUnitCountsJson);
+    const labels = financialCase.serviceIds.map((id) => {
+      const name = this.services.find((service) => service.id === id)?.label
+        ?? String(id);
+      const count = counts[id];
+      return count ? `${name}: ${count}` : name;
+    });
+
+    return labels.length ? labels.join("، ") : "—";
+  }
+
   isServiceSelected(id: number): boolean { return this.serviceIds.controls.some(c => c.value === id); }
   get cheques(): FormArray { return this.createForm.controls.cheques; }
   get notes(): FormArray { return this.createForm.controls.promissoryNotes; }
@@ -350,6 +418,14 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   submitCase(): void {
     if (this.submitting) return;
     this.createSubmitAttempted = true;
+    if (!this.serviceUnitsValid(
+      this.serviceIds.controls.map((control) => Number(control.value)),
+      this.createServiceUnits,
+    )) {
+      this.toast.error("برای هر خدمت تعداد واحد معتبر وارد کنید.");
+      return;
+    }
+
     if (!this.selectedFinancialPatientId || !GUID_PATTERN.test(this.selectedFinancialPatientId) || this.createForm.invalid) {
       this.createForm.markAllAsTouched();
       this.toast.error(this.createFormErrorMessage);
@@ -358,7 +434,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     }
     this.submitting = true;
     const value = this.createForm.getRawValue();
-    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceIds: this.serviceIds.controls.map(c => Number(c.value)), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, notes: value.notes, consultantName: value.consultantName, toothUnitCount: value.toothUnitCount ?? null, cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.serviceIds.clear(); this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
+    this.api.createCase({ patientId: this.selectedFinancialPatientId, serviceIds: this.serviceIds.controls.map(c => Number(c.value)), totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount), depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType), paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, notes: value.notes, consultantName: value.consultantName, toothUnitCount: Object.values(this.createServiceUnits).reduce((sum, count) => sum + count, 0), serviceUnitCounts: this.createServiceUnits, cheques: value.cheques.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })), promissoryNotes: value.promissoryNotes.map((x: any) => ({ ...x, amount: Number(x.amount), dueDate: this.iso(x.dueDate) })) }).pipe(finalize(() => { this.submitting = false; this.cdr.markForCheck(); }), takeUntilDestroyed(this.destroyRef)).subscribe({ next: (result) => { if (!result.isSuccess || !result.data) { this.toast.error(result.message); return; } this.toast.success(result.message || "پرونده مالی با موفقیت ثبت شد."); this.createForm.reset({ prePaymentAmount: 0, depositAmount: 0, agreementType: FinancialAgreementType.Deposit }); this.createSubmitAttempted = false; this.selectedFinancialPatientId = null; this.patientSearch = ""; this.cheques.clear(); this.notes.clear(); this.serviceIds.clear(); this.createServiceUnits = {}; this.selectTab("cases"); this.openDetails(result.data.id); }, error: (e) => this.showError(e) });
   }
 
   openDetails(id: PatientFinancialCaseId): void {
@@ -368,6 +444,10 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({ next: ({ details, summary }) => {
       this.details = details;
+      this.editServiceUnits = this.parseServiceUnits(details.case.serviceUnitCountsJson);
+      for (const serviceId of details.case.serviceIds) {
+        this.editServiceUnits[serviceId] ??= 1;
+      }
       this.summary = summary;
       this.detailCheques = details.cheques ?? [];
       this.detailNotes = details.promissoryNotes ?? [];
@@ -455,11 +535,16 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   cancelCase(item: PatientFinancialCase): void { if (!this.canCancelCase(item) || !confirm("کل ردیف حسابداری حذف شود؟ ابتدا باید همه چک‌ها و سفته‌ها حذف شده باشند.")) return; this.mutate(item.id, this.api.cancelCase(item.id), "پرونده حسابداری حذف شد."); }
   saveCaseEdit(): void {
     if (!this.details || this.caseEditForm.invalid) { this.toast.error("مبالغ پرونده معتبر نیستند."); return; }
+    if (!this.serviceUnitsValid(this.details.case.serviceIds, this.editServiceUnits)) {
+      this.toast.error("برای هر خدمت تعداد واحد معتبر وارد کنید.");
+      return;
+    }
     const value = this.caseEditForm.getRawValue();
     this.mutate(this.details.case.id, this.api.updateCase(this.details.case.id, {
       totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount),
       depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType),
-      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, notes: value.notes, consultantName: value.consultantName, toothUnitCount: value.toothUnitCount ?? null,
+      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, notes: value.notes, consultantName: value.consultantName, toothUnitCount: Object.values(this.editServiceUnits).reduce((sum, count) => sum + count, 0),
+      serviceUnitCounts: this.editServiceUnits,
     }), "حسابداری بیمار و همه جمع‌ها به‌روزرسانی شد.");
   }
   addChequeToExistingCase(): void {
