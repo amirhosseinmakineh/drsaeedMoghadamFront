@@ -1,0 +1,81 @@
+<section class="additional-documents" aria-labelledby="additional-documents-title">
+  <header class="section-heading">
+    <h3 id="additional-documents-title">مدارک اضافی بیمار</h3>
+    <span>{{ documents.length }} / {{ maximumDocumentCount }} تصویر</span>
+  </header>
+
+  <p class="section-description">
+    تصاویر مدارک بیمار را برای این پرونده حسابداری اضافه کنید.
+    فرمت‌های مجاز JPG و PNG، حداکثر ۵ مگابایت برای هر تصویر.
+  </p>
+
+  <div class="upload-controls">
+    <label for="patient-document-description">توضیح مدرک (اختیاری)</label>
+    <input
+      id="patient-document-description"
+      type="text"
+      maxlength="500"
+      [value]="description"
+      [disabled]="uploading"
+      (input)="description = $any($event.target).value"
+      placeholder="مثلاً مدارک تکمیلی بیمار"
+    />
+
+    <label class="upload-button">
+      {{ uploading ? "در حال بارگذاری..." : "افزودن تصویر مدارک" }}
+      <input
+        type="file"
+        accept="image/png,image/jpeg"
+        multiple
+        [disabled]="uploading || documents.length >= maximumDocumentCount"
+        (change)="selectImages($event)"
+      />
+    </label>
+  </div>
+
+  @if (error) {
+    <p class="document-error" role="alert">{{ error }}</p>
+  }
+
+  @if (loading) {
+    <p role="status">در حال دریافت تصاویر...</p>
+  } @else if (documents.length === 0) {
+    <p class="empty-message">هنوز تصویر مدرک اضافی ثبت نشده است.</p>
+  } @else {
+    <div class="document-grid">
+      @for (preview of documents; track preview.document.id) {
+        <article class="document-card">
+          @if (preview.imageUrl) {
+            <a
+              [href]="preview.imageUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              [attr.aria-label]="'نمایش تصویر مدرک ' + preview.document.description"
+            >
+              <img
+                [src]="preview.imageUrl"
+                [alt]="preview.document.description || 'تصویر مدرک بیمار'"
+                loading="lazy"
+              />
+            </a>
+          } @else {
+            <div class="image-loading">در حال بارگذاری تصویر...</div>
+          }
+
+          @if (preview.document.description) {
+            <p>{{ preview.document.description }}</p>
+          }
+
+          <button
+            type="button"
+            class="remove-document"
+            [disabled]="removingId !== null || uploading"
+            (click)="removeDocument(preview.document)"
+          >
+            {{ removingId === preview.document.id ? "در حال حذف..." : "حذف تصویر" }}
+          </button>
+        </article>
+      }
+    </div>
+  }
+</section>
