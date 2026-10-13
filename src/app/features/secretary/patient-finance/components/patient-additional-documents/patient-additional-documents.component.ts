@@ -63,9 +63,12 @@ export class PatientAdditionalDocumentsComponent implements OnInit, OnDestroy {
     this.imageUrls.clear();
   }
 
-  loadDocuments(): void {
+  loadDocuments(preserveError = false): void {
     this.loading = true;
-    this.error = "";
+
+    if (!preserveError) {
+      this.error = "";
+    }
 
     this.api.getAdditionalDocuments(this.caseId)
       .pipe(
@@ -164,7 +167,7 @@ export class PatientAdditionalDocumentsComponent implements OnInit, OnDestroy {
         : "آپلود تصویر انجام نشد.";
 
       // A previous image may have uploaded successfully.
-      this.loadDocuments();
+      this.loadDocuments(true);
     } finally {
       this.uploading = false;
       this.cdr.markForCheck();
