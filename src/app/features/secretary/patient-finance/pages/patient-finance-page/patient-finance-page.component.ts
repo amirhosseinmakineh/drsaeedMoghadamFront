@@ -18,7 +18,13 @@ import { environment } from "../../../../../../environments/environment";
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
 interface FinancePatientOption { patientFileId: number; financialPatientId: string | null; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
-type ChequeEditForm = FormGroup<{ amount: FormControl<number | null>; sayadNumber: FormControl<string | null>; ownerName: FormControl<string | null>; dueDate: FormControl<Date | null> }>;
+type ChequeEditForm = FormGroup<{
+  amount: FormControl<number | null>;
+  sayadNumber: FormControl<string | null>;
+  ownerName: FormControl<string | null>;
+  dueDate: FormControl<Date | null>;
+  isGuarantee: FormControl<boolean>;
+}>;
 type NoteEditForm = FormGroup<{ amount: FormControl<number | null>; serialNumber: FormControl<string | null>; dueDate: FormControl<Date | null> }>;
 
 const GUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
@@ -115,6 +121,28 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   // Kept as typed compatibility containers so older merged templates/helpers compile safely.
   // The current details modal does not render or populate these arrays.
   readonly chequeEditForms = new FormArray<ChequeEditForm>([]);
+
+  addingCaseCheque = false;
+
+  readonly newCaseChequeForm = this.fb.group({
+    amount: this.fb.control<number | null>(null, {
+      validators: [Validators.required, Validators.min(1)],
+    }),
+    sayadNumber: this.fb.control("", {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(SAYAD_NUMBER_PATTERN)],
+    }),
+    ownerName: this.fb.control("", {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    dueDate: this.fb.control<Date | null>(null, {
+      validators: [Validators.required, todayOrLater],
+    }),
+    isGuarantee: this.fb.control(false, {
+      nonNullable: true,
+    }),
+  });
   readonly noteEditForms = new FormArray<NoteEditForm>([]);
   readonly caseEditForm = this.fb.group({
     totalAmount: [0, Validators.required],
@@ -434,11 +462,64 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, notes: value.notes, consultantName: value.consultantName, toothUnitCount: value.toothUnitCount ?? null,
     }), "حسابداری بیمار و همه جمع‌ها به‌روزرسانی شد.");
   }
+  addChequeToExistingCase(): void {
+    if (!this.details || this.addingCaseCheque) {
+      return;
+    }
+
+    if (this.newCaseChequeForm.invalid) {
+      this.newCaseChequeForm.markAllAsTouched();
+      this.toast.error("اطلاعات چک را کامل و معتبر وارد کنید.");
+      return;
+    }
+
+    const value = this.newCaseChequeForm.getRawValue();
+
+    if (!value.dueDate || value.amount === null) {
+      return;
+    }
+
+    const caseId = this.details.case.id;
+    this.addingCaseCheque = true;
+
+    this.api.addCheque(caseId, {
+      amount: value.amount,
+      sayadNumber: value.sayadNumber.trim(),
+      ownerName: value.ownerName.trim(),
+      dueDate: this.iso(value.dueDate),
+      isGuarantee: value.isGuarantee,
+    }).pipe(
+      finalize(() => {
+        this.addingCaseCheque = false;
+        this.cdr.markForCheck();
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (result) => {
+        if (!result.isSuccess) {
+          this.toast.error(result.message);
+          return;
+        }
+
+        this.toast.success("چک پرونده مالی با موفقیت ثبت شد.");
+        this.newCaseChequeForm.reset({
+          amount: null,
+          sayadNumber: "",
+          ownerName: "",
+          dueDate: null,
+          isGuarantee: false,
+        });
+        this.openDetails(caseId);
+      },
+      error: (error: HttpErrorResponse) => this.showError(error),
+    });
+  }
+
   saveCheque(index: number): void {
     const item = this.detailCheques[index], form = this.chequeEditForms.at(index);
     if (!item || form.invalid) { this.toast.error("اطلاعات چک معتبر نیست."); return; }
     const value = form.getRawValue();
-    this.mutate(item.id, this.api.updateCheque(item.id, { amount: Number(value.amount), sayadNumber: value.sayadNumber!, ownerName: value.ownerName!, dueDate: this.iso(value.dueDate!) }), "چک و محاسبات مالی به‌روزرسانی شد.");
+    this.mutate(item.id, this.api.updateCheque(item.id, { amount: Number(value.amount), sayadNumber: value.sayadNumber!, ownerName: value.ownerName!, dueDate: this.iso(value.dueDate!), isGuarantee: value.isGuarantee }), "چک و محاسبات مالی به‌روزرسانی شد.");
   }
   saveNote(index: number): void {
     const item = this.detailNotes[index], form = this.noteEditForms.at(index);
@@ -540,7 +621,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   private buildCommitmentEditForms(): void {
     this.chequeEditForms.clear();
     this.noteEditForms.clear();
-    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], sayadNumber: [item.sayadNumber, Validators.required], ownerName: [item.ownerName, Validators.required], dueDate: [new Date(item.dueDate), Validators.required] })));
+    this.detailCheques.forEach(item => this.chequeEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], sayadNumber: [item.sayadNumber, Validators.required], ownerName: [item.ownerName, Validators.required], dueDate: [new Date(item.dueDate), Validators.required], isGuarantee: [item.isGuarantee ?? false, { nonNullable: true }] })));
     this.detailNotes.forEach(item => this.noteEditForms.push(this.fb.group({ amount: [item.amount, Validators.required], serialNumber: [item.serialNumber, Validators.required], dueDate: [new Date(item.dueDate), Validators.required] })));
   }
   private requestPatientOptions(searchText: string): void {
