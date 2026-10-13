@@ -187,12 +187,107 @@
       <label>تعداد واحد دندان<input type="number" min="1" formControlName="toothUnitCount"></label>
       <button class="primary" type="submit" [disabled]="actionId !== null">ذخیره حسابداری</button>
     </form>
-    <section class="commitment-edit-section"><h3>چک‌ها</h3>
+    <section class="commitment-edit-section">
+      <h3>چک‌های پرونده مالی بیمار</h3>
+
+      <form
+        class="commitment-edit-row"
+        [formGroup]="newCaseChequeForm"
+        (ngSubmit)="addChequeToExistingCase()"
+      >
+        <h4>افزودن چک به پرونده مالی</h4>
+
+        <label>
+          نوع چک
+          <select formControlName="isGuarantee">
+            <option [ngValue]="false">چک عادی</option>
+            <option [ngValue]="true">چک ضمانت</option>
+          </select>
+        </label>
+
+        <app-base-number-input
+          inputId="new-finance-cheque-amount"
+          label="مبلغ چک"
+          [maxFractionDigits]="3"
+          [value]="newCaseChequeForm.controls.amount.value"
+          (valueChange)="setAmount(newCaseChequeForm.controls.amount, $event)"
+        />
+
+        <label>
+          شماره صیادی
+          <input
+            formControlName="sayadNumber"
+            maxlength="16"
+            inputmode="numeric"
+            placeholder="۱۶ رقم"
+          />
+        </label>
+
+        <label>
+          نام صاحب چک
+          <input formControlName="ownerName" />
+        </label>
+
+        <app-base-persian-date-picker
+          label="تاریخ سررسید"
+          [required]="true"
+          [minDate]="today"
+          [value]="newCaseChequeForm.controls.dueDate.value"
+          (valueChange)="newCaseChequeForm.controls.dueDate.setValue($event)"
+        />
+
+        <button
+          class="primary"
+          type="submit"
+          [disabled]="addingCaseCheque || newCaseChequeForm.invalid"
+        >
+          {{ addingCaseCheque ? "در حال ثبت چک..." : "ثبت چک در پرونده مالی" }}
+        </button>
+      </form>
+
       @for (item of detailCheques; track item.id; let index = $index) {
-        <form class="commitment-edit-row" [formGroup]="chequeEditForms.at(index)" (ngSubmit)="saveCheque(index)">
-          <app-base-number-input [inputId]="'edit-cheque-amount-' + item.id" label="مبلغ" [maxFractionDigits]="3" [value]="chequeEditForms.at(index).controls.amount.value" (valueChange)="setAmount(chequeEditForms.at(index).controls.amount, $event)" /><input formControlName="sayadNumber" placeholder="شماره صیادی"><input formControlName="ownerName" placeholder="صاحب چک"><app-base-persian-date-picker label="تاریخ سررسید" [value]="chequeEditForms.at(index).controls.dueDate.value" (valueChange)="chequeEditForms.at(index).controls.dueDate.setValue($event)" /><button type="submit">ویرایش</button><button type="button" class="danger-link" (click)="deleteCheque(item)">حذف</button>
+        <form
+          class="commitment-edit-row"
+          [formGroup]="chequeEditForms.at(index)"
+          (ngSubmit)="saveCheque(index)"
+        >
+          <label>
+            نوع چک
+            <select formControlName="isGuarantee">
+              <option [ngValue]="false">چک عادی</option>
+              <option [ngValue]="true">چک ضمانت</option>
+            </select>
+          </label>
+
+          <app-base-number-input
+            [inputId]="'edit-cheque-amount-' + item.id"
+            label="مبلغ"
+            [maxFractionDigits]="3"
+            [value]="chequeEditForms.at(index).controls.amount.value"
+            (valueChange)="setAmount(chequeEditForms.at(index).controls.amount, $event)"
+          />
+
+          <input formControlName="sayadNumber" placeholder="شماره صیادی" />
+          <input formControlName="ownerName" placeholder="صاحب چک" />
+
+          <app-base-persian-date-picker
+            label="تاریخ سررسید"
+            [value]="chequeEditForms.at(index).controls.dueDate.value"
+            (valueChange)="chequeEditForms.at(index).controls.dueDate.setValue($event)"
+          />
+
+          <button type="submit">ویرایش</button>
+          <button
+            type="button"
+            class="danger-link"
+            (click)="deleteCheque(item)"
+          >
+            حذف
+          </button>
         </form>
-      } @empty { <p>چکی ثبت نشده است.</p> }
+      } @empty {
+        <p>چکی ثبت نشده است.</p>
+      }
     </section>
     <section class="commitment-edit-section"><h3>سفته‌ها</h3>
       @for (item of detailNotes; track item.id; let index = $index) {
