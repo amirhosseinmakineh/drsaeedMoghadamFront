@@ -219,7 +219,7 @@
               max="100"
               step="1"
               required
-              [value]="editServiceUnits[serviceId] ?? 1"
+              [value]="editServiceUnits[serviceId] || ''"
               (input)="updateServiceUnits('edit', serviceId, $event)"
             />
           </label>
