@@ -7,6 +7,13 @@ export enum FinancialSourceType { Cheque = 1, PromissoryNote = 2 }
 export type PatientGuid = string;
 export type PatientFinancialCaseId = string;
 
+export interface PatientAdditionalDocument {
+  id: string;
+  patientFinancialCaseId: PatientFinancialCaseId;
+  description: string;
+  createdAt: string;
+}
+
 export interface ApiResult<T> { data: T | null; isSuccess: boolean; message: string; }
 export interface IdResponse { id: number; }
 export interface PatientFinancialCaseIdResponse { id: PatientFinancialCaseId; }
