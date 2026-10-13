@@ -12,6 +12,7 @@ import { SecretaryAccountShellComponent } from "../../../account/components/secr
 import { PatientFilesService } from "../../../patient-files/patient-files.service";
 import { ApiResult, CommitmentStatus, DebtStatus, FinancialAgreementType, FinancialCaseStatus, IdResponse, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseId, PatientFinancialCaseIdResponse, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientGuid, PatientPromissoryNote } from "../../models/patient-finance.models";
 import { PatientFinanceApiService } from "../../services/patient-finance-api.service";
+import { PatientAdditionalDocumentsComponent } from "../../components/patient-additional-documents/patient-additional-documents.component";
 import { environment } from "../../../../../../environments/environment";
 
 type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
@@ -47,7 +48,7 @@ function todayOrLater(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: "app-patient-finance-page",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, BaseNumberInputComponent, BaseModalComponent, SecretaryAccountShellComponent],
+  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, BaseNumberInputComponent, BaseModalComponent, SecretaryAccountShellComponent, PatientAdditionalDocumentsComponent],
   templateUrl: "./patient-finance-page.component.html",
   styleUrl: "./patient-finance-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
