@@ -512,7 +512,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       this.details = details;
       this.editServiceUnits = this.parseServiceUnits(details.case.serviceUnitCountsJson);
       for (const serviceId of details.case.serviceIds) {
-        this.editServiceUnits[serviceId] ??= 1;
+        this.editServiceUnits[serviceId] ??= 0;
       }
       this.summary = summary;
       this.detailCheques = details.cheques ?? [];
