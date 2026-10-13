@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
 import { AuthService } from "../../../../core/auth/auth.service";
 import { environment } from "../../../../../environments/environment";
-import { ApiResult, CreateChequeRequest, CreateFinancialCaseRequest, CreatePromissoryNoteRequest, IdResponse, PageQuery, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseId, PatientFinancialCaseIdResponse, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote, UpdateChequeRequest, UpdateFinancialCaseRequest, UpdatePromissoryNoteRequest } from "../models/patient-finance.models";
+import { PatientAdditionalDocument, ApiResult, CreateChequeRequest, CreateFinancialCaseRequest, CreatePromissoryNoteRequest, IdResponse, PageQuery, PaginatedResult, PatientCheque, PatientDebt, PatientFinancialCase, PatientFinancialCaseDetails, PatientFinancialCaseId, PatientFinancialCaseIdResponse, PatientFinancialCaseSummary, PatientFinancialCommitment, PatientFinancialTransaction, PatientPromissoryNote, UpdateChequeRequest, UpdateFinancialCaseRequest, UpdatePromissoryNoteRequest } from "../models/patient-finance.models";
 
 @Injectable({ providedIn: "root" })
 export class PatientFinanceApiService {
@@ -36,6 +36,48 @@ export class PatientFinanceApiService {
     body.append("file", file);
     return this.http.post<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}/guarantee-document`, body, { headers });
   }
+  getAdditionalDocuments(id: PatientFinancialCaseId): Observable<PatientAdditionalDocument[]> {
+    return this.get<PatientAdditionalDocument[]>(
+      `${this.baseUrl}/patient-financial-cases/${id}/additional-documents`,
+    );
+  }
+
+  getAdditionalDocumentImage(
+    caseId: PatientFinancialCaseId,
+    documentId: string,
+  ): Observable<Blob> {
+    return this.http.get(
+      `${this.baseUrl}/patient-financial-cases/${caseId}/additional-documents/${documentId}/image`,
+      { ...this.options(), responseType: "blob" },
+    );
+  }
+
+  uploadAdditionalDocument(
+    caseId: PatientFinancialCaseId,
+    file: File,
+    description: string,
+  ): Observable<ApiResult<PatientAdditionalDocument>> {
+    const body = new FormData();
+    body.append("file", file);
+    body.append("description", description);
+
+    return this.http.post<ApiResult<PatientAdditionalDocument>>(
+      `${this.baseUrl}/patient-financial-cases/${caseId}/additional-documents`,
+      body,
+      { headers: this.options().headers },
+    );
+  }
+
+  deleteAdditionalDocument(
+    caseId: PatientFinancialCaseId,
+    documentId: string,
+  ): Observable<ApiResult<string>> {
+    return this.http.delete<ApiResult<string>>(
+      `${this.baseUrl}/patient-financial-cases/${caseId}/additional-documents/${documentId}`,
+      this.options(),
+    );
+  }
+
   deleteGuaranteeDocument(id: PatientFinancialCaseId) { return this.http.delete<ApiResult<PatientFinancialCaseIdResponse>>(`${this.baseUrl}/patient-financial-cases/${id}/guarantee-document`, this.options()); }
   addCheque(caseId: PatientFinancialCaseId, body: CreateChequeRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/cheques`, body, this.options()); }
   addPromissoryNote(caseId: PatientFinancialCaseId, body: CreatePromissoryNoteRequest) { return this.http.post<ApiResult<IdResponse>>(`${this.baseUrl}/patient-financial-cases/${caseId}/promissory-notes`, body, this.options()); }
