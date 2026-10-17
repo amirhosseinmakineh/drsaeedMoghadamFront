@@ -538,7 +538,14 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
   }
 
   documentUrl(relativePath: string): string {
-    return `${environment.apiBaseUrl.replace("/api", "")}${relativePath}`;
+      const apiUrl = new URL(environment.apiBaseUrl);
+      const basePath = apiUrl.pathname.replace(/\/api\/?$/, "");
+
+      const imagePath = relativePath.startsWith("/")
+          ? relativePath
+          : `/${relativePath}`;
+
+      return `${apiUrl.origin}${basePath}${imagePath}`;
   }
 
   onDocumentFileSelected(event: Event, caseId: PatientFinancialCaseId): void {
