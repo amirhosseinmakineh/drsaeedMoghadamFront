@@ -12,7 +12,10 @@
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
     "start": "node dist/demo/server/server.mjs",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
-    "optimize:images": "python3 scripts/optimize-images.py"
+    "optimize:images": "python3 scripts/optimize-images.py",
+    "android:build": "ng build --configuration production && npx cap sync android",
+    "android:init": "ng build --configuration production && npx cap add android && npx cap sync android",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
     "@angular/animations": "^20.3.0",
@@ -28,7 +31,10 @@
     "tslib": "^2.5.0",
     "@angular/platform-server": "^20.3.33",
     "@angular/ssr": "^20.3.33",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "@capacitor/core": "^7.4.0",
+    "@capacitor/android": "^7.4.0",
+    "@capacitor/app": "^7.1.0"
   },
   "devDependencies": {
     "@angular/build": "^20.3.0",
@@ -36,6 +42,7 @@
     "@angular/compiler-cli": "^20.3.0",
     "typescript": "^5.8.2",
     "@types/express": "^5.0.6",
-    "@types/node": "^24.10.0"
+    "@types/node": "^24.10.0",
+    "@capacitor/cli": "^7.4.0"
   }
 }
