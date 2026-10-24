@@ -1,0 +1,20 @@
+:host { display: block; min-width: 0; }
+.consultation-form { padding: clamp(1rem, 3vw, 2rem); border: 1px solid #cce4e2; background: #fff; border-radius: 1.5rem; box-shadow: 0 16px 48px #123e4410; color: #183c42; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: .7rem; }
+legend { font-size: 1.25rem; font-weight: 800; padding: 0; margin-bottom: .6rem; }
+.intro, small { color: #536d73; line-height: 1.9; }
+label { font-weight: 600; margin-top: .4rem; }
+input:not([type=checkbox]), textarea { width: 100%; box-sizing: border-box; border: 1px solid #b8cecf; border-radius: .75rem; padding: .85rem; min-height: 48px; font: inherit; background: #f9fcfc; color: inherit; }
+input:focus, textarea:focus { outline: 3px solid #b6e8df; border-color: #12766b; }
+textarea { resize: vertical; }
+.services { border: 1px solid #d9e8e8; border-radius: .75rem; padding: 1rem; margin-top: 1rem; }
+.services legend { font-size: 1rem; }
+.service-option { display: flex; align-items: center; gap: .6rem; min-height: 44px; cursor: pointer; }
+input[type=checkbox] { width: 20px; height: 20px; accent-color: #12766b; flex-shrink: 0; }
+button { font: inherit; cursor: pointer; min-height: 48px; border-radius: .75rem; }
+.submit { background: #126c65; color: white; border: 0; padding: 1rem; margin-top: .75rem; font-weight: 700; }
+button:disabled { opacity: .6; cursor: default; }
+.retry { background: white; border: 1px solid #126c65; color: #126c65; }
+.feedback { line-height: 1.9; background: #eaf8f2; padding: 1rem; border-radius: .75rem; overflow-wrap: anywhere; }
+.error { color: #a32135; }
+.feedback.error { background: #fff0f1; }
