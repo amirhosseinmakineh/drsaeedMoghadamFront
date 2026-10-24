@@ -1,3 +1,4 @@
+import { LeadConsultation } from "../lead/lead-consultation";
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, catchError, forkJoin, from, map, switchMap, throwError } from "rxjs";
@@ -228,7 +229,7 @@ export interface AttendanceItem {
   description: string | null;
 }
 
-export interface LeadAssignmentItem {
+export interface LeadAssignmentItem extends LeadConsultation {
   id?: number;
   Id?: number;
   leadAssignmentId?: number;
@@ -358,6 +359,7 @@ export interface DailyReservationsReport {
 }
 
 export interface LeadFilters {
+  sourceType?: number | null;
   profileId?: number;
   leadAssignmentState?: number | null;
   leadAssignmentType?: number | null;

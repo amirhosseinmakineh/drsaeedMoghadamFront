@@ -1,3 +1,4 @@
+import { LeadConsultation } from "../lead/lead-consultation";
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
@@ -83,7 +84,7 @@ export interface BroadcastRealtimeLeadsResponse {
   Leads?: BroadcastRealtimeLeadItem[];
 }
 
-export interface ConsultantLead {
+export interface ConsultantLead extends LeadConsultation {
   id?: number;
   Id?: number;
   leadAssignmentId?: number;

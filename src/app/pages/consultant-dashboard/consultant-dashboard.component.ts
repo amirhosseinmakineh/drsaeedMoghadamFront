@@ -1,3 +1,4 @@
+import { leadOriginLabel, requestedServicesLabel } from "../../core/lead/lead-consultation";
 import { CommonModule } from "@angular/common";
 import {
   ChangeDetectionStrategy,
@@ -173,6 +174,9 @@ interface ConsultantDashboardLink {
   styleUrl: "./consultant-dashboard.component.scss",
 })
 export class ConsultantDashboardComponent implements OnInit, OnDestroy {
+  readonly leadOriginLabel = leadOriginLabel;
+  readonly requestedServicesLabel = requestedServicesLabel;
+
   readonly user = this.auth.user;
   activeSection: ConsultantDashboardSection = "overview";
   mobileSidebarOpen = false;
