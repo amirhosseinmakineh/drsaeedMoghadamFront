@@ -48,3 +48,5 @@ npx playwright install chromium
 * `src/app/shared/consultation-request/consultation-request.component.html`
 * `src/app/shared/consultation-request/consultation-request.component.scss`
 * `src/app/shared/consultation-request/consultation-request.component.ts`
+
+Browser validation also exercises the authenticated admin table, Website source filter, requested service titles and visitor notes against the real paired API.

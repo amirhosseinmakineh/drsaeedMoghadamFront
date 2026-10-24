@@ -85,4 +85,20 @@ try {
     console.log('PASS consultant panel: authenticated real API displays assigned Website lead, service and visitor notes');
     await context.close();
   }
+  if (process.env.CLINIC_TEST_ADMIN_SESSION) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
+    await context.addInitScript(session => localStorage.setItem('clinic-auth-session', session), process.env.CLINIC_TEST_ADMIN_SESSION);
+    const page = await context.newPage();
+    await page.goto(`${url}/dashboard/admin?section=leads`);
+    const panel = page.locator('app-admin-leads-table');
+    await panel.locator('select[name=leadSourceType]').selectOption({ label: 'وب‌سایت' });
+    await panel.getByRole('button', { name: 'اعمال فیلتر', exact: true }).click();
+    const table = panel.locator('app-base-table');
+    await table.getByText('وب‌سایت', { exact: true }).first().waitFor();
+    await table.getByText('خدمت تست یکپارچه', { exact: true }).first().waitFor();
+    await table.getByText('توضیحات مراجعه‌کننده', { exact: true }).first().waitFor();
+    if (process.env.CLINIC_SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.CLINIC_SCREENSHOT_DIR}/admin.png`, fullPage: true });
+    console.log('PASS admin panel: authenticated real API renders Website source, requested services, visitor notes and source filter');
+    await context.close();
+  }
 } finally { await browser.close(); await new Promise(resolve => server.close(resolve)); }
