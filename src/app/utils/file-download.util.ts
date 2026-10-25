@@ -1,4 +1,16 @@
 export function downloadBlob(blob: Blob, filename: string): void {
+  // Android-only branch: keep the existing website download path untouched.
+  if (typeof window !== "undefined" &&
+      (window as Window & { Capacitor?: { isNativePlatform?: () => boolean; getPlatform?: () => string } }).Capacitor?.isNativePlatform?.() &&
+      (window as Window & { Capacitor?: { getPlatform?: () => string } }).Capacitor?.getPlatform?.() === "android") {
+    void import("../core/mobile/android-downloads")
+      .then(({ saveToAndroidDownloads }) => saveToAndroidDownloads(blob, filename))
+      .catch((error: unknown) => {
+        console.error("Unable to save file to Android Downloads:", error);
+        window.alert("ذخیره فایل در پوشه Downloads ناموفق بود.");
+      });
+    return;
+  }
   const url = window.URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
