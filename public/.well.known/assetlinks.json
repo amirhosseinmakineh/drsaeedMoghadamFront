@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.drsaeedmoghadam.clinic",
+      "sha256_cert_fingerprints": [
+        "28:78:BB:B6:08:5A:6D:16:84:55:24:03:CC:68:06:72:E6:96:23:AD:B6:ED:3D:0E:8D:47:AE:65:26:B2:B3:A0"
+      ]
+    }
+  }
+]
