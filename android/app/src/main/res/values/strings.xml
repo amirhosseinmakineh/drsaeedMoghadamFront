@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">کلینیک دکتر سعید مقدم</string>
+    <string name="title_activity_main">کلینیک دکتر سعید مقدم</string>
+    <string name="package_name">com.drsaeedmoghadam.clinic</string>
+    <string name="custom_url_scheme">com.drsaeedmoghadam.clinic</string>
+</resources>
