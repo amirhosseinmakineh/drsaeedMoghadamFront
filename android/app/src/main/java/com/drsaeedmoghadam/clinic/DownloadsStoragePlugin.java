@@ -33,7 +33,7 @@ public class DownloadsStoragePlugin extends Plugin {
             return;
         }
 
-        filename = filename.replaceAll("[\\\\/\\r\\n\\u0000-\\u001f]", "_").trim();
+        filename = filename.replace('/', '_').replace((char) 92, '_').replaceAll("[\\p{Cntrl}]", "_").trim();
         if (filename.equals(".") || filename.equals("..")) {
             call.reject("Invalid filename.");
             return;
