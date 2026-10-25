@@ -21,10 +21,8 @@ jobs:
         run: npm install
       - name: Build Angular
         run: npx ng build --configuration production
-      - name: Generate Android project
-        run: |
-          npx cap add android
-          npx cap sync android
+      - name: Sync existing Android project
+        run: npx cap sync android
       - name: Build APK
         working-directory: android
         run: bash ./gradlew assembleDebug
