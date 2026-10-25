@@ -1,8 +1,8 @@
+import { Capacitor } from "@capacitor/core";
+
 export function downloadBlob(blob: Blob, filename: string): void {
   // Android-only branch: keep the existing website download path untouched.
-  if (typeof window !== "undefined" &&
-      (window as Window & { Capacitor?: { isNativePlatform?: () => boolean; getPlatform?: () => string } }).Capacitor?.isNativePlatform?.() &&
-      (window as Window & { Capacitor?: { getPlatform?: () => string } }).Capacitor?.getPlatform?.() === "android") {
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android") {
     void import("../core/mobile/android-downloads")
       .then(({ saveToAndroidDownloads }) => saveToAndroidDownloads(blob, filename))
       .catch((error: unknown) => {
