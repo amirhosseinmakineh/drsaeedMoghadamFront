@@ -56,7 +56,7 @@ test('all recovered component methods and reservation-panel methods survive from
     const current = methods(readFileSync(path, 'utf8'));
     assert.deepEqual([...current.keys()], [...original.keys()]);
     for (const [name, text] of original) {
-      const expected = text.replace('.updateReservation(reservationId, payload)', `.updateReservation(reservationId, payload, ${file === 'consultant-dashboard.component.ts' ? 'profileId' : 'this.profileId'})`);
+      const expected = text.replace('if (now.getHours() < 21) return;', 'if (now.getHours() < 22) return;').replace('سیستم ساعت ۲۱ عدم حضور امروز شما را ثبت کرد.', 'سیستم ساعت ۲۲ عدم حضور امروز شما را ثبت کرد.').replace('.updateReservation(reservationId, payload)', `.updateReservation(reservationId, payload, ${file === 'consultant-dashboard.component.ts' ? 'profileId' : 'this.profileId'})`);
       assert.equal(current.get(name), expected, `Unexpected business change: ${file}:${name}`);
     }
   }
@@ -132,4 +132,77 @@ if (process.env.CLINIC_BACKEND_SOURCE) test('contract audit matches inspected ba
   for (const field of ['SourceType', 'ConsultationServiceId', 'ConsultationServiceTitle', 'ConsultationNotes']) assert(dto.includes(field), field);
   for (const route of ['GetConsultantReservations', 'ConfirmAttendance', 'DueConfirmations', 'CompletePatientProfile']) assert(reservation.includes(`("${route}")`), route);
   assert(reservation.includes('[HttpPut]')); assert(existsSync(resolve(root, 'DentalDashboard/Controllers/ConsultationRequestsController.cs')));
+});
+
+const { HomeComponent } = load('src/app/pages/home/home.component.ts');
+const { signal } = externals.get('@angular/core');
+const { Subject } = nativeRequire('rxjs');
+function consultationForm() {
+  const form = Object.create(HomeComponent.prototype);
+  const posts = [];
+  const pending = new Subject();
+  Object.assign(form, {
+    language: signal('fa'), submitting: signal(false), leadSent: signal(false),
+    servicesLoading: signal(false), servicesError: signal(false),
+    consultationServices: signal([{id: 13, title: 'خدمت واقعی API'}]), consultationServiceId: 13,
+    leadFeedback: signal(''), leadFeedbackType: signal('success'), requestId: crypto.randomUUID(), submittedPayload: '',
+    lead: {fullName: '  امیر   حسین  ', phone: '+۹۸ ۹۱۲-۳۴۵-۶۷۸۹', message: 'مشاوره اولیه'},
+    toast: {success() {}, error() {}},
+    http: {post(url, body) { posts.push({url, body}); return pending; }},
+  });
+  return {form, posts, pending};
+}
+test('Website form posts the exact merged backend contract with normalized values and API service ID', () => {
+  const {form, posts, pending} = consultationForm();
+  assert.equal(form.validateLeadForm(), null);
+  form.submitLead(); form.submitLead();
+  assert.equal(posts.length, 1);
+  assert(posts[0].url.endsWith('/consultation-requests'));
+  assert.deepEqual(posts[0].body, {fullName: 'امیر حسین', phoneNumber: '09123456789', serviceId: 13, notes: 'مشاوره اولیه', requestId: form.requestId});
+  assert.equal(form.leadSent(), false);
+  pending.next({success: true}); pending.complete();
+  assert.equal(form.leadSent(), true); assert.equal(form.submitting(), false);
+});
+test('Website failures retain inputs and a retry reuses the same idempotency key', () => {
+  const {form, posts, pending} = consultationForm();
+  form.submitLead(); const original = {...form.lead};
+  pending.error({status: 0});
+  assert.deepEqual(form.lead, original); assert.equal(form.leadSent(), false); assert.equal(form.submitting(), false);
+  form.http.post = (url, body) => {posts.push({url, body}); return of({success: true});};
+  form.submitLead();
+  assert.equal(posts.length, 2); assert.equal(posts[0].body.requestId, posts[1].body.requestId);
+});
+test('Website changed payload after failure receives a new idempotency key', () => {
+  const {form, posts, pending} = consultationForm(); form.submitLead(); pending.error({status: 503});
+  form.lead.message = 'توضیحات اصلاح شده';
+  form.http.post = (url, body) => {posts.push({url, body}); return of({success: true});}; form.submitLead();
+  assert.notEqual(posts[0].body.requestId, posts[1].body.requestId);
+});
+test('Website form rejects invalid mobile, unavailable service and control characters before sending', () => {
+  for (const change of [f => f.lead.phone = '123', f => f.consultationServiceId = 999,
+    f => f.servicesError.set(true), f => f.servicesLoading.set(true), f => f.lead.message = 'bad\u0001note']) {
+    const {form, posts} = consultationForm(); change(form); form.submitLead(); assert.equal(posts.length, 0);
+  }
+});
+test('Website HTTP success without backend commit acknowledgement never shows success', () => {
+  const {form, pending} = consultationForm(); form.submitLead(); pending.next({success: false}); pending.complete();
+  assert.equal(form.leadSent(), false); assert.equal(form.leadFeedbackType(), 'error');
+});
+test('consultant origin filter uses the actual SourceType query without dropping existing filters', async () => {
+  reset(); await firstValueFrom(api.getNewLeads({...filters, sourceType: 4}));
+  assert.equal(calls[0].options.params.get('sourceType'), '4'); assert.equal(calls[0].options.params.get('pageNumber'), '2');
+});
+test('daily auto absence waits for the latest backend workday end at 22:00', () => {
+  const NativeDate = globalThis.Date;
+  const effects = [];
+  const context = {autoAbsenceRunning: false, autoAbsenceStorageKey: () => 'test', dateStorageKey: () => 'today', readJson: () => null, currentProfileId: () => null};
+  try {
+    globalThis.Date = class extends NativeDate { getHours() { return 21; } };
+    context.currentProfileId = () => {effects.push('profile'); return null;};
+    ConsultantDashboardComponent.prototype.runDailyAutoAbsenceIfDue.call(context);
+    assert.deepEqual(effects, []);
+    globalThis.Date = class extends NativeDate { getHours() { return 22; } };
+    ConsultantDashboardComponent.prototype.runDailyAutoAbsenceIfDue.call(context);
+    assert.deepEqual(effects, ['profile']);
+  } finally {globalThis.Date = NativeDate;}
 });

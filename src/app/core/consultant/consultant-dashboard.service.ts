@@ -164,6 +164,7 @@ export interface ConsultantLead {
 }
 
 export interface LeadFilters {
+  sourceType?: number | null;
   profileId: number;
   searchText?: string;
   userName?: string;

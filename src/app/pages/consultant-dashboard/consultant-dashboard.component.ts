@@ -3697,7 +3697,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     if (this.autoAbsenceRunning) return;
 
     const now = new Date();
-    if (now.getHours() < 21) return;
+    if (now.getHours() < 22) return;
 
     const storageKey = this.autoAbsenceStorageKey();
     const todayKey = this.dateStorageKey(now);
@@ -3722,7 +3722,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             this.isAvailable = false;
             this.showLeadNotification(
               "عدم حضور خودکار ثبت شد",
-              "سیستم ساعت ۲۱ عدم حضور امروز شما را ثبت کرد.",
+              "سیستم ساعت ۲۲ عدم حضور امروز شما را ثبت کرد.",
             );
             finish();
           },

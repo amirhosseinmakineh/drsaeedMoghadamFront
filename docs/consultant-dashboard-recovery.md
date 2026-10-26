@@ -247,3 +247,13 @@ For browser tests install Playwright/Chromium in a separate test dependency dire
 * `src/main.js`
 * `src/main.server.js`
 * `src/server.js`
+
+## Website/backend synchronization follow-up (2026-10-26)
+
+The paired backend synchronization branch repairs an inconsistent `main` merge using the existing reservation controller, secretary query/DTO and daily report from `codex-lflotm`, while retaining Website intake/metadata. It also retains the latest workday end (22:00), active-lead pagination index and localhost CORS additions from that branch. The frontend auto-absence boundary and notification now follow that existing 22:00 rule; no other recovered dashboard methods changed.
+
+The form now validates the same whitespace-normalized name it submits, rejects control characters in notes, and cannot submit stale service selections during catalog errors/reloads. Consultant filters include optional `sourceType`; the admin DTO includes `consultationServiceId`.
+
+`test-consultation.mjs` now follows the submitted lead through the isolated ASP.NET HTTP host and SQL Server, the existing allocation/pickup services, the real authenticated consultant controller and the compiled consultant UI on desktop/mobile. Only unrelated dashboard summary/reservation/broadcast responses use explicit fixtures; consultation writes, service catalog and consultant lead reads are real. Test-only authentication and pickup routes live solely in the backend test project and are never registered by the production app. The backend consultation workflow checks out this frontend commit and runs the paired test against its disposable SQL service.
+
+Local checks: 24 contract/source-preservation/form tests, TypeScript compilation, development/stage/production Angular builds. The scratch runtime cannot start SQL Server, so paired persistence/browser results must come from the backend CI run; do not infer success from compilation.
