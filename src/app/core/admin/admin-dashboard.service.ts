@@ -236,6 +236,9 @@ export interface AttendanceItem {
 }
 
 export interface LeadAssignmentItem {
+  sourceType?: number;
+  consultationServiceTitle?: string | null;
+  consultationNotes?: string | null;
   id?: number;
   Id?: number;
   leadAssignmentId?: number;
@@ -559,6 +562,7 @@ export interface UpdateAdminPromissoryNoteRequest { amount: number; serialNumber
 export interface AdminLeadSheet { id: number; name: string; isActive: boolean; createdAt: string; }
 
 export interface LeadFilters {
+  sourceType?: number | null;
   profileId?: number;
   searchText?: string;
   leadAssignmentState?: number | null;

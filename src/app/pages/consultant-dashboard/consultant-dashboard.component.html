@@ -572,6 +572,9 @@
                       <div>
                         <span>{{ leadTypeLabel(leadType(lead)) }}</span>
                         <h3>{{ leadName(lead) }}</h3>
+                      <p>منشأ: {{ lead.sourceType === 4 ? 'وب‌سایت' : lead.sourceType === 3 ? 'شیت ادمین' : lead.sourceType === 1 ? 'یکتانت' : lead.sourceType === 2 ? 'کلینیک' : 'نامشخص' }}</p>
+                      <p *ngIf="lead.consultationServiceTitle">خدمت: {{ lead.consultationServiceTitle }}</p>
+                      <p *ngIf="lead.consultationNotes">توضیحات: {{ lead.consultationNotes }}</p>
                       </div>
                       <b [class]="leadDisplayBadgeClass(lead)">{{
                         leadDisplayStatus(lead)
@@ -748,6 +751,9 @@
                     <div>
                       <span>بیمار من</span>
                       <h3>{{ leadName(lead) }}</h3>
+                      <p>منشأ: {{ lead.sourceType === 4 ? 'وب‌سایت' : lead.sourceType === 3 ? 'شیت ادمین' : lead.sourceType === 1 ? 'یکتانت' : lead.sourceType === 2 ? 'کلینیک' : 'نامشخص' }}</p>
+                      <p *ngIf="lead.consultationServiceTitle">خدمت: {{ lead.consultationServiceTitle }}</p>
+                      <p *ngIf="lead.consultationNotes">توضیحات: {{ lead.consultationNotes }}</p>
                     </div>
                     <b [class]="leadDisplayBadgeClass(lead)">{{
                       leadDisplayStatus(lead)
@@ -1099,6 +1105,9 @@
                     <div>
                       <span>{{ leadTypeLabel(leadType(lead)) }}</span>
                       <h3>{{ leadName(lead) }}</h3>
+                      <p>منشأ: {{ lead.sourceType === 4 ? 'وب‌سایت' : lead.sourceType === 3 ? 'شیت ادمین' : lead.sourceType === 1 ? 'یکتانت' : lead.sourceType === 2 ? 'کلینیک' : 'نامشخص' }}</p>
+                      <p *ngIf="lead.consultationServiceTitle">خدمت: {{ lead.consultationServiceTitle }}</p>
+                      <p *ngIf="lead.consultationNotes">توضیحات: {{ lead.consultationNotes }}</p>
                     </div>
                     <div class="lead-badges">
                       <b class="badge muted">{{
@@ -1421,7 +1430,15 @@
           [(ngModel)]="reservationForm.reservationTime"
           [ngModelOptions]="ngModelBlurOptions"
           name="reservationTime"
-          type="time"
+          type="text"
+          inputmode="text"
+          dir="ltr"
+          placeholder="HH:mm"
+          pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+          maxlength="5"
+          autocomplete="off"
+          aria-label="ساعت رزرو به فرمت ۲۴ ساعته"
+          required
         />
       </label>
 

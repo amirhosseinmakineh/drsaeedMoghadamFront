@@ -71,17 +71,13 @@ export function toIranTimeInputValue(date: Date): string {
 
 export function combineIranDateAndTime(date: Date, time: string): Date | null {
   const dateValue = toIranDateInputValue(date);
-  const [hours, minutes] = time.split(":").map(Number);
-  if (
-    !Number.isInteger(hours) ||
-    !Number.isInteger(minutes) ||
-    hours < 0 ||
-    hours > 23 ||
-    minutes < 0 ||
-    minutes > 59
-  ) {
+  // Keep the reservation contract in strict 24-hour HH:mm format.
+  // Native time inputs can display AM/PM depending on the user's locale.
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
     return null;
   }
+
+  const [hours, minutes] = time.split(":").map(Number);
 
   const combined = new Date(
     `${dateValue}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00${IRAN_UTC_OFFSET}`,

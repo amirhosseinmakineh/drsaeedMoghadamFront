@@ -303,7 +303,15 @@
         [(ngModel)]="editForm.reservationTime"
         [ngModelOptions]="ngModelBlurOptions"
         name="editReservationTime"
-        type="time"
+        type="text"
+        inputmode="text"
+        dir="ltr"
+        placeholder="HH:mm"
+        pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+        maxlength="5"
+        autocomplete="off"
+        aria-label="ساعت رزرو به فرمت ۲۴ ساعته"
+        required
       />
     </label>
     <label class="patient-count-field">

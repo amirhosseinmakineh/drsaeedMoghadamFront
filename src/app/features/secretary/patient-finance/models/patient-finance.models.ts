@@ -7,21 +7,97 @@ export enum FinancialSourceType { Cheque = 1, PromissoryNote = 2 }
 export type PatientGuid = string;
 export type PatientFinancialCaseId = string;
 
+export interface PatientAdditionalDocument {
+  id: string;
+  patientFinancialCaseId: PatientFinancialCaseId;
+  description: string;
+  createdAt: string;
+}
+
 export interface ApiResult<T> { data: T | null; isSuccess: boolean; message: string; }
 export interface IdResponse { id: number; }
 export interface PatientFinancialCaseIdResponse { id: PatientFinancialCaseId; }
 export interface PaginatedResult<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number; totalPages: number; hasPrevious: boolean; hasNext: boolean; }
 export interface PageQuery { page?: number; pageSize?: number; [key: string]: string | number | boolean | null | undefined; }
 
-export interface CreateChequeRequest { amount: number; sayadNumber: string; ownerName: string; dueDate: string; }
+export interface CreateChequeRequest {
+  amount: number;
+  sayadNumber: string;
+  ownerName: string;
+  dueDate: string;
+  isGuarantee?: boolean;
+}
 export interface CreatePromissoryNoteRequest { serialNumber: string; amount: number; dueDate: string; }
-export interface UpdateChequeRequest { amount: number; sayadNumber: string; ownerName: string; dueDate: string; }
+export interface UpdateChequeRequest {
+  amount: number;
+  sayadNumber: string;
+  ownerName: string;
+  dueDate: string;
+  isGuarantee?: boolean;
+}
 export interface UpdatePromissoryNoteRequest { amount: number; serialNumber: string; dueDate: string; }
-export interface CreateFinancialCaseRequest { paymentMethod?: string | null; installmentStatus?: string | null; guaranteeDocument?: string | null; notes?: string | null; consultantName?: string | null; toothUnitCount?: number | null; patientId: PatientGuid; serviceIds: number[]; totalAmount: number; prePaymentAmount: number; depositAmount: number; agreementType: FinancialAgreementType; cheques?: CreateChequeRequest[] | null; promissoryNotes?: CreatePromissoryNoteRequest[] | null; }
-export interface UpdateFinancialCaseRequest { paymentMethod?: string | null; installmentStatus?: string | null; guaranteeDocument?: string | null; notes?: string | null; consultantName?: string | null; toothUnitCount?: number | null; totalAmount: number; prePaymentAmount: number; depositAmount: number; agreementType: FinancialAgreementType; }
-export interface PatientFinancialCase { chequeDates?: string[]; chequeRegistrations?: string[]; balanceAmount: number; paymentMethod?: string | null; installmentStatus?: string | null; guaranteeDocument?: string | null; notes?: string | null; consultantName?: string | null; toothUnitCount?: number | null; id: PatientFinancialCaseId; patientId: PatientGuid; patientName: string; patientFileNumber?: string | number | null; fileNumber?: string | number | null; patientPhoneNumber: string | null; serviceIds: number[]; serviceNames: string[]; totalAmount: number; prePaymentAmount: number; depositAmount: number; totalPaidAmount: number; remainingAmount: number; totalDebtAmount: number; agreementType: FinancialAgreementType; status: FinancialCaseStatus; createdAt: string; }
+export interface CreateFinancialCaseRequest {
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  guaranteeDocument?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  toothUnitCount?: number | null;
+  serviceUnitCounts?: Record<number, number> | null;
+  patientId: PatientGuid;
+  serviceIds: number[];
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  agreementType: FinancialAgreementType;
+  cheques?: CreateChequeRequest[] | null;
+  promissoryNotes?: CreatePromissoryNoteRequest[] | null;
+}
+export interface UpdateFinancialCaseRequest {
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  guaranteeDocument?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  toothUnitCount?: number | null;
+  serviceUnitCounts?: Record<number, number> | null;
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  agreementType: FinancialAgreementType;
+}
+export interface PatientFinancialCase {
+  serviceUnitCountsJson?: string | null;
+  chequeDates?: string[];
+  chequeRegistrations?: string[];
+  balanceAmount: number;
+  paymentMethod?: string | null;
+  installmentStatus?: string | null;
+  guaranteeDocument?: string | null;
+  notes?: string | null;
+  consultantName?: string | null;
+  toothUnitCount?: number | null;
+  serviceUnitCounts?: Record<number, number> | null;
+  id: PatientFinancialCaseId;
+  patientId: PatientGuid;
+  patientName: string;
+  patientFileNumber?: string | number | null;
+  fileNumber?: string | number | null;
+  patientPhoneNumber: string | null;
+  serviceIds: number[];
+  serviceNames: string[];
+  totalAmount: number;
+  prePaymentAmount: number;
+  depositAmount: number;
+  totalPaidAmount: number;
+  remainingAmount: number;
+  totalDebtAmount: number;
+  agreementType: FinancialAgreementType;
+  status: FinancialCaseStatus;
+  createdAt: string;
+}
 export interface PatientFinancialCaseDetails { case: PatientFinancialCase; chequeCount: number; chequeAmount: number; promissoryNoteCount: number; promissoryNoteAmount: number; cheques?: PatientCheque[]; promissoryNotes?: PatientPromissoryNote[]; }
-export interface PatientCheque { id: number; patientFinancialCaseId: PatientFinancialCaseId; patientId: PatientGuid; patientName: string; patientFileNumber?: string | number | null; fileNumber?: string | number | null; amount: number; sayadNumber: string; ownerName: string; dueDate: string; status: CommitmentStatus; }
+export interface PatientCheque { isGuarantee?: boolean; id: number; patientFinancialCaseId: PatientFinancialCaseId; patientId: PatientGuid; patientName: string; patientFileNumber?: string | number | null; fileNumber?: string | number | null; amount: number; sayadNumber: string; ownerName: string; dueDate: string; status: CommitmentStatus; }
 export interface PatientPromissoryNote { id: number; patientFinancialCaseId: PatientFinancialCaseId; patientId: PatientGuid; patientName: string; patientFileNumber?: string | number | null; fileNumber?: string | number | null; serialNumber: string; amount: number; dueDate: string; status: CommitmentStatus; }
 export interface PatientDebt { id: number; patientId: PatientGuid; patientName: string; patientFileNumber?: string | number | null; fileNumber?: string | number | null; patientPhoneNumber: string | null; patientFinancialCaseId: PatientFinancialCaseId; serviceIds?: number[]; serviceNames: string[]; amount: number; sourceType: FinancialSourceType; sourceId: number; dueDate: string; status: DebtStatus; }
 export interface PatientFinancialTransaction { id: number; patientFinancialCaseId: PatientFinancialCaseId; patientId: PatientGuid; patientName?: string; patientFileNumber?: string | number | null; fileNumber?: string | number | null; amount: number; type: 1; sourceType: FinancialSourceType; sourceId: number; createdAt: string; }
