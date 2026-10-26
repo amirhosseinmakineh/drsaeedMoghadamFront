@@ -77,7 +77,7 @@ try {
     await page.getByRole('heading', {name: 'امیر حسین', exact: true}).waitFor();
     await page.getByText(`خدمت: ${lead.consultationServiceTitle}`, {exact: true}).waitFor();
     await page.getByText('منشأ: وب‌سایت', {exact: true}).waitFor();
-    await page.getByText('درخواست تست مرورگر', {exact: true}).waitFor();
+    await page.getByText('توضیحات: درخواست تست مرورگر', {exact: true}).waitFor();
     // The real controller must apply authenticated ownership, source filters and pagination.
     const filtered = await context.request.get(`${baseUrl}/api/Consultant/GetNewLeads?profileId=999999&sourceType=4&pageSize=1&pageNumber=1`);
     assert.equal(filtered.status(), 200);
