@@ -5,3 +5,8 @@ node_modules
 
 public/images/
 /.vs
+
+# TypeScript is the only source under src; Angular owns build output.
+/src/**/*.js
+/src/**/*.js.map
+/out-tsc/

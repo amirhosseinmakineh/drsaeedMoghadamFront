@@ -601,7 +601,7 @@ export class ConsultantReservationsPanelComponent
 
     this.editSaving = true;
     this.consultantApi
-      .updateReservation(reservationId, payload)
+      .updateReservation(reservationId, payload, this.profileId)
       .pipe(finalize(() => (this.editSaving = false)))
       .subscribe({
         next: (response) => {
