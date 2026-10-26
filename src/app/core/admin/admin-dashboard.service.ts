@@ -237,6 +237,7 @@ export interface AttendanceItem {
 
 export interface LeadAssignmentItem {
   sourceType?: number;
+  consultationServiceId?: number | null;
   consultationServiceTitle?: string | null;
   consultationNotes?: string | null;
   id?: number;

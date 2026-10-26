@@ -98,9 +98,14 @@ export class HomeComponent {
   loadConsultationServices(): void {
     this.servicesLoading.set(true);
     this.servicesError.set(false);
+    this.consultationServices.set([]);
     this.http.get<{id: number; title: string}[]>(`${environment.apiBaseUrl}/consultation-requests/services`)
       .pipe(timeout(20000), finalize(() => this.servicesLoading.set(false)))
       .subscribe({next: data => this.consultationServices.set(data), error: () => this.servicesError.set(true)});
+  }
+
+  normalizeName(value: string): string {
+    return value.trim().replace(/\s+/g, " ");
   }
 
   normalizePhone(value: string): string {
@@ -116,7 +121,7 @@ export class HomeComponent {
     if (this.submitting() || this.leadSent()) return;
     const validationError = this.validateLeadForm();
     if (validationError) { this.showLeadFeedback(validationError, "error"); return; }
-    const payload = {fullName: this.lead.fullName.trim().replace(/\s+/g, " "),
+    const payload = {fullName: this.normalizeName(this.lead.fullName),
       phoneNumber: this.normalizePhone(this.lead.phone), serviceId: this.consultationServiceId, notes: this.lead.message.trim()};
     const signature = JSON.stringify(payload);
     if (this.submittedPayload && signature !== this.submittedPayload) this.requestId = crypto.randomUUID();
@@ -139,20 +144,23 @@ export class HomeComponent {
 
   validateLeadForm(): string | null {
     const isFa = this.language() === "fa";
-    if (this.lead.fullName.trim().length < 3 || (this.lead.fullName.match(/\p{L}/gu) || []).length < 3 || !/^[\p{L}\p{M} \u200c'’\-]+$/u.test(this.lead.fullName.trim()))
+    const name = this.normalizeName(this.lead.fullName);
+    if (name.length < 3 || (name.match(/\p{L}/gu) || []).length < 3 || !/^[\p{L}\p{M} \u200c'’\-]+$/u.test(name))
       return isFa ? "نام و نام خانوادگی الزامی است" : "Full name is required";
-    if (this.lead.fullName.trim().length > 100)
+    if (name.length > 100)
       return isFa
         ? "نام نباید بیشتر از ۱۰۰ کاراکتر باشد"
         : "Full name must be at most 100 characters";
     if (!/^09[0-9]{9}$/.test(this.normalizePhone(this.lead.phone)))
       return isFa ? "شماره تماس معتبر نیست" : "Phone number is invalid";
-    if (!this.consultationServices().some((service) => service.id === this.consultationServiceId))
+    if (this.servicesLoading() || this.servicesError() || !this.consultationServices().some((service) => service.id === this.consultationServiceId))
       return isFa ? "درمان مورد نظر معتبر نیست" : "Selected service is invalid";
     if (this.lead.message.trim().length > 1000)
       return isFa
         ? "توضیح کوتاه نباید بیشتر از ۱۰۰۰ کاراکتر باشد"
         : "Short note must be at most 1000 characters";
+    if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]/.test(this.lead.message.trim()))
+      return isFa ? "توضیحات دارای نویسه نامعتبر است" : "Notes contain invalid characters";
     return null;
   }
 

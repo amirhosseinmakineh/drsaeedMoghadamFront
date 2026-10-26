@@ -12,7 +12,12 @@
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
     "start": "node dist/demo/server/server.mjs",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
-    "optimize:images": "python3 scripts/optimize-images.py"
+    "optimize:images": "python3 scripts/optimize-images.py",
+    "check:source": "node scripts/check-typescript-source.mjs",
+    "typecheck": "tsc --project tsconfig.app.json --noEmit",
+    "prebuild": "npm run check:source",
+    "test:consultant": "node --test scripts/test-consultant-contracts.mjs",
+    "test:consultant:browser": "node scripts/test-consultant-browser.mjs"
   },
   "dependencies": {
     "@angular/animations": "^20.3.0",

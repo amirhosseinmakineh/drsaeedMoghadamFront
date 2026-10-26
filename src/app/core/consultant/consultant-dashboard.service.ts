@@ -92,6 +92,7 @@ export interface BroadcastRealtimeLeadsResponse {
 
 export interface ConsultantLead {
   sourceType?: number;
+  consultationServiceId?: number | null;
   consultationServiceTitle?: string | null;
   consultationNotes?: string | null;
   id?: number;
@@ -163,6 +164,7 @@ export interface ConsultantLead {
 }
 
 export interface LeadFilters {
+  sourceType?: number | null;
   profileId: number;
   searchText?: string;
   userName?: string;
@@ -782,6 +784,7 @@ export class ConsultantDashboardService {
   updateReservation(
     reservationId: number,
     payload: UpdateReservationRequest,
+    consultantProfileId: number,
   ): Observable<ApiCommandResponse<ConsultantReservation>> {
     return this.http
       .put<ApiCommandResponse<ConsultantReservation>>(
@@ -791,7 +794,21 @@ export class ConsultantDashboardService {
           headers: this.authHeaders(),
         },
       )
-      .pipe(this.ensureCommandSucceeded("ویرایش رزرو انجام نشد"));
+      .pipe(
+        // codex-lflotm exposes the token-owned route above. The merged main
+        // controller exposes PUT /Reservation with explicit command IDs.
+        // Only a missing route/method permits fallback; never replay a rejected
+        // business operation or retry an unknown database/network failure.
+        catchError((error: { status?: number }) => {
+          if (error.status !== 404 && error.status !== 405) return throwError(() => error);
+          return this.http.put<ApiCommandResponse<ConsultantReservation>>(
+            `${this.apiBaseUrl}/Reservation`,
+            { ...payload, reservationId, consultantProfileId },
+            { headers: this.authHeaders() },
+          );
+        }),
+        this.ensureCommandSucceeded("ویرایش رزرو انجام نشد"),
+      );
   }
 
   getConsultantPatientProfiles(
