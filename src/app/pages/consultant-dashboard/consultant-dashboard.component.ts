@@ -851,7 +851,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
 
     if (isAvailable && !this.isConsultantWorkingHours()) {
       this.showFeedback(
-        "امکان ثبت حضور فقط بین ساعت ۹ صبح تا ۹ شب وجود دارد",
+        "امکان ثبت حضور فقط بین ساعت ۹ صبح تا 10 شب وجود دارد",
         "error",
       );
       return;
