@@ -53,7 +53,7 @@ jobs:
             echo 'Operational backend prerequisite missing; real SQL integration is NOT verified.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          if ! rg -q 'ConsultationRequest\(string\? FullName, string\? PhoneNumber, Guid RequestId\)' "$controller"; then
+          if ! grep -Fq 'ConsultationRequest(string? FullName, string? PhoneNumber, Guid RequestId)' "$controller"; then
             echo '::error::Operational DTO differs from the approved three-field contract; inspect it instead of adding fake service IDs.'
             exit 1
           fi
