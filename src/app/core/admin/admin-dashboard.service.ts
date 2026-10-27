@@ -236,6 +236,8 @@ export interface AttendanceItem {
 }
 
 export interface LeadAssignmentItem {
+  sourceType?: number;
+  SourceType?: number;
   id?: number;
   Id?: number;
   leadAssignmentId?: number;
