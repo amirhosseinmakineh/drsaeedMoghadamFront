@@ -797,73 +797,52 @@
     </div>
 
     <!-- Form -->
-    <form class="consult-lead__form" (ngSubmit)="submitLead()">
+    <form class="consult-lead__form" dir="rtl" lang="fa" (ngSubmit)="submitLead(consultationForm)" #consultationForm="ngForm" novalidate>
       <label class="consult-lead__field">
-        <span>{{ language() === "fa" ? "نام و نام خانوادگی" : "Full name" }}</span>
+        <span>نام و نام خانوادگی</span>
         <input
           [(ngModel)]="lead.fullName"
-          [ngModelOptions]="ngModelBlurOptions"
           name="leadFullName"
+          [disabled]="submitting() || leadSent()"
           required
+          maxlength="100"
           autocomplete="name"
+          [attr.aria-describedby]="consultationForm.dirty && !leadSent() && validateLeadForm() ? 'consult-lead-validation' : null"
         />
       </label>
 
       <label class="consult-lead__field">
-        <span>{{ language() === "fa" ? "شماره موبایل" : "Mobile number" }}</span>
+        <span>شماره موبایل</span>
         <input
           [(ngModel)]="lead.phone"
-          [ngModelOptions]="ngModelBlurOptions"
           name="leadPhone"
+          [disabled]="submitting() || leadSent()"
           required
+          type="tel"
           inputmode="tel"
           autocomplete="tel"
-          placeholder="09xxxxxxxxx"
+          dir="ltr"
+          placeholder="09123456789"
+          [attr.aria-describedby]="consultationForm.dirty && !leadSent() && validateLeadForm() ? 'consult-lead-validation' : null"
         />
       </label>
 
-      <label class="consult-lead__field">
-        <span>{{ language() === "fa" ? "درمان مورد نظر" : "Treatment of interest" }}</span>
-        <select
-          [(ngModel)]="lead.serviceId"
-          [ngModelOptions]="ngModelBlurOptions"
-          name="leadService"
-        >
-          <option *ngFor="let service of services" [value]="service.id">
-            {{ pickText(service.title, language()) }}
-          </option>
-        </select>
-      </label>
-
-      <label class="consult-lead__field">
-        <span>{{ language() === "fa" ? "توضیح کوتاه (اختیاری)" : "Short note (optional)" }}</span>
-        <textarea
-          [(ngModel)]="lead.message"
-          [ngModelOptions]="ngModelBlurOptions"
-          name="leadMessage"
-          rows="3"
-          [placeholder]="language() === 'fa'
-            ? 'مثلاً: می‌خواهم درباره کامپوزیت راهنمایی بگیرم'
-            : 'e.g. I’d like advice about composite veneers'"
-        ></textarea>
-      </label>
-
-      <button class="consult-lead__submit" type="submit">
-        {{ language() === "fa" ? "ثبت برای مشاوره" : "Request consultation" }}
+      <p *ngIf="consultationForm.dirty && !leadSent() && validateLeadForm()" id="consult-lead-validation" class="consult-lead__msg is-error" role="status">
+        {{ validateLeadForm() }}
+      </p>
+      <button class="consult-lead__submit" type="submit" [disabled]="submitting() || leadSent()" [attr.aria-busy]="submitting()">
+        {{ submitting() ? "در حال ثبت…" : "درخواست مشاوره" }}
       </button>
 
       <p
         *ngIf="leadFeedback()"
         class="consult-lead__msg"
         [class.is-error]="leadFeedbackType() === 'error'"
+        [class.is-ok]="leadFeedbackType() === 'success'"
+        role="status"
+        aria-live="polite"
       >
         {{ leadFeedback() }}
-      </p>
-
-      <p *ngIf="leadSent()" class="consult-lead__msg is-ok">
-        {{ language() === "fa"
-          ? "شماره شما ثبت شد. به‌زودی برای مشاوره با شما تماس می‌گیریم."
-          : "Your number is saved. We’ll call you soon for a consultation." }}
       </p>
     </form>
 

@@ -75,6 +75,11 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   readonly typeFilterOptions = ADMIN_LEAD_TYPE_FILTER_OPTIONS;
 
   readonly columns: TableColumn<LeadAssignmentItem>[] = [
+    {
+      key: "sourceType",
+      label: "منشأ",
+      value: (row) => ({ 1: "یکتانت", 2: "کلینیک", 3: "شیت ادمین", 4: "وب‌سایت" } as Record<number, string>)[row.sourceType ?? row.SourceType ?? 0] ?? "نامشخص",
+    },
     { key: "id", label: "شناسه", value: (row) => this.leadId(row) ?? "-" },
     {
       key: "userName",

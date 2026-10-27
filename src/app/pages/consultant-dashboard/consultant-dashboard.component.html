@@ -572,6 +572,9 @@
                       <div>
                         <span>{{ leadTypeLabel(leadType(lead)) }}</span>
                         <h3>{{ leadName(lead) }}</h3>
+                        @if ((lead.sourceType ?? lead.SourceType) === 4) {
+                          <small>منشأ: وب‌سایت</small>
+                        }
                       </div>
                       <b [class]="leadDisplayBadgeClass(lead)">{{
                         leadDisplayStatus(lead)
@@ -748,6 +751,9 @@
                     <div>
                       <span>بیمار من</span>
                       <h3>{{ leadName(lead) }}</h3>
+                      @if ((lead.sourceType ?? lead.SourceType) === 4) {
+                        <small>منشأ: وب‌سایت</small>
+                      }
                     </div>
                     <b [class]="leadDisplayBadgeClass(lead)">{{
                       leadDisplayStatus(lead)
@@ -1099,6 +1105,9 @@
                     <div>
                       <span>{{ leadTypeLabel(leadType(lead)) }}</span>
                       <h3>{{ leadName(lead) }}</h3>
+                      @if ((lead.sourceType ?? lead.SourceType) === 4) {
+                        <small>منشأ: وب‌سایت</small>
+                      }
                     </div>
                     <div class="lead-badges">
                       <b class="badge muted">{{

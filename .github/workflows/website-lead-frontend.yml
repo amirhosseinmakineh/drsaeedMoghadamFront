@@ -1,0 +1,60 @@
+name: Website lead frontend validation
+on:
+  pull_request:
+    branches: [Clinic-APK]
+  push:
+    branches: [feature/website-lead-frontend-sync]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  frontend:
+    name: Form, production build, SSR and browser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/test-website-lead.mjs
+      - run: |
+          npm run test:seo
+          npm run check:secretary-template
+          node scripts/validate-lead-assignment-settings-ui.mjs
+          node scripts/validate-patient-finance-template.mjs
+          node scripts/validate-secretary-sales-ui.mjs
+      - run: npm run build:local
+      - run: node scripts/validate-ssr-runtime.mjs
+      - name: Install isolated browser test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/website-lead-playwright" playwright@1.56.1 --no-audit --no-fund
+          node "$RUNNER_TEMP/website-lead-playwright/node_modules/playwright/cli.js" install --with-deps chromium --only-shell
+      - name: Desktop and mobile form HTTP fixtures
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/website-lead-playwright/node_modules/playwright
+        run: node scripts/test-website-lead-browser.mjs
+  backend-prerequisite:
+    name: Operational backend contract prerequisite (not SQL E2E)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: amirhosseinmakineh/DentalClinicDashboaardBackend
+          ref: codex-lflotm
+          path: backend-reference
+      - name: Require service-free intake on the actual operational branch
+        shell: bash
+        run: |
+          controller=backend-reference/DentalDashboard/Controllers/ConsultationRequestsController.cs
+          if [ ! -f "$controller" ]; then
+            echo '::error::Blocked: latest codex-lflotm has no consultation intake endpoint. Backend PR #263 must be integrated before real Home-to-SQL-to-consultant validation.'
+            echo 'Operational backend prerequisite missing; real SQL integration is NOT verified.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          if ! rg -q 'ConsultationRequest\(string\? FullName, string\? PhoneNumber, Guid RequestId\)' "$controller"; then
+            echo '::error::Operational DTO differs from the approved three-field contract; inspect it instead of adding fake service IDs.'
+            exit 1
+          fi
+          echo 'Operational source DTO matches. This source check does not assert HTTP/SQL end-to-end success.' >> "$GITHUB_STEP_SUMMARY"

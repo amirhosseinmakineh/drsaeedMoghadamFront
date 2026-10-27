@@ -91,6 +91,8 @@ export interface BroadcastRealtimeLeadsResponse {
 }
 
 export interface ConsultantLead {
+  sourceType?: number;
+  SourceType?: number;
   id?: number;
   Id?: number;
   leadAssignmentId?: number;
