@@ -115,6 +115,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     paymentMethod: [null as string | null],
     installmentStatus: [null as string | null],
     guaranteeDocument: [null as string | null],
+    opgImageUrl: [null as string | null, Validators.maxLength(2048)],
     notes: [null as string | null],
     consultantName: [null as string | null],
     cheques: this.fb.array([]), promissoryNotes: this.fb.array([]),
@@ -153,6 +154,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     paymentMethod: [null as string | null],
     installmentStatus: [null as string | null],
     guaranteeDocument: [null as string | null],
+    opgImageUrl: [null as string | null, Validators.maxLength(2048)],
     notes: [null as string | null],
     consultantName: [null as string | null],
   }, { validators: agreedAmountsWithinTotal });
@@ -452,6 +454,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
       paymentMethod: value.paymentMethod,
       installmentStatus: value.installmentStatus,
       guaranteeDocument: value.guaranteeDocument,
+      opgImageUrl: value.opgImageUrl?.trim() || null,
       notes: value.notes,
       consultantName: value.consultantName,
       cheques: value.cheques.map((cheque: any) => ({
@@ -525,6 +528,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
         paymentMethod: details.case.paymentMethod ?? null,
         installmentStatus: details.case.installmentStatus ?? null,
         guaranteeDocument: details.case.guaranteeDocument ?? null,
+        opgImageUrl: details.case.opgImageUrl ?? null,
         notes: details.case.notes ?? null,
         consultantName: details.case.consultantName ?? null,
       });
@@ -615,7 +619,7 @@ export class PatientFinancePageComponent implements OnInit, OnDestroy {
     this.mutate(this.details.case.id, this.api.updateCase(this.details.case.id, {
       totalAmount: Number(value.totalAmount), prePaymentAmount: Number(value.prePaymentAmount),
       depositAmount: Number(value.depositAmount), agreementType: Number(value.agreementType),
-      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, notes: value.notes, consultantName: value.consultantName, toothUnitCount: Object.values(this.editServiceUnits).reduce((sum, count) => sum + count, 0),
+      paymentMethod: value.paymentMethod, installmentStatus: value.installmentStatus, guaranteeDocument: value.guaranteeDocument, opgImageUrl: value.opgImageUrl?.trim() || null, notes: value.notes, consultantName: value.consultantName, toothUnitCount: Object.values(this.editServiceUnits).reduce((sum, count) => sum + count, 0),
       serviceUnitCounts: this.editServiceUnits,
     }), "حسابداری بیمار و همه جمع‌ها به‌روزرسانی شد.");
   }
