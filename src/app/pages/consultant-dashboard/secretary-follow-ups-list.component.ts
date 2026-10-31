@@ -82,6 +82,17 @@ export class SecretaryFollowUpsListComponent implements OnInit {
     this.page = 1;
     this.load();
   }
+  announcementLabel(value: string | number | null | undefined): string {
+    const labels: Record<string, string> = {
+      "1": "تماس گرفته نشده", "NotCalled": "تماس گرفته نشده",
+      "2": "پاسخ نداد", "NoAnswer": "پاسخ نداد",
+      "3": "تأیید شد", "Confirmed": "تأیید شد",
+      "4": "لغو توسط بیمار", "CancelledByPatient": "لغو توسط بیمار",
+      "5": "درخواست تغییر زمان", "RescheduleRequested": "درخواست تغییر زمان",
+      "6": "تماس مجدد", "CallAgain": "تماس مجدد"
+    };
+    return value == null ? "ثبت نشده" : labels[String(value)] ?? "نامشخص";
+  }
   formatDate(value: string): string {
     return formatIranDateTime(value, {year: "numeric", month: "2-digit", day: "2-digit"});
   }
