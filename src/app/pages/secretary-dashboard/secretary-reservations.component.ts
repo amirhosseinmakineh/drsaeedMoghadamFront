@@ -15,7 +15,6 @@ import {
   AttendanceConfirmationStatus,
   attendanceScoreLabel,
   attendanceStatusPresentation,
-  canSecretaryReviewAttendance,
   consultantAttendanceClaimLabel,
   readAttendanceStatus,
 } from "../../core/reservation/reservation-attendance";
@@ -438,7 +437,7 @@ export class SecretaryReservationsComponent
     const doctorName = (this.doctorNames[reservationId] || "").trim();
     if (patientReceivedService && !doctorName) {
       this.approvalReservationId = reservationId;
-      this.showFeedback("وارد کردن نام دکتر برای تایید حضور الزامی است", "error");
+      this.showFeedback("وارد کردن نام دکتر برای ثبت انجام خدمت الزامی است", "error");
       this.markDirty();
       return;
     }
@@ -511,15 +510,13 @@ export class SecretaryReservationsComponent
 
   canReview(item: SecretaryReservation): boolean {
     if (this.activeTab !== "queue") return false;
-    return canSecretaryReviewAttendance(
-      readAttendanceStatus(
-        item,
-        "attendanceConfirmationStatus",
-        "AttendanceConfirmationStatus",
-      ),
-      (item.isWaitingForSecretaryReview ?? item.IsWaitingForSecretaryReview) ===
-        true,
-    );
+    if ((item.isCanceled ?? item.IsCanceled) === true) return false;
+    if ((item.isAttendanceScoreApplied ?? item.IsAttendanceScoreApplied) === true) return false;
+    if ((item.patientReceivedService ?? item.PatientReceivedService) != null) return false;
+    const status = readAttendanceStatus(item, "attendanceConfirmationStatus", "AttendanceConfirmationStatus");
+    if (status === AttendanceConfirmationStatus.SecretaryApproved || status === AttendanceConfirmationStatus.SecretaryRejected) return false;
+    const appointment = new Date(this.reservationAt(item)).getTime();
+    return Number.isFinite(appointment) && appointment <= Date.now();
   }
 
   canManage(item: SecretaryReservation): boolean {
