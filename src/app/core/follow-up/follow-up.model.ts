@@ -13,6 +13,7 @@ export interface ConsultantFollowUp {
   consultantName: string;
   reservationDate: string;
   reservationTime: string;
+  secretaryAnnouncementStatus?: string | number | null;
   contacted: boolean;
   contactResult: string;
   createdAt: string;
