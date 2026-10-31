@@ -40,6 +40,7 @@ export interface CreateFinancialCaseRequest {
   paymentMethod?: string | null;
   installmentStatus?: string | null;
   guaranteeDocument?: string | null;
+  opgImageUrl?: string | null;
   notes?: string | null;
   consultantName?: string | null;
   toothUnitCount?: number | null;
@@ -57,6 +58,7 @@ export interface UpdateFinancialCaseRequest {
   paymentMethod?: string | null;
   installmentStatus?: string | null;
   guaranteeDocument?: string | null;
+  opgImageUrl?: string | null;
   notes?: string | null;
   consultantName?: string | null;
   toothUnitCount?: number | null;
@@ -74,6 +76,7 @@ export interface PatientFinancialCase {
   paymentMethod?: string | null;
   installmentStatus?: string | null;
   guaranteeDocument?: string | null;
+  opgImageUrl?: string | null;
   notes?: string | null;
   consultantName?: string | null;
   toothUnitCount?: number | null;
