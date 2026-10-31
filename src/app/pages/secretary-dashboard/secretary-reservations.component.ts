@@ -305,10 +305,11 @@ export class SecretaryReservationsComponent
         .getReservations({
           includeCanceled: false,
           pageNumber: this.pageNumber,
-          pageSize: this.pageSize,
+            pageSize: this.pageSize,
           searchText: this.searchText.trim() || undefined,
           attendanceConfirmationStatus: this.statusFilter,
             reservationType: this.reservationTypeFilter,
+            sortDirection: "desc",
             ...this.dateParam(),
         })
         .pipe(
@@ -339,12 +340,14 @@ export class SecretaryReservationsComponent
           includeCanceled: false,
           pageNumber: this.pageNumber,
             pageSize: this.pageSize,
+            sortDirection:"desc",
             ...this.dateParam(),
 
         }),
         rejected: this.secretaryApi.getReservations({
           includeCanceled: false,
-          pageNumber: this.pageNumber,
+            pageNumber: this.pageNumber,
+            sortDirection: "desc",
             pageSize: this.pageSize,
             ...this.dateParam(),
 
@@ -454,10 +457,9 @@ export class SecretaryReservationsComponent
       .subscribe({
         next: (response) => {
           this.showFeedback(
-            response.message ||
-              (patientReceivedService
+              patientReceivedService
                 ? "انجام خدمت برای بیمار ثبت شد"
-                : "انجام نشدن خدمت برای بیمار ثبت شد"),
+                : "انجام نشدن خدمت برای بیمار ثبت شد",
             "success",
           );
           delete this.doctorNames[reservationId];
