@@ -52,7 +52,8 @@
       <label>نحوه پرداخت<input  formControlName="paymentMethod"></label>
       <label>وضعیت اقساط<input  formControlName="installmentStatus"></label>
       <label>توضیحات<input  formControlName="notes"></label>
-      <label>نام مشاور<input  formControlName="consultantName"></label>
+      <label>نام مشاور<input formControlName="consultantName"></label>
+      <label>لینک OPG بیمار<input type="url" dir="ltr" formControlName="opgImageUrl" placeholder="https://..." maxlength="2048"></label>
       <fieldset class="service-unit-fields">
         <legend>تعداد واحد دندان به تفکیک خدمت</legend>
 
@@ -170,6 +171,7 @@
       </dd></div>
       <div><dt>توضیحات</dt><dd>{{ details.case.notes || "" }}</dd></div>
       <div><dt>نام مشاور</dt><dd>{{ details.case.consultantName || "" }}</dd></div>
+      <div><dt>تصویر OPG بیمار</dt><dd>@if (details.case.opgImageUrl) { <a [href]="details.case.opgImageUrl" target="_blank" rel="noopener noreferrer">مشاهده OPG</a> } @else { — }</dd></div>
       <div><dt>واحد هر خدمت</dt><dd>{{ formatServiceUnitCounts(details.case) }}</dd></div>
       <div><dt>شماره چک صیادی</dt><dd dir="ltr">{{ detailChequeRegistrations() }}</dd></div>
       <div><dt>شماره سفته</dt><dd dir="ltr">{{ detailNoteSerialNumbers() }}</dd></div>
@@ -206,7 +208,8 @@
         }
       </div>
       <label>توضیحات<input  formControlName="notes"></label>
-      <label>نام مشاور<input  formControlName="consultantName"></label>
+      <label>نام مشاور<input formControlName="consultantName"></label>
+      <label>لینک OPG بیمار<input type="url" dir="ltr" formControlName="opgImageUrl" placeholder="https://..." maxlength="2048"></label>
       <fieldset class="service-unit-fields">
         <legend>تعداد واحد دندان به تفکیک خدمت</legend>
 
