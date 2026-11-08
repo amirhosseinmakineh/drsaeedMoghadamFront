@@ -78,7 +78,7 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
     {
       key: "sourceType",
       label: "منشأ",
-      value: (row) => ({ 1: "یکتانت", 2: "کلینیک", 3: "شیت ادمین", 4: "وب‌سایت" } as Record<number, string>)[row.sourceType ?? row.SourceType ?? 0] ?? "نامشخص",
+      value: (row) => ({ 1: "یکتانت", 2: "کلینیک", 3: "شیت ادمین", 4: "وب‌سایت", 5: "پنل پیامکی" } as Record<number, string>)[row.sourceType ?? row.SourceType ?? 0] ?? "نامشخص",
     },
     { key: "id", label: "شناسه", value: (row) => this.leadId(row) ?? "-" },
     {
