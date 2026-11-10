@@ -1214,6 +1214,16 @@
       "
     >
       <label>
+        نام بیمار
+        <input
+          [(ngModel)]="reportForm.userName"
+          [ngModelOptions]="ngModelBlurOptions"
+          name="leadReportUserName"
+          maxlength="120"
+          autocomplete="name"
+        />
+      </label>
+      <label>
         نتیجه تماس
         <select
           [(ngModel)]="reportForm.callResult"
