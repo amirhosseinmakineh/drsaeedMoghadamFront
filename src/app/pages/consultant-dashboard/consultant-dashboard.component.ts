@@ -23,6 +23,7 @@ import {
   ConsultantReservation,
   CreateReservationRequest,
   SubmitLeadCallReportRequest,
+  UpdateLeadCallReportRequest,
   UpdateReservationRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
@@ -98,6 +99,7 @@ interface ConsultantProfileForm {
 }
 
 interface LeadReportForm {
+  userName: string;
   callResult: number;
   reportDescription: string;
   patientCity: string;
@@ -1693,7 +1695,10 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     this.reportingLeadIds.add(leadAssignmentId);
     this.selectedLead = lead;
     this.reportEditOriginalSecondaryPhone = null;
-    this.reportForm = this.emptyLeadReportForm(leadAssignmentId);
+    this.reportForm = {
+      ...this.emptyLeadReportForm(leadAssignmentId),
+      userName: this.leadName(lead),
+    };
     this.reportDialogOpen = true;
     this.markViewDirty();
   }
@@ -1870,6 +1875,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const payload: SubmitLeadCallReportRequest = {
       leadAssignmentId,
       consultantProfileId: profileId,
+      ...(this.updatedReportPatientName()
+        ? { userName: this.updatedReportPatientName() }
+        : {}),
       callResult: Number(this.reportForm.callResult),
       reportDescription: this.normalizedReportDescription(
         Number(this.reportForm.callResult),
@@ -1918,6 +1926,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             nextState,
             reportSubmittedAt,
             {
+              userName: payload.userName,
               reportDescription: payload.reportDescription,
               patientCity: payload.patientCity,
               patientRegion: payload.patientRegion,
@@ -2025,9 +2034,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const originalSecondaryPhone = this.reportEditOriginalSecondaryPhone ?? "";
     const secondaryPhoneChanged = secondaryPhone !== originalSecondaryPhone;
 
-    const payload = {
+    const payload: UpdateLeadCallReportRequest = {
       leadAssignmentId,
       consultantProfileId: profileId,
+      ...(this.updatedReportPatientName()
+        ? { userName: this.updatedReportPatientName() }
+        : {}),
       callResult: Number(this.reportForm.callResult),
       reportDescription: this.normalizedReportDescription(
         Number(this.reportForm.callResult),
@@ -2063,6 +2075,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             nextState,
             reportSubmittedAt,
             {
+              userName: payload.userName,
               reportDescription: payload.reportDescription,
               patientCity: payload.patientCity,
               patientRegion: payload.patientRegion,
@@ -2089,8 +2102,15 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
+  private updatedReportPatientName(): string | undefined {
+    const name = this.reportForm.userName.trim();
+    const original = this.selectedLead ? this.leadName(this.selectedLead).trim() : "";
+    return name && name !== original ? name : undefined;
+  }
+
   private emptyLeadReportForm(leadAssignmentId?: number): LeadReportForm {
     return {
+      userName: "",
       callResult: 1,
       reportDescription: "",
       patientCity: "",
@@ -2110,6 +2130,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
       null;
 
     return {
+      userName: this.leadName(lead),
       callResult: this.leadCallResult(lead) ?? 6,
       reportDescription:
         lead.reportDescription?.trim() || lead.ReportDescription?.trim() || "",
@@ -4129,12 +4150,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     nextState: number,
     reportSubmittedAt: string,
     payload: {
+      userName?: string;
       reportDescription: string;
       patientCity: string;
       patientRegion: string;
     },
   ): Partial<ConsultantLead> {
     return {
+      ...(payload.userName ? { userName: payload.userName, UserName: payload.userName } : {}),
       callResult,
       CallResult: callResult,
       reportDescription: payload.reportDescription,
@@ -4306,6 +4329,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   validateLeadReportForm(): string | null {
+    if (this.reportForm.userName.trim().length > 120)
+      return "نام بیمار نباید بیشتر از ۱۲۰ کاراکتر باشد";
+
     const callResult = Number(this.reportForm.callResult);
     if (![1, 2, 3, 4, 5, 6, 7, 8].includes(callResult))
       return "نتیجه تماس معتبر نیست";
