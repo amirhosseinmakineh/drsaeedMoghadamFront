@@ -23,6 +23,7 @@ import {
   ConsultantReservation,
   CreateReservationRequest,
   SubmitLeadCallReportRequest,
+  UpdateLeadCallReportRequest,
   UpdateReservationRequest,
 } from "../../core/consultant/consultant-dashboard.service";
 import { PushNotificationService } from "../../core/push/push-notification.service";
@@ -1880,7 +1881,7 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const originalSecondaryPhone = this.reportEditOriginalSecondaryPhone ?? "";
     const secondaryPhoneChanged = secondaryPhone !== originalSecondaryPhone;
 
-    const payload = {
+    const payload: UpdateLeadCallReportRequest = {
       leadAssignmentId,
       consultantProfileId: profileId,
       ...(this.updatedReportPatientName()
