@@ -177,6 +177,7 @@ export interface LeadFilters {
 }
 
 export interface SubmitLeadCallReportRequest {
+  userName?: string;
   leadAssignmentId: number;
   consultantProfileId: number;
   callResult: number;
@@ -220,6 +221,7 @@ export interface RecordLeadCallInitiatedResponse {
 }
 
 export interface UpdateLeadCallReportRequest {
+  userName?: string;
   leadAssignmentId: number;
   consultantProfileId: number;
   callResult: number;
