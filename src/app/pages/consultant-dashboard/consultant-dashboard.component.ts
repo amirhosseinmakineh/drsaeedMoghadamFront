@@ -1721,7 +1721,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const payload: SubmitLeadCallReportRequest = {
       leadAssignmentId,
       consultantProfileId: profileId,
-      userName: this.reportForm.userName.trim(),
+      ...(this.updatedReportPatientName()
+        ? { userName: this.updatedReportPatientName() }
+        : {}),
       callResult: Number(this.reportForm.callResult),
       reportDescription: this.normalizedReportDescription(
         Number(this.reportForm.callResult),
@@ -1881,7 +1883,9 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     const payload = {
       leadAssignmentId,
       consultantProfileId: profileId,
-      userName: this.reportForm.userName.trim(),
+      ...(this.updatedReportPatientName()
+        ? { userName: this.updatedReportPatientName() }
+        : {}),
       callResult: Number(this.reportForm.callResult),
       reportDescription: this.normalizedReportDescription(
         Number(this.reportForm.callResult),
@@ -1942,6 +1946,12 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
             "error",
           ),
       });
+  }
+
+  private updatedReportPatientName(): string | undefined {
+    const name = this.reportForm.userName.trim();
+    const original = this.selectedLead ? this.leadName(this.selectedLead).trim() : "";
+    return name && name !== original ? name : undefined;
   }
 
   private emptyLeadReportForm(leadAssignmentId?: number): LeadReportForm {
@@ -3915,12 +3925,14 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
     nextState: number,
     reportSubmittedAt: string,
     payload: {
+      userName?: string;
       reportDescription: string;
       patientCity: string;
       patientRegion: string;
     },
   ): Partial<ConsultantLead> {
     return {
+      ...(payload.userName ? { userName: payload.userName, UserName: payload.userName } : {}),
       callResult,
       CallResult: callResult,
       reportDescription: payload.reportDescription,
@@ -4092,8 +4104,6 @@ export class ConsultantDashboardComponent implements OnInit, OnDestroy {
   }
 
   validateLeadReportForm(): string | null {
-    if (!this.reportForm.userName.trim())
-      return "نام بیمار الزامی است";
     if (this.reportForm.userName.trim().length > 120)
       return "نام بیمار نباید بیشتر از ۱۲۰ کاراکتر باشد";
 
