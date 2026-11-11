@@ -12,6 +12,7 @@ import {
 import { ToastService } from "../../../core/toast/toast.service";
 import { EligiblePatient, PatientFile, PatientFileQuery } from "./patient-file.models";
 import { PatientFilesService } from "./patient-files.service";
+import { SecretaryDentalChartComponent } from "./dental-chart/dental-chart.component";
 import { SecretaryAccountShellComponent } from "../account/components/secretary-account-shell/secretary-account-shell.component";
 import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/patient-finance-details.component";
 
@@ -22,7 +23,8 @@ import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/
     BaseConfirmDialogComponent, BaseContentContainerComponent, BaseEmptyStateComponent,
     BaseFilterBarComponent, BaseLoadingComponent, BaseModalComponent, BasePageHeaderComponent,
     BasePageShellComponent, BaseSearchFilterComponent, BaseSelectFilterComponent,
-    BaseTablePaginationComponent, SecretaryAccountShellComponent, PatientFinanceDetailsComponent],
+    BaseTablePaginationComponent, SecretaryAccountShellComponent, PatientFinanceDetailsComponent,
+    SecretaryDentalChartComponent],
   templateUrl: "./patient-files-page.component.html",
   styleUrl: "./patient-files-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
