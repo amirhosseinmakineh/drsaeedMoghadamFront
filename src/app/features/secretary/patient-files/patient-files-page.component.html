@@ -58,17 +58,126 @@
   <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeCreate()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">ثبت پرونده</app-base-button></div>
 </app-base-modal>
 
-<app-base-modal [open]="newPatientOpen" title="افزودن بیمار" [closeOnBackdrop]="!creating" (close)="closeNewPatient()">
-  <form class="create-form" (ngSubmit)="createNewPatient()">
-    <label>نام<input required maxlength="100" [(ngModel)]="createForm.firstName" name="createFirstName" /></label>
-    <label>نام خانوادگی<input required maxlength="100" [(ngModel)]="createForm.lastName" name="createLastName" /></label>
-    <label>شماره موبایل<input required maxlength="11" inputmode="numeric" dir="ltr" placeholder="09xxxxxxxxx"
-      pattern="09[0-9]{9}" [(ngModel)]="createForm.phoneNumber" name="createPhoneNumber" /></label>
-    <label class="full-width">توضیحات<textarea maxlength="2000" rows="4"
-      [(ngModel)]="createForm.description" name="createDescription"></textarea></label>
-    <p class="form-hint">این بیمار فقط در فهرست شما ثبت می‌شود و به هیچ مشاوری متصل نخواهد شد.</p>
+<app-base-modal class="patient-intake-modal" [open]="newPatientOpen" title="افزودن بیمار" [closeOnBackdrop]="!creating" (close)="closeNewPatient()">
+  <form class="patient-intake-sheet" (ngSubmit)="createNewPatient()">
+    <section class="patient-intake-top">
+      <div class="clinic-logo-slot" aria-label="محل قرارگیری لوگوی کلینیک"></div>
+
+      <div class="patient-intake-info">
+        <div class="intake-field intake-name-field">
+          <label>نام و نام خانوادگی:</label>
+          <div class="intake-name-pair">
+            <input required maxlength="100" aria-label="نام" placeholder="نام"
+              [(ngModel)]="createForm.firstName" name="createFirstName" />
+            <input required maxlength="100" aria-label="نام خانوادگی" placeholder="نام خانوادگی"
+              [(ngModel)]="createForm.lastName" name="createLastName" />
+          </div>
+        </div>
+
+        <div class="intake-field">
+          <label for="newPatientMarital">وضعیت تأهل:</label>
+          <select id="newPatientMarital" name="newPatientMarital">
+            <option value=""></option><option>مجرد</option><option>متأهل</option><option>سایر</option>
+          </select>
+        </div>
+
+        <div class="intake-field">
+          <label for="newPatientBirthDate">تاریخ تولد:</label>
+          <input id="newPatientBirthDate" name="newPatientBirthDate" placeholder="____ / ____ / ______" inputmode="numeric" />
+        </div>
+        <div class="intake-field">
+          <label for="newPatientHomeAddress">آدرس منزل:</label>
+          <input id="newPatientHomeAddress" name="newPatientHomeAddress" />
+        </div>
+
+        <div class="intake-field">
+          <label for="newPatientEducation">میزان تحصیلات:</label>
+          <input id="newPatientEducation" name="newPatientEducation" />
+        </div>
+        <div class="intake-field">
+          <label for="newPatientWorkAddress">آدرس محل کار:</label>
+          <input id="newPatientWorkAddress" name="newPatientWorkAddress" />
+        </div>
+
+        <div class="intake-field">
+          <label for="newPatientMobile">شماره همراه:</label>
+          <input id="newPatientMobile" required maxlength="11" inputmode="numeric" dir="ltr"
+            placeholder="09xxxxxxxxx" pattern="09[0-9]{9}"
+            [(ngModel)]="createForm.phoneNumber" name="createPhoneNumber" />
+        </div>
+        <div class="intake-field">
+          <label for="newPatientReferral">چطور با کلینیک آشنا شدید؟</label>
+          <input id="newPatientReferral" name="newPatientReferral" />
+        </div>
+
+        <div class="intake-field">
+          <label for="newPatientHomePhone">تلفن منزل:</label>
+          <input id="newPatientHomePhone" name="newPatientHomePhone" dir="ltr" inputmode="tel" />
+        </div>
+        <div class="intake-field intake-empty-cell"></div>
+
+        <div class="intake-field">
+          <label for="newPatientNationalCode">کد ملی:</label>
+          <input id="newPatientNationalCode" name="newPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" />
+        </div>
+      </div>
+
+      <div class="intake-file-number">
+        <label for="newPatientFileNumber">شماره پرونده:</label>
+        <input id="newPatientFileNumber" readonly placeholder="پس از ثبت" />
+      </div>
+    </section>
+
+    <section class="patient-intake-medical">
+      <h3>اگر سابقه ابتلا به هر یک از موارد زیر را دارید، کادر روبه‌روی آن را علامت بزنید</h3>
+
+      <div class="intake-diseases">
+        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" /></label>
+        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" /></label>
+        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" /></label>
+        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" /></label>
+        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" /></label>
+        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" /></label>
+        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" /></label>
+        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" /></label>
+        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" /></label>
+        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" /></label>
+        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" /></label>
+        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" /></label>
+        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" /></label>
+        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" /></label>
+        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" /></label>
+      </div>
+
+      <div class="intake-questions">
+        <div class="intake-question">
+          <label for="newPatientMedication">داروی خاصی مصرف می‌کنید؟ (نام دارو و مقدار مصرف)</label>
+          <input id="newPatientMedication" name="newPatientMedication" />
+        </div>
+        <div class="intake-question">
+          <label for="newPatientHospital">تاکنون در بیمارستان بستری شده‌اید؟ (علت و زمان)</label>
+          <input id="newPatientHospital" name="newPatientHospital" />
+        </div>
+        <div class="intake-question">
+          <label for="newPatientAllergy">به دارویی حساسیت دارید؟ (نام دارو)</label>
+          <input id="newPatientAllergy" name="newPatientAllergy" />
+        </div>
+        <div class="intake-question">
+          <label for="newPatientPregnancy">باردار یا در دوران شیردهی هستید؟ (ماه بارداری)</label>
+          <input id="newPatientPregnancy" name="newPatientPregnancy" />
+        </div>
+        <div class="intake-question intake-question-wide">
+          <label for="createDescription">موردی هست که در طی درمان می‌بایست مد نظر قرار گیرد؟</label>
+          <input id="createDescription" maxlength="2000" [(ngModel)]="createForm.description" name="createDescription" />
+        </div>
+      </div>
+      <p class="intake-form-note">اطلاعات تکمیلی این فرم در حال حاضر فقط جهت نمایش و ورود ظاهری هستند و ذخیره نمی‌شوند.</p>
+    </section>
   </form>
-  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeNewPatient()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="createNewPatient()">ثبت بیمار</app-base-button></div>
+  <div baseModalFooter>
+    <app-base-button variant="secondary" [disabled]="creating" (pressed)="closeNewPatient()">انصراف</app-base-button>
+    <app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="createNewPatient()">ثبت بیمار</app-base-button>
+  </div>
 </app-base-modal>
 
 <app-base-modal [open]="editOpen" title="ویرایش پرونده" [closeOnBackdrop]="!updating" (close)="closeEdit()">
