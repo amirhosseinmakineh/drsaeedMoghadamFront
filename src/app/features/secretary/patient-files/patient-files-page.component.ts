@@ -141,13 +141,13 @@ export class PatientFilesPageComponent implements OnInit {
   openEdit(file: PatientFile): void {
     this.editing = file; this.editForm = { firstName: file.firstName, lastName: file.lastName, phoneNumber: file.phoneNumber, description: file.description ?? "" }; this.editOpen = true;
   }
-  closeEdit(): void { if (!this.updating) this.editOpen = false; }
+  closeEdit(): void { if (!this.updating) { this.editOpen = false; this.editing = null; } }
   update(): void {
     if (!this.editing || this.updating || !this.editForm.firstName.trim() || !this.editForm.lastName.trim() || !this.editForm.phoneNumber.trim()) return;
     this.updating = true;
     const body = { firstName: this.editForm.firstName.trim(), lastName: this.editForm.lastName.trim(), phoneNumber: this.editForm.phoneNumber.trim(), description: this.editForm.description.trim() || null };
     this.api.updatePatientFile(this.editing.id, body).pipe(finalize(() => { this.updating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: () => { this.toast.success("اطلاعات پرونده با موفقیت ویرایش شد."); this.editOpen = false; this.loadFiles(); },
+      .subscribe({ next: () => { this.toast.success("اطلاعات پرونده با موفقیت ویرایش شد."); this.editOpen = false; this.editing = null; this.loadFiles(); },
         error: (error) => this.toast.error(this.errorMessage(error, "ویرایش پرونده انجام نشد.")) });
   }
   remove(): void {
