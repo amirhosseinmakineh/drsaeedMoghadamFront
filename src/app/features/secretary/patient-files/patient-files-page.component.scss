@@ -29,3 +29,267 @@ th { color: #64748b; font-size: .85rem; background: #f8fafc; } .row-actions { di
 .create-form .full-width, .edit-form .full-width { grid-column: 1 / -1; }
 .form-hint { grid-column: 1 / -1; margin: 0; padding: .75rem; border-radius: 10px; color: #075985; background: #f0f9ff; }
 @media (max-width: 700px) { .create-form { grid-template-columns: 1fr; } .create-form .full-width, .edit-form .full-width, .form-hint { grid-column: auto; } }
+
+
+/* Approved clinic patient-intake form design — visual-only additions. */
+.patient-intake-modal ::ng-deep section[role="dialog"] {
+  width: min(1100px, calc(100vw - 32px));
+  max-height: min(94dvh, 900px);
+  grid-template-rows: minmax(0, 1fr) auto;
+  border-radius: 8px;
+}
+.patient-intake-modal ::ng-deep header { display: none; }
+.patient-intake-modal ::ng-deep main { padding: 0; background: #f5f0eb; }
+.patient-intake-modal ::ng-deep footer {
+  padding: .75rem 1rem;
+  background: #f5f0eb;
+  border-top: 1px solid #d3c3bb;
+}
+.patient-intake-sheet {
+  --intake-ink: #302b2b;
+  --intake-rose: #b79e98;
+  --intake-line: #b7a29b;
+  margin: 0;
+  color: var(--intake-ink);
+  background: #f5f0eb;
+  font-family: Vazirmatn, Tahoma, sans-serif;
+  direction: rtl;
+}
+.patient-intake-top {
+  position: relative;
+  isolation: isolate;
+  min-height: 385px;
+  padding: 34px 42px 78px;
+  background-color: #f1eae4;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='150' viewBox='0 0 180 150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.13'/%3E%3C/svg%3E"),
+    linear-gradient(105deg,#eee5df 0%,#f6f0eb 48%,#eee5df 100%);
+}
+.patient-intake-top::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: 22px;
+  top: 20px;
+  width: 170px;
+  height: 255px;
+  opacity: .075;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 220'%3E%3Cpath d='M75 12C48 -1 14 13 13 55c-1 38 20 56 29 91 5 19 8 54 25 55 16 1 17-35 25-55 13-32 34-53 32-91C122 15 94 0 75 12Z' fill='none' stroke='%23b7a29b' stroke-width='8' stroke-linecap='round'/%3E%3Cpath d='M29 55c9-18 23-25 40-18' fill='none' stroke='%23b7a29b' stroke-width='5' stroke-linecap='round' opacity='.65'/%3E%3C/svg%3E");
+}
+.clinic-logo-slot {
+  position: absolute;
+  left: 32px;
+  top: 25px;
+  width: 142px;
+  height: 158px;
+}
+.patient-intake-info {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  column-gap: 54px;
+  row-gap: 15px;
+  padding-left: 175px;
+  position: relative;
+  z-index: 1;
+}
+.intake-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 39px;
+  min-width: 0;
+}
+.intake-field > label {
+  flex: none;
+  white-space: nowrap;
+  font-size: 17px;
+  font-weight: 800;
+}
+.patient-intake-sheet .intake-field input,
+.patient-intake-sheet .intake-field select {
+  min-width: 0;
+  min-height: 34px;
+  flex: 1;
+  width: 1%;
+  padding: 6px 4px;
+  color: #302b2b;
+  border: 0;
+  border-bottom: 1.5px solid #c4b3aa;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  font: 500 15px Vazirmatn, Tahoma, sans-serif;
+  box-shadow: none;
+}
+.patient-intake-sheet .intake-field input:focus,
+.patient-intake-sheet .intake-field select:focus { border-bottom-color: #85635b; }
+.patient-intake-sheet .intake-field input::placeholder { color: #b8aaa4; }
+.intake-name-pair { display: flex; flex: 1; min-width: 0; gap: 8px; }
+.intake-name-pair input { width: 50% !important; }
+.intake-file-number {
+  position: absolute;
+  left: 27px;
+  bottom: 28px;
+  z-index: 1;
+  width: 150px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 800;
+}
+.patient-intake-sheet .intake-file-number input {
+  width: 145px;
+  height: 37px;
+  min-height: 37px;
+  text-align: center;
+  color: #66534c;
+  background: #d2c4bc;
+  border: 0;
+  border-radius: 24px;
+  font: inherit;
+}
+.patient-intake-medical {
+  position: relative;
+  isolation: isolate;
+  border-top: 8px solid #d0c2bb;
+  padding: 25px 30px 24px;
+  background-color: #edf3f0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='210' height='165' viewBox='0 0 210 165'%3E%3Cg fill='none' stroke='%23d2e1dc' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' opacity='.68'%3E%3Cpath d='M27 17c-10-8-24-1-22 13 2 13 12 18 15 31 2 7 2 17 7 17s6-10 8-17c4-13 14-19 14-32 0-13-13-20-22-12Z'/%3E%3Cpath d='M100 18h18v38h-18zM96 13h26v7H96zM104 56v8h10v-8'/%3E%3Cpath d='M158 18c-8 0-13 7-13 15 0 10 8 14 13 21 5-7 13-11 13-21 0-8-5-15-13-15Z'/%3E%3Cpath d='M150 75c12-8 24-8 35 0l-5 18h-25zM155 93v23m19-23v23M151 116h27'/%3E%3Cpath d='M40 111c-8-8-21-1-17 10 4 10 17 17 17 17s13-7 17-17c4-11-9-18-17-10Z'/%3E%3Cpath d='M91 107l24 24m-24 0 24-24'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(180deg,#eff5f2 0%,#eaf1ee 100%);
+  background-repeat: repeat, no-repeat;
+  background-size: 210px 165px, 100% 100%;
+}
+.patient-intake-medical > h3 {
+  margin: 4px 0 30px;
+  text-align: center;
+  font-size: 19px;
+  line-height: 1.8;
+  font-weight: 800;
+}
+.intake-diseases {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px 14px;
+  margin-bottom: 36px;
+  position: relative;
+}
+.intake-disease {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.patient-intake-sheet .intake-disease input {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 2.5px solid #aa9289;
+  border-radius: 9px;
+  background: #f8faf880;
+  cursor: pointer;
+}
+.patient-intake-sheet .intake-disease input:checked { background: #b79e98; }
+.patient-intake-sheet .intake-disease input:checked::after {
+  content: "✓";
+  color: white;
+  font-size: 22px;
+}
+.intake-questions {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 25px 34px 30px;
+  border-radius: 38px;
+  background: linear-gradient(115deg,#e8d9d1f2 0%,#eee2dbef 54%,#e7d8d0f2 100%);
+  box-shadow: -4px 4px 0 #bdaea7, 0 4px 12px #77645d12;
+}
+.intake-questions::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 12%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 420px;
+  height: 300px;
+  opacity: .11;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 300'%3E%3Cpath d='M210 275S24 166 24 88C24 16 112 -8 165 40l45 43 45-43c53-48 141-24 141 48 0 78-186 187-186 187Z' fill='%23bda49a'/%3E%3Cpath d='M75 100c32 65 92 86 135 86s103-21 135-86' fill='none' stroke='%23e8d9d1' stroke-width='9' stroke-linecap='round'/%3E%3Cpath d='M82 119c37 47 83 62 128 62s91-15 128-62' fill='none' stroke='%23e8d9d1' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.intake-question {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  position: relative;
+}
+.intake-question:last-child { margin-bottom: 0; }
+.intake-question label {
+  white-space: nowrap;
+  font-size: 17px;
+  font-weight: 600;
+}
+.patient-intake-sheet .intake-question input {
+  min-width: 0;
+  min-height: 38px;
+  flex: 1;
+  padding: 8px;
+  border: 0;
+  border-bottom: 3px solid #b6a49c;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  box-shadow: none;
+}
+.patient-intake-sheet .intake-question input:focus { border-bottom-color: #8b6b63; }
+.intake-question-wide input { flex: 0 0 43% !important; width: 43%; }
+.intake-form-note {
+  margin: 12px 0 0;
+  text-align: center;
+  color: #81716a;
+  font-size: 12px;
+}
+@media (max-width: 850px) {
+  .patient-intake-top { min-height: 0; padding: 26px 20px 100px; }
+  .clinic-logo-slot { position: relative; left: auto; top: auto; width: 100%; height: 88px; }
+  .patient-intake-info { padding-left: 0; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+  .intake-file-number { left: 20px; bottom: 20px; }
+  .intake-diseases { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .intake-question { display: block; }
+  .intake-question label { white-space: normal; }
+  .patient-intake-sheet .intake-question input,
+  .intake-question-wide input { display: block; width: 100% !important; margin-top: 5px; }
+}
+@media (max-width: 560px) {
+  .patient-intake-info { grid-template-columns: 1fr; }
+  .intake-field > label { font-size: 14px; }
+  .intake-diseases { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+  .intake-disease { gap: 7px; font-size: 13px; }
+  .patient-intake-sheet .intake-disease input { width: 26px; height: 26px; min-height: 26px; }
+  .patient-intake-medical { padding: 20px 13px; }
+  .patient-intake-medical > h3 { font-size: 15px; }
+  .intake-questions { padding: 20px 16px; border-radius: 22px; }
+  .intake-question label { font-size: 14px; }
+}
+@media print {
+  .patient-intake-modal ::ng-deep footer { display: none; }
+  .patient-intake-top { min-height: 365px; }
+  .patient-intake-medical { break-inside: avoid; }
+}
