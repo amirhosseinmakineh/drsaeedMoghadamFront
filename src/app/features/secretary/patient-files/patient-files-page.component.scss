@@ -86,6 +86,14 @@ th { color: #64748b; font-size: .85rem; background: #f8fafc; } .row-actions { di
   width: 142px;
   height: 158px;
 }
+.clinic-logo-slot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
 .patient-intake-info {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
