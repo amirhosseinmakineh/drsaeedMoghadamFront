@@ -181,9 +181,130 @@
   </div>
 </app-base-modal>
 
-<app-base-modal [open]="editOpen" title="ویرایش پرونده" [closeOnBackdrop]="!updating" (close)="closeEdit()">
-  @if (editing) { <form class="edit-form" (ngSubmit)="update()"><label>شماره پرونده<input readonly [value]="editing.fileNumber" /></label><label>نوع پرونده<input readonly [value]="sourceLabel(editing.sourceType)" /></label><label>نام<input required [(ngModel)]="editForm.firstName" name="firstName" /></label><label>نام خانوادگی<input required [(ngModel)]="editForm.lastName" name="lastName" /></label><label>شماره تماس<input required dir="ltr" [(ngModel)]="editForm.phoneNumber" name="phoneNumber" /></label><label class="full-width">توضیحات<textarea maxlength="2000" rows="4" [(ngModel)]="editForm.description" name="description"></textarea></label></form> }
-  <div baseModalFooter><app-base-button variant="secondary" [disabled]="updating" (pressed)="closeEdit()">انصراف</app-base-button><app-base-button [loading]="updating" (pressed)="update()">ذخیره تغییرات</app-base-button></div>
+<app-base-modal class="patient-intake-modal" [open]="editOpen" title="ویرایش پرونده" [closeOnBackdrop]="!updating" (close)="closeEdit()">
+  @if (editing) {
+  <form class="patient-intake-sheet" (ngSubmit)="update()">
+    <section class="patient-intake-top">
+      <div class="clinic-logo-slot"><img src="/images/delkhand-logo.webp" alt="لوگوی کلینیک دلبخند" /></div>
+
+      <div class="patient-intake-info">
+        <div class="intake-field intake-name-field">
+          <label>نام و نام خانوادگی:</label>
+          <div class="intake-name-pair">
+            <input required maxlength="100" aria-label="نام" placeholder="نام"
+              [(ngModel)]="editForm.firstName" name="editFirstName" />
+            <input required maxlength="100" aria-label="نام خانوادگی" placeholder="نام خانوادگی"
+              [(ngModel)]="editForm.lastName" name="editLastName" />
+          </div>
+        </div>
+
+        <div class="intake-field">
+          <label for="editPatientMarital">وضعیت تأهل:</label>
+          <select id="editPatientMarital" name="editPatientMarital">
+            <option value=""></option><option>مجرد</option><option>متأهل</option><option>سایر</option>
+          </select>
+        </div>
+
+        <div class="intake-field">
+          <label for="editPatientBirthDate">تاریخ تولد:</label>
+          <input id="editPatientBirthDate" name="editPatientBirthDate" placeholder="____ / ____ / ______" inputmode="numeric" />
+        </div>
+        <div class="intake-field">
+          <label for="editPatientHomeAddress">آدرس منزل:</label>
+          <input id="editPatientHomeAddress" name="editPatientHomeAddress" />
+        </div>
+
+        <div class="intake-field">
+          <label for="editPatientEducation">میزان تحصیلات:</label>
+          <input id="editPatientEducation" name="editPatientEducation" />
+        </div>
+        <div class="intake-field">
+          <label for="editPatientWorkAddress">آدرس محل کار:</label>
+          <input id="editPatientWorkAddress" name="editPatientWorkAddress" />
+        </div>
+
+        <div class="intake-field">
+          <label for="editPatientMobile">شماره همراه:</label>
+          <input id="editPatientMobile" required maxlength="11" inputmode="numeric" dir="ltr"
+            placeholder="09xxxxxxxxx" pattern="09[0-9]{9}"
+            [(ngModel)]="editForm.phoneNumber" name="editPhoneNumber" />
+        </div>
+        <div class="intake-field">
+          <label for="editPatientReferral">چطور با کلینیک آشنا شدید؟</label>
+          <input id="editPatientReferral" name="editPatientReferral" />
+        </div>
+
+        <div class="intake-field">
+          <label for="editPatientHomePhone">تلفن منزل:</label>
+          <input id="editPatientHomePhone" name="editPatientHomePhone" dir="ltr" inputmode="tel" />
+        </div>
+        <div class="intake-field intake-empty-cell"></div>
+
+        <div class="intake-field">
+          <label for="editPatientNationalCode">کد ملی:</label>
+          <input id="editPatientNationalCode" name="editPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" />
+        </div>
+      </div>
+
+      <div class="intake-file-number">
+        <label for="editPatientFileNumber">شماره پرونده:</label>
+        <input id="editPatientFileNumber" readonly [value]="editing.fileNumber" />
+        <div class="intake-source-type">نوع پرونده: {{ sourceLabel(editing.sourceType) }}</div>
+      </div>
+    </section>
+
+    <section class="patient-intake-medical">
+      <h3>اگر سابقه ابتلا به هر یک از موارد زیر را دارید، کادر روبه‌روی آن را علامت بزنید</h3>
+
+      <div class="intake-diseases">
+        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" /></label>
+        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" /></label>
+        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" /></label>
+        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" /></label>
+        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" /></label>
+        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" /></label>
+        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" /></label>
+        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" /></label>
+        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" /></label>
+        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" /></label>
+        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" /></label>
+        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" /></label>
+        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" /></label>
+        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" /></label>
+        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" /></label>
+      </div>
+
+      <div class="intake-questions">
+        <div class="intake-question">
+          <label for="editPatientMedication">داروی خاصی مصرف می‌کنید؟ (نام دارو و مقدار مصرف)</label>
+          <input id="editPatientMedication" name="editPatientMedication" />
+        </div>
+        <div class="intake-question">
+          <label for="editPatientHospital">تاکنون در بیمارستان بستری شده‌اید؟ (علت و زمان)</label>
+          <input id="editPatientHospital" name="editPatientHospital" />
+        </div>
+        <div class="intake-question">
+          <label for="editPatientAllergy">به دارویی حساسیت دارید؟ (نام دارو)</label>
+          <input id="editPatientAllergy" name="editPatientAllergy" />
+        </div>
+        <div class="intake-question">
+          <label for="editPatientPregnancy">باردار یا در دوران شیردهی هستید؟ (ماه بارداری)</label>
+          <input id="editPatientPregnancy" name="editPatientPregnancy" />
+        </div>
+        <div class="intake-question intake-question-wide">
+          <label for="createDescription">موردی هست که در طی درمان می‌بایست مد نظر قرار گیرد؟</label>
+          <input id="editDescription" maxlength="2000" [(ngModel)]="editForm.description" name="editDescription" />
+        </div>
+      </div>
+      <p class="intake-form-note">اطلاعات تکمیلی و خدمات دندان در حال حاضر فقط نمایشی‌اند و ذخیره نمی‌شوند.</p>
+    </section>
+    <app-secretary-dental-chart />
+  </form>
+  }
+  <div baseModalFooter>
+    <app-base-button variant="secondary" [disabled]="updating" (pressed)="closeEdit()">انصراف</app-base-button>
+    <app-base-button [loading]="updating" (pressed)="update()">ذخیره تغییرات</app-base-button>
+  </div>
 </app-base-modal>
 
 <app-base-modal class="finance-modal" [open]="!!financeFile" [title]="'صورت‌حساب‌های ' + (financeFile?.firstName ?? '') + ' ' + (financeFile?.lastName ?? '')" (close)="closeFinance()">
