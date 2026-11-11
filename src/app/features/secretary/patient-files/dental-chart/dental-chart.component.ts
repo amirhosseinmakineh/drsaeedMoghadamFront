@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostListener } from "@angular/core";
 
 type ToothType = "molar" | "premolar" | "canine" | "central";
-type ServiceId = "composite" | "implant" | "root" | "filling" | "laminate" | "scaling" | "extraction";
+type ServiceId = "composite" | "laminate" | "implant" | "root" | "filling" | "crown" | "extraction";
 
 interface Tooth {
   id: number;
@@ -76,14 +76,13 @@ function generateJaw(numbers: number[], upper: boolean): Tooth[] {
 export class SecretaryDentalChartComponent {
   readonly services: { id: ServiceId; label: string; fill: string; stroke: string }[] = [
     { id: "composite", label: "کامپوزیت", fill: "#dcefff", stroke: "#087fc1" },
-    { id: "implant", label: "ایمپلنت", fill: "#ffe0e1", stroke: "#e13f4b" },
-    { id: "root", label: "عصب‌کشی", fill: "#fff0c9", stroke: "#d49128" },
-    { id: "filling", label: "ترمیم", fill: "#d9f5e8", stroke: "#38a478" },
     { id: "laminate", label: "لمینت", fill: "#eadfff", stroke: "#9165c4" },
-    { id: "scaling", label: "جرم‌گیری", fill: "#d8f5f5", stroke: "#339b9a" },
+    { id: "implant", label: "ایمپلنت", fill: "#ffe0e1", stroke: "#e13f4b" },
+    { id: "root", label: "اندو", fill: "#fff0c9", stroke: "#d49128" },
+    { id: "filling", label: "ترمیم", fill: "#d9f5e8", stroke: "#38a478" },
+    { id: "crown", label: "روکش", fill: "#fff0df", stroke: "#d98545" },
     { id: "extraction", label: "کشیدن", fill: "#e7ebed", stroke: "#7c858c" },
   ];
-
   readonly teeth: Tooth[] = [
     ...generateJaw([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], true),
     ...generateJaw([32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17], false),
