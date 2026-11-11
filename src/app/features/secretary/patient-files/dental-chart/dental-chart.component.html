@@ -1,0 +1,95 @@
+<section class="dental-chart" aria-label="چارت دندان‌های بیمار">
+  <header class="chart-title">
+    <strong>چارت دندان‌های بیمار</strong>
+    <span>۳۲ دندان دائمی · برای ثبت خدمت روی دندان کلیک کنید</span>
+  </header>
+
+  <div class="chart-layout">
+    <div class="chart-card">
+      <div class="chart-card-title"><span>نمای فک بالا و پایین</span><span>شماره‌گذاری ۱ تا ۸ در هر سمت</span></div>
+      <div class="chart-frame">
+        <svg class="teeth-svg" viewBox="0 0 529 760" xmlns="http://www.w3.org/2000/svg" role="group"
+          aria-label="نمودار تعاملی دندان‌ها، نمای فک بالا و پایین">
+          <text x="264" y="253" class="quadrant-label">Upper jaw</text>
+          <text x="264" y="514" class="quadrant-label">Lower jaw</text>
+          <text x="210" y="382" class="axis-label">R</text>
+          <text x="308" y="382" class="axis-label">L</text>
+          @for (tooth of teeth; track tooth.id) {
+            <g class="tooth" tabindex="0" role="button"
+               [class.selected]="selectedTooth?.id === tooth.id"
+               [class.has-service]="!!treatments[tooth.id]"
+               [style.--fill]="fillFor(tooth.id)"
+               [style.--stroke]="strokeFor(tooth.id)"
+               [attr.aria-label]="toothLabel(tooth)"
+               (click)="select(tooth)" (keydown.enter)="select(tooth)" (keydown.space)="$event.preventDefault(); select(tooth)">
+              <g [attr.transform]="tooth.transform">
+                <path class="outline" [attr.d]="tooth.outline"></path>
+                <path class="details-line" [attr.d]="tooth.detail"></path>
+              </g>
+              <circle class="number-dot" [attr.cx]="tooth.numberX" [attr.cy]="tooth.numberY" r="15.2"></circle>
+              <text class="number-text" [attr.x]="tooth.numberX" [attr.y]="tooth.numberY + 0.8">{{ tooth.number }}</text>
+            </g>
+          }
+        </svg>
+      </div>
+    </div>
+
+    <aside class="chart-details">
+      <h3>راهنمای رنگ خدمات</h3>
+      <p>برای هر دندان یک خدمت اصلی و توضیح کوتاه ثبت کنید. رنگ هر دندان بر اساس خدمت انتخابی تغییر می‌کند.</p>
+      <div class="legend">
+        @for (service of services; track service.id) {
+          <span class="pill"><i [style.background]="service.stroke"></i>{{ service.label }}</span>
+        }
+      </div>
+      <div class="summary"><strong>{{ treatmentCount.toLocaleString('fa-IR') }}</strong> دندان از ۳۲ دندان دارای خدمت هستند.</div>
+      <h3>خدمات انتخاب‌شده</h3>
+      <div class="saved-list">
+        @for (entry of savedTreatments; track entry.tooth.id) {
+          <div class="saved">
+            <span><strong>{{ toothLabel(entry.tooth) }}</strong> · {{ serviceLabel(entry.service) }}{{ entry.description ? ' · ' + entry.description : '' }}</span>
+            <button type="button" (click)="select(entry.tooth)">ویرایش</button>
+          </div>
+        } @empty {
+          <p>هنوز خدمتی ثبت نشده است.</p>
+        }
+      </div>
+      <p class="tip">شماره‌های آبی اطراف دندان‌ها برای هر ربع فک از ۱ تا ۸ هستند و R و L جهت راست و چپ را مشخص می‌کنند.</p>
+    </aside>
+  </div>
+  <p class="chart-note">اطلاعات خدمات دندان در این مرحله فقط برای پیش‌نمایش و انتخاب در فرم است و هنوز به سرور ارسال یا ذخیره نمی‌شود.</p>
+</section>
+
+@if (selectedTooth) {
+  <div class="tooth-overlay" role="presentation" (click)="closeEditor()">
+    <div class="tooth-editor" role="dialog" aria-modal="true" aria-labelledby="toothEditorTitle" (click)="$event.stopPropagation()">
+      <div class="editor-header">
+        <div><strong id="toothEditorTitle">{{ toothLabel(selectedTooth) }}</strong>
+          <small>شماره جهانی: {{ selectedTooth.id }}</small>
+        </div>
+        <button type="button" class="close" aria-label="بستن" (click)="closeEditor()">×</button>
+      </div>
+      <label class="field">خدمت درمانی
+        <select [value]="draftService" (change)="changeService($event)">
+          <option value="">انتخاب خدمت...</option>
+          @for (service of services; track service.id) {
+            <option [value]="service.id">{{ service.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">توضیحات کوتاه
+        <textarea [value]="draftDescription" (input)="changeDescription($event)"
+          placeholder="مثلاً سطح دندان، رنگ کامپوزیت، یا توضیح پزشک..."></textarea>
+      </label>
+      @if (validationError) { <p class="validation-error">{{ validationError }}</p> }
+      <div class="buttons">
+        <button type="button" class="save" (click)="save()">تأیید و ثبت</button>
+        <button type="button" class="cancel" (click)="closeEditor()">انصراف</button>
+        @if (treatments[selectedTooth.id]) {
+          <button type="button" class="remove" (click)="remove()">حذف</button>
+        }
+      </div>
+      <p class="editor-note">خدمات انتخاب‌شده فعلاً فقط در همین فرم نگهداری می‌شوند.</p>
+    </div>
+  </div>
+}
