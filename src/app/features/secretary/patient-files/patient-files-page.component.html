@@ -54,8 +54,132 @@
   @else { <div class="patient-list">@for (patient of eligible; track patient.id) {
     <button type="button" [class.selected]="selectedPatient?.id === patient.id" (click)="selectPatient(patient)"><strong>{{ patient.firstName }} {{ patient.lastName }}</strong><span dir="ltr">{{ patient.phoneNumber }}</span></button>
   }</div><app-base-table-pagination [currentPage]="eligiblePage" [pageSize]="8" [totalCount]="eligibleTotal" (pageChange)="eligiblePage = $event; loadEligible()" /> }
-  @if (selectedPatient) { <section class="selected-summary"><h3>بیمار انتخاب‌شده</h3><dl><div><dt>نام</dt><dd>{{ selectedPatient.firstName }}</dd></div><div><dt>نام خانوادگی</dt><dd>{{ selectedPatient.lastName }}</dd></div><div><dt>شماره تماس</dt><dd dir="ltr">{{ selectedPatient.phoneNumber }}</dd></div></dl><p>شماره پرونده پس از ثبت توسط سیستم صادر می‌شود.</p></section> }
-  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeCreate()">انصراف</app-base-button><app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">ثبت پرونده</app-base-button></div>
+  <div baseModalFooter><app-base-button variant="secondary" [disabled]="creating" (pressed)="closeCreate()">انصراف</app-base-button></div>
+</app-base-modal>
+
+<app-base-modal class="patient-intake-modal" [open]="createIntakeOpen" title="تکمیل اطلاعات و ایجاد پرونده" [closeOnBackdrop]="!creating" (close)="closeCreateIntake()">
+  @if (createIntakeOpen && selectedPatient) {
+  <form class="patient-intake-sheet" (ngSubmit)="create()">
+    <section class="patient-intake-top">
+      <div class="clinic-logo-slot"><img src="/images/delkhand-logo.webp" alt="لوگوی کلینیک دلبخند" /></div>
+
+      <div class="patient-intake-info">
+        <div class="intake-field intake-name-field">
+          <label>نام و نام خانوادگی:</label>
+          <div class="intake-name-pair">
+            <input required maxlength="100" aria-label="نام" placeholder="نام"
+              [value]="selectedPatient.firstName" readonly name="reservationFirstName" />
+            <input required maxlength="100" aria-label="نام خانوادگی" placeholder="نام خانوادگی"
+              [value]="selectedPatient.lastName" readonly name="reservationLastName" />
+          </div>
+        </div>
+
+        <div class="intake-field">
+          <label for="reservationPatientMarital">وضعیت تأهل:</label>
+          <select id="reservationPatientMarital" name="reservationPatientMarital">
+            <option value=""></option><option>مجرد</option><option>متأهل</option><option>سایر</option>
+          </select>
+        </div>
+
+        <div class="intake-field">
+          <label for="reservationPatientBirthDate">تاریخ تولد:</label>
+          <input id="reservationPatientBirthDate" name="reservationPatientBirthDate" placeholder="____ / ____ / ______" inputmode="numeric" />
+        </div>
+        <div class="intake-field">
+          <label for="reservationPatientHomeAddress">آدرس منزل:</label>
+          <input id="reservationPatientHomeAddress" name="reservationPatientHomeAddress" />
+        </div>
+
+        <div class="intake-field">
+          <label for="reservationPatientEducation">میزان تحصیلات:</label>
+          <input id="reservationPatientEducation" name="reservationPatientEducation" />
+        </div>
+        <div class="intake-field">
+          <label for="reservationPatientWorkAddress">آدرس محل کار:</label>
+          <input id="reservationPatientWorkAddress" name="reservationPatientWorkAddress" />
+        </div>
+
+        <div class="intake-field">
+          <label for="reservationPatientMobile">شماره همراه:</label>
+          <input id="reservationPatientMobile" required maxlength="11" inputmode="numeric" dir="ltr"
+            placeholder="09xxxxxxxxx" pattern="09[0-9]{9}"
+            [value]="selectedPatient.phoneNumber" readonly name="reservationPhoneNumber" />
+        </div>
+        <div class="intake-field">
+          <label for="reservationPatientReferral">چطور با کلینیک آشنا شدید؟</label>
+          <input id="reservationPatientReferral" name="reservationPatientReferral" />
+        </div>
+
+        <div class="intake-field">
+          <label for="reservationPatientHomePhone">تلفن منزل:</label>
+          <input id="reservationPatientHomePhone" name="reservationPatientHomePhone" dir="ltr" inputmode="tel" />
+        </div>
+        <div class="intake-field intake-empty-cell"></div>
+
+        <div class="intake-field">
+          <label for="reservationPatientNationalCode">کد ملی:</label>
+          <input id="reservationPatientNationalCode" name="reservationPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" />
+        </div>
+      </div>
+
+      <div class="intake-file-number">
+        <label for="reservationPatientFileNumber">شماره پرونده:</label>
+        <input id="reservationPatientFileNumber" readonly placeholder="پس از ثبت" />
+      </div>
+    </section>
+
+    <section class="patient-intake-medical">
+      <h3>اگر سابقه ابتلا به هر یک از موارد زیر را دارید، کادر روبه‌روی آن را علامت بزنید</h3>
+
+      <div class="intake-diseases">
+        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" /></label>
+        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" /></label>
+        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" /></label>
+        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" /></label>
+        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" /></label>
+        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" /></label>
+        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" /></label>
+        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" /></label>
+        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" /></label>
+        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" /></label>
+        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" /></label>
+        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" /></label>
+        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" /></label>
+        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" /></label>
+        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" /></label>
+      </div>
+
+      <div class="intake-questions">
+        <div class="intake-question">
+          <label for="reservationPatientMedication">داروی خاصی مصرف می‌کنید؟ (نام دارو و مقدار مصرف)</label>
+          <input id="reservationPatientMedication" name="reservationPatientMedication" />
+        </div>
+        <div class="intake-question">
+          <label for="reservationPatientHospital">تاکنون در بیمارستان بستری شده‌اید؟ (علت و زمان)</label>
+          <input id="reservationPatientHospital" name="reservationPatientHospital" />
+        </div>
+        <div class="intake-question">
+          <label for="reservationPatientAllergy">به دارویی حساسیت دارید؟ (نام دارو)</label>
+          <input id="reservationPatientAllergy" name="reservationPatientAllergy" />
+        </div>
+        <div class="intake-question">
+          <label for="reservationPatientPregnancy">باردار یا در دوران شیردهی هستید؟ (ماه بارداری)</label>
+          <input id="reservationPatientPregnancy" name="reservationPatientPregnancy" />
+        </div>
+        <div class="intake-question intake-question-wide">
+          <label for="reservationDescription">موردی هست که در طی درمان می‌بایست مد نظر قرار گیرد؟</label>
+          <input id="reservationDescription" maxlength="2000"  name="reservationDescription" />
+        </div>
+      </div>
+      <p class="intake-form-note">نام، نام خانوادگی و موبایل از اطلاعات بیمار انتخاب‌شده پر شده‌اند. اطلاعات تکمیلی و چارت دندان فعلاً فقط نمایشی‌اند و در دیتابیس ذخیره نمی‌شوند.</p>
+    </section>
+    <app-secretary-dental-chart />
+  </form>
+  }
+  <div baseModalFooter>
+    <app-base-button variant="secondary" [disabled]="creating" (pressed)="backToEligible()">بازگشت به انتخاب بیمار</app-base-button>
+    <app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">ثبت پرونده</app-base-button>
+  </div>
 </app-base-modal>
 
 <app-base-modal class="patient-intake-modal" [open]="newPatientOpen" title="افزودن بیمار" [closeOnBackdrop]="!creating" (close)="closeNewPatient()">
