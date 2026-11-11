@@ -36,6 +36,7 @@ export class PatientFilesPageComponent implements OnInit {
   loading = false;
   loadError = "";
   createOpen = false;
+  createIntakeOpen = false;
   eligible: EligiblePatient[] = [];
   eligibleSearch = "";
   eligiblePage = 1;
@@ -91,13 +92,23 @@ export class PatientFilesPageComponent implements OnInit {
   }
   closeFinance(): void { this.financeFile = null; this.financeError = ""; this.financeRefreshing = false; }
   openCreate(): void {
+    this.createIntakeOpen = false;
     this.createOpen = true;
     this.selectedPatient = null;
     this.eligibleSearch = "";
     this.eligiblePage = 1;
     this.loadEligible();
   }
-  closeCreate(): void { if (!this.creating) this.createOpen = false; }
+  closeCreate(): void { if (!this.creating) { this.createOpen = false; this.selectedPatient = null; } }
+  closeCreateIntake(): void {
+    if (!this.creating) { this.createIntakeOpen = false; this.selectedPatient = null; }
+  }
+  backToEligible(): void {
+    if (this.creating) return;
+    this.createIntakeOpen = false;
+    this.selectedPatient = null;
+    this.createOpen = true;
+  }
   loadEligible(): void {
     this.eligibleLoading = true;
     this.api.getEligiblePatients({ search: this.eligibleSearch, page: this.eligiblePage, pageSize: 8 })
@@ -106,12 +117,16 @@ export class PatientFilesPageComponent implements OnInit {
         error: (error) => this.toast.error(this.errorMessage(error, "دریافت بیماران دارای رزرو انجام نشد.")) });
   }
   searchEligible(value: string): void { this.eligibleSearch = value; this.eligiblePage = 1; this.selectedPatient = null; this.loadEligible(); }
-  selectPatient(patient: EligiblePatient): void { this.selectedPatient = patient; }
+  selectPatient(patient: EligiblePatient): void {
+    this.selectedPatient = patient;
+    this.createOpen = false;
+    this.createIntakeOpen = true;
+  }
   create(): void {
-    if (this.creating || !this.selectedPatient) return;
+    if (this.creating || !this.createIntakeOpen || !this.selectedPatient) return;
     this.creating = true;
     this.api.createFromReservation(this.selectedPatient.id).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: (result) => { this.toast.success(`پرونده با شماره ${result.fileNumber} ثبت شد.`); this.createOpen = false; this.loadFiles(); },
+      .subscribe({ next: (result) => { this.toast.success(`پرونده با شماره ${result.fileNumber} ثبت شد.`); this.createIntakeOpen = false; this.createOpen = false; this.selectedPatient = null; this.loadFiles(); },
         error: (error) => this.toast.error(this.errorMessage(error, "ثبت پرونده انجام نشد.")) });
   }
   openNewPatient(): void {
