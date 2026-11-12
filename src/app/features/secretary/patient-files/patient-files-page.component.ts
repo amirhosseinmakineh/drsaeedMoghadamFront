@@ -148,6 +148,22 @@ export class PatientFilesPageComponent implements OnInit {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
+  parseTreatmentDate(value: string): Date | null {
+    return this.parseDateOnly(value);
+  }
+
+  onTreatmentDateChange(
+    treatment: PatientPaperRecord["treatments"][number],
+    value: Date | null,
+  ): void {
+    if (!value) {
+      return;
+    }
+
+    treatment.treatmentDate =
+      `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}-${String(value.getUTCDate()).padStart(2, "0")}`;
+  }
+
   setMedicalCondition(key: keyof PatientPaperMedicalHistory, value: string): void {
     (this.paperRecord.intake.medicalHistory as Record<string, string | boolean | null | undefined>)[key] =
       value === "yes" ? true : value === "no" ? false : null;
