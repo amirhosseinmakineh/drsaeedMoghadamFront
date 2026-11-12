@@ -52,3 +52,9 @@ export interface PatientPaperTreatmentRow {
   remainingAmount: number;
   dentistName: string;
 }
+
+export interface PatientPaperRecord {
+  intake: PatientPaperIntake;
+  treatments: Omit<PatientPaperTreatmentRow, "remainingAmount">[];
+  dentalChart: Record<string, unknown>;
+}
