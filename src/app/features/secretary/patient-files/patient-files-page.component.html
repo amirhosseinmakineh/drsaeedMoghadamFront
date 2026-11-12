@@ -181,6 +181,9 @@
   }
   <div baseModalFooter>
     <app-base-button variant="secondary" [disabled]="creating" (pressed)="backToEligible()">بازگشت به انتخاب بیمار</app-base-button>
+    @if (paperStep === 2) {
+      <app-base-button variant="secondary" [disabled]="creating" (pressed)="previousPaperStep()">بازگشت به صفحه اول</app-base-button>
+    }
     <app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">{{ paperStep === 1 ? "ادامه به صفحه دوم" : "ثبت پرونده" }}</app-base-button>
   </div>
 </app-base-modal>
@@ -307,6 +310,9 @@
   </form>
   <div baseModalFooter>
     <app-base-button variant="secondary" [disabled]="creating" (pressed)="closeNewPatient()">انصراف</app-base-button>
+    @if (paperStep === 2) {
+      <app-base-button variant="secondary" [disabled]="creating" (pressed)="previousPaperStep()">بازگشت به صفحه اول</app-base-button>
+    }
     <app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="createNewPatient()">{{ paperStep === 1 ? "ادامه به صفحه دوم" : "ثبت بیمار" }}</app-base-button>
   </div>
 </app-base-modal>
