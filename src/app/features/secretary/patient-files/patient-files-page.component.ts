@@ -143,7 +143,7 @@ export class PatientFilesPageComponent implements OnInit {
   }
 
   private parseDateOnly(value: string | null | undefined): Date | null {
-    if (!value || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
       return null;
     }
 
