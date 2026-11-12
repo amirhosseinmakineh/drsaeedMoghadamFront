@@ -126,6 +126,11 @@ export class PatientFilesPageComponent implements OnInit {
     });
   }
 
+  setMedicalCondition(key: keyof PatientPaperMedicalHistory, value: string): void {
+    (this.paperRecord.intake.medicalHistory as Record<string, string | boolean | null | undefined>)[key] =
+      value === "yes" ? true : value === "no" ? false : null;
+  }
+
   closePaperRecord(): void { if (!this.paperSaving) this.paperFile = null; }
 
   addPaperTreatment(): void {
