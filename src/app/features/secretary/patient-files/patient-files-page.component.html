@@ -34,7 +34,7 @@
                 <td data-label="شماره تماس" dir="ltr">{{ file.phoneNumber }}</td>
                 <td data-label="توضیحات" class="description-cell">{{ file.description || "—" }}</td>
                 <td data-label="نوع پرونده"><app-base-badge [variant]="file.sourceType === 'Legacy' ? 'warning' : 'success'">{{ sourceLabel(file.sourceType) }}</app-base-badge></td>
-                <td data-label="عملیات"><div class="row-actions"><button class="finance-action" type="button" (click)="openFinance(file)">مشاهده صورت‌حساب‌های بیمار</button><button type="button" (click)="openEdit(file)">ویرایش</button><button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
+                <td data-label="عملیات"><div class="row-actions"><button type="button" (click)="openPaperRecord(file)">فرم کامل پرونده</button><button class="finance-action" type="button" (click)="openFinance(file)">مشاهده صورت‌حساب‌های بیمار</button><button type="button" (click)="openEdit(file)">ویرایش</button><button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
               </tr>
             }</tbody>
           </table>
@@ -445,4 +445,78 @@
   <div class="import-box"><p>فایل اکسل باید شامل نام، نام خانوادگی، شماره پرونده و شماره تماس باشد.</p><label>انتخاب فایل اکسل<input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" [disabled]="importing" (change)="chooseFile($event)" /></label>
     @if (importErrors.length) { <section class="import-errors" role="alert"><h3>جزئیات خطاهای فایل</h3><ul>@for (error of importErrors; track $index) { <li>{{ error }}</li> }</ul></section> }</div>
   <div baseModalFooter><app-base-button variant="secondary" [disabled]="importing" (pressed)="importOpen = false">انصراف</app-base-button><app-base-button [loading]="importing" [disabled]="!importFile" (pressed)="importLegacy()">بارگذاری</app-base-button></div>
+</app-base-modal>
+
+
+<app-base-modal [open]="!!paperFile" title="فرم کامل پرونده بیمار" [closeOnBackdrop]="!paperSaving" (close)="closePaperRecord()">
+  @if (paperFile) {
+    <div class="patient-intake-sheet" dir="rtl">
+      <p><strong>نام بیمار:</strong> {{ paperFile.firstName }} {{ paperFile.lastName }} |
+        <strong>شماره پرونده:</strong> {{ paperFile.fileNumber }}</p>
+      <p>شماره پرونده توسط سیستم ایجاد شده و قابل ویرایش نیست.</p>
+      @if (paperLoading) { <app-base-loading label="در حال بارگذاری اطلاعات پرونده…" /> }
+      @else {
+        <h3>اطلاعات فردی</h3>
+        <div class="intake-questions">
+          <label>تاریخ تولد (میلادی، YYYY-MM-DD)<input type="date" name="paperBirth" [(ngModel)]="paperRecord.intake.birthDate" /></label>
+          <label>وضعیت تأهل<input name="paperMarital" [(ngModel)]="paperRecord.intake.maritalStatus" /></label>
+          <label>میزان تحصیلات<input name="paperEducation" [(ngModel)]="paperRecord.intake.educationLevel" /></label>
+          <label>تلفن منزل<input name="paperHomePhone" [(ngModel)]="paperRecord.intake.homePhone" /></label>
+          <label>آدرس منزل<input name="paperHomeAddress" [(ngModel)]="paperRecord.intake.homeAddress" /></label>
+          <label>آدرس محل کار<input name="paperWorkAddress" [(ngModel)]="paperRecord.intake.workAddress" /></label>
+          <label>نحوه آشنایی با کلینیک<input name="paperReferral" [(ngModel)]="paperRecord.intake.referralSource" /></label>
+        </div>
+        <h3>سوابق پزشکی</h3>
+        <p>برای هر مورد وضعیت را مشخص کنید؛ گزینه «مشخص نشده» به معنی پاسخ ثبت‌نشده است.</p>
+        <div class="intake-diseases">
+          @for (condition of medicalConditions; track condition.key) {
+            <label class="intake-disease">{{ condition.label }}
+              <select [name]="'paper-' + condition.key"
+                [ngModel]="paperRecord.intake.medicalHistory[condition.key] == null ? '' : (paperRecord.intake.medicalHistory[condition.key] ? 'yes' : 'no')"
+                (ngModelChange)="setMedicalCondition(condition.key, $event)">
+                <option value="">مشخص نشده</option>
+                <option value="yes">بله</option>
+                <option value="no">خیر</option>
+              </select>
+            </label>
+          }
+        </div>
+        <div class="intake-questions">
+          <label>داروهای مصرفی و مقدار مصرف<input name="paperMedication" [(ngModel)]="paperRecord.intake.medicalHistory.currentMedications" /></label>
+          <label>سابقه بستری، علت و زمان<input name="paperHospital" [(ngModel)]="paperRecord.intake.medicalHistory.hospitalizationHistory" /></label>
+          <label>حساسیت دارویی و نام دارو<input name="paperAllergy" [(ngModel)]="paperRecord.intake.medicalHistory.drugAllergies" /></label>
+          <label>بارداری یا شیردهی و ماه بارداری<input name="paperPregnancy" [(ngModel)]="paperRecord.intake.medicalHistory.pregnancyOrBreastfeeding" /></label>
+          <label>نکات مهم حین درمان<input name="paperNotes" [(ngModel)]="paperRecord.intake.medicalHistory.additionalMedicalNotes" /></label>
+          <label>یادداشت دندانپزشک<input name="paperDentalNotes" [(ngModel)]="paperRecord.intake.dentalNotes" /></label>
+        </div>
+        <h3>سوابق درمان و پرداخت</h3>
+        <p>این جدول، ثبت سوابق فرم کاغذی است و جایگزین حسابداری فعلی کلینیک نیست.</p>
+        <div class="table-wrap">
+          <table><thead><tr><th>تاریخ</th><th>توضیحات</th><th>ادامه کار</th><th>هزینه</th><th>پرداختی</th><th>مانده</th><th>دندانپزشک</th><th></th></tr></thead>
+          <tbody>
+            @for (t of paperRecord.treatments; track $index; let i = $index) {
+              <tr>
+                <td><input type="date" [name]="'date'+i" [(ngModel)]="t.treatmentDate" /></td>
+                <td><input [name]="'desc'+i" [(ngModel)]="t.description" /></td>
+                <td><input type="checkbox" [name]="'follow'+i" [(ngModel)]="t.hasFollowUp" /></td>
+                <td><input type="number" min="0" [name]="'cost'+i" [(ngModel)]="t.cost" /></td>
+                <td><input type="number" min="0" [name]="'paid'+i" [(ngModel)]="t.paidAmount" /></td>
+                <td>{{ t.cost - t.paidAmount }}</td>
+                <td><input [name]="'dentist'+i" [(ngModel)]="t.dentistName" /></td>
+                <td><button type="button" (click)="paperRecord.treatments.splice(i, 1)">حذف ردیف</button></td>
+              </tr>
+            }
+          </tbody></table>
+        </div>
+        <button type="button" (click)="addPaperTreatment()">افزودن ردیف درمان</button>
+        <h3>رضایت‌نامه</h3>
+        <label><input type="checkbox" name="paperConsent" [(ngModel)]="paperRecord.intake.consentAccepted" /> رضایت بیمار ثبت شده است</label>
+        <p>ثبت امضای دیجیتال و چارت تعاملی در این مرحله هنوز متصل نشده‌اند.</p>
+      }
+    </div>
+  }
+  <div baseModalFooter>
+    <app-base-button variant="secondary" [disabled]="paperSaving" (pressed)="closePaperRecord()">انصراف</app-base-button>
+    <app-base-button [loading]="paperSaving" [disabled]="paperLoading || paperSaving" (pressed)="savePaperRecord()">ذخیره اطلاعات پرونده</app-base-button>
+  </div>
 </app-base-modal>
