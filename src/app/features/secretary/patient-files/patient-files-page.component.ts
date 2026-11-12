@@ -368,17 +368,95 @@ export class PatientFilesPageComponent implements OnInit {
   }
 
   openEdit(file: PatientFile): void {
-    this.editing = file; this.editForm = { firstName: file.firstName, lastName: file.lastName, phoneNumber: file.phoneNumber, description: file.description ?? "" }; this.editOpen = true;
+    this.editing = file;
+    this.editForm = {
+      firstName: file.firstName,
+      lastName: file.lastName,
+      phoneNumber: file.phoneNumber,
+      description: file.description ?? "",
+    };
+    this.paperRecord = this.emptyPaperRecord();
+    this.paperLoading = true;
+    this.editOpen = true;
+
+    this.api.getPaperRecord(file.id).pipe(
+      finalize(() => {
+        this.paperLoading = false;
+        this.cdr.markForCheck();
+      }),
+    ).subscribe({
+      next: record => {
+        this.paperRecord = {
+          ...record,
+          intake: {
+            ...record.intake,
+            medicalHistory: record.intake?.medicalHistory ?? {},
+          },
+          dentalChart: record.dentalChart ?? {},
+          treatments: record.treatments ?? [],
+        };
+        this.paperBirthDate = this.parseDateOnly(record.intake.birthDate);
+      },
+      error: error => {
+        this.toast.error(this.errorMessage(error, "دریافت اطلاعات پرونده ناموفق بود."));
+        this.editOpen = false;
+      },
+    });
   }
-  closeEdit(): void { if (!this.updating) { this.editOpen = false; this.editing = null; } }
+
+  closeEdit(): void {
+    if (!this.updating) {
+      this.editOpen = false;
+      this.editing = null;
+    }
+  }
+
   update(): void {
-    if (!this.editing || this.updating || !this.editForm.firstName.trim() || !this.editForm.lastName.trim() || !this.editForm.phoneNumber.trim()) return;
+    if (!this.editing || this.updating || this.paperLoading) {
+      return;
+    }
+
+    if (!this.editForm.firstName.trim() || !this.editForm.lastName.trim() ||
+        !/^09\\d{9}$/.test(this.editForm.phoneNumber.trim())) {
+      this.toast.error("اطلاعات هویتی بیمار معتبر نیست.");
+      return;
+    }
+
     this.updating = true;
-    const body = { firstName: this.editForm.firstName.trim(), lastName: this.editForm.lastName.trim(), phoneNumber: this.editForm.phoneNumber.trim(), description: this.editForm.description.trim() || null };
-    this.api.updatePatientFile(this.editing.id, body).pipe(finalize(() => { this.updating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: () => { this.toast.success("اطلاعات پرونده با موفقیت ویرایش شد."); this.editOpen = false; this.editing = null; this.loadFiles(); },
-        error: (error) => this.toast.error(this.errorMessage(error, "ویرایش پرونده انجام نشد.")) });
+    const body = {
+      firstName: this.editForm.firstName.trim(),
+      lastName: this.editForm.lastName.trim(),
+      phoneNumber: this.editForm.phoneNumber.trim(),
+      description: this.editForm.description.trim() || null,
+    };
+
+    this.api.updatePatientFile(this.editing.id, body).subscribe({
+      next: () => {
+        this.api.savePaperRecord(this.editing!.id, this.paperRecord).pipe(
+          finalize(() => {
+            this.updating = false;
+            this.cdr.markForCheck();
+          }),
+        ).subscribe({
+          next: () => {
+            this.toast.success("تمام اطلاعات پرونده ذخیره شد.");
+            this.editOpen = false;
+            this.editing = null;
+            this.loadFiles();
+          },
+          error: error => {
+            this.toast.error(this.errorMessage(error, "اطلاعات هویتی ذخیره شد، ولی ثبت صفحه دوم ناموفق بود؛ دوباره تلاش کنید."));
+          },
+        });
+      },
+      error: error => {
+        this.updating = false;
+        this.toast.error(this.errorMessage(error, "ویرایش پرونده انجام نشد."));
+        this.cdr.markForCheck();
+      },
+    });
   }
+
   remove(): void {
     if (!this.deleting || this.deleteLoading) return;
     this.deleteLoading = true;
