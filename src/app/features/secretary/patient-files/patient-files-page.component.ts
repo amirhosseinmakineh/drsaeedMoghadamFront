@@ -1,3 +1,4 @@
+import { PatientPaperRecord, PatientPaperMedicalHistory } from "./patient-paper-intake.models";
 import { CommonModule, Location } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
@@ -31,6 +32,27 @@ import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/
 })
 export class PatientFilesPageComponent implements OnInit {
   files: PatientFile[] = [];
+  paperFile: PatientFile | null = null;
+  paperLoading = false;
+  paperSaving = false;
+  paperRecord: PatientPaperRecord = this.emptyPaperRecord();
+  readonly medicalConditions: { key: keyof PatientPaperMedicalHistory; label: string }[] = [
+    { key: "heartDisease", label: "ناراحتی قلبی" },
+    { key: "bloodPressure", label: "فشار خون" },
+    { key: "bleeding", label: "خونریزی" },
+    { key: "diabetes", label: "دیابت" },
+    { key: "thyroid", label: "تیروئید" },
+    { key: "liverDisease", label: "بیماری کبدی" },
+    { key: "respiratoryDisease", label: "بیماری تنفسی" },
+    { key: "kidneyDisease", label: "بیماری کلیوی" },
+    { key: "hepatitis", label: "هپاتیت" },
+    { key: "malignancy", label: "بدخیمی" },
+    { key: "infectiousDisease", label: "بیماری عفونی" },
+    { key: "digestiveDisease", label: "بیماری گوارشی" },
+    { key: "allergy", label: "حساسیت" },
+    { key: "rheumatism", label: "روماتیسم" },
+    { key: "epilepsy", label: "صرع" },
+  ];
   totalCount = 0;
   query: PatientFileQuery = { search: "", fileNumber: "", sourceType: "", page: 1, pageSize: 10 };
   loading = false;
@@ -81,6 +103,54 @@ export class PatientFilesPageComponent implements OnInit {
   resetFilters(): void { this.query = { ...this.query, search: "", fileNumber: "", sourceType: "", page: 1 }; this.loadFiles(); }
   changePage(page: number): void { this.query = { ...this.query, page }; this.loadFiles(); }
   changePageSize(value: string): void { this.query = { ...this.query, pageSize: Number(value), page: 1 }; this.loadFiles(); }
+
+  private emptyPaperRecord(): PatientPaperRecord {
+    return { intake: { medicalHistory: {} }, treatments: [], dentalChart: {} };
+  }
+
+  openPaperRecord(file: PatientFile): void {
+    this.paperFile = file;
+    this.paperRecord = this.emptyPaperRecord();
+    this.paperLoading = true;
+    this.api.getPaperRecord(file.id).pipe(finalize(() => {
+      this.paperLoading = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: record => this.paperRecord = {
+        ...record,
+        intake: { ...record.intake, medicalHistory: record.intake?.medicalHistory ?? {} },
+        treatments: record.treatments ?? [],
+        dentalChart: record.dentalChart ?? {},
+      },
+      error: error => this.toast.error(this.errorMessage(error, "دریافت فرم پرونده انجام نشد.")),
+    });
+  }
+
+  closePaperRecord(): void { if (!this.paperSaving) this.paperFile = null; }
+
+  addPaperTreatment(): void {
+    this.paperRecord.treatments.push({
+      treatmentDate: new Date().toISOString().slice(0, 10),
+      description: "", hasFollowUp: false, cost: 0, paidAmount: 0, dentistName: "",
+    });
+  }
+
+  savePaperRecord(): void {
+    if (!this.paperFile || this.paperSaving || this.paperLoading) return;
+    if (this.paperRecord.treatments.some(t =>
+      !t.dentistName.trim() || t.cost < 0 || t.paidAmount < 0 || t.paidAmount > t.cost)) {
+      this.toast.error("اطلاعات هزینه، پرداختی یا نام دندانپزشک معتبر نیست.");
+      return;
+    }
+    this.paperSaving = true;
+    this.api.savePaperRecord(this.paperFile.id, this.paperRecord).pipe(finalize(() => {
+      this.paperSaving = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: () => { this.toast.success("اطلاعات تکمیلی پرونده ذخیره شد."); this.paperFile = null; },
+      error: error => this.toast.error(this.errorMessage(error, "ذخیره فرم پرونده انجام نشد.")),
+    });
+  }
 
   openFinance(file: PatientFile): void { this.financeFile = file; this.financeError = ""; this.refreshFinance(); }
   refreshFinance(): void {
