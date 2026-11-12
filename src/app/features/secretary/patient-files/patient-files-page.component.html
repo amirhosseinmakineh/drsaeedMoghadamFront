@@ -496,7 +496,7 @@
           <tbody>
             @for (t of paperRecord.treatments; track $index; let i = $index) {
               <tr>
-                <td><input type="date" [name]="'date'+i" [(ngModel)]="t.treatmentDate" /></td>
+                <td><app-base-persian-date-picker label="تاریخ درمان" [value]="parseTreatmentDate(t.treatmentDate)" (valueChange)="onTreatmentDateChange(t, $event)" /></td>
                 <td><input [name]="'desc'+i" [(ngModel)]="t.description" /></td>
                 <td><input type="checkbox" [name]="'follow'+i" [(ngModel)]="t.hasFollowUp" /></td>
                 <td><input type="number" min="0" [name]="'cost'+i" [(ngModel)]="t.cost" /></td>
