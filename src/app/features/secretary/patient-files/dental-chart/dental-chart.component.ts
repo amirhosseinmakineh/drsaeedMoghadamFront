@@ -15,7 +15,12 @@ interface Tooth {
   numberY: number;
 }
 
-interface ToothTreatment { service: ServiceId; description: string; }
+interface ToothTreatment {
+  service: ServiceId;
+  description: string;
+  toothName: string;
+  serviceName: string;
+}
 
 const PATHS: Record<ToothType, { outline: string; detail: string }> = {
   molar: {
@@ -161,7 +166,12 @@ export class SecretaryDentalChartComponent {
     }
     this.commitTreatments({
       ...this.treatments,
-      [this.selectedTooth.id]: { service: service.id, description: this.draftDescription.trim() },
+      [this.selectedTooth.id]: {
+        service: service.id,
+        description: this.draftDescription.trim(),
+        toothName: this.toothLabel(this.selectedTooth),
+        serviceName: service.label,
+      },
     });
     this.closeEditor();
   }
