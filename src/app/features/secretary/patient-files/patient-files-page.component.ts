@@ -38,6 +38,8 @@ export class PatientFilesPageComponent implements OnInit {
   paperSaving = false;
   paperRecord: PatientPaperRecord = this.emptyPaperRecord();
   paperBirthDate: Date | null = null;
+  paperStep = 1;
+  pendingPaperFileId: number | null = null;
   readonly medicalConditions: { key: keyof PatientPaperMedicalHistory; label: string }[] = [
     { key: "heartDisease", label: "ناراحتی قلبی" },
     { key: "bloodPressure", label: "فشار خون" },
@@ -114,6 +116,7 @@ export class PatientFilesPageComponent implements OnInit {
     this.paperFile = file;
     this.paperRecord = this.emptyPaperRecord();
     this.paperBirthDate = null;
+    this.paperStep = 1;
     this.paperLoading = true;
     this.api.getPaperRecord(file.id).pipe(finalize(() => {
       this.paperLoading = false;
@@ -169,7 +172,34 @@ export class PatientFilesPageComponent implements OnInit {
       value === "yes" ? true : value === "no" ? false : null;
   }
 
-  closePaperRecord(): void { if (!this.paperSaving) this.paperFile = null; }
+  closePaperRecord(): void {
+    if (!this.paperSaving) {
+      this.paperFile = null;
+      this.pendingPaperFileId = null;
+    }
+  }
+
+  onDentalChartChange(value: Record<string, unknown>): void {
+    this.paperRecord = {
+      ...this.paperRecord,
+      dentalChart: value,
+    };
+  }
+
+  startPaperCreation(): void {
+    this.paperRecord = this.emptyPaperRecord();
+    this.paperBirthDate = null;
+    this.paperStep = 1;
+    this.pendingPaperFileId = null;
+  }
+
+  nextPaperStep(): void {
+    this.paperStep = 2;
+  }
+
+  previousPaperStep(): void {
+    this.paperStep = 1;
+  }
 
   addPaperTreatment(): void {
     this.paperRecord.treatments.push({
