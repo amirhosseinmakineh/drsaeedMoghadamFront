@@ -1,3 +1,4 @@
+import { PatientPaperRecord } from "./patient-paper-intake.models";
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
@@ -23,6 +24,17 @@ export class PatientFilesService {
     private readonly http: HttpClient,
     private readonly auth: AuthService,
   ) {}
+
+  getPaperRecord(patientFileId: number): Observable<PatientPaperRecord> {
+    return this.http.get<PatientPaperRecord>(`${this.endpoint}/${patientFileId}/paper-record`, {
+      headers: this.authHeaders(),
+    });
+  }
+
+  savePaperRecord(patientFileId: number, record: PatientPaperRecord): Observable<{ patientFileId: number; updatedAtUtc: string }> {
+    return this.http.put<{ patientFileId: number; updatedAtUtc: string }>(
+      `${this.endpoint}/${patientFileId}/paper-record`, record, { headers: this.authHeaders() });
+  }
 
   getPatientFiles(query: PatientFileQuery): Observable<PagedResult<PatientFile>> {
     return this.http.get<unknown>(this.endpoint, {
