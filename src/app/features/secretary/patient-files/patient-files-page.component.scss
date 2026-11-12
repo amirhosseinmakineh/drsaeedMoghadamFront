@@ -305,3 +305,53 @@ th { color: #64748b; font-size: .85rem; background: #f8fafc; } .row-actions { di
 
 /* Display existing source type within the approved paper-style edit form. */
 .intake-source-type { margin-top: 2px; color: #74635c; font-size: 12px; font-weight: 700; text-align: center; }
+
+/* Patient paper-record editor: follow the existing application theme and remain usable on mobile. */
+.paper-date-field {
+  min-width: 0;
+}
+
+.patient-intake-sheet .paper-date-field,
+.patient-intake-sheet .intake-questions > label {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.patient-intake-sheet .intake-questions input,
+.patient-intake-sheet .intake-questions select {
+  max-width: 100%;
+}
+
+.patient-intake-sheet .table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.patient-intake-sheet .table-wrap table {
+  min-width: 860px;
+}
+
+.patient-intake-sheet .table-wrap input {
+  width: 100%;
+  min-width: 90px;
+}
+
+@media (max-width: 700px) {
+  .patient-intake-sheet .table-wrap table,
+  .patient-intake-sheet .table-wrap thead,
+  .patient-intake-sheet .table-wrap tbody,
+  .patient-intake-sheet .table-wrap tr,
+  .patient-intake-sheet .table-wrap th,
+  .patient-intake-sheet .table-wrap td {
+    display: revert;
+  }
+
+  .patient-intake-sheet .table-wrap td::before {
+    content: none;
+  }
+
+  .patient-intake-sheet .table-wrap td {
+    white-space: nowrap;
+  }
+}
