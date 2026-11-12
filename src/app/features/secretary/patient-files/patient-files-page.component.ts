@@ -264,32 +264,103 @@ export class PatientFilesPageComponent implements OnInit {
     this.selectedPatient = patient;
     this.createOpen = false;
     this.createIntakeOpen = true;
+    this.startPaperCreation();
   }
   create(): void {
-    if (this.creating || !this.createIntakeOpen || !this.selectedPatient) return;
+    if (this.creating || !this.createIntakeOpen || !this.selectedPatient) {
+      return;
+    }
+
+    if (this.paperStep === 1) {
+      this.nextPaperStep();
+      return;
+    }
+
     this.creating = true;
-    this.api.createFromReservation(this.selectedPatient.id).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: (result) => { this.toast.success(`پرونده با شماره ${result.fileNumber} ثبت شد.`); this.createIntakeOpen = false; this.createOpen = false; this.selectedPatient = null; this.loadFiles(); },
-        error: (error) => this.toast.error(this.errorMessage(error, "ثبت پرونده انجام نشد.")) });
+    if (this.pendingPaperFileId !== null) {
+      this.persistCreatedPaper(this.pendingPaperFileId);
+      return;
+    }
+
+    this.api.createFromReservation(this.selectedPatient.id).subscribe({
+      next: file => {
+        this.pendingPaperFileId = file.id;
+        this.persistCreatedPaper(file.id);
+      },
+      error: error => {
+        this.creating = false;
+        this.toast.error(this.errorMessage(error, "ثبت پرونده انجام نشد."));
+        this.cdr.markForCheck();
+      },
+    });
   }
+
+  private persistCreatedPaper(fileId: number): void {
+    this.api.savePaperRecord(fileId, this.paperRecord).pipe(
+      finalize(() => {
+        this.creating = false;
+        this.cdr.markForCheck();
+      }),
+    ).subscribe({
+      next: () => {
+        this.toast.success("پرونده و اطلاعات درمان با موفقیت ذخیره شدند.");
+        this.pendingPaperFileId = null;
+        this.createIntakeOpen = false;
+        this.newPatientOpen = false;
+        this.createOpen = false;
+        this.selectedPatient = null;
+        this.loadFiles();
+      },
+      error: error => {
+        this.toast.error(
+          this.errorMessage(error, "پرونده ایجاد شد، اما ذخیره فرم کامل ناموفق بود. دوباره ثبت را بزنید؛ پرونده تکراری ایجاد نمی‌شود."),
+        );
+      },
+    });
+  }
+
   openNewPatient(): void {
     this.createForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
     this.newPatientOpen = true;
+    this.startPaperCreation();
   }
   closeNewPatient(): void { if (!this.creating) this.newPatientOpen = false; }
   createNewPatient(): void {
-    if (this.creating || !this.isCreateValid()) return;
+    if (this.creating || !this.isCreateValid()) {
+      return;
+    }
+
+    if (this.paperStep === 1) {
+      this.nextPaperStep();
+      return;
+    }
+
     this.creating = true;
+    if (this.pendingPaperFileId !== null) {
+      this.persistCreatedPaper(this.pendingPaperFileId);
+      return;
+    }
+
     const request = {
       firstName: this.createForm.firstName.trim(),
       lastName: this.createForm.lastName.trim(),
       phoneNumber: this.createForm.phoneNumber.trim(),
       description: this.createForm.description.trim() || undefined,
     };
-    this.api.createPatientFile(request).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: (result) => { this.toast.success(`بیمار با موفقیت ثبت شد. شماره پرونده: ${result.fileNumber}`); this.newPatientOpen = false; this.loadFiles(); },
-        error: (error) => this.toast.error(this.errorMessage(error, "ثبت بیمار انجام نشد.")) });
+
+    this.api.createPatientFile(request).subscribe({
+      next: file => {
+        this.pendingPaperFileId = file.id;
+        this.persistCreatedPaper(file.id);
+      },
+      error: error => {
+        this.creating = false;
+        this.toast.error(this.errorMessage(error, "ثبت بیمار انجام نشد."));
+        this.cdr.markForCheck();
+      },
+    });
   }
+
   isCreateValid(): boolean {
     return !!this.createForm.firstName.trim() &&
       !!this.createForm.lastName.trim() &&
