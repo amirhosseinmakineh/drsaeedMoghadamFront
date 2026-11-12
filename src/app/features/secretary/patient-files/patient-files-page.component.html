@@ -458,7 +458,7 @@
       @else {
         <h3>اطلاعات فردی</h3>
         <div class="intake-questions">
-          <label>تاریخ تولد (میلادی، YYYY-MM-DD)<input type="date" name="paperBirth" [(ngModel)]="paperRecord.intake.birthDate" /></label>
+          <div class="paper-date-field"><app-base-persian-date-picker label="تاریخ تولد (شمسی)" [value]="paperBirthDate" (valueChange)="onPaperBirthDateChange($event)" /></div>
           <label>وضعیت تأهل<input name="paperMarital" [(ngModel)]="paperRecord.intake.maritalStatus" /></label>
           <label>میزان تحصیلات<input name="paperEducation" [(ngModel)]="paperRecord.intake.educationLevel" /></label>
           <label>تلفن منزل<input name="paperHomePhone" [(ngModel)]="paperRecord.intake.homePhone" /></label>
