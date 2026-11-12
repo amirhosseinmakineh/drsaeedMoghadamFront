@@ -60,6 +60,7 @@
 <app-base-modal class="patient-intake-modal" [open]="createIntakeOpen" title="تکمیل اطلاعات و ایجاد پرونده" [closeOnBackdrop]="!creating" (close)="closeCreateIntake()">
   @if (createIntakeOpen && selectedPatient) {
   <form class="patient-intake-sheet" (ngSubmit)="create()">
+    @if (paperStep === 1) {
     <section class="patient-intake-top">
       <div class="clinic-logo-slot"><img src="/images/delkhand-logo.webp" alt="لوگوی کلینیک دلبخند" /></div>
 
@@ -173,17 +174,20 @@
       </div>
       <p class="intake-form-note">نام، نام خانوادگی و موبایل از اطلاعات بیمار انتخاب‌شده پر شده‌اند. اطلاعات تکمیلی و چارت دندان فعلاً فقط نمایشی‌اند و در دیتابیس ذخیره نمی‌شوند.</p>
     </section>
-    <app-secretary-dental-chart />
+    } @else {
+      <ng-container *ngTemplateOutlet="paperSecondPage" />
+    }
   </form>
   }
   <div baseModalFooter>
     <app-base-button variant="secondary" [disabled]="creating" (pressed)="backToEligible()">بازگشت به انتخاب بیمار</app-base-button>
-    <app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">ثبت پرونده</app-base-button>
+    <app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">{{ paperStep === 1 ? "ادامه به صفحه دوم" : "ثبت پرونده" }}</app-base-button>
   </div>
 </app-base-modal>
 
 <app-base-modal class="patient-intake-modal" [open]="newPatientOpen" title="افزودن بیمار" [closeOnBackdrop]="!creating" (close)="closeNewPatient()">
   <form class="patient-intake-sheet" (ngSubmit)="createNewPatient()">
+    @if (paperStep === 1) {
     <section class="patient-intake-top">
       <div class="clinic-logo-slot"><img src="/images/delkhand-logo.webp" alt="لوگوی کلینیک دلبخند" /></div>
 
@@ -297,11 +301,13 @@
       </div>
       <p class="intake-form-note">اطلاعات تکمیلی این فرم در حال حاضر فقط جهت نمایش و ورود ظاهری هستند و ذخیره نمی‌شوند.</p>
     </section>
-    <app-secretary-dental-chart />
+    } @else {
+      <ng-container *ngTemplateOutlet="paperSecondPage" />
+    }
   </form>
   <div baseModalFooter>
     <app-base-button variant="secondary" [disabled]="creating" (pressed)="closeNewPatient()">انصراف</app-base-button>
-    <app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="createNewPatient()">ثبت بیمار</app-base-button>
+    <app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="createNewPatient()">{{ paperStep === 1 ? "ادامه به صفحه دوم" : "ثبت بیمار" }}</app-base-button>
   </div>
 </app-base-modal>
 
@@ -448,14 +454,9 @@
 </app-base-modal>
 
 
-<app-base-modal [open]="!!paperFile" title="فرم کامل پرونده بیمار" [closeOnBackdrop]="!paperSaving" (close)="closePaperRecord()">
-  @if (paperFile) {
-    <div class="patient-intake-sheet" dir="rtl">
-      <p><strong>نام بیمار:</strong> {{ paperFile.firstName }} {{ paperFile.lastName }} |
-        <strong>شماره پرونده:</strong> {{ paperFile.fileNumber }}</p>
-      <p>شماره پرونده توسط سیستم ایجاد شده و قابل ویرایش نیست.</p>
-      @if (paperLoading) { <app-base-loading label="در حال بارگذاری اطلاعات پرونده…" /> }
-      @else {
+<ng-template #paperSecondPage>
+  <section class="paper-second-page patient-intake-sheet" dir="rtl">
+    <h2>صفحه دوم پرونده بیمار</h2>
         <h3>اطلاعات فردی</h3>
         <div class="intake-questions">
           <div class="paper-date-field"><app-base-persian-date-picker label="تاریخ تولد (شمسی)" [value]="paperBirthDate" (valueChange)="onPaperBirthDateChange($event)" /></div>
@@ -512,11 +513,9 @@
         <h3>رضایت‌نامه</h3>
         <label><input type="checkbox" name="paperConsent" [(ngModel)]="paperRecord.intake.consentAccepted" /> رضایت بیمار ثبت شده است</label>
         <p>ثبت امضای دیجیتال و چارت تعاملی در این مرحله هنوز متصل نشده‌اند.</p>
-      }
-    </div>
-  }
-  <div baseModalFooter>
-    <app-base-button variant="secondary" [disabled]="paperSaving" (pressed)="closePaperRecord()">انصراف</app-base-button>
-    <app-base-button [loading]="paperSaving" [disabled]="paperLoading || paperSaving" (pressed)="savePaperRecord()">ذخیره اطلاعات پرونده</app-base-button>
-  </div>
-</app-base-modal>
+    <h3>چارت دندان و خدمات انتخاب‌شده</h3>
+    <app-secretary-dental-chart
+      [value]="$any(paperRecord.dentalChart)"
+      (valueChange)="onDentalChartChange($event)" />
+  </section>
+</ng-template>
