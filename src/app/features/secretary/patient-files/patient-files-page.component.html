@@ -77,27 +77,27 @@
 
         <div class="intake-field">
           <label for="reservationPatientMarital">وضعیت تأهل:</label>
-          <select id="reservationPatientMarital" name="reservationPatientMarital">
+          <select id="reservationPatientMarital" name="reservationPatientMarital" [(ngModel)]="paperRecord.intake.maritalStatus">
             <option value=""></option><option>مجرد</option><option>متأهل</option><option>سایر</option>
           </select>
         </div>
 
         <div class="intake-field">
           <label for="reservationPatientBirthDate">تاریخ تولد:</label>
-          <input id="reservationPatientBirthDate" name="reservationPatientBirthDate" placeholder="____ / ____ / ______" inputmode="numeric" />
+          <app-base-persian-date-picker label="تاریخ تولد (شمسی)" [value]="paperBirthDate" (valueChange)="onPaperBirthDateChange($event)" />
         </div>
         <div class="intake-field">
           <label for="reservationPatientHomeAddress">آدرس منزل:</label>
-          <input id="reservationPatientHomeAddress" name="reservationPatientHomeAddress" />
+          <input id="reservationPatientHomeAddress" name="reservationPatientHomeAddress" / [(ngModel)]="paperRecord.intake.homeAddress">
         </div>
 
         <div class="intake-field">
           <label for="reservationPatientEducation">میزان تحصیلات:</label>
-          <input id="reservationPatientEducation" name="reservationPatientEducation" />
+          <input id="reservationPatientEducation" name="reservationPatientEducation" / [(ngModel)]="paperRecord.intake.educationLevel">
         </div>
         <div class="intake-field">
           <label for="reservationPatientWorkAddress">آدرس محل کار:</label>
-          <input id="reservationPatientWorkAddress" name="reservationPatientWorkAddress" />
+          <input id="reservationPatientWorkAddress" name="reservationPatientWorkAddress" / [(ngModel)]="paperRecord.intake.workAddress">
         </div>
 
         <div class="intake-field">
@@ -108,12 +108,12 @@
         </div>
         <div class="intake-field">
           <label for="reservationPatientReferral">چطور با کلینیک آشنا شدید؟</label>
-          <input id="reservationPatientReferral" name="reservationPatientReferral" />
+          <input id="reservationPatientReferral" name="reservationPatientReferral" / [(ngModel)]="paperRecord.intake.referralSource">
         </div>
 
         <div class="intake-field">
           <label for="reservationPatientHomePhone">تلفن منزل:</label>
-          <input id="reservationPatientHomePhone" name="reservationPatientHomePhone" dir="ltr" inputmode="tel" />
+          <input id="reservationPatientHomePhone" name="reservationPatientHomePhone" dir="ltr" inputmode="tel" / [(ngModel)]="paperRecord.intake.homePhone">
         </div>
         <div class="intake-field intake-empty-cell"></div>
 
@@ -133,39 +133,39 @@
       <h3>اگر سابقه ابتلا به هر یک از موارد زیر را دارید، کادر روبه‌روی آن را علامت بزنید</h3>
 
       <div class="intake-diseases">
-        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" /></label>
-        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" /></label>
-        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" /></label>
-        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" /></label>
-        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" /></label>
-        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" /></label>
-        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" /></label>
-        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" /></label>
-        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" /></label>
-        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" /></label>
-        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" /></label>
-        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" /></label>
-        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" /></label>
-        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" /></label>
-        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" /></label>
+        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" [(ngModel)]="paperRecord.intake.medicalHistory.heartDisease" /></label>
+        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" [(ngModel)]="paperRecord.intake.medicalHistory.bloodPressure" /></label>
+        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" [(ngModel)]="paperRecord.intake.medicalHistory.bleeding" /></label>
+        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" [(ngModel)]="paperRecord.intake.medicalHistory.diabetes" /></label>
+        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" [(ngModel)]="paperRecord.intake.medicalHistory.thyroid" /></label>
+        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" [(ngModel)]="paperRecord.intake.medicalHistory.liverDisease" /></label>
+        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" [(ngModel)]="paperRecord.intake.medicalHistory.respiratoryDisease" /></label>
+        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" [(ngModel)]="paperRecord.intake.medicalHistory.kidneyDisease" /></label>
+        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" [(ngModel)]="paperRecord.intake.medicalHistory.hepatitis" /></label>
+        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" [(ngModel)]="paperRecord.intake.medicalHistory.malignancy" /></label>
+        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" [(ngModel)]="paperRecord.intake.medicalHistory.infectiousDisease" /></label>
+        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" [(ngModel)]="paperRecord.intake.medicalHistory.digestiveDisease" /></label>
+        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" [(ngModel)]="paperRecord.intake.medicalHistory.allergy" /></label>
+        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" [(ngModel)]="paperRecord.intake.medicalHistory.rheumatism" /></label>
+        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" [(ngModel)]="paperRecord.intake.medicalHistory.epilepsy" /></label>
       </div>
 
       <div class="intake-questions">
         <div class="intake-question">
           <label for="reservationPatientMedication">داروی خاصی مصرف می‌کنید؟ (نام دارو و مقدار مصرف)</label>
-          <input id="reservationPatientMedication" name="reservationPatientMedication" />
+          <input id="reservationPatientMedication" name="reservationPatientMedication" / [(ngModel)]="paperRecord.intake.medicalHistory.currentMedications">
         </div>
         <div class="intake-question">
           <label for="reservationPatientHospital">تاکنون در بیمارستان بستری شده‌اید؟ (علت و زمان)</label>
-          <input id="reservationPatientHospital" name="reservationPatientHospital" />
+          <input id="reservationPatientHospital" name="reservationPatientHospital" / [(ngModel)]="paperRecord.intake.medicalHistory.hospitalizationHistory">
         </div>
         <div class="intake-question">
           <label for="reservationPatientAllergy">به دارویی حساسیت دارید؟ (نام دارو)</label>
-          <input id="reservationPatientAllergy" name="reservationPatientAllergy" />
+          <input id="reservationPatientAllergy" name="reservationPatientAllergy" / [(ngModel)]="paperRecord.intake.medicalHistory.drugAllergies">
         </div>
         <div class="intake-question">
           <label for="reservationPatientPregnancy">باردار یا در دوران شیردهی هستید؟ (ماه بارداری)</label>
-          <input id="reservationPatientPregnancy" name="reservationPatientPregnancy" />
+          <input id="reservationPatientPregnancy" name="reservationPatientPregnancy" / [(ngModel)]="paperRecord.intake.medicalHistory.pregnancyOrBreastfeeding">
         </div>
         <div class="intake-question intake-question-wide">
           <label for="reservationDescription">موردی هست که در طی درمان می‌بایست مد نظر قرار گیرد؟</label>
@@ -204,27 +204,27 @@
 
         <div class="intake-field">
           <label for="newPatientMarital">وضعیت تأهل:</label>
-          <select id="newPatientMarital" name="newPatientMarital">
+          <select id="newPatientMarital" name="newPatientMarital" [(ngModel)]="paperRecord.intake.maritalStatus">
             <option value=""></option><option>مجرد</option><option>متأهل</option><option>سایر</option>
           </select>
         </div>
 
         <div class="intake-field">
           <label for="newPatientBirthDate">تاریخ تولد:</label>
-          <input id="newPatientBirthDate" name="newPatientBirthDate" placeholder="____ / ____ / ______" inputmode="numeric" />
+          <app-base-persian-date-picker label="تاریخ تولد (شمسی)" [value]="paperBirthDate" (valueChange)="onPaperBirthDateChange($event)" />
         </div>
         <div class="intake-field">
           <label for="newPatientHomeAddress">آدرس منزل:</label>
-          <input id="newPatientHomeAddress" name="newPatientHomeAddress" />
+          <input id="newPatientHomeAddress" name="newPatientHomeAddress" / [(ngModel)]="paperRecord.intake.homeAddress">
         </div>
 
         <div class="intake-field">
           <label for="newPatientEducation">میزان تحصیلات:</label>
-          <input id="newPatientEducation" name="newPatientEducation" />
+          <input id="newPatientEducation" name="newPatientEducation" / [(ngModel)]="paperRecord.intake.educationLevel">
         </div>
         <div class="intake-field">
           <label for="newPatientWorkAddress">آدرس محل کار:</label>
-          <input id="newPatientWorkAddress" name="newPatientWorkAddress" />
+          <input id="newPatientWorkAddress" name="newPatientWorkAddress" / [(ngModel)]="paperRecord.intake.workAddress">
         </div>
 
         <div class="intake-field">
@@ -235,12 +235,12 @@
         </div>
         <div class="intake-field">
           <label for="newPatientReferral">چطور با کلینیک آشنا شدید؟</label>
-          <input id="newPatientReferral" name="newPatientReferral" />
+          <input id="newPatientReferral" name="newPatientReferral" / [(ngModel)]="paperRecord.intake.referralSource">
         </div>
 
         <div class="intake-field">
           <label for="newPatientHomePhone">تلفن منزل:</label>
-          <input id="newPatientHomePhone" name="newPatientHomePhone" dir="ltr" inputmode="tel" />
+          <input id="newPatientHomePhone" name="newPatientHomePhone" dir="ltr" inputmode="tel" / [(ngModel)]="paperRecord.intake.homePhone">
         </div>
         <div class="intake-field intake-empty-cell"></div>
 
@@ -260,39 +260,39 @@
       <h3>اگر سابقه ابتلا به هر یک از موارد زیر را دارید، کادر روبه‌روی آن را علامت بزنید</h3>
 
       <div class="intake-diseases">
-        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" /></label>
-        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" /></label>
-        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" /></label>
-        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" /></label>
-        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" /></label>
-        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" /></label>
-        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" /></label>
-        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" /></label>
-        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" /></label>
-        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" /></label>
-        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" /></label>
-        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" /></label>
-        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" /></label>
-        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" /></label>
-        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" /></label>
+        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" [(ngModel)]="paperRecord.intake.medicalHistory.heartDisease" /></label>
+        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" [(ngModel)]="paperRecord.intake.medicalHistory.bloodPressure" /></label>
+        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" [(ngModel)]="paperRecord.intake.medicalHistory.bleeding" /></label>
+        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" [(ngModel)]="paperRecord.intake.medicalHistory.diabetes" /></label>
+        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" [(ngModel)]="paperRecord.intake.medicalHistory.thyroid" /></label>
+        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" [(ngModel)]="paperRecord.intake.medicalHistory.liverDisease" /></label>
+        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" [(ngModel)]="paperRecord.intake.medicalHistory.respiratoryDisease" /></label>
+        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" [(ngModel)]="paperRecord.intake.medicalHistory.kidneyDisease" /></label>
+        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" [(ngModel)]="paperRecord.intake.medicalHistory.hepatitis" /></label>
+        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" [(ngModel)]="paperRecord.intake.medicalHistory.malignancy" /></label>
+        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" [(ngModel)]="paperRecord.intake.medicalHistory.infectiousDisease" /></label>
+        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" [(ngModel)]="paperRecord.intake.medicalHistory.digestiveDisease" /></label>
+        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" [(ngModel)]="paperRecord.intake.medicalHistory.allergy" /></label>
+        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" [(ngModel)]="paperRecord.intake.medicalHistory.rheumatism" /></label>
+        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" [(ngModel)]="paperRecord.intake.medicalHistory.epilepsy" /></label>
       </div>
 
       <div class="intake-questions">
         <div class="intake-question">
           <label for="newPatientMedication">داروی خاصی مصرف می‌کنید؟ (نام دارو و مقدار مصرف)</label>
-          <input id="newPatientMedication" name="newPatientMedication" />
+          <input id="newPatientMedication" name="newPatientMedication" / [(ngModel)]="paperRecord.intake.medicalHistory.currentMedications">
         </div>
         <div class="intake-question">
           <label for="newPatientHospital">تاکنون در بیمارستان بستری شده‌اید؟ (علت و زمان)</label>
-          <input id="newPatientHospital" name="newPatientHospital" />
+          <input id="newPatientHospital" name="newPatientHospital" / [(ngModel)]="paperRecord.intake.medicalHistory.hospitalizationHistory">
         </div>
         <div class="intake-question">
           <label for="newPatientAllergy">به دارویی حساسیت دارید؟ (نام دارو)</label>
-          <input id="newPatientAllergy" name="newPatientAllergy" />
+          <input id="newPatientAllergy" name="newPatientAllergy" / [(ngModel)]="paperRecord.intake.medicalHistory.drugAllergies">
         </div>
         <div class="intake-question">
           <label for="newPatientPregnancy">باردار یا در دوران شیردهی هستید؟ (ماه بارداری)</label>
-          <input id="newPatientPregnancy" name="newPatientPregnancy" />
+          <input id="newPatientPregnancy" name="newPatientPregnancy" / [(ngModel)]="paperRecord.intake.medicalHistory.pregnancyOrBreastfeeding">
         </div>
         <div class="intake-question intake-question-wide">
           <label for="createDescription">موردی هست که در طی درمان می‌بایست مد نظر قرار گیرد؟</label>
@@ -330,27 +330,27 @@
 
         <div class="intake-field">
           <label for="editPatientMarital">وضعیت تأهل:</label>
-          <select id="editPatientMarital" name="editPatientMarital">
+          <select id="editPatientMarital" name="editPatientMarital" [(ngModel)]="paperRecord.intake.maritalStatus">
             <option value=""></option><option>مجرد</option><option>متأهل</option><option>سایر</option>
           </select>
         </div>
 
         <div class="intake-field">
           <label for="editPatientBirthDate">تاریخ تولد:</label>
-          <input id="editPatientBirthDate" name="editPatientBirthDate" placeholder="____ / ____ / ______" inputmode="numeric" />
+          <app-base-persian-date-picker label="تاریخ تولد (شمسی)" [value]="paperBirthDate" (valueChange)="onPaperBirthDateChange($event)" />
         </div>
         <div class="intake-field">
           <label for="editPatientHomeAddress">آدرس منزل:</label>
-          <input id="editPatientHomeAddress" name="editPatientHomeAddress" />
+          <input id="editPatientHomeAddress" name="editPatientHomeAddress" / [(ngModel)]="paperRecord.intake.homeAddress">
         </div>
 
         <div class="intake-field">
           <label for="editPatientEducation">میزان تحصیلات:</label>
-          <input id="editPatientEducation" name="editPatientEducation" />
+          <input id="editPatientEducation" name="editPatientEducation" / [(ngModel)]="paperRecord.intake.educationLevel">
         </div>
         <div class="intake-field">
           <label for="editPatientWorkAddress">آدرس محل کار:</label>
-          <input id="editPatientWorkAddress" name="editPatientWorkAddress" />
+          <input id="editPatientWorkAddress" name="editPatientWorkAddress" / [(ngModel)]="paperRecord.intake.workAddress">
         </div>
 
         <div class="intake-field">
@@ -361,12 +361,12 @@
         </div>
         <div class="intake-field">
           <label for="editPatientReferral">چطور با کلینیک آشنا شدید؟</label>
-          <input id="editPatientReferral" name="editPatientReferral" />
+          <input id="editPatientReferral" name="editPatientReferral" / [(ngModel)]="paperRecord.intake.referralSource">
         </div>
 
         <div class="intake-field">
           <label for="editPatientHomePhone">تلفن منزل:</label>
-          <input id="editPatientHomePhone" name="editPatientHomePhone" dir="ltr" inputmode="tel" />
+          <input id="editPatientHomePhone" name="editPatientHomePhone" dir="ltr" inputmode="tel" / [(ngModel)]="paperRecord.intake.homePhone">
         </div>
         <div class="intake-field intake-empty-cell"></div>
 
@@ -387,39 +387,39 @@
       <h3>اگر سابقه ابتلا به هر یک از موارد زیر را دارید، کادر روبه‌روی آن را علامت بزنید</h3>
 
       <div class="intake-diseases">
-        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" /></label>
-        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" /></label>
-        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" /></label>
-        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" /></label>
-        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" /></label>
-        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" /></label>
-        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" /></label>
-        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" /></label>
-        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" /></label>
-        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" /></label>
-        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" /></label>
-        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" /></label>
-        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" /></label>
-        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" /></label>
-        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" /></label>
+        <label class="intake-disease">ناراحتی قلبی <input type="checkbox" name="medicalHeart" [(ngModel)]="paperRecord.intake.medicalHistory.heartDisease" /></label>
+        <label class="intake-disease">فشار خون <input type="checkbox" name="medicalBloodPressure" [(ngModel)]="paperRecord.intake.medicalHistory.bloodPressure" /></label>
+        <label class="intake-disease">خونریزی <input type="checkbox" name="medicalBleeding" [(ngModel)]="paperRecord.intake.medicalHistory.bleeding" /></label>
+        <label class="intake-disease">دیابت <input type="checkbox" name="medicalDiabetes" [(ngModel)]="paperRecord.intake.medicalHistory.diabetes" /></label>
+        <label class="intake-disease">تیروئید <input type="checkbox" name="medicalThyroid" [(ngModel)]="paperRecord.intake.medicalHistory.thyroid" /></label>
+        <label class="intake-disease">بیماری کبدی <input type="checkbox" name="medicalLiver" [(ngModel)]="paperRecord.intake.medicalHistory.liverDisease" /></label>
+        <label class="intake-disease">بیماری تنفسی <input type="checkbox" name="medicalRespiratory" [(ngModel)]="paperRecord.intake.medicalHistory.respiratoryDisease" /></label>
+        <label class="intake-disease">بیماری کلیوی <input type="checkbox" name="medicalKidney" [(ngModel)]="paperRecord.intake.medicalHistory.kidneyDisease" /></label>
+        <label class="intake-disease">هپاتیت <input type="checkbox" name="medicalHepatitis" [(ngModel)]="paperRecord.intake.medicalHistory.hepatitis" /></label>
+        <label class="intake-disease">بدخیمی <input type="checkbox" name="medicalMalignancy" [(ngModel)]="paperRecord.intake.medicalHistory.malignancy" /></label>
+        <label class="intake-disease">بیماری عفونی <input type="checkbox" name="medicalInfectious" [(ngModel)]="paperRecord.intake.medicalHistory.infectiousDisease" /></label>
+        <label class="intake-disease">بیماری گوارشی <input type="checkbox" name="medicalDigestive" [(ngModel)]="paperRecord.intake.medicalHistory.digestiveDisease" /></label>
+        <label class="intake-disease">حساسیت <input type="checkbox" name="medicalAllergy" [(ngModel)]="paperRecord.intake.medicalHistory.allergy" /></label>
+        <label class="intake-disease">روماتیسم <input type="checkbox" name="medicalRheumatism" [(ngModel)]="paperRecord.intake.medicalHistory.rheumatism" /></label>
+        <label class="intake-disease">صرع <input type="checkbox" name="medicalEpilepsy" [(ngModel)]="paperRecord.intake.medicalHistory.epilepsy" /></label>
       </div>
 
       <div class="intake-questions">
         <div class="intake-question">
           <label for="editPatientMedication">داروی خاصی مصرف می‌کنید؟ (نام دارو و مقدار مصرف)</label>
-          <input id="editPatientMedication" name="editPatientMedication" />
+          <input id="editPatientMedication" name="editPatientMedication" / [(ngModel)]="paperRecord.intake.medicalHistory.currentMedications">
         </div>
         <div class="intake-question">
           <label for="editPatientHospital">تاکنون در بیمارستان بستری شده‌اید؟ (علت و زمان)</label>
-          <input id="editPatientHospital" name="editPatientHospital" />
+          <input id="editPatientHospital" name="editPatientHospital" / [(ngModel)]="paperRecord.intake.medicalHistory.hospitalizationHistory">
         </div>
         <div class="intake-question">
           <label for="editPatientAllergy">به دارویی حساسیت دارید؟ (نام دارو)</label>
-          <input id="editPatientAllergy" name="editPatientAllergy" />
+          <input id="editPatientAllergy" name="editPatientAllergy" / [(ngModel)]="paperRecord.intake.medicalHistory.drugAllergies">
         </div>
         <div class="intake-question">
           <label for="editPatientPregnancy">باردار یا در دوران شیردهی هستید؟ (ماه بارداری)</label>
-          <input id="editPatientPregnancy" name="editPatientPregnancy" />
+          <input id="editPatientPregnancy" name="editPatientPregnancy" / [(ngModel)]="paperRecord.intake.medicalHistory.pregnancyOrBreastfeeding">
         </div>
         <div class="intake-question intake-question-wide">
           <label for="editDescription">موردی هست که در طی درمان می‌بایست مد نظر قرار گیرد؟</label>
