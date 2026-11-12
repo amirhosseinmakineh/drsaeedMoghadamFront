@@ -1,3 +1,4 @@
+import { PersianDatePickerComponent } from "../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
 import { PatientPaperRecord, PatientPaperMedicalHistory } from "./patient-paper-intake.models";
 import { CommonModule, Location } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
@@ -25,7 +26,7 @@ import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/
     BaseFilterBarComponent, BaseLoadingComponent, BaseModalComponent, BasePageHeaderComponent,
     BasePageShellComponent, BaseSearchFilterComponent, BaseSelectFilterComponent,
     BaseTablePaginationComponent, SecretaryAccountShellComponent, PatientFinanceDetailsComponent,
-    SecretaryDentalChartComponent],
+    SecretaryDentalChartComponent, PersianDatePickerComponent],
   templateUrl: "./patient-files-page.component.html",
   styleUrl: "./patient-files-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,7 @@ export class PatientFilesPageComponent implements OnInit {
   paperLoading = false;
   paperSaving = false;
   paperRecord: PatientPaperRecord = this.emptyPaperRecord();
+  paperBirthDate: Date | null = null;
   readonly medicalConditions: { key: keyof PatientPaperMedicalHistory; label: string }[] = [
     { key: "heartDisease", label: "ناراحتی قلبی" },
     { key: "bloodPressure", label: "فشار خون" },
@@ -111,19 +113,39 @@ export class PatientFilesPageComponent implements OnInit {
   openPaperRecord(file: PatientFile): void {
     this.paperFile = file;
     this.paperRecord = this.emptyPaperRecord();
+    this.paperBirthDate = null;
     this.paperLoading = true;
     this.api.getPaperRecord(file.id).pipe(finalize(() => {
       this.paperLoading = false;
       this.cdr.markForCheck();
     })).subscribe({
-      next: record => this.paperRecord = {
+      next: record => {
+        this.paperBirthDate = this.parseDateOnly(record.intake?.birthDate);
+        this.paperRecord = {
         ...record,
         intake: { ...record.intake, medicalHistory: record.intake?.medicalHistory ?? {} },
         treatments: record.treatments ?? [],
         dentalChart: record.dentalChart ?? {},
+      };
       },
       error: error => this.toast.error(this.errorMessage(error, "دریافت فرم پرونده انجام نشد.")),
     });
+  }
+
+  onPaperBirthDateChange(value: Date | null): void {
+    this.paperBirthDate = value;
+    this.paperRecord.intake.birthDate = value
+      ? `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}-${String(value.getUTCDate()).padStart(2, "0")}`
+      : null;
+  }
+
+  private parseDateOnly(value: string | null | undefined): Date | null {
+    if (!value || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+      return null;
+    }
+
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
   setMedicalCondition(key: keyof PatientPaperMedicalHistory, value: string): void {
