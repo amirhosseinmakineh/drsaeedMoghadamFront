@@ -462,37 +462,67 @@
 
 <ng-template #paperSecondPage>
   <section class="paper-second-page patient-intake-sheet" dir="rtl">
-    <h2>صفحه دوم — سوابق درمان و چارت دندان</h2>
-    <label class="paper-dental-notes">
-      یادداشت دندانپزشک
-      <textarea name="paperDentalNotes" rows="3" [(ngModel)]="paperRecord.intake.dentalNotes"></textarea>
-    </label>
-        <h3>سوابق درمان و پرداخت</h3>
-        <p>این جدول، ثبت سوابق فرم کاغذی است و جایگزین حسابداری فعلی کلینیک نیست.</p>
-        <div class="table-wrap">
-          <table><thead><tr><th>تاریخ</th><th>توضیحات</th><th>ادامه کار</th><th>هزینه</th><th>پرداختی</th><th>مانده</th><th>دندانپزشک</th><th></th></tr></thead>
-          <tbody>
-            @for (t of paperRecord.treatments; track $index; let i = $index) {
-              <tr>
-                <td><app-base-persian-date-picker label="تاریخ درمان" [value]="parseTreatmentDate(t.treatmentDate)" (valueChange)="onTreatmentDateChange(t, $event)" /></td>
-                <td><input [name]="'desc'+i" [(ngModel)]="t.description" /></td>
-                <td><input type="checkbox" [name]="'follow'+i" [(ngModel)]="t.hasFollowUp" /></td>
-                <td><input type="number" min="0" [name]="'cost'+i" [(ngModel)]="t.cost" /></td>
-                <td><input type="number" min="0" [name]="'paid'+i" [(ngModel)]="t.paidAmount" /></td>
-                <td>{{ t.cost - t.paidAmount }}</td>
-                <td><input [name]="'dentist'+i" [(ngModel)]="t.dentistName" /></td>
-                <td><button type="button" (click)="paperRecord.treatments.splice(i, 1)">حذف ردیف</button></td>
-              </tr>
-            }
-          </tbody></table>
-        </div>
-        <button type="button" (click)="addPaperTreatment()">افزودن ردیف درمان</button>
-        <h3>رضایت‌نامه</h3>
-        <label><input type="checkbox" name="paperConsent" [(ngModel)]="paperRecord.intake.consentAccepted" /> رضایت بیمار ثبت شده است</label>
+    <header class="paper-page-heading">
+      <div class="paper-page-heading__icon" aria-hidden="true">🦷</div>
+      <div>
+        <span class="paper-eyebrow">فرم تکمیلی پرونده بیمار · مرحله ۲ از ۲</span>
+        <h2>سوابق درمان و چارت دندان</h2>
+        <p>اطلاعات درمان، پرداخت و وضعیت دندان‌ها را در بخش‌های زیر ثبت کنید.</p>
+      </div>
+    </header>
 
-    <h3>چارت دندان و خدمات انتخاب‌شده</h3>
-    <app-secretary-dental-chart
-      [value]="$any(paperRecord.dentalChart)"
-      (valueChange)="onDentalChartChange($event)" />
+    <section class="paper-panel" aria-labelledby="paper-notes-title">
+      <div class="paper-panel__heading"><div><span class="paper-section-index">۰۱</span><h3 id="paper-notes-title">یادداشت دندانپزشک</h3></div></div>
+      <label class="paper-dental-notes">
+        <span>شرح معاینه و توصیه‌های درمانی</span>
+        <textarea name="paperDentalNotes" rows="4" placeholder="یادداشت‌ها، توصیه‌ها و نکات مهم درمان را اینجا وارد کنید…" [(ngModel)]="paperRecord.intake.dentalNotes"></textarea>
+      </label>
+    </section>
+
+    <section class="paper-panel" aria-labelledby="paper-treatments-title">
+      <div class="paper-panel__heading">
+        <div><span class="paper-section-index">۰۲</span><h3 id="paper-treatments-title">سوابق درمان و پرداخت</h3></div>
+        <button class="paper-add-button" type="button" (click)="addPaperTreatment()">+ افزودن درمان</button>
+      </div>
+      <p class="paper-panel__hint">این بخش صرفاً برای ثبت سوابق فرم کاغذی است و جایگزین حسابداری کلینیک نیست.</p>
+      @if (!paperRecord.treatments.length) {
+        <div class="paper-empty-state">هنوز درمانی ثبت نشده است. برای شروع، «افزودن درمان» را انتخاب کنید.</div>
+      }
+      <div class="paper-treatment-list">
+        @for (t of paperRecord.treatments; track $index; let i = $index) {
+          <article class="paper-treatment-card">
+            <div class="paper-treatment-card__header">
+              <strong>درمان شماره {{ i + 1 }}</strong>
+              <button class="paper-remove-button" type="button" (click)="paperRecord.treatments.splice(i, 1)" [attr.aria-label]="'حذف درمان شماره ' + (i + 1)">حذف درمان</button>
+            </div>
+            <div class="paper-treatment-fields">
+              <div class="paper-treatment-field paper-treatment-date">
+                <span>تاریخ درمان</span>
+                <app-base-persian-date-picker label="تاریخ درمان" [value]="parseTreatmentDate(t.treatmentDate)" (valueChange)="onTreatmentDateChange(t, $event)" />
+              </div>
+              <label class="paper-treatment-field paper-treatment-description"><span>شرح خدمات</span><input [name]="'desc'+i" placeholder="نوع درمان و توضیحات" [(ngModel)]="t.description" /></label>
+              <label class="paper-treatment-field"><span>هزینه (ریال)</span><input type="number" min="0" [name]="'cost'+i" [(ngModel)]="t.cost" /></label>
+              <label class="paper-treatment-field"><span>پرداختی (ریال)</span><input type="number" min="0" [name]="'paid'+i" [(ngModel)]="t.paidAmount" /></label>
+              <div class="paper-treatment-field paper-balance"><span>مانده (ریال)</span><strong>{{ t.cost - t.paidAmount | number }}</strong></div>
+              <label class="paper-treatment-field"><span>نام دندانپزشک</span><input [name]="'dentist'+i" placeholder="نام دندانپزشک" [(ngModel)]="t.dentistName" /></label>
+              <label class="paper-followup"><input type="checkbox" [name]="'follow'+i" [(ngModel)]="t.hasFollowUp" /><span>نیاز به ادامه درمان دارد</span></label>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="paper-panel" aria-labelledby="paper-chart-title">
+      <div class="paper-panel__heading"><div><span class="paper-section-index">۰۳</span><h3 id="paper-chart-title">چارت دندان و خدمات انتخاب‌شده</h3></div></div>
+      <p class="paper-panel__hint">دندان‌ها و خدمات انجام‌شده یا موردنیاز را از چارت انتخاب کنید.</p>
+      <div class="paper-chart-container">
+        <app-secretary-dental-chart [value]="$any(paperRecord.dentalChart)" (valueChange)="onDentalChartChange($event)" />
+      </div>
+    </section>
+
+    <section class="paper-panel paper-consent-panel" aria-labelledby="paper-consent-title">
+      <div class="paper-panel__heading"><div><span class="paper-section-index">۰۴</span><h3 id="paper-consent-title">رضایت بیمار</h3></div></div>
+      <label class="paper-consent-choice"><input type="checkbox" name="paperConsent" [(ngModel)]="paperRecord.intake.consentAccepted" /><span>رضایت بیمار برای ثبت اطلاعات درمان دریافت شده است.</span></label>
+    </section>
   </section>
 </ng-template>
