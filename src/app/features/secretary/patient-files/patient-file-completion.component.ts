@@ -137,6 +137,20 @@ export class PatientFileCompletionComponent implements OnInit {
       })), takeUntilDestroyed(this.destroyRef), finalize(() => this.setBusy(false)),
     ).subscribe({ next: () => this.saved.emit(), error: e => { this.error = this.message(e); this.cdr.markForCheck(); } });
   }
+  confirmFinance(): void {
+    if (this.loading || this.saving || !this.reviewConfirmed) return;
+    this.setBusy(true); this.error = "";
+    this.filesApi.confirmFinance(this.file.id).pipe(
+      takeUntilDestroyed(this.destroyRef), finalize(() => this.setBusy(false)),
+    ).subscribe({ next: () => this.saved.emit(), error: e => { this.error = this.message(e); this.cdr.markForCheck(); } });
+  }
+  confirmProfile(): void {
+    if (this.loading || this.saving || !this.reviewConfirmed) return;
+    this.setBusy(true); this.error = "";
+    this.filesApi.confirmProfile(this.file.id).pipe(
+      takeUntilDestroyed(this.destroyRef), finalize(() => this.setBusy(false)),
+    ).subscribe({ next: () => this.saved.emit(), error: e => { this.error = this.message(e); this.cdr.markForCheck(); } });
+  }
   approve(): void {
     if (this.loading || this.saving || !this.details || !this.reviewConfirmed) return;
     this.setBusy(true); this.error = "";
