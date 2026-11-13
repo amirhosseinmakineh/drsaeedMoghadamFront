@@ -27,6 +27,10 @@ export interface PatientFile {
   patientId?: string | number | null;
   financialPatientId?: string | null;
   consultationCompleted?: boolean;
+  treatmentConfirmedAtUtc?: string | null;
+  financeConfirmedAtUtc?: string | null;
+  profileConfirmedAtUtc?: string | null;
+  workflowStage?: string;
   completionFinancialCaseId?: string | null;
   financeCompleted?: boolean;
   serviceApproved?: boolean;

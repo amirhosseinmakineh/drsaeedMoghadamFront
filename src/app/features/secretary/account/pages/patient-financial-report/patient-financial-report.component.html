@@ -1,0 +1,52 @@
+<app-secretary-account-shell>
+<main class="patient-report" dir="rtl">
+  <header><div><p>حسابداری کلینیک</p><h1>گزارش مالی بیماران</h1><span>گزارش حساب هر بیمار، صورت‌حساب‌ها، پرداخت‌ها، چک‌ها، سفته‌ها و بدهی‌ها</span></div></header>
+  <form class="report-search" (ngSubmit)="searchNow()">
+    <label for="patient-finance-search">جستجوی بیمار</label>
+    <input id="patient-finance-search" type="search" name="search" [(ngModel)]="search" placeholder="نام، نام خانوادگی یا شماره تماس" />
+    <button type="submit" [disabled]="loading">جستجو</button>
+  </form>
+  @if (loading) { <p role="status">در حال دریافت گزارش…</p> }
+  @if (error) { <p role="alert" class="error">{{ error }}</p><button type="button" (click)="load()">تلاش دوباره</button> }
+  <p class="report-note">تعداد پرونده‌های مطابق جستجو: {{ totalCount }} · مقادیر جدول مربوط به حساب هر بیمار هستند؛ مجموع کلینیک از این صفحه محاسبه نمی‌شود.</p>
+  <div class="report-table-wrap">
+    <table>
+      <thead><tr><th>شماره پرونده</th><th>بیمار</th><th>تماس</th><th>مرحله</th><th>کل درمان</th><th>دریافتی</th><th>مانده</th><th>بدهی</th><th>عملیات</th></tr></thead>
+      <tbody>
+        @for (file of files; track file.id) {
+          <tr>
+            <td data-label="شماره پرونده">{{ file.fileNumber }}</td>
+            <td data-label="بیمار"><strong>{{ file.firstName }} {{ file.lastName }}</strong></td>
+            <td data-label="تماس" dir="ltr">{{ file.phoneNumber }}</td>
+            <td data-label="مرحله">{{ stage(file) }}</td>
+            <td data-label="کل درمان">{{ file.finance ? money(file.finance.totalTreatmentAmount) : 'فاقد اطلاعات مالی' }}</td>
+            <td data-label="دریافتی">{{ file.finance ? money(file.finance.totalPaidAmount) : '—' }}</td>
+            <td data-label="مانده">{{ file.finance ? money(file.finance.remainingAmount) : '—' }}</td>
+            <td data-label="بدهی">{{ file.finance ? money(file.finance.totalDebtAmount) : '—' }}</td>
+            <td data-label="عملیات"><button type="button" (click)="open(file)">مشاهده گزارش کامل</button></td>
+          </tr>
+        } @empty { @if (!loading && !error) { <tr><td colspan="9">بیماری یافت نشد.</td></tr> } }
+      </tbody>
+    </table>
+  </div>
+  <nav class="pagination" aria-label="صفحه‌بندی گزارش"><button type="button" [disabled]="loading || page <= 1" (click)="changePage(-1)">قبلی</button><span>صفحه {{ page }} از {{ Math.ceil(totalCount / pageSize) || 1 }}</span><button type="button" [disabled]="loading || page * pageSize >= totalCount" (click)="changePage(1)">بعدی</button></nav>
+  @if (selected; as patient) {
+    <div class="modal-backdrop" (click)="close()">
+      <section class="report-modal" role="dialog" aria-modal="true" aria-labelledby="report-modal-title" (click)="$event.stopPropagation()">
+        <header><div><h2 id="report-modal-title">گزارش مالی {{ patient.firstName }} {{ patient.lastName }}</h2><p>پرونده {{ patient.fileNumber }} · مرحله: {{ stage(patient) }}</p></div><button type="button" (click)="close()" aria-label="بستن گزارش">بستن ×</button></header>
+        <div class="report-modal-body">
+          <div class="report-summary">
+            <div><span>کل درمان</span><strong>{{ money(patient.finance?.totalTreatmentAmount) }}</strong></div>
+            <div><span>پرداخت‌شده</span><strong>{{ money(patient.finance?.totalPaidAmount) }}</strong></div>
+            <div><span>مانده</span><strong>{{ money(patient.finance?.remainingAmount) }}</strong></div>
+            <div><span>بدهی</span><strong>{{ money(patient.finance?.totalDebtAmount) }}</strong></div>
+            <div><span>چک پرداخت‌نشده</span><strong>{{ patient.finance?.unpaidChequesCount ?? 0 }}</strong></div>
+            <div><span>سفته پرداخت‌نشده</span><strong>{{ patient.finance?.unpaidPromissoryNotesCount ?? 0 }}</strong></div>
+          </div>
+          <app-patient-finance-details [finance]="patient.finance" [patientName]="patient.firstName + ' ' + patient.lastName" [loading]="detailLoading" [error]="detailError" (retry)="open(patient)" />
+        </div>
+      </section>
+    </div>
+  }
+</main>
+</app-secretary-account-shell>

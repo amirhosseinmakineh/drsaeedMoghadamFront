@@ -35,9 +35,9 @@
                 <td data-label="توضیحات" class="description-cell">{{ file.description || "—" }}</td>
                 <td data-label="نوع پرونده"><app-base-badge [variant]="file.sourceType === 'Legacy' ? 'warning' : 'success'">{{ sourceLabel(file.sourceType) }}</app-base-badge></td>
                 <td data-label="عملیات" class="patient-actions-cell"><div class="row-actions" role="group" [attr.aria-label]="'عملیات پرونده ' + file.fileNumber"><button class="view-file-action" type="button" (click)="viewingFile = file">مشاهده پرونده</button><button class="finance-action" type="button" (click)="openFinance(file)" title="مشاهده صورت‌حساب‌های بیمار">صورت‌حساب‌ها</button><button class="edit-file-action" type="button" (click)="openEdit(file)">ویرایش</button>
-                  @if (!file.consultationCompleted) { <button class="consultation-pending" type="button" (click)="openEdit(file)">در انتظار مشاوره</button> }
-                  @else if (!file.financeCompleted) { <button class="complete-file-action" type="button" (click)="openCompletion(file)">تکمیل پرونده</button> }
-                  @else if (!file.serviceApproved) { <button class="approve-service-action" type="button" (click)="openCompletion(file)">انجام کار بشود؟</button> }
+                  @if (!file.consultationCompleted) { <button class="consultation-pending" type="button" (click)="openEdit(file)">در انتظار تأیید طرح درمان</button> }
+                  @else if (!file.financeCompleted) { <button class="complete-file-action" type="button" (click)="openCompletion(file)">ثبت مالی پرونده</button> }
+                  @else if (!file.serviceApproved) { <button class="approve-service-action" type="button" (click)="openCompletion(file)">{{ !file.financeConfirmedAtUtc ? 'در انتظار تأیید مالی' : !file.profileConfirmedAtUtc ? 'در انتظار تأیید پروفایل' : 'در انتظار مجوز درمان' }}</button> }
                   @else { <span class="service-approved" role="status">✓ مجاز به انجام خدمات</span> }
                   <button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
               </tr>
@@ -479,7 +479,7 @@
         <p>اطلاعات درمان، پرداخت و وضعیت دندان‌ها را در بخش‌های زیر ثبت کنید.</p>
       </div>
     </header>
-    <label class="consultation-confirmation"><input type="checkbox" name="consultationCompleted" [(ngModel)]="paperRecord.consultationCompleted" /><span><strong>مشاوره انجام شد</strong><small>اطلاعات فرم مشاور را وارد کرده‌ام. تمام فیلدهای این صفحه اختیاری‌اند؛ با ثبت این تأیید، تکمیل مالی پرونده فعال می‌شود.</small></span></label>
+    <label class="consultation-confirmation"><input type="checkbox" name="consultationCompleted" [(ngModel)]="paperRecord.consultationCompleted" /><span><strong>طرح درمان تکمیل و توسط منشی تأیید شد</strong><small>پس از ثبت شرح خدمات، هزینه هر خدمت و رضایت بیمار، این مرحله را تأیید کنید. تنها پس از تأیید و ذخیره، پرونده وارد مرحله مالی می‌شود.</small></span></label>
 
     <section class="paper-panel" aria-labelledby="paper-notes-title">
       <div class="paper-panel__heading"><div><span class="paper-section-index">۰۱</span><h3 id="paper-notes-title">یادداشت دندانپزشک</h3></div></div>

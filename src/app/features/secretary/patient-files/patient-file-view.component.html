@@ -1,5 +1,15 @@
 <div class="file-view" dir="rtl">
   <div class="file-view-summary"><strong>{{ currentFile.firstName }} {{ currentFile.lastName }}</strong><span>شماره پرونده: {{ currentFile.fileNumber }}</span><span>{{ currentFile.phoneNumber }}</span><span>تاریخ تشکیل: {{ date(currentFile.createdAt) }}</span></div>
+  <section class="workflow-overview" aria-label="وضعیت گردش کار پرونده">
+    <h3>مرحله فعلی پرونده: {{ currentFile.serviceApproved ? 'مجاز به انجام درمان' : !currentFile.treatmentConfirmedAtUtc ? 'در انتظار تأیید طرح درمان' : !currentFile.financeCompleted ? 'در انتظار ثبت مالی' : !currentFile.financeConfirmedAtUtc ? 'در انتظار تأیید مالی' : !currentFile.profileConfirmedAtUtc ? 'در انتظار تأیید پروفایل بیمار' : 'در انتظار مجوز انجام درمان' }}</h3>
+    <div class="workflow-grid">
+      <div><strong>۱. تشکیل پرونده</strong><span>ثبت‌شده · {{ date(currentFile.createdAt) }}</span></div>
+      <div><strong>۲. طرح درمان</strong><span>{{ currentFile.treatmentConfirmedAtUtc ? 'تأییدشده · ' + date(currentFile.treatmentConfirmedAtUtc) : 'در انتظار تأیید منشی' }}</span></div>
+      <div><strong>۳. مالی</strong><span>{{ currentFile.financeConfirmedAtUtc ? 'تأییدشده · ' + date(currentFile.financeConfirmedAtUtc) : currentFile.financeCompleted ? 'ثبت‌شده، در انتظار تأیید' : 'ثبت نشده' }}</span></div>
+      <div><strong>۴. پروفایل</strong><span>{{ currentFile.profileConfirmedAtUtc ? 'تأییدشده · ' + date(currentFile.profileConfirmedAtUtc) : 'در انتظار تأیید' }}</span></div>
+      <div><strong>۵. مجوز درمان</strong><span>{{ currentFile.serviceApproved ? 'صادرشده · ' + date(currentFile.serviceApprovedAtUtc) : 'صادر نشده' }}</span></div>
+    </div>
+  </section>
   <nav class="file-view-pages" aria-label="بخش‌های پرونده">
     <button type="button" [class.active]="activePage === 'first'" [attr.aria-pressed]="activePage === 'first'" (click)="activePage = 'first'">صفحه اول · اطلاعات بیمار</button>
     <button type="button" [class.active]="activePage === 'second'" [attr.aria-pressed]="activePage === 'second'" (click)="activePage = 'second'">صفحه دوم · مشاوره و درمان</button>

@@ -147,8 +147,8 @@ export const routes: Routes = [
     path: "dashboard/patient",
     canActivate: [authGuard, roleGuard(["patient"])],
     loadComponent: () =>
-      import("./pages/dashboard/dashboard.component").then(
-        (m) => m.DashboardComponent,
+      import("./features/patient-portal/patient-portal.component").then(
+        (m) => m.PatientPortalComponent,
       ),
     data: { role: "patient" },
   },
