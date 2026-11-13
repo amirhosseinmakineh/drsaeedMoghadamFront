@@ -35,3 +35,12 @@ dd { margin: 6px 0 0; line-height: 1.9; overflow-wrap: anywhere; white-space: pr
 .file-view-summary, .file-view-pages { margin-inline: 16px; }
 .file-view-summary { margin-top: 16px; }
 .file-view > .view-section, .file-view > .view-status, .file-view > .view-error { margin: 0 16px 16px; }
+
+.workflow-overview { margin: 16px; padding: 16px; border: 1px solid #d6e1da; border-radius: 14px; background: #f7faf8; }
+.workflow-overview h3 { margin: 0 0 12px; font-size: 1rem; line-height: 1.8; }
+.workflow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; }
+.workflow-grid > div { display: flex; flex-direction: column; gap: 6px; padding: 12px; background: white; border: 1px solid #e3eae5; border-radius: 10px; overflow-wrap: anywhere; }
+.workflow-grid span { font-size: .85rem; color: #566b60; }
+.file-view { max-width: 100%; min-width: 0; overflow-x: hidden; }
+.file-view .paper-ledger-scroll { max-width: 100%; overflow-x: auto; }
+@media (max-width: 600px) { .workflow-overview { margin: 10px; padding: 12px; } .workflow-grid { grid-template-columns: 1fr; } .file-view-summary { flex-wrap: wrap; overflow-wrap: anywhere; } }
