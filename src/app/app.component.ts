@@ -161,7 +161,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.applyRouteTheme();
   }
 
-  /** Keeps the public website cyan/dark while every authenticated workspace is monochrome. */
+  /** Keeps the public website in its clinic theme while authenticated workspaces stay neutral. */
   private applyRouteTheme(): void {
     if (!this.document.body?.dataset) return;
     this.document.body.dataset["theme"] = this.isDashboardRoute()

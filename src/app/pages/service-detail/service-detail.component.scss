@@ -1,11 +1,11 @@
 .svc {
-  --bg: #06141c;
-  --surface: #0b1f29;
-  --text: #e8f5f3;
-  --muted: rgba(232, 245, 243, 0.7);
-  --cyan: #2dd4bf;
-  --cyan-soft: #5eead4;
-  --line: rgba(45, 212, 191, 0.14);
+  --bg: #f5f1eb;
+  --surface: #fffdf9;
+  --text: #1e2b29;
+  --muted: #6f7873;
+  --cyan: #496759;
+  --cyan-soft: #6f8a7b;
+  --line: rgba(30, 43, 41, 0.12);
 
   background: var(--bg);
   color: var(--text);
@@ -38,7 +38,7 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  color: #fff;
+  color: var(--text);
 }
 
 .svc-hero__subtitle {
@@ -92,7 +92,7 @@
 
 .svc-btn--primary {
   background: var(--cyan);
-  color: #042f2e;
+  color: #fffdf9;
 }
 .svc-btn--primary:hover {
   background: var(--cyan-soft);
@@ -105,7 +105,7 @@
   background: transparent;
 }
 .svc-btn--ghost:hover {
-  border-color: rgba(45, 212, 191, 0.4);
+  border-color: rgba(155, 118, 80, 0.38);
 }
 
 /* Blocks */
@@ -124,7 +124,7 @@
   font-size: clamp(1.55rem, 3vw, 2.2rem);
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--text);
 }
 
 .svc-h2--center {
@@ -160,14 +160,14 @@
   height: 42px;
   margin-bottom: 0.9rem;
   border-radius: 14px;
-  background: rgba(45, 212, 191, 0.12);
+  background: rgba(155, 118, 80, 0.12);
   color: var(--cyan);
 }
 
 .svc-meta__card h3 {
   margin: 0 0 0.45rem;
   font-size: 1rem;
-  color: #fff;
+  color: var(--text);
 }
 
 .svc-meta__card p {
@@ -224,7 +224,7 @@
 
 .svc-aside h3 {
   margin: 0 0 0.65rem;
-  color: #fff;
+  color: var(--text);
   font-size: 1.15rem;
 }
 
@@ -280,7 +280,7 @@
   height: 40px;
   border-radius: 12px;
   background: var(--cyan);
-  color: #042f2e;
+  color: #fffdf9;
   font-weight: 700;
   font-size: 0.9rem;
 }
@@ -288,7 +288,7 @@
 .svc-steps__item h3 {
   margin: 0 0 0.35rem;
   font-size: 1.05rem;
-  color: #fff;
+  color: var(--text);
 }
 
 .svc-steps__item p {
@@ -345,7 +345,7 @@
   list-style: none;
   padding: 1.05rem 1.2rem;
   font-weight: 650;
-  color: #fff;
+  color: var(--text);
 }
 
 .svc-faq__item summary::-webkit-details-marker { display: none; }
@@ -378,13 +378,13 @@
 }
 
 .svc-related__card:hover {
-  border-color: rgba(45, 212, 191, 0.35);
+  border-color: rgba(155, 118, 80, 0.35);
   transform: translateY(-3px);
 }
 
 .svc-related__card h3 {
   margin: 0;
-  color: #fff;
+  color: var(--text);
   font-size: 1.05rem;
 }
 

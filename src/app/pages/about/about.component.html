@@ -1,5 +1,8 @@
 <section class="page-section about-hero">
   <div class="section-heading">
+    <span class="page-kicker">
+      {{ language() === "fa" ? "درباره کلینیک دکتر سعید مقدم" : "About Dr. Saeed Moghaddam Clinic" }}
+    </span>
     <h1>
       {{
         language() === "fa"
@@ -18,8 +21,16 @@
       <app-fa-icon name="user"></app-fa-icon>
       {{ language() === "fa" ? "ورود / عضویت" : "Sign in / Join" }}
     </button>
+    <a class="secondary-btn about-hero__contact" routerLink="/contact">
+      {{ language() === "fa" ? "گفت‌وگو درباره لبخندتان" : "Talk about your smile" }}
+      <app-fa-icon name="arrowLeft"></app-fa-icon>
+    </a>
   </div>
   <div class="doctor-card">
+    <div class="doctor-card__media">
+      <img src="/1.png" alt="" loading="lazy" decoding="async" />
+      <span>{{ language() === "fa" ? "سلامت، زیبایی، آرامش" : "Health, beauty, calm" }}</span>
+    </div>
     <span class="icon-bubble"
       ><app-fa-icon name="doctor"></app-fa-icon
     ></span>
@@ -33,6 +44,21 @@
           : "Cosmetic dentistry focused on conservative composite, veneers and bleaching"
       }}
     </p>
+  </div>
+</section>
+
+<section class="finance-strip finance-strip--about" aria-labelledby="about-finance-title">
+  <div class="finance-strip__inner">
+    <span class="finance-strip__icon" aria-hidden="true"><app-fa-icon name="shield"></app-fa-icon></span>
+    <div>
+      <span class="finance-strip__eyebrow">{{ language() === "fa" ? "برای شروع راحت‌تر" : "A more comfortable start" }}</span>
+      <h2 id="about-finance-title">{{ language() === "fa" ? "دریافت خدمات اقساطی بدون ضامن و بدون پیش‌پرداخت و فقط با چک" : "Installment dental services with no guarantor or down payment — only by cheque" }}</h2>
+      <p>{{ language() === "fa" ? "شرایط پرداخت در مسیر مشاوره شفاف و متناسب با طرح درمان توضیح داده می‌شود." : "Payment terms are explained clearly alongside your treatment plan." }}</p>
+    </div>
+    <a routerLink="/contact" class="finance-strip__cta">
+      {{ language() === "fa" ? "ثبت درخواست" : "Get started" }}
+      <app-fa-icon name="arrowLeft"></app-fa-icon>
+    </a>
   </div>
 </section>
 

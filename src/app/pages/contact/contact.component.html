@@ -1,5 +1,8 @@
 <section class="page-section contact-hero">
   <div class="section-heading">
+    <span class="page-kicker">
+      {{ language() === "fa" ? "شروع گفت‌وگوی شما با کلینیک" : "Start a conversation with the clinic" }}
+    </span>
     <h1>
       {{
         language() === "fa"
@@ -24,6 +27,28 @@
       <app-fa-icon name="user"></app-fa-icon
       >{{ language() === "fa" ? "ورود / عضویت" : "Sign in / Join" }}
     </button>
+  </div>
+  <div class="contact-hero__promise">
+    <span class="contact-hero__promise-icon"><app-fa-icon name="shield"></app-fa-icon></span>
+    <div>
+      <strong>{{ language() === "fa" ? "دریافت خدمات اقساطی بدون ضامن و بدون پیش‌پرداخت و فقط با چک" : "Installment dental services with no guarantor or down payment — only by cheque" }}</strong>
+      <span>{{ language() === "fa" ? "برای بررسی شرایط، فرم درخواست تماس را تکمیل کنید." : "Complete the call request form to review the terms." }}</span>
+    </div>
+  </div>
+</section>
+
+<section class="finance-strip finance-strip--contact" aria-labelledby="contact-finance-title">
+  <div class="finance-strip__inner">
+    <span class="finance-strip__icon" aria-hidden="true"><app-fa-icon name="phone"></app-fa-icon></span>
+    <div>
+      <span class="finance-strip__eyebrow">{{ language() === "fa" ? "یک قدم تا لبخند جدید" : "One step toward your new smile" }}</span>
+      <h2 id="contact-finance-title">{{ language() === "fa" ? "لمینت و خدمات زیبایی را با شرایط پرداخت منعطف بررسی کنید" : "Explore veneers and cosmetic care with flexible payment terms" }}</h2>
+      <p>{{ language() === "fa" ? "مشاور کلینیک درباره انتخاب درمان و شرایط پرداخت با شما صحبت می‌کند." : "A clinic consultant will discuss treatment options and payment terms with you." }}</p>
+    </div>
+    <a class="finance-strip__cta" href="#contact-request">
+      {{ language() === "fa" ? "تکمیل فرم" : "Complete the form" }}
+      <app-fa-icon name="arrowLeft"></app-fa-icon>
+    </a>
   </div>
 </section>
 

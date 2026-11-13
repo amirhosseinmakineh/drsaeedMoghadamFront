@@ -134,30 +134,26 @@ const PUBLIC_IMAGE_SIZES = {
 
 const PUBLIC_IMAGES = {
   clinic: {
-    src: "/images/1-640.png",
-    srcset:
-      "/images/1-360.png 360w, /images/1-640.png 640w, /images/1-960.png 960w",
+    src: "/1.png",
+    srcset: "/1.png",
     width: 1361,
     height: 1156,
   },
   laminate: {
-    src: "/images/2-640.png",
-    srcset:
-      "/images/2-360.png 360w, /images/2-640.png 640w, /images/2-960.png 960w",
+    src: "/3.png",
+    srcset: "/3.png",
     width: 1310,
     height: 1200,
   },
   composite: {
-    src: "/images/3-640.png",
-    srcset:
-      "/images/3-360.png 360w, /images/3-640.png 640w, /images/3-960.png 960w",
+    src: "/4.png",
+    srcset: "/4.png",
     width: 1310,
     height: 1201,
   },
   whitening: {
-    src: "/images/5-640.png",
-    srcset:
-      "/images/5-360.png 360w, /images/5-640.png 640w, /images/5-960.png 960w",
+    src: "/6.png",
+    srcset: "/6.png",
     width: 1310,
     height: 1201,
   },

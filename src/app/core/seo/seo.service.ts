@@ -41,7 +41,7 @@ export class SeoService {
     const pageTitle = pickText(config.title, language);
     const description = pickText(config.description, language);
     const canonical = this.absolute(config.canonicalPath);
-    const image = this.absolute(config.imagePath ?? "/images/1-960.png");
+    const image = this.absolute(config.imagePath ?? "/1.png");
 
     this.title.setTitle(pageTitle);
     this.meta.updateTag({ name: "description", content: description });

@@ -1,9 +1,12 @@
-<section class="page-section page-hero">
+<section class="page-section page-hero services-page-hero">
   <div class="section-heading">
+    <span class="page-kicker">
+      {{ language() === "fa" ? "مسیرهای تخصصی طراحی لبخند" : "Specialized smile design paths" }}
+    </span>
     <h1>
       {{
         language() === "fa"
-          ? "خدمات زیبایی دندان دکتر سعید مقدم"
+          ? "لمینت، کامپوزیت و زیبایی دندان؛ با انتخابی دقیق و شیک"
           : "Cosmetic dental services by Dr. Saeed Moghaddam"
       }}
     </h1>
@@ -14,6 +17,34 @@
           : "This page presents composite veneers, porcelain veneers and dental bleaching, with indications, steps, aftercare, limits and common questions explained through a health-first approach."
       }}
     </p>
+    <div class="page-hero__actions">
+      <a class="primary-btn" routerLink="/services/laminate">
+        {{ language() === "fa" ? "مشاوره لمینت" : "Veneer consultation" }}
+        <app-fa-icon name="arrowLeft"></app-fa-icon>
+      </a>
+      <a class="secondary-btn" routerLink="/contact">
+        {{ language() === "fa" ? "درخواست تماس" : "Request a call" }}
+      </a>
+    </div>
+  </div>
+  <div class="services-page-hero__visual" aria-hidden="true">
+    <img src="/3.png" alt="" loading="eager" decoding="async" />
+    <span>{{ language() === "fa" ? "لمینت سرامیکی" : "Porcelain veneers" }}</span>
+  </div>
+</section>
+
+<section class="finance-strip finance-strip--compact" aria-labelledby="services-finance-title">
+  <div class="finance-strip__inner">
+    <span class="finance-strip__icon" aria-hidden="true"><app-fa-icon name="shield"></app-fa-icon></span>
+    <div>
+      <span class="finance-strip__eyebrow">{{ language() === "fa" ? "تسهیل مسیر درمان" : "A simpler care path" }}</span>
+      <h2 id="services-finance-title">{{ language() === "fa" ? "دریافت خدمات اقساطی بدون ضامن و بدون پیش‌پرداخت و فقط با چک" : "Installment dental services with no guarantor or down payment — only by cheque" }}</h2>
+      <p>{{ language() === "fa" ? "برای اطلاع از جزئیات، درخواست تماس خود را ثبت کنید." : "Submit a call request to learn the available terms." }}</p>
+    </div>
+    <a routerLink="/contact" class="finance-strip__cta">
+      {{ language() === "fa" ? "مشاوره شرایط" : "Ask about terms" }}
+      <app-fa-icon name="arrowLeft"></app-fa-icon>
+    </a>
   </div>
 </section>
 
@@ -21,18 +52,17 @@
   <div class="service-grid">
     <article
       class="service-card"
+      [class.is-featured]="service.id === 'laminate'"
       *ngFor="let service of services"
       [style.--accent]="service.accent"
     >
+      @if (service.id === "laminate") {
+        <span class="service-card__badge">{{ language() === "fa" ? "تمرکز ویژه کلینیک" : "Clinic focus" }}</span>
+      }
       @switch (service.id) {
         @case ("laminate") {
           <img
-            src="/images/2-640.png"
-            srcset="
-              /images/2-360.png 360w,
-              /images/2-640.png 640w,
-              /images/2-960.png 960w
-            "
+            src="/3.png"
             sizes="(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw"
             width="1310"
             height="1200"
@@ -44,12 +74,7 @@
         }
         @case ("composite") {
           <img
-            src="/images/3-640.png"
-            srcset="
-              /images/3-360.png 360w,
-              /images/3-640.png 640w,
-              /images/3-960.png 960w
-            "
+            src="/4.png"
             sizes="(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw"
             width="1310"
             height="1201"
@@ -61,12 +86,7 @@
         }
         @case ("whitening") {
           <img
-            src="/images/5-640.png"
-            srcset="
-              /images/5-360.png 360w,
-              /images/5-640.png 640w,
-              /images/5-960.png 960w
-            "
+            src="/6.png"
             sizes="(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw"
             width="1310"
             height="1201"
@@ -78,12 +98,7 @@
         }
         @default {
           <img
-            src="/images/1-640.png"
-            srcset="
-              /images/1-360.png 360w,
-              /images/1-640.png 640w,
-              /images/1-960.png 960w
-            "
+            src="/1.png"
             sizes="(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw"
             width="1361"
             height="1156"

@@ -1,46 +1,27 @@
 <section class="hero-cyan">
   <div class="hero-cyan__media">
-    @switch (heroSlides[activeSlide()].id) {
-      @case ("mobile-first") {
-        <img
-          src="/images/image.jpg"
-          srcset="
-            /images/5-360.png 360w,
-            /images/5-640.png 640w,
-            /images/5-960.png 960w
-          "
-          sizes="100vw"
-          width="1310"
-          height="1201"
-          [alt]="pickText(heroSlides[activeSlide()].title, language())"
-          loading="eager"
-          decoding="async"
-          fetchpriority="high"
-        />
-      }
-
-      @default {
-        <img
-        src="/images/image (1).jpg"
-          srcset="
-            /images/image (1).jpg,
-            /images/image (1).jpg,
-            /images/image (1).jpg"
-          sizes="100vw"
-          width="1361"
-          height="1156"
-          [alt]="pickText(heroSlides[activeSlide()].title, language())"
-          loading="eager"
-          decoding="async"
-          fetchpriority="high"
-        />
-      }
-    }
+    <img
+      src="/3.png"
+      width="2048"
+      height="2048"
+      [alt]="language() === 'fa' ? 'لمینت و طراحی لبخند' : 'Veneer smile design'"
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
+    />
     <div class="hero-cyan__overlay"></div>
   </div>
 
   <div class="hero-cyan__content">
     <div class="hero-cyan__text">
+      <span class="hero-cyan__kicker">
+        {{ language() === "fa" ? "دندان‌پزشکی زیبایی با نگاه طبیعی" : "Natural cosmetic dentistry" }}
+      </span>
+
+      <div class="hero-cyan__offer">
+        <app-fa-icon name="shield"></app-fa-icon>
+        {{ language() === "fa" ? "مشاوره شفاف، انتخاب آگاهانه" : "Clear guidance, confident decisions" }}
+      </div>
 
       <h1 class="hero-cyan__title">
         {{
@@ -48,6 +29,7 @@
             ? "لبخندی که لایقش هستید"
             : "The smile you deserve"
         }}
+        <em>{{ language() === "fa" ? "با تمرکز ویژه روی لمینت" : "with a focus on veneers" }}</em>
       </h1>
 
 <p class="hero-cyan__desc">
@@ -58,17 +40,13 @@
   }}
 </p>
       <div class="hero-cyan__actions">
-        <button
-          type="button"
-          class="hero-cyan__btn"
-          (click)="openAuth()"
-        >
+        <a routerLink="/contact" class="hero-cyan__btn">
           {{
             language() === "fa"
-              ? "دریافت مشاوره رایگان"
-              : "Free consultation"
+              ? "دریافت مشاوره لمینت"
+              : "Veneer consultation"
           }}
-        </button>
+        </a>
 
         <a routerLink="/services" class="hero-cyan__link">
           {{
@@ -97,6 +75,29 @@
         <strong>{{ language() === "fa" ? "بلیچینگ" : "Whitening" }}</strong>
       </a>
     </div>
+  </div>
+</section>
+
+<section class="finance-strip" aria-labelledby="finance-strip-title">
+  <div class="finance-strip__inner">
+    <span class="finance-strip__icon" aria-hidden="true">
+      <app-fa-icon name="shield"></app-fa-icon>
+    </span>
+    <div>
+      <span class="finance-strip__eyebrow">
+        {{ language() === "fa" ? "شرایط ویژه پرداخت" : "Flexible payment" }}
+      </span>
+      <h2 id="finance-strip-title">
+        {{ language() === "fa" ? "دریافت خدمات اقساطی بدون ضامن و بدون پیش‌پرداخت و فقط با چک" : "Receive dental services in installments, with no guarantor or down payment — only by cheque" }}
+      </h2>
+      <p>
+        {{ language() === "fa" ? "جزئیات شرایط را در مشاوره اولیه با شما شفاف هماهنگ می‌کنیم." : "We explain the available terms clearly during your initial consultation." }}
+      </p>
+    </div>
+    <a routerLink="/contact" class="finance-strip__cta">
+      {{ language() === "fa" ? "بررسی شرایط" : "Check eligibility" }}
+      <app-fa-icon name="arrowLeft"></app-fa-icon>
+    </a>
   </div>
 </section>
 <section class="doctor-lux" aria-labelledby="doctor-intro-title">
@@ -198,12 +199,7 @@
       <a routerLink="/services/composite" class="services-lux__card">
         <div class="services-lux__image">
           <img
-            src="/images/3-640.png"
-            srcset="
-              /images/3-360.png 360w,
-              /images/3-640.png 640w,
-              /images/3-960.png 960w
-            "
+            src="/4.png"
             sizes="(max-width: 768px) 100vw, 33vw"
             width="1310"
             height="1201"
@@ -228,15 +224,13 @@
       </a>
 
       <!-- Laminate -->
-      <a routerLink="/services/laminate" class="services-lux__card">
+      <a routerLink="/services/laminate" class="services-lux__card services-lux__card--featured">
+        <span class="services-lux__ribbon">
+          {{ language() === "fa" ? "تمرکز ویژه کلینیک" : "Clinic focus" }}
+        </span>
         <div class="services-lux__image">
           <img
-            src="/images/2-640.png"
-            srcset="
-              /images/2-360.png 360w,
-              /images/2-640.png 640w,
-              /images/2-960.png 960w
-            "
+            src="/3.png"
             sizes="(max-width: 768px) 100vw, 33vw"
             width="1310"
             height="1200"
@@ -264,12 +258,7 @@
       <a routerLink="/services/whitening" class="services-lux__card">
         <div class="services-lux__image">
           <img
-            src="/images/5-640.png"
-            srcset="
-              /images/5-360.png 360w,
-              /images/5-640.png 640w,
-              /images/5-960.png 960w
-            "
+            src="/6.png"
             sizes="(max-width: 768px) 100vw, 33vw"
             width="1310"
             height="1201"
@@ -591,11 +580,11 @@
 
 
     <div class="results-lux__footer">
-      <a routerLink="/portfolio" class="results-lux__btn">
+      <a routerLink="/services" class="results-lux__btn">
         {{
           language() === "fa"
-            ? "مشاهده همه نمونه‌کارها"
-            : "View all cases"
+            ? "مشاهده خدمات مرتبط"
+            : "View related services"
         }}
 
         <app-fa-icon name="arrowLeft"></app-fa-icon>
@@ -636,16 +625,12 @@
 
         <div class="testimonials-lux__video">
 
-          <video
-            poster="/images/patient-1-poster.jpg"
-            controls
-            preload="metadata"
-          >
-            <source
-              src="/videos/patient-1.mp4"
-              type="video/mp4"
-            />
-          </video>
+          <img
+            src="/4.png"
+            [alt]="language() === 'fa' ? 'نمونه نتیجه کامپوزیت ونیر' : 'Composite veneer result'"
+            loading="lazy"
+            decoding="async"
+          />
 
           <span class="testimonials-lux__video-label">
             {{
