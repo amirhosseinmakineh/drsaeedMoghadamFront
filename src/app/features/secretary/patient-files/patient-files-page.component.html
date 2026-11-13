@@ -35,9 +35,9 @@
                 <td data-label="توضیحات" class="description-cell">{{ file.description || "—" }}</td>
                 <td data-label="نوع پرونده"><app-base-badge [variant]="file.sourceType === 'Legacy' ? 'warning' : 'success'">{{ sourceLabel(file.sourceType) }}</app-base-badge></td>
                 <td data-label="عملیات" class="patient-actions-cell"><div class="row-actions" role="group" [attr.aria-label]="'عملیات پرونده ' + file.fileNumber"><button class="view-file-action" type="button" (click)="viewingFile = file">مشاهده پرونده</button><button class="finance-action" type="button" (click)="openFinance(file)" title="مشاهده صورت‌حساب‌های بیمار">صورت‌حساب‌ها</button><button class="edit-file-action" type="button" (click)="openEdit(file)">ویرایش</button>
-                  @if (!file.consultationCompleted) { <button class="consultation-pending" type="button" (click)="openEdit(file)">در انتظار مشاوره</button> }
-                  @else if (!file.financeCompleted) { <button class="complete-file-action" type="button" (click)="openCompletion(file)">تکمیل پرونده</button> }
-                  @else if (!file.serviceApproved) { <button class="approve-service-action" type="button" (click)="openCompletion(file)">انجام کار بشود؟</button> }
+                  @if (!file.consultationCompleted) { <button class="consultation-pending" type="button" (click)="openEdit(file)">در انتظار تأیید طرح درمان</button> }
+                  @else if (!file.financeCompleted) { <button class="complete-file-action" type="button" (click)="openCompletion(file)">ثبت مالی پرونده</button> }
+                  @else if (!file.serviceApproved) { <button class="approve-service-action" type="button" (click)="openCompletion(file)">{{ !file.financeConfirmedAtUtc ? 'در انتظار تأیید مالی' : !file.profileConfirmedAtUtc ? 'در انتظار تأیید پروفایل' : 'در انتظار مجوز درمان' }}</button> }
                   @else { <span class="service-approved" role="status">✓ مجاز به انجام خدمات</span> }
                   <button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
               </tr>
