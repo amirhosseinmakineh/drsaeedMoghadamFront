@@ -1,0 +1,37 @@
+<div class="patient-portal" dir="rtl">
+  <header class="portal-header"><div><span class="eyebrow">کلینیک دلبخند · پنل بیمار</span><h1>حساب کاربری من</h1><p>اطلاعات شخصی، وضعیت پرونده، گزارش مالی و اقساط</p></div><button type="button" (click)="refresh()" [disabled]="loading">به‌روزرسانی اطلاعات</button></header>
+  <nav class="portal-tabs" aria-label="بخش‌های پنل بیمار">@for (tab of tabs; track tab.id) { <button type="button" [class.active]="activeTab === tab.id" [attr.aria-current]="activeTab === tab.id ? 'page' : null" (click)="activeTab = tab.id; error = ''; success = ''">{{ tab.label }}</button> }</nav>
+  @if (loading) { <p class="state" role="status">در حال دریافت اطلاعات…</p> }
+  @if (error) { <p class="state error" role="alert">{{ error }}</p> }
+  @if (success) { <p class="state success" role="status">{{ success }}</p> }
+  @if (data; as d) {
+    @if (activeTab === 'overview') {
+      <section class="welcome"><h2>سلام {{ d.profile.firstName }} {{ d.profile.lastName }}</h2><p>خلاصه آخرین وضعیت پرونده‌های درمان و حساب مالی شما</p></section>
+      <section class="stat-grid" aria-label="خلاصه حساب"><article><span>تعداد پرونده‌های مالی</span><strong>{{ d.summary.caseCount }}</strong></article><article><span>کل هزینه درمان</span><strong>{{ money(d.summary.totalTreatment) }}</strong></article><article><span>پرداخت‌های ثبت‌شده</span><strong>{{ money(d.summary.totalPaid) }}</strong></article><article><span>مانده حساب</span><strong>{{ money(d.summary.totalRemaining) }}</strong></article></section>
+      <section class="panel"><h2>وضعیت پرونده‌ها</h2>@for (c of d.cases; track c.id) { <div class="case-line"><div><strong>پرونده {{ c.fileNumber || 'مالی' }}</strong><span>{{ stage(c.stage) }}</span></div><button type="button" (click)="selectedCase = c; activeTab = 'finance'">مشاهده جزئیات</button></div> } @empty { <p>هنوز پرونده مالی ثبت نشده است.</p> }</section>
+    }
+    @if (activeTab === 'profile') {
+      <section class="panel"><h2>اطلاعات شخصی</h2><div class="info-grid"><div><span>شماره موبایل</span><strong dir="ltr">{{ d.profile.phoneNumber }}</strong></div><div><span>کد ملی</span><strong>{{ d.profile.nationalCode || 'ثبت نشده' }}</strong></div><div><span>تاریخ تولد</span><strong>{{ date(d.profile.birthDate) }}</strong></div></div><p class="hint">برای تغییر شماره موبایل یا کد ملی، به پذیرش کلینیک مراجعه کنید تا مالکیت اطلاعات بررسی شود.</p><form class="edit-form" (ngSubmit)="saveProfile()"><label>نام<input name="firstName" [(ngModel)]="firstName" maxlength="100" required autocomplete="given-name" /></label><label>نام خانوادگی<input name="lastName" [(ngModel)]="lastName" maxlength="100" required autocomplete="family-name" /></label><button type="submit" [disabled]="saving || !firstName.trim() || !lastName.trim()">ذخیره اطلاعات</button></form></section>
+    }
+    @if (activeTab === 'finance') {
+      <section class="panel"><h2>گزارش مالی و وضعیت پرونده</h2><p class="hint">مبالغ بر اساس تراکنش‌های ثبت‌شده کلینیک است. اسناد در انتظار وصول، پرداخت قطعی محسوب نمی‌شوند.</p>
+      @for (c of d.cases; track c.id) {
+        <article class="finance-case"><header><div><strong>پرونده {{ c.fileNumber || 'مالی' }}</strong><span>{{ date(c.createdAt) }}</span></div><span class="stage">{{ stage(c.stage) }}</span></header>
+        <div class="stat-grid compact"><div><span>هزینه کل</span><strong>{{ money(c.totalAmount) }}</strong></div><div><span>پرداخت‌شده</span><strong>{{ money(c.paidAmount) }}</strong></div><div><span>مانده</span><strong>{{ money(c.remainingAmount) }}</strong></div><div><span>روش پرداخت</span><strong>{{ c.paymentMethod || '—' }}</strong></div></div>
+        <button type="button" (click)="selectedCase = selectedCase?.id === c.id ? null : c">{{ selectedCase?.id === c.id ? 'بستن جزئیات' : 'مشاهده گزارش کامل' }}</button>
+        @if (selectedCase?.id === c.id) {
+          <div class="detail"><h3>تأییدهای پرونده</h3><div class="info-grid"><div>طرح درمان: {{ date(c.treatmentConfirmedAtUtc) }}</div><div>مالی: {{ date(c.financeConfirmedAtUtc) }}</div><div>پروفایل: {{ date(c.profileConfirmedAtUtc) }}</div><div>مجوز درمان: {{ date(c.approvedAtUtc) }}</div></div>
+          <h3>تاریخچه پرداخت‌ها</h3><div class="table-scroll"><table><thead><tr><th>تاریخ</th><th>مبلغ</th><th>نوع منبع</th></tr></thead><tbody>@for (t of c.transactions; track t.id) { <tr><td>{{ date(t.createdAt) }}</td><td>{{ money(t.amount) }}</td><td>{{ t.sourceType }}</td></tr> } @empty { <tr><td colspan="3">تراکنش جداگانه‌ای ثبت نشده است؛ پیش‌پرداخت و ودیعه در جمع پرداختی لحاظ شده‌اند.</td></tr> }</tbody></table></div>
+          <h3>بدهی‌ها</h3><div class="table-scroll"><table><thead><tr><th>سررسید</th><th>مبلغ</th><th>وضعیت</th></tr></thead><tbody>@for (debt of c.debts; track debt.id) { <tr><td>{{ date(debt.dueDate) }}</td><td>{{ money(debt.amount) }}</td><td>{{ debt.status === 1 ? 'پرداخت‌نشده' : debt.status === 2 ? 'تسویه‌شده' : 'بسته‌شده' }}</td></tr> } @empty { <tr><td colspan="3">بدهی ثبت‌شده‌ای وجود ندارد.</td></tr> }</tbody></table></div>
+          </div>
+        }</article>
+      } @empty { <p>پرونده مالی برای شما ثبت نشده است.</p> }</section>
+    }
+    @if (activeTab === 'installments') {
+      <section class="panel"><h2>وضعیت اقساط، چک‌ها و سفته‌ها</h2><p class="hint">سررسید و وضعیت وصول هر سند از حسابداری کلینیک دریافت می‌شود.</p><div class="table-scroll"><table><thead><tr><th>پرونده</th><th>نوع سند</th><th>شناسه</th><th>مبلغ</th><th>سررسید</th><th>وضعیت</th></tr></thead><tbody>@for (item of installments; track item.kind + item.caseId + item.number) { <tr><td>{{ item.fileNumber || '—' }}</td><td>{{ item.kind }}</td><td dir="ltr">{{ item.number }}</td><td>{{ money(item.amount) }}</td><td>{{ date(item.dueDate) }}</td><td>{{ commitmentStatus(item.status) }}</td></tr> } @empty { <tr><td colspan="6">چک یا سفته‌ای برای این حساب ثبت نشده است.</td></tr> }</tbody></table></div></section>
+    }
+    @if (activeTab === 'security') {
+      <section class="panel"><h2>تغییر کلمه عبور</h2><p class="hint">بعد از تغییر رمز، برای حفظ امنیت باید دوباره وارد شوید.</p><form class="edit-form" (ngSubmit)="savePassword()"><label>رمز عبور فعلی<input name="currentPassword" [(ngModel)]="currentPassword" type="password" autocomplete="current-password" required /></label><label>رمز عبور جدید<input name="newPassword" [(ngModel)]="newPassword" type="password" autocomplete="new-password" minlength="10" maxlength="128" required /></label><label>تکرار رمز جدید<input name="confirmPassword" [(ngModel)]="confirmPassword" type="password" autocomplete="new-password" required /></label><button type="submit" [disabled]="saving || !currentPassword || newPassword.length < 10 || newPassword !== confirmPassword">تغییر رمز عبور</button></form></section>
+    }
+  }
+</div>
