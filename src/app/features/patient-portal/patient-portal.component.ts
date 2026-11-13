@@ -1,7 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
+import { Router } from "@angular/router";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { finalize } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
@@ -9,7 +9,7 @@ import { PatientPortalCase, PatientPortalOverview, PatientPortalService } from "
 @Component({
   selector: "app-patient-portal",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: "./patient-portal.component.html",
   styleUrl: "./patient-portal.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,7 +50,7 @@ export class PatientPortalComponent implements OnInit {
     this.api.changePassword(this.currentPassword, this.newPassword)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
       .subscribe({ next: () => { this.currentPassword = ""; this.newPassword = ""; this.confirmPassword = "";
-          this.auth.logout(); this.router.navigateByUrl("/auth/login"); },
+          this.auth.logout(); this.router.navigateByUrl("/"); },
         error: e => this.error = e?.error?.message || "تغییر رمز ناموفق بود." });
   }
   money(v: number | null | undefined): string { return Number(v || 0).toLocaleString("fa-IR") + " تومان"; }
