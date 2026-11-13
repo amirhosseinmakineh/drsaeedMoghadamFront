@@ -18,6 +18,7 @@ import { PatientFinanceDetailsComponent } from "../../../../../shared/patient-fi
 })
 export class PatientFinancialReportComponent {
   private readonly destroyRef = inject(DestroyRef);
+  readonly Math = Math;
   search = "";
   files: PatientFile[] = [];
   selected: PatientFile | null = null;
