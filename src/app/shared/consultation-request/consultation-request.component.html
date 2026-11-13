@@ -1,0 +1,41 @@
+<form class="consultation-form" dir="rtl" (ngSubmit)="submit()" aria-label="درخواست مشاوره رایگان" [attr.aria-busy]="sending()">
+  <fieldset [disabled]="sending()">
+    <legend>درخواست مشاوره رایگان</legend>
+    <p class="intro">خدمت موردنظرتان را انتخاب کنید؛ همکاران کلینیک برای راهنمایی با شما تماس می‌گیرند.</p>
+    <label for="consultation-name">نام و نام خانوادگی <span aria-hidden="true">*</span></label>
+    <input id="consultation-name" name="fullName" [(ngModel)]="name" (ngModelChange)="changed()" #nameField="ngModel"
+      required maxlength="100" autocomplete="name" placeholder="نام و نام خانوادگی شما"
+      [attr.aria-invalid]="nameField.dirty && !validName(name)" aria-describedby="consultation-name-error" />
+    @if (nameField.dirty && !validName(name)) { <small id="consultation-name-error" class="error">حداقل ۳ حرف معتبر وارد کنید.</small> }
+    <label for="consultation-phone">شماره موبایل <span aria-hidden="true">*</span></label>
+    <input id="consultation-phone" name="phoneNumber" [(ngModel)]="phone" (ngModelChange)="changed()" #phoneField="ngModel"
+      required maxlength="30" type="tel" dir="ltr" autocomplete="tel" placeholder="09123456789 یا +989123456789"
+      [attr.aria-invalid]="phoneField.dirty && !validPhone(phone)" aria-describedby="consultation-phone-error" />
+    @if (phoneField.dirty && !validPhone(phone)) { <small id="consultation-phone-error" class="error">شماره موبایل ایران را کامل وارد کنید.</small> }
+    <fieldset class="services" aria-describedby="consultation-services-hint">
+      <legend>خدمت یا خدمات موردنظر <span aria-hidden="true">*</span></legend>
+      <small id="consultation-services-hint">می‌توانید چند خدمت را انتخاب کنید (حداکثر ۱۰ مورد).</small>
+      @if (loadingServices()) { <p role="status">در حال دریافت خدمات کلینیک…</p> }
+      @for (service of services(); track service.id) {
+        <label class="service-option">
+          <input type="checkbox" [checked]="serviceIds.includes(service.id)"
+            (change)="toggleService(service.id, $any($event.target).checked)"
+            [disabled]="!serviceIds.includes(service.id) && serviceIds.length >= 10" />
+          <span>{{ service.title }}</span>
+        </label>
+      }
+      @if (servicesError()) {
+        <p class="error" role="alert">{{ servicesError() }}</p>
+        <button type="button" class="retry" (click)="loadServices()" [disabled]="loadingServices()">دریافت دوباره خدمات</button>
+      }
+    </fieldset>
+    <label for="consultation-description">توضیحات تکمیلی <small>(اختیاری)</small></label>
+    <textarea id="consultation-description" name="description" [(ngModel)]="description" (ngModelChange)="changed()"
+      rows="3" maxlength="1000" placeholder="اگر نکته‌ای برای مشاور دارید، اینجا بنویسید."></textarea>
+    <small>{{ description.length }} از ۱۰۰۰ کاراکتر</small>
+    <button type="submit" class="submit" [disabled]="!valid || sending() || saved() || loadingServices()">
+      {{ sending() ? 'در حال ثبت درخواست…' : 'ثبت درخواست مشاوره رایگان' }}
+    </button>
+  </fieldset>
+  @if (feedback()) { <p class="feedback" [class.error]="!saved()" role="status" aria-live="polite">{{ feedback() }}</p> }
+</form>

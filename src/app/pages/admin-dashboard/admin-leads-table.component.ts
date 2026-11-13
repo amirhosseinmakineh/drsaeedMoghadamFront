@@ -1,3 +1,4 @@
+import { leadOriginLabel, requestedServicesLabel } from "../../core/lead/lead-consultation";
 import { CommonModule } from "@angular/common";
 import {
   ChangeDetectionStrategy,
@@ -76,6 +77,9 @@ export class AdminLeadsTableComponent implements OnChanges, OnInit {
   readonly typeFilterOptions = ADMIN_LEAD_TYPE_FILTER_OPTIONS;
 
   readonly columns: TableColumn<LeadAssignmentItem>[] = [
+    { key: "sourceType", label: "منشأ", value: leadOriginLabel },
+    { key: "requestedServices", label: "خدمات درخواستی", value: requestedServicesLabel },
+    { key: "consultationDescription", label: "توضیحات مراجعه‌کننده", value: row => row.consultationDescription || "—" },
     { key: "id", label: "شناسه", value: (row) => this.leadId(row) ?? "-" },
     {
       key: "userName",

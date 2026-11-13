@@ -11,7 +11,8 @@
     "validate:pwa": "node scripts/validate-pwa-push.mjs",
     "start": "http-server dist/demo/browser -p 3000 -a 0.0.0.0",
     "dev": "npm run optimize:images && ng serve --configuration development --host 0.0.0.0",
-    "optimize:images": "python3 scripts/optimize-images.py"
+    "optimize:images": "python3 scripts/optimize-images.py",
+    "test:consultation": "node scripts/test-consultation-browser.mjs"
   },
   "dependencies": {
     "@angular/animations": "^20.3.0",
@@ -30,6 +31,7 @@
     "@angular/build": "^20.3.0",
     "@angular/cli": "^20.3.0",
     "@angular/compiler-cli": "^20.3.0",
+    "playwright": "^1.62.1",
     "typescript": "^5.8.2"
   }
 }
