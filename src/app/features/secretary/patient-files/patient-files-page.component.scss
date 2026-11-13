@@ -522,3 +522,46 @@ th { color: #64748b; font-size: .85rem; background: #f8fafc; } .row-actions { di
   .paper-panel__heading { align-items: stretch; }
   .paper-add-button { width: 100%; }
 }
+
+
+/* Keep the Persian calendar visible inside the patient-paper modal on desktop.
+   The modal has its own scrolling region, so an absolutely positioned calendar
+   would be clipped and cover adjacent treatment cards. */
+@media (min-width: 701px) {
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open .calendar-content {
+    position: fixed;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 48px));
+    max-height: min(610px, calc(100dvh - 72px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 9999;
+    box-shadow: 0 24px 75px rgba(15, 23, 42, .3);
+  }
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open {
+    z-index: 9999;
+  }
+}
+.patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact-trigger {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact-trigger strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 700px) {
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open .calendar-content {
+    position: fixed;
+    inset: auto 12px 12px;
+    transform: none;
+    width: auto;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    z-index: 9999;
+  }
+}
