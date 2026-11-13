@@ -43,7 +43,7 @@ export interface PatientPaperMedicalHistory {
 }
 
 export interface PatientPaperTreatmentRow {
-  treatmentDate: string;
+  treatmentDate: string | null;
   description?: string | null;
   hasFollowUp: boolean;
   cost: number;
@@ -54,6 +54,7 @@ export interface PatientPaperTreatmentRow {
 }
 
 export interface PatientPaperRecord {
+  consultationCompleted?: boolean;
   intake: PatientPaperIntake;
   treatments: Omit<PatientPaperTreatmentRow, "remainingAmount">[];
   dentalChart: Record<string, unknown>;

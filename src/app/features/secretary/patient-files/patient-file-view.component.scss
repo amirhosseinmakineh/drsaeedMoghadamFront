@@ -1,0 +1,37 @@
+@use "./patient-paper-form";
+
+:host { display: block; }
+.file-view { display: grid; gap: 18px; color: #30453c; }
+.file-view-summary { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; padding: 18px; border-radius: 12px; background: #eef5f1; }
+.file-view-summary span { font-size: .85rem; color: #5f7068; }
+.file-view-pages { display: flex; flex-wrap: wrap; gap: 8px; }
+button { padding: 10px 14px; border: 1px solid #d3dfd7; border-radius: 10px; background: #fff; color: #365b49; font: inherit; cursor: pointer; }
+button.active { background: #27614f; color: #fff; border-color: #27614f; }
+button:focus-visible { outline: 2px solid #a97846; outline-offset: 3px; }
+.view-section { min-width: 0; padding: 20px; border: 1px solid #e1e7e3; border-radius: 14px; background: #fff; }
+h3 { margin: 0 0 18px; font-size: 1rem; }
+.view-fields, .view-conditions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; }
+.view-fields > div { min-width: 0; padding-bottom: 12px; border-bottom: 1px solid #edf0ed; }
+dt { color: #758178; font-size: .82rem; }
+dd { margin: 6px 0 0; line-height: 1.9; overflow-wrap: anywhere; white-space: pre-wrap; }
+.view-conditions { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 24px; }
+.view-conditions > div { padding: 10px; border-radius: 8px; background: #f7f9f7; }
+.preserve-lines { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.9; }
+.view-table-wrap { overflow-x: auto; }
+.view-treatment-table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: right; font-size: .85rem; }
+.view-treatment-table th, .view-treatment-table td { padding: 14px 10px; border: 1px solid #ead2bb; line-height: 1.8; }
+.view-treatment-table th { background: #fbf3e9; white-space: nowrap; }
+.view-empty, .view-status { padding: 14px; background: #f7f9f7; color: #758178; border-radius: 10px; line-height: 1.9; }
+.view-error { padding: 14px; background: #fff2ef; color: #a04436; border-radius: 10px; }
+.consultation-state { margin: 0; padding: 12px; background: #edf5f1; border-radius: 10px; }
+.patient-signature { display: block; max-width: 100%; max-height: 140px; object-fit: contain; }
+@media (max-width: 600px) { .view-fields, .view-conditions { grid-template-columns: 1fr; } .view-section { padding: 14px; } .file-view-pages { display: grid; } }
+
+.paper-readonly input:disabled { opacity: 1; -webkit-text-fill-color: currentColor; cursor: default; }
+.paper-readonly .intake-disease, .paper-readonly .ledger-followup-options label { cursor: default; }
+.paper-readonly input[readonly], .paper-readonly textarea[readonly] { cursor: default; }
+.paper-readonly .paper-dental-notes textarea { resize: none; }
+.view-consent-details { display: grid; gap: 12px; margin-top: 16px; font-size: .85rem; color: #5f7068; }
+.file-view-summary, .file-view-pages { margin-inline: 16px; }
+.file-view-summary { margin-top: 16px; }
+.file-view > .view-section, .file-view > .view-status, .file-view > .view-error { margin: 0 16px 16px; }

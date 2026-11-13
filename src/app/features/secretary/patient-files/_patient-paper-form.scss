@@ -1,0 +1,565 @@
+.patient-intake-sheet {
+  --intake-ink: #302b2b;
+  --intake-rose: #b79e98;
+  --intake-line: #b7a29b;
+  margin: 0;
+  color: var(--intake-ink);
+  background: #f5f0eb;
+  font-family: Vazirmatn, Tahoma, sans-serif;
+  direction: rtl;
+}
+.patient-intake-top {
+  position: relative;
+  isolation: isolate;
+  min-height: 385px;
+  padding: 34px 42px 78px;
+  background-color: #f1eae4;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='150' viewBox='0 0 180 150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.13'/%3E%3C/svg%3E"),
+    linear-gradient(105deg,#eee5df 0%,#f6f0eb 48%,#eee5df 100%);
+}
+.patient-intake-top::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: 22px;
+  top: 20px;
+  width: 170px;
+  height: 255px;
+  opacity: .075;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 220'%3E%3Cpath d='M75 12C48 -1 14 13 13 55c-1 38 20 56 29 91 5 19 8 54 25 55 16 1 17-35 25-55 13-32 34-53 32-91C122 15 94 0 75 12Z' fill='none' stroke='%23b7a29b' stroke-width='8' stroke-linecap='round'/%3E%3Cpath d='M29 55c9-18 23-25 40-18' fill='none' stroke='%23b7a29b' stroke-width='5' stroke-linecap='round' opacity='.65'/%3E%3C/svg%3E");
+}
+.clinic-logo-slot {
+  position: absolute;
+  left: 32px;
+  top: 25px;
+  width: 142px;
+  height: 158px;
+}
+.clinic-logo-slot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.patient-intake-info {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  column-gap: 54px;
+  row-gap: 15px;
+  padding-left: 175px;
+  position: relative;
+  z-index: 1;
+}
+.intake-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 39px;
+  min-width: 0;
+}
+.intake-field > label {
+  flex: none;
+  white-space: nowrap;
+  font-size: 17px;
+  font-weight: 800;
+}
+.patient-intake-sheet .intake-field input,
+.patient-intake-sheet .intake-field select {
+  min-width: 0;
+  min-height: 34px;
+  flex: 1;
+  width: 1%;
+  padding: 6px 4px;
+  color: #302b2b;
+  border: 0;
+  border-bottom: 1.5px solid #c4b3aa;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  font: 500 15px Vazirmatn, Tahoma, sans-serif;
+  box-shadow: none;
+}
+.patient-intake-sheet .intake-field input:focus,
+.patient-intake-sheet .intake-field select:focus { border-bottom-color: #85635b; }
+.patient-intake-sheet .intake-field input::placeholder { color: #b8aaa4; }
+.intake-name-pair { display: flex; flex: 1; min-width: 0; gap: 8px; }
+.intake-name-pair input { width: 50% !important; }
+.intake-file-number {
+  position: absolute;
+  left: 27px;
+  bottom: 28px;
+  z-index: 1;
+  width: 150px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 800;
+}
+.patient-intake-sheet .intake-file-number input {
+  width: 145px;
+  height: 37px;
+  min-height: 37px;
+  text-align: center;
+  color: #66534c;
+  background: #d2c4bc;
+  border: 0;
+  border-radius: 24px;
+  font: inherit;
+}
+.patient-intake-medical {
+  position: relative;
+  isolation: isolate;
+  border-top: 8px solid #d0c2bb;
+  padding: 25px 30px 24px;
+  background-color: #edf3f0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='210' height='165' viewBox='0 0 210 165'%3E%3Cg fill='none' stroke='%23d2e1dc' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' opacity='.68'%3E%3Cpath d='M27 17c-10-8-24-1-22 13 2 13 12 18 15 31 2 7 2 17 7 17s6-10 8-17c4-13 14-19 14-32 0-13-13-20-22-12Z'/%3E%3Cpath d='M100 18h18v38h-18zM96 13h26v7H96zM104 56v8h10v-8'/%3E%3Cpath d='M158 18c-8 0-13 7-13 15 0 10 8 14 13 21 5-7 13-11 13-21 0-8-5-15-13-15Z'/%3E%3Cpath d='M150 75c12-8 24-8 35 0l-5 18h-25zM155 93v23m19-23v23M151 116h27'/%3E%3Cpath d='M40 111c-8-8-21-1-17 10 4 10 17 17 17 17s13-7 17-17c4-11-9-18-17-10Z'/%3E%3Cpath d='M91 107l24 24m-24 0 24-24'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(180deg,#eff5f2 0%,#eaf1ee 100%);
+  background-repeat: repeat, no-repeat;
+  background-size: 210px 165px, 100% 100%;
+}
+.patient-intake-medical > h3 {
+  margin: 4px 0 30px;
+  text-align: center;
+  font-size: 19px;
+  line-height: 1.8;
+  font-weight: 800;
+}
+.intake-diseases {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px 14px;
+  margin-bottom: 36px;
+  position: relative;
+}
+.intake-disease {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.patient-intake-sheet .intake-disease input {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 2.5px solid #aa9289;
+  border-radius: 9px;
+  background: #f8faf880;
+  cursor: pointer;
+}
+.patient-intake-sheet .intake-disease input:checked { background: #b79e98; }
+.patient-intake-sheet .intake-disease input:checked::after {
+  content: "✓";
+  color: white;
+  font-size: 15px;
+}
+.intake-questions {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 25px 34px 30px;
+  border-radius: 38px;
+  background: linear-gradient(115deg,#e8d9d1f2 0%,#eee2dbef 54%,#e7d8d0f2 100%);
+  box-shadow: -4px 4px 0 #bdaea7, 0 4px 12px #77645d12;
+}
+.intake-questions::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 12%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 420px;
+  height: 300px;
+  opacity: .11;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 300'%3E%3Cpath d='M210 275S24 166 24 88C24 16 112 -8 165 40l45 43 45-43c53-48 141-24 141 48 0 78-186 187-186 187Z' fill='%23bda49a'/%3E%3Cpath d='M75 100c32 65 92 86 135 86s103-21 135-86' fill='none' stroke='%23e8d9d1' stroke-width='9' stroke-linecap='round'/%3E%3Cpath d='M82 119c37 47 83 62 128 62s91-15 128-62' fill='none' stroke='%23e8d9d1' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.intake-question {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  position: relative;
+}
+.intake-question:last-child { margin-bottom: 0; }
+.intake-question label {
+  white-space: nowrap;
+  font-size: 17px;
+  font-weight: 600;
+}
+.patient-intake-sheet .intake-question input {
+  min-width: 0;
+  min-height: 38px;
+  flex: 1;
+  padding: 8px;
+  border: 0;
+  border-bottom: 3px solid #b6a49c;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  box-shadow: none;
+}
+.patient-intake-sheet .intake-question input:focus { border-bottom-color: #8b6b63; }
+.intake-question-wide input { flex: 0 0 43% !important; width: 43%; }
+.intake-form-note {
+  margin: 12px 0 0;
+  text-align: center;
+  color: #81716a;
+  font-size: 12px;
+}
+@media (max-width: 850px) {
+  .patient-intake-top { min-height: 0; padding: 26px 20px 100px; }
+  .clinic-logo-slot { position: relative; left: auto; top: auto; width: 100%; height: 88px; }
+  .patient-intake-info { padding-left: 0; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+  .intake-file-number { left: 20px; bottom: 20px; }
+  .intake-diseases { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .intake-question { display: block; }
+  .intake-question label { white-space: normal; }
+  .patient-intake-sheet .intake-question input,
+  .intake-question-wide input { display: block; width: 100% !important; margin-top: 5px; }
+}
+@media (max-width: 560px) {
+  .patient-intake-info { grid-template-columns: 1fr; }
+  .intake-field > label { font-size: 14px; }
+  .intake-diseases { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+  .intake-disease { gap: 7px; font-size: 13px; }
+  .patient-intake-sheet .intake-disease input { width: 26px; height: 26px; min-height: 26px; }
+  .patient-intake-medical { padding: 20px 13px; }
+  .patient-intake-medical > h3 { font-size: 15px; }
+  .intake-questions { padding: 20px 16px; border-radius: 22px; }
+  .intake-question label { font-size: 14px; }
+}
+@media print {
+  .patient-intake-modal ::ng-deep footer { display: none; }
+  .patient-intake-top { min-height: 365px; }
+  .patient-intake-medical { break-inside: avoid; }
+}
+
+/* Display existing source type within the approved paper-style edit form. */
+.intake-source-type { margin-top: 2px; color: #74635c; font-size: 12px; font-weight: 700; text-align: center; }
+
+/* Patient paper-record editor: follow the existing application theme and remain usable on mobile. */
+.paper-date-field {
+  min-width: 0;
+}
+
+.patient-intake-sheet .paper-date-field,
+.patient-intake-sheet .intake-questions > label {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.patient-intake-sheet .intake-questions input,
+.patient-intake-sheet .intake-questions select {
+  max-width: 100%;
+}
+
+.patient-intake-sheet .table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.patient-intake-sheet .table-wrap table {
+  min-width: 860px;
+}
+
+.patient-intake-sheet .table-wrap input {
+  width: 100%;
+  min-width: 90px;
+}
+
+@media (max-width: 700px) {
+  .patient-intake-sheet .table-wrap table,
+  .patient-intake-sheet .table-wrap thead,
+  .patient-intake-sheet .table-wrap tbody,
+  .patient-intake-sheet .table-wrap tr,
+  .patient-intake-sheet .table-wrap th,
+  .patient-intake-sheet .table-wrap td {
+    display: revert;
+  }
+
+  .patient-intake-sheet .table-wrap td::before {
+    content: none;
+  }
+
+  .patient-intake-sheet .table-wrap td {
+    white-space: nowrap;
+  }
+}
+
+/* Second paper page follows the same visual language as the first page. */
+.paper-second-page {
+  padding: clamp(1rem, 3vw, 2rem);
+  background: var(--surface, #fff);
+  color: var(--text, #302b2b);
+}
+
+.paper-second-page h2,
+.paper-second-page h3 {
+  color: var(--primary, #85635b);
+  line-height: 1.7;
+}
+
+.paper-dental-notes {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+
+.paper-dental-notes textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.paper-second-page .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.paper-second-page .table-wrap table {
+  min-width: 850px;
+}
+
+@media (max-width: 560px) {
+  .paper-second-page {
+    padding: 0.75rem;
+  }
+
+  .paper-second-page .table-wrap input {
+    min-width: 84px;
+  }
+}
+
+
+/* Responsive paper form corrections: keep the birth-date control in the normal flow,
+   rather than beneath the absolutely positioned clinic logo. */
+.patient-intake-sheet .patient-intake-top { display: flow-root; }
+.patient-intake-sheet .intake-field:has(app-base-persian-date-picker) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: .35rem;
+  min-width: 0;
+}
+.patient-intake-sheet .intake-field app-base-persian-date-picker {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+.patient-intake-sheet .intake-field:has(app-base-persian-date-picker) > label { white-space: normal; }
+@media (max-width: 1050px) {
+  .patient-intake-top .clinic-logo-slot {
+    position: static;
+    width: min(160px, 100%);
+    height: 90px;
+    margin: 0 auto 1.25rem;
+  }
+  .patient-intake-top .patient-intake-info {
+    padding-left: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+@media (max-width: 620px) {
+  .patient-intake-top .patient-intake-info { grid-template-columns: minmax(0, 1fr); }
+  .patient-intake-top .intake-field { flex-wrap: wrap; }
+  .patient-intake-top .intake-field > label { width: 100%; }
+}
+
+/* Redesigned second paper page */
+.paper-second-page {
+  --paper-border: #e6e7eb;
+  --paper-accent: #0f766e;
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 2.25rem);
+  background: #f8fafc;
+  color: #1e293b;
+}
+.paper-page-heading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.4rem;
+  border: 1px solid #cce7e3;
+  border-radius: 20px;
+  background: linear-gradient(120deg, #e6f5f1, #f7fbfa);
+}
+.paper-page-heading__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: #fff;
+  font-size: 1.8rem;
+}
+.paper-eyebrow { color: #0f766e; font-size: .8rem; font-weight: 700; }
+.paper-second-page .paper-page-heading h2 { margin: .25rem 0; color: #134e4a; font-size: clamp(1.25rem, 2.3vw, 1.75rem); }
+.paper-page-heading p { margin: 0; color: #526474; font-size: .9rem; line-height: 1.8; }
+.paper-panel {
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid var(--paper-border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 3px 16px #0f172a06;
+}
+.paper-panel__heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
+.paper-panel__heading > div { display: flex; align-items: center; gap: .65rem; }
+.paper-second-page .paper-panel__heading h3 { margin: 0; color: #1e293b; font-size: 1.08rem; }
+.paper-section-index { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: #e5f5f1; color: #0f766e; font-weight: 800; }
+.paper-panel__hint { margin: -.25rem 0 1.2rem; color: #64748b; font-size: .84rem; line-height: 1.8; }
+.paper-dental-notes { margin: 0; color: #475569; font-weight: 600; }
+.paper-dental-notes textarea { min-height: 115px; padding: .85rem; border-radius: 12px; border: 1px solid #cbd5e1; background: #fcfdff; }
+.paper-add-button, .paper-remove-button { border: 0; border-radius: 10px; padding: .65rem 1rem; cursor: pointer; font: inherit; font-weight: 700; }
+.paper-add-button { background: #0f766e; color: white; }
+.paper-add-button:hover { background: #115e59; }
+.paper-remove-button { color: #b91c1c; background: #fff1f2; font-size: .8rem; }
+.paper-empty-state { padding: 1.75rem; text-align: center; border: 1px dashed #cbd5e1; border-radius: 14px; color: #64748b; background: #f8fafc; }
+.paper-treatment-list { display: grid; gap: 1rem; }
+.paper-treatment-card { padding: 1rem; border: 1px solid #e2e8f0; border-radius: 15px; background: #fcfdff; }
+.paper-treatment-card__header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.paper-treatment-card__header strong { color: #0f766e; }
+.paper-treatment-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: end; }
+.paper-treatment-field { display: grid; gap: .4rem; min-width: 0; color: #475569; font-size: .82rem; font-weight: 700; }
+.paper-treatment-field input { width: 100%; min-width: 0; min-height: 44px; padding: .65rem; border: 1px solid #cbd5e1; border-radius: 10px; background: white; }
+.paper-treatment-date app-base-persian-date-picker { display: block; min-width: 0; width: 100%; }
+.paper-treatment-description { grid-column: span 2; }
+.paper-balance { padding: .65rem .85rem; min-height: 65px; border-radius: 10px; background: #f0fdfa; }
+.paper-balance strong { color: #115e59; font-size: 1rem; }
+.paper-followup { display: flex; align-items: center; gap: .6rem; color: #334155; font-size: .85rem; }
+.paper-followup input, .paper-consent-choice input { width: 20px; height: 20px; min-height: 20px; accent-color: #0f766e; flex: none; }
+.paper-chart-container { min-width: 0; overflow-x: auto; }
+.paper-consent-panel { border-color: #cce7e3; }
+.paper-consent-choice { display: flex; align-items: center; gap: .75rem; padding: 1rem; border-radius: 12px; background: #f0fdfa; color: #134e4a; line-height: 1.8; }
+@media (max-width: 800px) {
+  .paper-treatment-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .paper-treatment-description { grid-column: span 2; }
+}
+@media (max-width: 560px) {
+  .paper-second-page { gap: .85rem; padding: .75rem; }
+  .paper-page-heading { padding: 1rem; align-items: flex-start; border-radius: 14px; }
+  .paper-page-heading__icon { flex-basis: 42px; width: 42px; height: 42px; font-size: 1.25rem; }
+  .paper-panel { border-radius: 14px; padding: .85rem; }
+  .paper-treatment-fields { grid-template-columns: minmax(0, 1fr); }
+  .paper-treatment-description { grid-column: auto; }
+  .paper-panel__heading { align-items: stretch; }
+  .paper-add-button { width: 100%; }
+}
+
+
+/* Keep the Persian calendar visible inside the patient-paper modal on desktop.
+   The modal has its own scrolling region, so an absolutely positioned calendar
+   would be clipped and cover adjacent treatment cards. */
+@media (min-width: 701px) {
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open .calendar-content {
+    position: fixed;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 48px));
+    max-height: min(610px, calc(100dvh - 72px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 9999;
+    box-shadow: 0 24px 75px rgba(15, 23, 42, .3);
+  }
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open {
+    z-index: 9999;
+  }
+}
+.patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact-trigger {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact-trigger strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 700px) {
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open .calendar-content {
+    position: fixed;
+    inset: auto 12px 12px;
+    transform: none;
+    width: auto;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    z-index: 9999;
+  }
+}
+/* Treatment ledger follows the seven-column paper reference. */
+.paper-ledger-panel { --ledger-ink: #817d79; --ledger-line: #ead2bb; background: #fffefa; }
+.paper-ledger-scroll { width: 100%; overflow-x: auto; padding: 3px; }
+.paper-ledger-frame { min-width: 720px; overflow: hidden; border: 6px solid var(--ledger-line); border-radius: 58px; background: #fffefa; }
+.paper-ledger { display: table; width: 100%; min-width: 0; table-layout: fixed; border-collapse: collapse; direction: rtl; color: var(--ledger-ink); background: transparent; font-size: 14px; }
+.paper-ledger-caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.paper-ledger .ledger-date { width: 13%; }
+.paper-ledger .ledger-description { width: 21%; }
+.paper-ledger .ledger-followup { width: 13%; }
+.paper-ledger .ledger-money { width: 11%; }
+.paper-ledger .ledger-dentist { width: 20%; }
+.paper-ledger thead { display: table-header-group; }
+.paper-ledger tbody { display: table-row-group; }
+.paper-ledger tr { display: table-row; background: transparent; border: 0; box-shadow: none; }
+.paper-ledger th, .paper-ledger td { display: table-cell; position: relative; padding: 8px 6px; border: 0; border-inline-end: 3px solid var(--ledger-line); text-align: center; vertical-align: middle; white-space: normal; background: transparent; color: var(--ledger-ink); box-shadow: none; }
+.paper-ledger th:last-child, .paper-ledger td:last-child { border-inline-end: 0; }
+.paper-ledger th { height: 56px; font-weight: 600; border-bottom: 3px solid var(--ledger-line); }
+.paper-ledger td { height: 112px; border-bottom: 1px solid var(--ledger-line); }
+.paper-ledger tbody tr:last-child td { border-bottom: 0; }
+.paper-ledger td::before { content: none; }
+.paper-ledger input:not([type='radio']), .paper-ledger textarea { display: block; width: 100%; min-width: 0; min-height: 38px; padding: 5px 2px; border: 1px solid transparent; border-radius: 4px; background: transparent; box-shadow: none; color: #645d57; font: inherit; text-align: center; }
+.paper-ledger textarea { resize: vertical; line-height: 1.8; text-align: right; }
+.paper-ledger input:focus-visible, .paper-ledger textarea:focus-visible { outline: 2px solid #b78960; outline-offset: 1px; background: #fff8f0; }
+.paper-ledger input[type='number'] { appearance: textfield; -moz-appearance: textfield; }
+.paper-ledger input::-webkit-inner-spin-button, .paper-ledger input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.ledger-followup-options { display: grid; gap: 18px; }
+.ledger-followup-options label, .ledger-followup-options > span { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 400; white-space: nowrap; }
+.ledger-followup-options input[type='radio'], .ledger-followup-options i { appearance: none; display: inline-block; flex: 0 0 21px; width: 21px; height: 21px; min-height: 21px; margin: 0; border: 2px solid var(--ledger-line); border-radius: 5px; background: #fffefa; cursor: pointer; }
+.ledger-followup-options input:checked { background: #b78960; border-color: #b78960; box-shadow: inset 0 0 0 4px #fffefa; }
+.ledger-followup-options i { cursor: default; }
+.ledger-remove { padding: 2px 8px; margin-top: 8px; border: 0; border-radius: 4px; background: transparent; color: #9d7162; font: inherit; font-size: 11px; cursor: pointer; }
+.ledger-remove:hover { background: #f8e9dd; }
+.paper-ledger app-base-persian-date-picker { display: block; min-width: 0; }
+.paper-ledger ::ng-deep .compact-trigger { padding: 4px; border-color: transparent; background: transparent; color: #817d79; font-size: 11px; }
+@media print {
+  .paper-ledger-panel .paper-add-button, .ledger-remove { display: none; }
+  .paper-ledger-scroll { overflow: visible; }
+  .paper-ledger-frame { min-width: 0; }
+  .paper-ledger tr { break-inside: avoid; }
+}
+
+
+.consultation-confirmation { display: flex; align-items: flex-start; gap: 12px; padding: 18px; border: 1px solid #b6d8c9; border-radius: 12px; background: #edf7f1; line-height: 1.8; }
+.consultation-confirmation > input { width: 22px; height: 22px; min-height: 22px; margin-top: 4px; accent-color: #27614f; }
+.consultation-confirmation span { display: grid; gap: 4px; }
+.consultation-confirmation small { color: #5f706b; }

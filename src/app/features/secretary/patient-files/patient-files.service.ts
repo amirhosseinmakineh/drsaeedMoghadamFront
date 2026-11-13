@@ -6,6 +6,7 @@ import { AuthService } from "../../../core/auth/auth.service";
 import { environment } from "../../../../environments/environment";
 import {
   CreatePatientFileRequest,
+  CompletePatientFileRequest,
   CreatePatientFileResult,
   EligiblePatient,
   EligiblePatientQuery,
@@ -24,6 +25,18 @@ export class PatientFilesService {
     private readonly http: HttpClient,
     private readonly auth: AuthService,
   ) {}
+
+  completeFinance(patientFileId: number, body: CompletePatientFileRequest) {
+    return this.http.post<{ financialCaseId: string }>(`${this.endpoint}/${patientFileId}/complete-finance`, body, { headers: this.authHeaders() });
+  }
+
+  approveService(patientFileId: number) {
+    return this.http.post<{ approvedAtUtc: string }>(`${this.endpoint}/${patientFileId}/approve-service`, {}, { headers: this.authHeaders() });
+  }
+
+  linkFinance(patientFileId: number, financialCaseId: string) {
+    return this.http.post<{ financialCaseId: string }>(`${this.endpoint}/${patientFileId}/link-finance`, { financialCaseId }, { headers: this.authHeaders() });
+  }
 
   getPaperRecord(patientFileId: number): Observable<PatientPaperRecord> {
     return this.http.get<PatientPaperRecord>(`${this.endpoint}/${patientFileId}/paper-record`, {

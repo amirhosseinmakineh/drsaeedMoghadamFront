@@ -25,7 +25,7 @@
         </app-base-empty-state>
       } @else {
         <div class="table-wrap">
-          <table>
+          <table class="patient-files-table">
             <thead><tr><th>شماره پرونده</th><th>نام</th><th>نام خانوادگی</th><th>شماره تماس</th><th>توضیحات</th><th>نوع پرونده</th><th>عملیات</th></tr></thead>
             <tbody>@for (file of files; track file.id) {
               <tr>
@@ -34,7 +34,12 @@
                 <td data-label="شماره تماس" dir="ltr">{{ file.phoneNumber }}</td>
                 <td data-label="توضیحات" class="description-cell">{{ file.description || "—" }}</td>
                 <td data-label="نوع پرونده"><app-base-badge [variant]="file.sourceType === 'Legacy' ? 'warning' : 'success'">{{ sourceLabel(file.sourceType) }}</app-base-badge></td>
-                <td data-label="عملیات"><div class="row-actions"><button class="finance-action" type="button" (click)="openFinance(file)">مشاهده صورت‌حساب‌های بیمار</button><button type="button" (click)="openEdit(file)">ویرایش</button><button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
+                <td data-label="عملیات" class="patient-actions-cell"><div class="row-actions" role="group" [attr.aria-label]="'عملیات پرونده ' + file.fileNumber"><button class="view-file-action" type="button" (click)="viewingFile = file">مشاهده پرونده</button><button class="finance-action" type="button" (click)="openFinance(file)" title="مشاهده صورت‌حساب‌های بیمار">صورت‌حساب‌ها</button><button class="edit-file-action" type="button" (click)="openEdit(file)">ویرایش</button>
+                  @if (!file.consultationCompleted) { <button class="consultation-pending" type="button" (click)="openEdit(file)">در انتظار مشاوره</button> }
+                  @else if (!file.financeCompleted) { <button class="complete-file-action" type="button" (click)="openCompletion(file)">تکمیل پرونده</button> }
+                  @else if (!file.serviceApproved) { <button class="approve-service-action" type="button" (click)="openCompletion(file)">انجام کار بشود؟</button> }
+                  @else { <span class="service-approved" role="status">✓ مجاز به انجام خدمات</span> }
+                  <button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
               </tr>
             }</tbody>
           </table>
@@ -172,7 +177,7 @@
           <input id="reservationDescription" maxlength="2000"  name="reservationDescription" />
         </div>
       </div>
-      <p class="intake-form-note">نام، نام خانوادگی و موبایل از اطلاعات بیمار انتخاب‌شده پر شده‌اند. اطلاعات این فرم در صفحه دوم تکمیل و هنگام ثبت پرونده ذخیره می‌شوند.</p>
+      <p class="intake-form-note">نام، نام خانوادگی و موبایل از اطلاعات بیمار انتخاب‌شده پر شده‌اند. پرونده اولیه را ثبت کنید؛ صفحه دوم بعداً از بخش ویرایش قابل ثبت است.</p>
     </section>
     } @else {
       <ng-container *ngTemplateOutlet="paperSecondPage" />
@@ -183,8 +188,10 @@
     <app-base-button variant="secondary" [disabled]="creating" (pressed)="backToEligible()">بازگشت به انتخاب بیمار</app-base-button>
     @if (paperStep === 2) {
       <app-base-button variant="secondary" [disabled]="creating" (pressed)="previousPaperStep()">بازگشت به صفحه اول</app-base-button>
+    } @else {
+      <app-base-button variant="secondary" [disabled]="creating" (pressed)="nextPaperStep()">صفحه دوم (اختیاری)</app-base-button>
     }
-    <app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">{{ paperStep === 1 ? "ادامه به صفحه دوم" : "ثبت پرونده" }}</app-base-button>
+    <app-base-button [loading]="creating" [disabled]="!selectedPatient" (pressed)="create()">ثبت پرونده</app-base-button>
   </div>
 </app-base-modal>
 
@@ -302,7 +309,7 @@
           <input id="createDescription" maxlength="2000" [(ngModel)]="createForm.description" name="createDescription" />
         </div>
       </div>
-      <p class="intake-form-note">اطلاعات این فرم در صفحه دوم تکمیل و هنگام ثبت بیمار ذخیره می‌شوند.</p>
+      <p class="intake-form-note">پرونده اولیه را ثبت کنید؛ اطلاعات مشاوره و صفحه دوم بعداً از بخش ویرایش قابل ثبت است.</p>
     </section>
     } @else {
       <ng-container *ngTemplateOutlet="paperSecondPage" />
@@ -312,8 +319,10 @@
     <app-base-button variant="secondary" [disabled]="creating" (pressed)="closeNewPatient()">انصراف</app-base-button>
     @if (paperStep === 2) {
       <app-base-button variant="secondary" [disabled]="creating" (pressed)="previousPaperStep()">بازگشت به صفحه اول</app-base-button>
+    } @else {
+      <app-base-button variant="secondary" [disabled]="creating" (pressed)="nextPaperStep()">صفحه دوم (اختیاری)</app-base-button>
     }
-    <app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="createNewPatient()">{{ paperStep === 1 ? "ادامه به صفحه دوم" : "ثبت بیمار" }}</app-base-button>
+    <app-base-button [loading]="creating" [disabled]="!isCreateValid()" (pressed)="createNewPatient()">ثبت بیمار</app-base-button>
   </div>
 </app-base-modal>
 
@@ -465,11 +474,12 @@
     <header class="paper-page-heading">
       <div class="paper-page-heading__icon" aria-hidden="true">🦷</div>
       <div>
-        <span class="paper-eyebrow">فرم تکمیلی پرونده بیمار · مرحله ۲ از ۲</span>
+        <span class="paper-eyebrow">فرم مشاوره · صفحه دوم پرونده</span>
         <h2>سوابق درمان و چارت دندان</h2>
         <p>اطلاعات درمان، پرداخت و وضعیت دندان‌ها را در بخش‌های زیر ثبت کنید.</p>
       </div>
     </header>
+    <label class="consultation-confirmation"><input type="checkbox" name="consultationCompleted" [(ngModel)]="paperRecord.consultationCompleted" /><span><strong>مشاوره انجام شد</strong><small>اطلاعات فرم مشاور را وارد کرده‌ام. تمام فیلدهای این صفحه اختیاری‌اند؛ با ثبت این تأیید، تکمیل مالی پرونده فعال می‌شود.</small></span></label>
 
     <section class="paper-panel" aria-labelledby="paper-notes-title">
       <div class="paper-panel__heading"><div><span class="paper-section-index">۰۱</span><h3 id="paper-notes-title">یادداشت دندانپزشک</h3></div></div>
@@ -479,36 +489,40 @@
       </label>
     </section>
 
-    <section class="paper-panel" aria-labelledby="paper-treatments-title">
+    <section class="paper-panel paper-ledger-panel" aria-labelledby="paper-treatments-title">
       <div class="paper-panel__heading">
         <div><span class="paper-section-index">۰۲</span><h3 id="paper-treatments-title">سوابق درمان و پرداخت</h3></div>
         <button class="paper-add-button" type="button" (click)="addPaperTreatment()">+ افزودن درمان</button>
       </div>
-      <p class="paper-panel__hint">این بخش صرفاً برای ثبت سوابق فرم کاغذی است و جایگزین حسابداری کلینیک نیست.</p>
-      @if (!paperRecord.treatments.length) {
-        <div class="paper-empty-state">هنوز درمانی ثبت نشده است. برای شروع، «افزودن درمان» را انتخاب کنید.</div>
-      }
-      <div class="paper-treatment-list">
-        @for (t of paperRecord.treatments; track $index; let i = $index) {
-          <article class="paper-treatment-card">
-            <div class="paper-treatment-card__header">
-              <strong>درمان شماره {{ i + 1 }}</strong>
-              <button class="paper-remove-button" type="button" (click)="paperRecord.treatments.splice(i, 1)" [attr.aria-label]="'حذف درمان شماره ' + (i + 1)">حذف درمان</button>
-            </div>
-            <div class="paper-treatment-fields">
-              <div class="paper-treatment-field paper-treatment-date">
-                <span>تاریخ درمان</span>
-                <app-base-persian-date-picker label="تاریخ درمان" [value]="parseTreatmentDate(t.treatmentDate)" (valueChange)="onTreatmentDateChange(t, $event)" />
-              </div>
-              <label class="paper-treatment-field paper-treatment-description"><span>شرح خدمات</span><input [name]="'desc'+i" placeholder="نوع درمان و توضیحات" [(ngModel)]="t.description" /></label>
-              <label class="paper-treatment-field"><span>هزینه (ریال)</span><input type="number" min="0" [name]="'cost'+i" [(ngModel)]="t.cost" /></label>
-              <label class="paper-treatment-field"><span>پرداختی (ریال)</span><input type="number" min="0" [name]="'paid'+i" [(ngModel)]="t.paidAmount" /></label>
-              <div class="paper-treatment-field paper-balance"><span>مانده (ریال)</span><strong>{{ t.cost - t.paidAmount | number }}</strong></div>
-              <label class="paper-treatment-field"><span>نام دندانپزشک</span><input [name]="'dentist'+i" placeholder="نام دندانپزشک" [(ngModel)]="t.dentistName" /></label>
-              <label class="paper-followup"><input type="checkbox" [name]="'follow'+i" [(ngModel)]="t.hasFollowUp" /><span>نیاز به ادامه درمان دارد</span></label>
-            </div>
-          </article>
-        }
+      <div class="paper-ledger-scroll" role="region" aria-label="جدول سوابق درمان و پرداخت" tabindex="0">
+        <div class="paper-ledger-frame">
+          <table class="paper-ledger">
+            <caption class="paper-ledger-caption">سوابق درمان و پرداخت؛ مبالغ به تومان</caption>
+            <colgroup><col class="ledger-date" /><col class="ledger-description" /><col class="ledger-followup" /><col class="ledger-money" /><col class="ledger-money" /><col class="ledger-money" /><col class="ledger-dentist" /></colgroup>
+            <thead><tr><th scope="col">تاریخ</th><th scope="col">توضیحات</th><th scope="col">ادامه کار</th><th scope="col">هزینه</th><th scope="col">پرداختی</th><th scope="col">مانده</th><th scope="col">دندانپزشک</th></tr></thead>
+            <tbody>
+              @for (t of paperRecord.treatments; track $index; let i = $index) {
+                <tr>
+                  <td><app-base-persian-date-picker label="تاریخ درمان" [value]="parseTreatmentDate(t.treatmentDate)" (valueChange)="onTreatmentDateChange(t, $event)" /></td>
+                  <td><textarea rows="3" [name]="'desc'+i" [attr.aria-label]="'توضیحات درمان ' + (i + 1)" [(ngModel)]="t.description"></textarea></td>
+                  <td><div class="ledger-followup-options">
+                    <label><span>دارد</span><input type="radio" [name]="'follow'+i" [value]="true" [(ngModel)]="t.hasFollowUp" /></label>
+                    <label><span>ندارد</span><input type="radio" [name]="'follow'+i" [value]="false" [(ngModel)]="t.hasFollowUp" /></label>
+                  </div></td>
+                  <td><input type="number" min="0" [name]="'cost'+i" [attr.aria-label]="'هزینه درمان ' + (i + 1) + ' به تومان'" [(ngModel)]="t.cost" /></td>
+                  <td><input type="number" min="0" [name]="'paid'+i" [attr.aria-label]="'پرداختی درمان ' + (i + 1) + ' به تومان'" [(ngModel)]="t.paidAmount" /></td>
+                  <td><output [attr.aria-label]="'مانده درمان ' + (i + 1)">{{ t.cost - t.paidAmount | number }}</output></td>
+                  <td><input [name]="'dentist'+i" [attr.aria-label]="'نام دندانپزشک درمان ' + (i + 1)" [(ngModel)]="t.dentistName" /><button class="ledger-remove" type="button" (click)="paperRecord.treatments.splice(i, 1)" [attr.aria-label]="'حذف درمان شماره ' + (i + 1)">حذف</button></td>
+                </tr>
+              }
+              @for (slot of [0, 1, 2, 3, 4, 5, 6]; track slot) {
+                @if (slot >= paperRecord.treatments.length) {
+                  <tr class="ledger-blank-row" aria-hidden="true"><td></td><td></td><td><div class="ledger-followup-options"><span>دارد <i></i></span><span>ندارد <i></i></span></div></td><td></td><td></td><td></td><td></td></tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -526,3 +540,15 @@
     </section>
   </section>
 </ng-template>
+<app-base-modal class="completion-modal" [open]="!!completionFile" [title]="completionFile?.financeCompleted ? 'بررسی مالی و اجازه انجام خدمات' : 'تکمیل مالی پرونده'" [closeOnBackdrop]="!completionBusy" (close)="!completionBusy && (completionFile = null)">
+  @if (completionFile) {
+    <app-patient-file-completion [file]="completionFile" (busyChange)="completionBusy = $event" (saved)="completionSaved()" />
+  }
+  <div baseModalFooter><app-base-button variant="secondary" [disabled]="completionBusy" (pressed)="completionFile = null">بستن</app-base-button></div>
+</app-base-modal>
+<app-base-modal class="patient-file-view-modal" [open]="!!viewingFile" title="مشاهده پرونده بیمار" (close)="viewingFile = null">
+  @if (viewingFile) {
+    <app-patient-file-view [file]="viewingFile" [medicalConditions]="medicalConditions" />
+  }
+  <div baseModalFooter><app-base-button variant="secondary" (pressed)="viewingFile = null">بستن</app-base-button></div>
+</app-base-modal>

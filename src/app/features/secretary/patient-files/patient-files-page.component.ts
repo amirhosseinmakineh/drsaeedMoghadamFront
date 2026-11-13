@@ -1,5 +1,8 @@
 import { PersianDatePickerComponent } from "../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
 import { PatientPaperRecord, PatientPaperMedicalHistory } from "./patient-paper-intake.models";
+import { PatientFileCompletionComponent } from "./patient-file-completion.component";
+import { PatientFileViewComponent } from "./patient-file-view.component";
+import { fromIranDateInputValue, toIranDateInputValue } from "../../../utils/iran-datetime.util";
 import { CommonModule, Location } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
@@ -26,13 +29,14 @@ import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/
     BaseFilterBarComponent, BaseLoadingComponent, BaseModalComponent, BasePageHeaderComponent,
     BasePageShellComponent, BaseSearchFilterComponent, BaseSelectFilterComponent,
     BaseTablePaginationComponent, SecretaryAccountShellComponent, PatientFinanceDetailsComponent,
-    SecretaryDentalChartComponent, PersianDatePickerComponent],
+    SecretaryDentalChartComponent, PersianDatePickerComponent, PatientFileCompletionComponent, PatientFileViewComponent],
   templateUrl: "./patient-files-page.component.html",
   styleUrl: "./patient-files-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PatientFilesPageComponent implements OnInit {
   files: PatientFile[] = [];
+  viewingFile: PatientFile | null = null;
   paperFile: PatientFile | null = null;
   paperLoading = false;
   paperSaving = false;
@@ -85,6 +89,20 @@ export class PatientFilesPageComponent implements OnInit {
   financeFile: PatientFile | null = null;
   financeRefreshing = false;
   financeError = "";
+  completionFile: PatientFile | null = null;
+  completionBusy = false;
+
+  openCompletion(file: PatientFile): void {
+    if (!file.consultationCompleted || file.serviceApproved) return;
+    this.completionFile = file;
+  }
+
+  completionSaved(): void {
+    const approved = this.completionFile?.financeCompleted;
+    this.completionFile = null;
+    this.toast.success(approved ? "اجازه انجام خدمات ثبت شد." : "اطلاعات مالی ثبت شد؛ اکنون می‌توانید اجازه انجام خدمات را تأیید کنید.");
+    this.loadFiles();
+  }
   readonly sourceOptions = [{ value: "System", label: "جدید" }, { value: "Legacy", label: "قدیمی" }];
   readonly pageSizeOptions = [{ value: 10, label: "۱۰ ردیف" }, { value: 20, label: "۲۰ ردیف" }, { value: 50, label: "۵۰ ردیف" }];
 
@@ -109,7 +127,7 @@ export class PatientFilesPageComponent implements OnInit {
   changePageSize(value: string): void { this.query = { ...this.query, pageSize: Number(value), page: 1 }; this.loadFiles(); }
 
   private emptyPaperRecord(): PatientPaperRecord {
-    return { intake: { medicalHistory: {} }, treatments: [], dentalChart: {} };
+    return { intake: { medicalHistory: {} }, treatments: [], dentalChart: {}, consultationCompleted: false };
   }
 
   openPaperRecord(file: PatientFile): void {
@@ -138,7 +156,7 @@ export class PatientFilesPageComponent implements OnInit {
   onPaperBirthDateChange(value: Date | null): void {
     this.paperBirthDate = value;
     this.paperRecord.intake.birthDate = value
-      ? `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}-${String(value.getUTCDate()).padStart(2, "0")}`
+      ? toIranDateInputValue(value)
       : null;
   }
 
@@ -147,11 +165,11 @@ export class PatientFilesPageComponent implements OnInit {
       return null;
     }
 
-    const parsed = new Date(`${value}T00:00:00Z`);
+    const parsed = fromIranDateInputValue(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
-  parseTreatmentDate(value: string): Date | null {
+  parseTreatmentDate(value: string | null): Date | null {
     return this.parseDateOnly(value);
   }
 
@@ -163,8 +181,7 @@ export class PatientFilesPageComponent implements OnInit {
       return;
     }
 
-    treatment.treatmentDate =
-      `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}-${String(value.getUTCDate()).padStart(2, "0")}`;
+    treatment.treatmentDate = toIranDateInputValue(value);
   }
 
   setMedicalCondition(key: keyof PatientPaperMedicalHistory, value: string): void {
@@ -203,7 +220,7 @@ export class PatientFilesPageComponent implements OnInit {
 
   addPaperTreatment(): void {
     this.paperRecord.treatments.push({
-      treatmentDate: new Date().toISOString().slice(0, 10),
+      treatmentDate: null,
       description: "", hasFollowUp: false, cost: 0, paidAmount: 0, dentistName: "",
     });
   }
@@ -211,8 +228,8 @@ export class PatientFilesPageComponent implements OnInit {
   savePaperRecord(): void {
     if (!this.paperFile || this.paperSaving || this.paperLoading) return;
     if (this.paperRecord.treatments.some(t =>
-      !t.dentistName.trim() || t.cost < 0 || t.paidAmount < 0 || t.paidAmount > t.cost)) {
-      this.toast.error("اطلاعات هزینه، پرداختی یا نام دندانپزشک معتبر نیست.");
+      t.cost < 0 || t.paidAmount < 0 || t.paidAmount > t.cost)) {
+      this.toast.error("مبالغ هزینه و پرداختی معتبر نیستند.");
       return;
     }
     this.paperSaving = true;
@@ -271,11 +288,6 @@ export class PatientFilesPageComponent implements OnInit {
       return;
     }
 
-    if (this.paperStep === 1) {
-      this.nextPaperStep();
-      return;
-    }
-
     this.creating = true;
     if (this.pendingPaperFileId !== null) {
       this.persistCreatedPaper(this.pendingPaperFileId);
@@ -327,11 +339,6 @@ export class PatientFilesPageComponent implements OnInit {
   closeNewPatient(): void { if (!this.creating) this.newPatientOpen = false; }
   createNewPatient(): void {
     if (this.creating || !this.isCreateValid()) {
-      return;
-    }
-
-    if (this.paperStep === 1) {
-      this.nextPaperStep();
       return;
     }
 
@@ -417,7 +424,7 @@ export class PatientFilesPageComponent implements OnInit {
     }
 
     if (!this.editForm.firstName.trim() || !this.editForm.lastName.trim() ||
-        !/^09\\d{9}$/.test(this.editForm.phoneNumber.trim())) {
+        !/^09\d{9}$/.test(this.editForm.phoneNumber.trim())) {
       this.toast.error("اطلاعات هویتی بیمار معتبر نیست.");
       return;
     }

@@ -224,3 +224,7 @@ input {
     flex: 1;
   }
 }
+.calendar-period { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.calendar-period label { display: grid; gap: 6px; min-width: 0; font-size: .85rem; color: var(--text, #2c241b); }
+.calendar-period select { width: 100%; min-width: 0; min-height: 42px; padding: 7px 10px; border: 1px solid var(--line, #dbe6ee); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #2c241b); font: inherit; }
+.calendar-period select:focus-visible { outline: 2px solid var(--brand, #a8793f); outline-offset: 2px; }

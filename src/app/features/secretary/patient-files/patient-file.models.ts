@@ -26,6 +26,11 @@ export interface PatientFile {
   id: number;
   patientId?: string | number | null;
   financialPatientId?: string | null;
+  consultationCompleted?: boolean;
+  completionFinancialCaseId?: string | null;
+  financeCompleted?: boolean;
+  serviceApproved?: boolean;
+  serviceApprovedAtUtc?: string | null;
   fileNumber: number;
   firstName: string;
   lastName: string;
@@ -65,6 +70,16 @@ export interface CreatePatientFileResult {
 
 export interface PatientFileFinancialIdentity {
   financialPatientId: string;
+}
+
+export interface CompletePatientFileRequest {
+  patientId: string;
+  paymentMode: "cash" | "installments";
+  totalAmount: number;
+  cashReceived: number;
+  serviceUnitCounts: Record<number, number>;
+  cheques: { amount: number; number: string; ownerName: string; dueDate: string | null; installment: boolean }[];
+  notes: { amount: number; number: string; dueDate: string | null }[];
 }
 
 export interface ImportPatientFilesResult {

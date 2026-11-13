@@ -45,6 +45,19 @@
     </div>
   </header>
 
+  <div *ngIf="monthYearSelection" class="calendar-period">
+    <label><span>{{ language === 'fa' ? 'ماه' : 'Month' }}</span>
+      <select [value]="activeMonth" (change)="changeCalendarPeriod(activeYear, +$any($event.target).value)">
+        <option *ngFor="let month of calendarMonths; let i = index" [value]="i + 1">{{ month }}</option>
+      </select>
+    </label>
+    <label><span>{{ language === 'fa' ? 'سال' : 'Year' }}</span>
+      <select [value]="activeYear" (change)="changeCalendarPeriod(+$any($event.target).value, activeMonth)">
+        <option *ngFor="let year of calendarYears" [value]="year">{{ year.toLocaleString(language === 'fa' ? 'fa-IR' : 'en-US', {useGrouping: false}) }}</option>
+      </select>
+    </label>
+  </div>
+
   <div class="week-row" aria-hidden="true">
     <span *ngFor="let day of weekDays">{{ day }}</span>
   </div>

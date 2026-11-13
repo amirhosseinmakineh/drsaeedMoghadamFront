@@ -1,0 +1,191 @@
+<div class="file-view" dir="rtl">
+  <div class="file-view-summary"><strong>{{ currentFile.firstName }} {{ currentFile.lastName }}</strong><span>شماره پرونده: {{ currentFile.fileNumber }}</span><span>{{ currentFile.phoneNumber }}</span><span>تاریخ تشکیل: {{ date(currentFile.createdAt) }}</span></div>
+  <nav class="file-view-pages" aria-label="بخش‌های پرونده">
+    <button type="button" [class.active]="activePage === 'first'" [attr.aria-pressed]="activePage === 'first'" (click)="activePage = 'first'">صفحه اول · اطلاعات بیمار</button>
+    <button type="button" [class.active]="activePage === 'second'" [attr.aria-pressed]="activePage === 'second'" (click)="activePage = 'second'">صفحه دوم · مشاوره و درمان</button>
+    <button type="button" [class.active]="activePage === 'finance'" [attr.aria-pressed]="activePage === 'finance'" (click)="activePage = 'finance'">اطلاعات مالی</button>
+  </nav>
+  @if (activePage !== 'finance') {
+    @if (paperLoading) { <p class="view-status" role="status">در حال دریافت فرم پرونده…</p> }
+    @else if (paperError) { <div class="view-error" role="alert"><p>{{ paperError }}</p><button type="button" (click)="loadPaper()">تلاش دوباره</button></div> }
+    @else if (record; as paper) {
+      @if (activePage === 'first') {
+<div class="patient-intake-sheet paper-readonly">
+    <section class="patient-intake-top">
+      <div class="clinic-logo-slot"><img src="/images/delkhand-logo.webp" alt="لوگوی کلینیک دلبخند" /></div>
+
+      <div class="patient-intake-info">
+        <div class="intake-field intake-name-field">
+          <label>نام و نام خانوادگی:</label>
+          <div class="intake-name-pair">
+            <input readonly required maxlength="100" aria-label="نام"
+              [value]="currentFile.firstName" name="viewFirstName" />
+            <input readonly required maxlength="100" aria-label="نام خانوادگی"
+              [value]="currentFile.lastName" name="viewLastName" />
+          </div>
+        </div>
+
+        <div class="intake-field">
+          <label for="viewPatientMarital">وضعیت تأهل:</label>
+          <input id="viewPatientMarital" readonly [value]="paper.intake.maritalStatus ?? ''" />
+        </div>
+
+        <div class="intake-field">
+          <label for="viewPatientBirthDate">تاریخ تولد:</label>
+          <input readonly aria-label="تاریخ تولد" [value]="paper.intake.birthDate ? date(paper.intake.birthDate, true) : ''" />
+        </div>
+        <div class="intake-field">
+          <label for="viewPatientHomeAddress">آدرس منزل:</label>
+          <input readonly id="viewPatientHomeAddress" name="viewPatientHomeAddress" [value]="paper.intake.homeAddress ?? ''" />
+        </div>
+
+        <div class="intake-field">
+          <label for="viewPatientEducation">میزان تحصیلات:</label>
+          <input readonly id="viewPatientEducation" name="viewPatientEducation" [value]="paper.intake.educationLevel ?? ''" />
+        </div>
+        <div class="intake-field">
+          <label for="viewPatientWorkAddress">آدرس محل کار:</label>
+          <input readonly id="viewPatientWorkAddress" name="viewPatientWorkAddress" [value]="paper.intake.workAddress ?? ''" />
+        </div>
+
+        <div class="intake-field">
+          <label for="viewPatientMobile">شماره همراه:</label>
+          <input readonly id="viewPatientMobile" required maxlength="11" inputmode="numeric" dir="ltr"
+            pattern="09[0-9]{9}"
+            [value]="currentFile.phoneNumber" name="editPhoneNumber" />
+        </div>
+        <div class="intake-field">
+          <label for="viewPatientReferral">چطور با کلینیک آشنا شدید؟</label>
+          <input readonly id="viewPatientReferral" name="viewPatientReferral" [value]="paper.intake.referralSource ?? ''" />
+        </div>
+
+        <div class="intake-field">
+          <label for="viewPatientHomePhone">تلفن منزل:</label>
+          <input readonly id="viewPatientHomePhone" name="viewPatientHomePhone" dir="ltr" inputmode="tel" [value]="paper.intake.homePhone ?? ''" />
+        </div>
+        <div class="intake-field intake-empty-cell"></div>
+
+        <div class="intake-field">
+          <label for="viewPatientNationalCode">کد ملی:</label>
+          <input readonly id="viewPatientNationalCode" name="viewPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" />
+        </div>
+      </div>
+
+      <div class="intake-file-number">
+        <label for="viewPatientFileNumber">شماره پرونده:</label>
+        <input id="viewPatientFileNumber" readonly [value]="currentFile.fileNumber" />
+        <div class="intake-source-type">نوع پرونده: {{ currentFile.sourceType === 'Legacy' ? 'قدیمی' : 'جدید' }}</div>
+      </div>
+    </section>
+
+    <section class="patient-intake-medical">
+      <h3>اگر سابقه ابتلا به هر یک از موارد زیر را دارید، کادر روبه‌روی آن را علامت بزنید</h3>
+
+      <div class="intake-diseases">
+        @for (condition of medicalConditions; track condition.key) {
+          <label class="intake-disease">{{ condition.label }}<input disabled type="checkbox" [checked]="paper.intake.medicalHistory[condition.key] === true" /></label>
+        }
+      </div>
+
+      <div class="intake-questions">
+        <div class="intake-question">
+          <label for="viewPatientMedication">داروی خاصی مصرف می‌کنید؟ (نام دارو و مقدار مصرف)</label>
+          <input readonly id="viewPatientMedication" name="viewPatientMedication" [value]="paper.intake.medicalHistory.currentMedications ?? ''" />
+        </div>
+        <div class="intake-question">
+          <label for="viewPatientHospital">تاکنون در بیمارستان بستری شده‌اید؟ (علت و زمان)</label>
+          <input readonly id="viewPatientHospital" name="viewPatientHospital" [value]="paper.intake.medicalHistory.hospitalizationHistory ?? ''" />
+        </div>
+        <div class="intake-question">
+          <label for="viewPatientAllergy">به دارویی حساسیت دارید؟ (نام دارو)</label>
+          <input readonly id="viewPatientAllergy" name="viewPatientAllergy" [value]="paper.intake.medicalHistory.drugAllergies ?? ''" />
+        </div>
+        <div class="intake-question">
+          <label for="viewPatientPregnancy">باردار یا در دوران شیردهی هستید؟ (ماه بارداری)</label>
+          <input readonly id="viewPatientPregnancy" name="viewPatientPregnancy" [value]="paper.intake.medicalHistory.pregnancyOrBreastfeeding ?? ''" />
+        </div>
+        <div class="intake-question intake-question-wide">
+          <label for="viewDescription">موردی هست که در طی درمان می‌بایست مد نظر قرار گیرد؟</label>
+          <input readonly id="viewDescription" maxlength="2000" [value]="currentFile.description ?? ''" name="viewDescription" />
+        </div>
+      </div>
+      
+    </section>
+</div>
+      } @else {
+  <section class="paper-second-page patient-intake-sheet paper-readonly" dir="rtl">
+    <header class="paper-page-heading">
+      <div class="paper-page-heading__icon" aria-hidden="true">🦷</div>
+      <div>
+        <span class="paper-eyebrow">فرم مشاوره · صفحه دوم پرونده</span>
+        <h2>سوابق درمان و چارت دندان</h2>
+        <p>اطلاعات ثبت‌شده درمان، پرداخت و وضعیت دندان‌های بیمار</p>
+      </div>
+    </header>
+    <label class="consultation-confirmation"><input disabled type="checkbox" name="consultationCompleted" [checked]="paper.consultationCompleted === true" /><span><strong>مشاوره انجام شد</strong><small>وضعیت پایان مشاوره ثبت‌شده در پرونده</small></span></label>
+
+    <section class="paper-panel" aria-labelledby="view-paper-notes-title">
+      <div class="paper-panel__heading"><div><span class="paper-section-index">۰۱</span><h3 id="view-paper-notes-title">یادداشت دندانپزشک</h3></div></div>
+      <label class="paper-dental-notes">
+        <span>شرح معاینه و توصیه‌های درمانی</span>
+        <textarea readonly name="paperDentalNotes" rows="4" [value]="paper.intake.dentalNotes ?? ''"></textarea>
+      </label>
+    </section>
+
+    <section class="paper-panel paper-ledger-panel" aria-labelledby="view-paper-treatments-title">
+      <div class="paper-panel__heading">
+        <div><span class="paper-section-index">۰۲</span><h3 id="view-paper-treatments-title">سوابق درمان و پرداخت</h3></div>
+      </div>
+      <div class="paper-ledger-scroll" role="region" aria-label="جدول سوابق درمان و پرداخت" tabindex="0">
+        <div class="paper-ledger-frame">
+          <table class="paper-ledger">
+            <caption class="paper-ledger-caption">سوابق درمان و پرداخت؛ مبالغ به تومان</caption>
+            <colgroup><col class="ledger-date" /><col class="ledger-description" /><col class="ledger-followup" /><col class="ledger-money" /><col class="ledger-money" /><col class="ledger-money" /><col class="ledger-dentist" /></colgroup>
+            <thead><tr><th scope="col">تاریخ</th><th scope="col">توضیحات</th><th scope="col">ادامه کار</th><th scope="col">هزینه</th><th scope="col">پرداختی</th><th scope="col">مانده</th><th scope="col">دندانپزشک</th></tr></thead>
+            <tbody>
+              @for (t of paper.treatments; track $index; let i = $index) {
+                <tr>
+                  <td><input readonly aria-label="تاریخ درمان" [value]="t.treatmentDate ? date(t.treatmentDate, true) : ''" /></td>
+                  <td><textarea readonly rows="3" [name]="'desc'+i" [attr.aria-label]="'توضیحات درمان ' + (i + 1)" [value]="t.description ?? ''"></textarea></td>
+                  <td><div class="ledger-followup-options">
+                    <label><span>دارد</span><input disabled type="radio" [name]="'follow'+i" [value]="true" [checked]="t.hasFollowUp === true" /></label>
+                    <label><span>ندارد</span><input disabled type="radio" [name]="'follow'+i" [value]="false" [checked]="t.hasFollowUp === false" /></label>
+                  </div></td>
+                  <td><input readonly type="number" min="0" [name]="'cost'+i" [attr.aria-label]="'هزینه درمان ' + (i + 1) + ' به تومان'" [value]="t.cost" /></td>
+                  <td><input readonly type="number" min="0" [name]="'paid'+i" [attr.aria-label]="'پرداختی درمان ' + (i + 1) + ' به تومان'" [value]="t.paidAmount" /></td>
+                  <td><output [attr.aria-label]="'مانده درمان ' + (i + 1)">{{ t.cost - t.paidAmount | number }}</output></td>
+                  <td><input readonly [name]="'dentist'+i" [attr.aria-label]="'نام دندانپزشک درمان ' + (i + 1)" [value]="t.dentistName" /></td>
+                </tr>
+              }
+              @for (slot of [0, 1, 2, 3, 4, 5, 6]; track slot) {
+                @if (slot >= paper.treatments.length) {
+                  <tr class="ledger-blank-row" aria-hidden="true"><td></td><td></td><td><div class="ledger-followup-options"><span>دارد <i></i></span><span>ندارد <i></i></span></div></td><td></td><td></td><td></td><td></td></tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="paper-panel" aria-labelledby="view-paper-chart-title">
+      <div class="paper-panel__heading"><div><span class="paper-section-index">۰۳</span><h3 id="view-paper-chart-title">چارت دندان و خدمات انتخاب‌شده</h3></div></div>
+      <p class="paper-panel__hint">دندان‌ها و خدمات انجام‌شده یا موردنیاز ثبت‌شده در پرونده</p>
+      <div class="paper-chart-container">
+        <app-secretary-dental-chart [value]="$any(paper.dentalChart)" [readOnly]="true" />
+      </div>
+    </section>
+
+    <section class="paper-panel paper-consent-panel" aria-labelledby="view-paper-consent-title">
+      <div class="paper-panel__heading"><div><span class="paper-section-index">۰۴</span><h3 id="view-paper-consent-title">رضایت بیمار</h3></div></div>
+      <label class="paper-consent-choice"><input disabled type="checkbox" name="paperConsent" [checked]="paper.intake.consentAccepted === true" /><span>رضایت بیمار برای ثبت اطلاعات درمان دریافت شده است.</span></label>
+      <div class="view-consent-details"><span>تاریخ رضایت: {{ date(paper.intake.consentDate) }}</span>@if (signatureImage; as signature) { <img class="patient-signature" [src]="signature" alt="امضای ثبت‌شده بیمار" /> } @else if (paper.intake.patientSignature) { <span>{{ paper.intake.patientSignature }}</span> }</div>
+    </section>
+  </section>
+
+      }
+    }
+  } @else {
+    <section class="view-section"><h3>صورت‌حساب‌ها و اسناد مالی بیمار</h3><app-patient-finance-details [finance]="currentFile.finance" [patientName]="currentFile.firstName + ' ' + currentFile.lastName" [loading]="financeLoading" [error]="financeError" (retry)="loadFile()" /></section>
+  }
+</div>

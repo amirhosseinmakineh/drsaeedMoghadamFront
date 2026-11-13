@@ -1,0 +1,37 @@
+:host { display: block; }
+.completion { display: grid; gap: 1rem; color: #253b38; }
+.patient-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: 1rem; border-radius: 12px; background: #edf5f2; }
+.patient-heading span, .completion-intro, .completion-section p { color: #5f706b; font-size: .9rem; line-height: 1.9; margin: 0; }
+fieldset { min-width: 0; border: 0; margin: 0; padding: 0; display: grid; gap: 1.25rem; }
+legend { margin-bottom: .75rem; font-weight: 700; }
+.payment-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.payment-modes > label { display: grid; grid-template-columns: auto 1fr; gap: 8px; padding: 16px; border: 1px solid #d7e1dc; border-radius: 12px; cursor: pointer; }
+.payment-modes small { grid-column: 2; color: #697a74; }
+.payment-modes .selected { border-color: #287562; background: #eff8f4; }
+input[type='checkbox'], input[type='radio'] { width: 19px; height: 19px; min-height: 19px; accent-color: #287562; flex: none; }
+.completion-section { display: grid; gap: 1rem; padding: 1rem; border: 1px solid #e1e7e3; border-radius: 14px; }
+h3, h4 { margin: 0; font-size: 1rem; }
+.service-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.service-option { display: grid; gap: 8px; align-content: start; padding: 10px; border: 1px solid #e1e7e3; border-radius: 8px; }
+.service-option label { display: flex; align-items: center; gap: 8px; }
+.unit-count { color: #697a74; font-size: .8rem; }
+.unit-count input { width: 75px; }
+.document-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+button { padding: 9px 14px; border: 1px solid #cdded5; border-radius: 8px; color: #27614f; background: #f1f7f4; cursor: pointer; font: inherit; }
+.completion-document { display: grid; gap: 14px; padding: 16px; border: 1px solid #d9e2dd; border-radius: 12px; background: #fcfdfc; }
+.document-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.document-heading button { color: #a04444; background: #fff6f5; border-color: #f0d6d4; }
+.document-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; }
+.document-fields > label { display: grid; gap: 8px; font-size: .85rem; }
+input:not([type='checkbox']):not([type='radio']) { min-width: 0; min-height: 44px; border: 1px solid #cdd8d1; border-radius: 8px; padding: 8px; font: inherit; background: #fff; }
+.due-note { align-self: center; }
+.completion-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.completion-summary > div { display: grid; gap: 8px; padding: 14px; border-radius: 10px; background: #f1f6f3; }
+.completion-summary span { color: #617369; font-size: .85rem; }
+.amount-error strong { color: #b64539; }
+.receipt-confirm { display: flex; align-items: flex-start; gap: 10px; padding: 16px; border: 1px solid #cdded5; border-radius: 12px; background: #f4faf6; line-height: 1.9; }
+.receipt-confirm input { margin-top: 4px; }
+.completion-error { padding: 12px; border: 1px solid #efcfca; background: #fff2ef; color: #a4372b; border-radius: 10px; line-height: 1.8; }
+.document-review { display: grid; gap: 8px; border: 1px solid #d9e2dd; padding: 16px; border-radius: 12px; }
+.document-review b { color: #8e5e24; }
+@media (max-width: 600px) { .document-fields, .service-options, .completion-summary { grid-template-columns: 1fr; } .payment-modes > label { padding: 12px; } }

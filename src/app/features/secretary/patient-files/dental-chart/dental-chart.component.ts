@@ -79,6 +79,7 @@ function generateJaw(numbers: number[], upper: boolean): Tooth[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SecretaryDentalChartComponent {
+  @Input() readOnly = false;
   readonly services: { id: ServiceId; label: string; fill: string; stroke: string }[] = [
     { id: "composite", label: "کامپوزیت", fill: "#dcefff", stroke: "#087fc1" },
     { id: "laminate", label: "لمینت", fill: "#eadfff", stroke: "#9165c4" },
@@ -142,6 +143,7 @@ export class SecretaryDentalChartComponent {
   }
 
   select(tooth: Tooth): void {
+    if (this.readOnly) return;
     this.selectedTooth = tooth;
     this.draftService = this.treatments[tooth.id]?.service ?? "";
     this.draftDescription = this.treatments[tooth.id]?.description ?? "";
@@ -158,6 +160,7 @@ export class SecretaryDentalChartComponent {
   }
 
   save(): void {
+    if (this.readOnly) return;
     if (!this.selectedTooth) return;
     const service = this.services.find(item => item.id === this.draftService);
     if (!service) {
@@ -177,6 +180,7 @@ export class SecretaryDentalChartComponent {
   }
 
   remove(): void {
+    if (this.readOnly) return;
     if (!this.selectedTooth) return;
     const { [this.selectedTooth.id]: removed, ...remaining } = this.treatments;
     this.commitTreatments(remaining);

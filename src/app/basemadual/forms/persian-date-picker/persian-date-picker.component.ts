@@ -14,10 +14,11 @@ import { BaseDatepickerComponent } from "../../../shared/base/base-datepicker/ba
         language="fa"
         [label]="localizedLabel"
         [selectedDate]="value ?? undefined"
-        [minDate]="minDate"
+        [minDate]="minDate ?? historicalMinDate"
         [allowToday]="!!minDate"
         [unrestrictedDates]="!minDate"
         [compact]="true"
+        [monthYearSelection]="true"
         (dateChange)="valueChange.emit($event)"
       />
       @if (required) { <span class="required" aria-hidden="true">*</span> }
@@ -27,6 +28,7 @@ import { BaseDatepickerComponent } from "../../../shared/base/base-datepicker/ba
   styleUrl: "./persian-date-picker.component.scss",
 })
 export class PersianDatePickerComponent {
+  readonly historicalMinDate = new Date(1900, 0, 1);
   @Input() label = "تاریخ";
   @Input() value: Date | null = null;
   @Input() required = false;

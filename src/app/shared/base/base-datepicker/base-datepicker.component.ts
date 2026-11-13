@@ -50,6 +50,7 @@ export class BaseDatepickerComponent implements OnChanges {
   @Input() unrestrictedDates = false;
   /** Renders the calendar as a compact popover for dense filter toolbars. */
   @Input() compact = false;
+  @Input() monthYearSelection = false;
   @Output() dateChange = new EventEmitter<Date>();
 
   calendarOpen = false;
@@ -108,6 +109,44 @@ export class BaseDatepickerComponent implements OnChanges {
       this.monthStart.getTime() <
       this.findMonthStart(maxDate, this.calendarParts(maxDate)).getTime()
     );
+  }
+
+  get activeYear(): number { return this.calendarParts(this.activeMonthAnchor).year; }
+  get activeMonth(): number { return this.calendarParts(this.activeMonthAnchor).month; }
+  get calendarMonths(): string[] {
+    return this.language === "fa"
+      ? ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"]
+      : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  }
+  get calendarYears(): number[] {
+    const first = this.calendarParts(this.minSelectableDate).year;
+    const last = this.maxSelectableDate
+      ? this.calendarParts(this.maxSelectableDate).year
+      : Math.max(this.calendarParts(this.referenceToday()).year + 10, this.activeYear);
+    return Array.from({ length: Math.max(0, last - first + 1) }, (_, i) => last - i);
+  }
+  changeCalendarPeriod(year: number, month: number): void {
+    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return;
+    // Search calendar days to preserve the same Persian month, including leap years.
+    const gregorianYear = this.language === "fa" ? year + 621 : year;
+    let low = Math.floor(Date.UTC(gregorianYear - 1, 0, 1) / 86400000);
+    let high = Math.floor(Date.UTC(gregorianYear + 2, 0, 1) / 86400000);
+    while (low < high) {
+      const mid = Math.floor((low + high) / 2);
+      const utc = new Date(mid * 86400000);
+      const date = new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
+      const parts = this.calendarParts(date);
+      if (parts.year < year || (parts.year === year && parts.month < month)) low = mid + 1;
+      else high = mid;
+    }
+    const utc = new Date(low * 86400000);
+    let anchor = new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
+    if (anchor < this.minMonthStart) anchor = this.minSelectableDate;
+    const max = this.maxSelectableDate;
+    if (max && anchor > max) anchor = max;
+    this.activeMonthAnchor = anchor;
+    this.rebuildDaysCache();
+    this.cdr.markForCheck();
   }
 
   get days(): DatePickerDay[] {
@@ -257,7 +296,7 @@ export class BaseDatepickerComponent implements OnChanges {
   }
 
   private get minSelectableDate(): Date {
-    if (this.unrestrictedDates) return this.startOfDay(new Date(2000, 0, 1));
+    if (this.unrestrictedDates) return this.startOfDay(this.minDate ?? new Date(2000, 0, 1));
     if (this.minDate) return this.startOfDay(this.minDate);
     if (this.allowPastDates) return this.startOfDay(new Date(2000, 0, 1));
 
