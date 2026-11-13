@@ -305,3 +305,263 @@ th { color: #64748b; font-size: .85rem; background: #f8fafc; } .row-actions { di
 
 /* Display existing source type within the approved paper-style edit form. */
 .intake-source-type { margin-top: 2px; color: #74635c; font-size: 12px; font-weight: 700; text-align: center; }
+
+/* Patient paper-record editor: follow the existing application theme and remain usable on mobile. */
+.paper-date-field {
+  min-width: 0;
+}
+
+.patient-intake-sheet .paper-date-field,
+.patient-intake-sheet .intake-questions > label {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.patient-intake-sheet .intake-questions input,
+.patient-intake-sheet .intake-questions select {
+  max-width: 100%;
+}
+
+.patient-intake-sheet .table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.patient-intake-sheet .table-wrap table {
+  min-width: 860px;
+}
+
+.patient-intake-sheet .table-wrap input {
+  width: 100%;
+  min-width: 90px;
+}
+
+@media (max-width: 700px) {
+  .patient-intake-sheet .table-wrap table,
+  .patient-intake-sheet .table-wrap thead,
+  .patient-intake-sheet .table-wrap tbody,
+  .patient-intake-sheet .table-wrap tr,
+  .patient-intake-sheet .table-wrap th,
+  .patient-intake-sheet .table-wrap td {
+    display: revert;
+  }
+
+  .patient-intake-sheet .table-wrap td::before {
+    content: none;
+  }
+
+  .patient-intake-sheet .table-wrap td {
+    white-space: nowrap;
+  }
+}
+
+/* Second paper page follows the same visual language as the first page. */
+.paper-second-page {
+  padding: clamp(1rem, 3vw, 2rem);
+  background: var(--surface, #fff);
+  color: var(--text, #302b2b);
+}
+
+.paper-second-page h2,
+.paper-second-page h3 {
+  color: var(--primary, #85635b);
+  line-height: 1.7;
+}
+
+.paper-dental-notes {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+
+.paper-dental-notes textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.paper-second-page .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.paper-second-page .table-wrap table {
+  min-width: 850px;
+}
+
+@media (max-width: 560px) {
+  .paper-second-page {
+    padding: 0.75rem;
+  }
+
+  .paper-second-page .table-wrap input {
+    min-width: 84px;
+  }
+}
+
+
+/* Responsive paper form corrections: keep the birth-date control in the normal flow,
+   rather than beneath the absolutely positioned clinic logo. */
+.patient-intake-sheet .patient-intake-top { display: flow-root; }
+.patient-intake-sheet .intake-field:has(app-base-persian-date-picker) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: .35rem;
+  min-width: 0;
+}
+.patient-intake-sheet .intake-field app-base-persian-date-picker {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+.patient-intake-sheet .intake-field:has(app-base-persian-date-picker) > label { white-space: normal; }
+@media (max-width: 1050px) {
+  .patient-intake-top .clinic-logo-slot {
+    position: static;
+    width: min(160px, 100%);
+    height: 90px;
+    margin: 0 auto 1.25rem;
+  }
+  .patient-intake-top .patient-intake-info {
+    padding-left: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+@media (max-width: 620px) {
+  .patient-intake-top .patient-intake-info { grid-template-columns: minmax(0, 1fr); }
+  .patient-intake-top .intake-field { flex-wrap: wrap; }
+  .patient-intake-top .intake-field > label { width: 100%; }
+}
+
+/* Redesigned second paper page */
+.paper-second-page {
+  --paper-border: #e6e7eb;
+  --paper-accent: #0f766e;
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 2.25rem);
+  background: #f8fafc;
+  color: #1e293b;
+}
+.paper-page-heading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.4rem;
+  border: 1px solid #cce7e3;
+  border-radius: 20px;
+  background: linear-gradient(120deg, #e6f5f1, #f7fbfa);
+}
+.paper-page-heading__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: #fff;
+  font-size: 1.8rem;
+}
+.paper-eyebrow { color: #0f766e; font-size: .8rem; font-weight: 700; }
+.paper-second-page .paper-page-heading h2 { margin: .25rem 0; color: #134e4a; font-size: clamp(1.25rem, 2.3vw, 1.75rem); }
+.paper-page-heading p { margin: 0; color: #526474; font-size: .9rem; line-height: 1.8; }
+.paper-panel {
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid var(--paper-border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 3px 16px #0f172a06;
+}
+.paper-panel__heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
+.paper-panel__heading > div { display: flex; align-items: center; gap: .65rem; }
+.paper-second-page .paper-panel__heading h3 { margin: 0; color: #1e293b; font-size: 1.08rem; }
+.paper-section-index { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: #e5f5f1; color: #0f766e; font-weight: 800; }
+.paper-panel__hint { margin: -.25rem 0 1.2rem; color: #64748b; font-size: .84rem; line-height: 1.8; }
+.paper-dental-notes { margin: 0; color: #475569; font-weight: 600; }
+.paper-dental-notes textarea { min-height: 115px; padding: .85rem; border-radius: 12px; border: 1px solid #cbd5e1; background: #fcfdff; }
+.paper-add-button, .paper-remove-button { border: 0; border-radius: 10px; padding: .65rem 1rem; cursor: pointer; font: inherit; font-weight: 700; }
+.paper-add-button { background: #0f766e; color: white; }
+.paper-add-button:hover { background: #115e59; }
+.paper-remove-button { color: #b91c1c; background: #fff1f2; font-size: .8rem; }
+.paper-empty-state { padding: 1.75rem; text-align: center; border: 1px dashed #cbd5e1; border-radius: 14px; color: #64748b; background: #f8fafc; }
+.paper-treatment-list { display: grid; gap: 1rem; }
+.paper-treatment-card { padding: 1rem; border: 1px solid #e2e8f0; border-radius: 15px; background: #fcfdff; }
+.paper-treatment-card__header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.paper-treatment-card__header strong { color: #0f766e; }
+.paper-treatment-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: end; }
+.paper-treatment-field { display: grid; gap: .4rem; min-width: 0; color: #475569; font-size: .82rem; font-weight: 700; }
+.paper-treatment-field input { width: 100%; min-width: 0; min-height: 44px; padding: .65rem; border: 1px solid #cbd5e1; border-radius: 10px; background: white; }
+.paper-treatment-date app-base-persian-date-picker { display: block; min-width: 0; width: 100%; }
+.paper-treatment-description { grid-column: span 2; }
+.paper-balance { padding: .65rem .85rem; min-height: 65px; border-radius: 10px; background: #f0fdfa; }
+.paper-balance strong { color: #115e59; font-size: 1rem; }
+.paper-followup { display: flex; align-items: center; gap: .6rem; color: #334155; font-size: .85rem; }
+.paper-followup input, .paper-consent-choice input { width: 20px; height: 20px; min-height: 20px; accent-color: #0f766e; flex: none; }
+.paper-chart-container { min-width: 0; overflow-x: auto; }
+.paper-consent-panel { border-color: #cce7e3; }
+.paper-consent-choice { display: flex; align-items: center; gap: .75rem; padding: 1rem; border-radius: 12px; background: #f0fdfa; color: #134e4a; line-height: 1.8; }
+@media (max-width: 800px) {
+  .paper-treatment-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .paper-treatment-description { grid-column: span 2; }
+}
+@media (max-width: 560px) {
+  .paper-second-page { gap: .85rem; padding: .75rem; }
+  .paper-page-heading { padding: 1rem; align-items: flex-start; border-radius: 14px; }
+  .paper-page-heading__icon { flex-basis: 42px; width: 42px; height: 42px; font-size: 1.25rem; }
+  .paper-panel { border-radius: 14px; padding: .85rem; }
+  .paper-treatment-fields { grid-template-columns: minmax(0, 1fr); }
+  .paper-treatment-description { grid-column: auto; }
+  .paper-panel__heading { align-items: stretch; }
+  .paper-add-button { width: 100%; }
+}
+
+
+/* Keep the Persian calendar visible inside the patient-paper modal on desktop.
+   The modal has its own scrolling region, so an absolutely positioned calendar
+   would be clipped and cover adjacent treatment cards. */
+@media (min-width: 701px) {
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open .calendar-content {
+    position: fixed;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 48px));
+    max-height: min(610px, calc(100dvh - 72px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 9999;
+    box-shadow: 0 24px 75px rgba(15, 23, 42, .3);
+  }
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open {
+    z-index: 9999;
+  }
+}
+.patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact-trigger {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact-trigger strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 700px) {
+  .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open .calendar-content {
+    position: fixed;
+    inset: auto 12px 12px;
+    transform: none;
+    width: auto;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    z-index: 9999;
+  }
+}

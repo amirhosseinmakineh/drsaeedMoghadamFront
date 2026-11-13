@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostListener } from "@angular/core";
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from "@angular/core";
 
 type ToothType = "molar" | "premolar" | "canine" | "central";
 type ServiceId = "composite" | "laminate" | "implant" | "root" | "filling" | "crown" | "extraction";
@@ -15,7 +15,12 @@ interface Tooth {
   numberY: number;
 }
 
-interface ToothTreatment { service: ServiceId; description: string; }
+interface ToothTreatment {
+  service: ServiceId;
+  description: string;
+  toothName: string;
+  serviceName: string;
+}
 
 const PATHS: Record<ToothType, { outline: string; detail: string }> = {
   molar: {
@@ -88,7 +93,23 @@ export class SecretaryDentalChartComponent {
     ...generateJaw([32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17], false),
   ];
 
-  treatments: Record<number, ToothTreatment> = {};
+  private currentTreatments: Record<number, ToothTreatment> = {};
+
+  @Input()
+  set value(value: Record<number, ToothTreatment> | null | undefined) {
+    this.currentTreatments = value ? { ...value } : {};
+  }
+
+  get treatments(): Record<number, ToothTreatment> {
+    return this.currentTreatments;
+  }
+
+  @Output() readonly valueChange = new EventEmitter<Record<number, ToothTreatment>>();
+
+  private commitTreatments(value: Record<number, ToothTreatment>): void {
+    this.currentTreatments = value;
+    this.valueChange.emit({ ...value });
+  }
   selectedTooth: Tooth | null = null;
   draftService = "";
   draftDescription = "";
@@ -143,17 +164,22 @@ export class SecretaryDentalChartComponent {
       this.validationError = "لطفاً یک خدمت انتخاب کنید.";
       return;
     }
-    this.treatments = {
+    this.commitTreatments({
       ...this.treatments,
-      [this.selectedTooth.id]: { service: service.id, description: this.draftDescription.trim() },
-    };
+      [this.selectedTooth.id]: {
+        service: service.id,
+        description: this.draftDescription.trim(),
+        toothName: this.toothLabel(this.selectedTooth),
+        serviceName: service.label,
+      },
+    });
     this.closeEditor();
   }
 
   remove(): void {
     if (!this.selectedTooth) return;
     const { [this.selectedTooth.id]: removed, ...remaining } = this.treatments;
-    this.treatments = remaining;
+    this.commitTreatments(remaining);
     this.closeEditor();
   }
 

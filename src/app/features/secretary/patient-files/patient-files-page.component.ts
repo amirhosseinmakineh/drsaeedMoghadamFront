@@ -1,3 +1,5 @@
+import { PersianDatePickerComponent } from "../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
+import { PatientPaperRecord, PatientPaperMedicalHistory } from "./patient-paper-intake.models";
 import { CommonModule, Location } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
@@ -24,13 +26,37 @@ import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/
     BaseFilterBarComponent, BaseLoadingComponent, BaseModalComponent, BasePageHeaderComponent,
     BasePageShellComponent, BaseSearchFilterComponent, BaseSelectFilterComponent,
     BaseTablePaginationComponent, SecretaryAccountShellComponent, PatientFinanceDetailsComponent,
-    SecretaryDentalChartComponent],
+    SecretaryDentalChartComponent, PersianDatePickerComponent],
   templateUrl: "./patient-files-page.component.html",
   styleUrl: "./patient-files-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PatientFilesPageComponent implements OnInit {
   files: PatientFile[] = [];
+  paperFile: PatientFile | null = null;
+  paperLoading = false;
+  paperSaving = false;
+  paperRecord: PatientPaperRecord = this.emptyPaperRecord();
+  paperBirthDate: Date | null = null;
+  paperStep = 1;
+  pendingPaperFileId: number | null = null;
+  readonly medicalConditions: { key: keyof PatientPaperMedicalHistory; label: string }[] = [
+    { key: "heartDisease", label: "ناراحتی قلبی" },
+    { key: "bloodPressure", label: "فشار خون" },
+    { key: "bleeding", label: "خونریزی" },
+    { key: "diabetes", label: "دیابت" },
+    { key: "thyroid", label: "تیروئید" },
+    { key: "liverDisease", label: "بیماری کبدی" },
+    { key: "respiratoryDisease", label: "بیماری تنفسی" },
+    { key: "kidneyDisease", label: "بیماری کلیوی" },
+    { key: "hepatitis", label: "هپاتیت" },
+    { key: "malignancy", label: "بدخیمی" },
+    { key: "infectiousDisease", label: "بیماری عفونی" },
+    { key: "digestiveDisease", label: "بیماری گوارشی" },
+    { key: "allergy", label: "حساسیت" },
+    { key: "rheumatism", label: "روماتیسم" },
+    { key: "epilepsy", label: "صرع" },
+  ];
   totalCount = 0;
   query: PatientFileQuery = { search: "", fileNumber: "", sourceType: "", page: 1, pageSize: 10 };
   loading = false;
@@ -82,6 +108,123 @@ export class PatientFilesPageComponent implements OnInit {
   changePage(page: number): void { this.query = { ...this.query, page }; this.loadFiles(); }
   changePageSize(value: string): void { this.query = { ...this.query, pageSize: Number(value), page: 1 }; this.loadFiles(); }
 
+  private emptyPaperRecord(): PatientPaperRecord {
+    return { intake: { medicalHistory: {} }, treatments: [], dentalChart: {} };
+  }
+
+  openPaperRecord(file: PatientFile): void {
+    this.paperFile = file;
+    this.paperRecord = this.emptyPaperRecord();
+    this.paperBirthDate = null;
+    this.paperStep = 1;
+    this.paperLoading = true;
+    this.api.getPaperRecord(file.id).pipe(finalize(() => {
+      this.paperLoading = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: record => {
+        this.paperBirthDate = this.parseDateOnly(record.intake?.birthDate);
+        this.paperRecord = {
+        ...record,
+        intake: { ...record.intake, medicalHistory: record.intake?.medicalHistory ?? {} },
+        treatments: record.treatments ?? [],
+        dentalChart: record.dentalChart ?? {},
+      };
+      },
+      error: error => this.toast.error(this.errorMessage(error, "دریافت فرم پرونده انجام نشد.")),
+    });
+  }
+
+  onPaperBirthDateChange(value: Date | null): void {
+    this.paperBirthDate = value;
+    this.paperRecord.intake.birthDate = value
+      ? `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}-${String(value.getUTCDate()).padStart(2, "0")}`
+      : null;
+  }
+
+  private parseDateOnly(value: string | null | undefined): Date | null {
+    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return null;
+    }
+
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  parseTreatmentDate(value: string): Date | null {
+    return this.parseDateOnly(value);
+  }
+
+  onTreatmentDateChange(
+    treatment: PatientPaperRecord["treatments"][number],
+    value: Date | null,
+  ): void {
+    if (!value) {
+      return;
+    }
+
+    treatment.treatmentDate =
+      `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}-${String(value.getUTCDate()).padStart(2, "0")}`;
+  }
+
+  setMedicalCondition(key: keyof PatientPaperMedicalHistory, value: string): void {
+    (this.paperRecord.intake.medicalHistory as Record<string, string | boolean | null | undefined>)[key] =
+      value === "yes" ? true : value === "no" ? false : null;
+  }
+
+  closePaperRecord(): void {
+    if (!this.paperSaving) {
+      this.paperFile = null;
+      this.pendingPaperFileId = null;
+    }
+  }
+
+  onDentalChartChange(value: Record<string, unknown>): void {
+    this.paperRecord = {
+      ...this.paperRecord,
+      dentalChart: value,
+    };
+  }
+
+  startPaperCreation(): void {
+    this.paperRecord = this.emptyPaperRecord();
+    this.paperBirthDate = null;
+    this.paperStep = 1;
+    this.pendingPaperFileId = null;
+  }
+
+  nextPaperStep(): void {
+    this.paperStep = 2;
+  }
+
+  previousPaperStep(): void {
+    this.paperStep = 1;
+  }
+
+  addPaperTreatment(): void {
+    this.paperRecord.treatments.push({
+      treatmentDate: new Date().toISOString().slice(0, 10),
+      description: "", hasFollowUp: false, cost: 0, paidAmount: 0, dentistName: "",
+    });
+  }
+
+  savePaperRecord(): void {
+    if (!this.paperFile || this.paperSaving || this.paperLoading) return;
+    if (this.paperRecord.treatments.some(t =>
+      !t.dentistName.trim() || t.cost < 0 || t.paidAmount < 0 || t.paidAmount > t.cost)) {
+      this.toast.error("اطلاعات هزینه، پرداختی یا نام دندانپزشک معتبر نیست.");
+      return;
+    }
+    this.paperSaving = true;
+    this.api.savePaperRecord(this.paperFile.id, this.paperRecord).pipe(finalize(() => {
+      this.paperSaving = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: () => { this.toast.success("اطلاعات تکمیلی پرونده ذخیره شد."); this.paperFile = null; },
+      error: error => this.toast.error(this.errorMessage(error, "ذخیره فرم پرونده انجام نشد.")),
+    });
+  }
+
   openFinance(file: PatientFile): void { this.financeFile = file; this.financeError = ""; this.refreshFinance(); }
   refreshFinance(): void {
     if (!this.financeFile || this.financeRefreshing) return;
@@ -121,32 +264,103 @@ export class PatientFilesPageComponent implements OnInit {
     this.selectedPatient = patient;
     this.createOpen = false;
     this.createIntakeOpen = true;
+    this.startPaperCreation();
   }
   create(): void {
-    if (this.creating || !this.createIntakeOpen || !this.selectedPatient) return;
+    if (this.creating || !this.createIntakeOpen || !this.selectedPatient) {
+      return;
+    }
+
+    if (this.paperStep === 1) {
+      this.nextPaperStep();
+      return;
+    }
+
     this.creating = true;
-    this.api.createFromReservation(this.selectedPatient.id).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: (result) => { this.toast.success(`پرونده با شماره ${result.fileNumber} ثبت شد.`); this.createIntakeOpen = false; this.createOpen = false; this.selectedPatient = null; this.loadFiles(); },
-        error: (error) => this.toast.error(this.errorMessage(error, "ثبت پرونده انجام نشد.")) });
+    if (this.pendingPaperFileId !== null) {
+      this.persistCreatedPaper(this.pendingPaperFileId);
+      return;
+    }
+
+    this.api.createFromReservation(this.selectedPatient.id).subscribe({
+      next: file => {
+        this.pendingPaperFileId = file.id;
+        this.persistCreatedPaper(file.id);
+      },
+      error: error => {
+        this.creating = false;
+        this.toast.error(this.errorMessage(error, "ثبت پرونده انجام نشد."));
+        this.cdr.markForCheck();
+      },
+    });
   }
+
+  private persistCreatedPaper(fileId: number): void {
+    this.api.savePaperRecord(fileId, this.paperRecord).pipe(
+      finalize(() => {
+        this.creating = false;
+        this.cdr.markForCheck();
+      }),
+    ).subscribe({
+      next: () => {
+        this.toast.success("پرونده و اطلاعات درمان با موفقیت ذخیره شدند.");
+        this.pendingPaperFileId = null;
+        this.createIntakeOpen = false;
+        this.newPatientOpen = false;
+        this.createOpen = false;
+        this.selectedPatient = null;
+        this.loadFiles();
+      },
+      error: error => {
+        this.toast.error(
+          this.errorMessage(error, "پرونده ایجاد شد، اما ذخیره فرم کامل ناموفق بود. دوباره ثبت را بزنید؛ پرونده تکراری ایجاد نمی‌شود."),
+        );
+      },
+    });
+  }
+
   openNewPatient(): void {
     this.createForm = { firstName: "", lastName: "", phoneNumber: "", description: "" };
     this.newPatientOpen = true;
+    this.startPaperCreation();
   }
   closeNewPatient(): void { if (!this.creating) this.newPatientOpen = false; }
   createNewPatient(): void {
-    if (this.creating || !this.isCreateValid()) return;
+    if (this.creating || !this.isCreateValid()) {
+      return;
+    }
+
+    if (this.paperStep === 1) {
+      this.nextPaperStep();
+      return;
+    }
+
     this.creating = true;
+    if (this.pendingPaperFileId !== null) {
+      this.persistCreatedPaper(this.pendingPaperFileId);
+      return;
+    }
+
     const request = {
       firstName: this.createForm.firstName.trim(),
       lastName: this.createForm.lastName.trim(),
       phoneNumber: this.createForm.phoneNumber.trim(),
       description: this.createForm.description.trim() || undefined,
     };
-    this.api.createPatientFile(request).pipe(finalize(() => { this.creating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: (result) => { this.toast.success(`بیمار با موفقیت ثبت شد. شماره پرونده: ${result.fileNumber}`); this.newPatientOpen = false; this.loadFiles(); },
-        error: (error) => this.toast.error(this.errorMessage(error, "ثبت بیمار انجام نشد.")) });
+
+    this.api.createPatientFile(request).subscribe({
+      next: file => {
+        this.pendingPaperFileId = file.id;
+        this.persistCreatedPaper(file.id);
+      },
+      error: error => {
+        this.creating = false;
+        this.toast.error(this.errorMessage(error, "ثبت بیمار انجام نشد."));
+        this.cdr.markForCheck();
+      },
+    });
   }
+
   isCreateValid(): boolean {
     return !!this.createForm.firstName.trim() &&
       !!this.createForm.lastName.trim() &&
@@ -154,17 +368,95 @@ export class PatientFilesPageComponent implements OnInit {
   }
 
   openEdit(file: PatientFile): void {
-    this.editing = file; this.editForm = { firstName: file.firstName, lastName: file.lastName, phoneNumber: file.phoneNumber, description: file.description ?? "" }; this.editOpen = true;
+    this.editing = file;
+    this.editForm = {
+      firstName: file.firstName,
+      lastName: file.lastName,
+      phoneNumber: file.phoneNumber,
+      description: file.description ?? "",
+    };
+    this.paperRecord = this.emptyPaperRecord();
+    this.paperLoading = true;
+    this.editOpen = true;
+
+    this.api.getPaperRecord(file.id).pipe(
+      finalize(() => {
+        this.paperLoading = false;
+        this.cdr.markForCheck();
+      }),
+    ).subscribe({
+      next: record => {
+        this.paperRecord = {
+          ...record,
+          intake: {
+            ...record.intake,
+            medicalHistory: record.intake?.medicalHistory ?? {},
+          },
+          dentalChart: record.dentalChart ?? {},
+          treatments: record.treatments ?? [],
+        };
+        this.paperBirthDate = this.parseDateOnly(record.intake.birthDate);
+      },
+      error: error => {
+        this.toast.error(this.errorMessage(error, "دریافت اطلاعات پرونده ناموفق بود."));
+        this.editOpen = false;
+      },
+    });
   }
-  closeEdit(): void { if (!this.updating) { this.editOpen = false; this.editing = null; } }
+
+  closeEdit(): void {
+    if (!this.updating) {
+      this.editOpen = false;
+      this.editing = null;
+    }
+  }
+
   update(): void {
-    if (!this.editing || this.updating || !this.editForm.firstName.trim() || !this.editForm.lastName.trim() || !this.editForm.phoneNumber.trim()) return;
+    if (!this.editing || this.updating || this.paperLoading) {
+      return;
+    }
+
+    if (!this.editForm.firstName.trim() || !this.editForm.lastName.trim() ||
+        !/^09\\d{9}$/.test(this.editForm.phoneNumber.trim())) {
+      this.toast.error("اطلاعات هویتی بیمار معتبر نیست.");
+      return;
+    }
+
     this.updating = true;
-    const body = { firstName: this.editForm.firstName.trim(), lastName: this.editForm.lastName.trim(), phoneNumber: this.editForm.phoneNumber.trim(), description: this.editForm.description.trim() || null };
-    this.api.updatePatientFile(this.editing.id, body).pipe(finalize(() => { this.updating = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: () => { this.toast.success("اطلاعات پرونده با موفقیت ویرایش شد."); this.editOpen = false; this.editing = null; this.loadFiles(); },
-        error: (error) => this.toast.error(this.errorMessage(error, "ویرایش پرونده انجام نشد.")) });
+    const body = {
+      firstName: this.editForm.firstName.trim(),
+      lastName: this.editForm.lastName.trim(),
+      phoneNumber: this.editForm.phoneNumber.trim(),
+      description: this.editForm.description.trim() || null,
+    };
+
+    this.api.updatePatientFile(this.editing.id, body).subscribe({
+      next: () => {
+        this.api.savePaperRecord(this.editing!.id, this.paperRecord).pipe(
+          finalize(() => {
+            this.updating = false;
+            this.cdr.markForCheck();
+          }),
+        ).subscribe({
+          next: () => {
+            this.toast.success("تمام اطلاعات پرونده ذخیره شد.");
+            this.editOpen = false;
+            this.editing = null;
+            this.loadFiles();
+          },
+          error: error => {
+            this.toast.error(this.errorMessage(error, "اطلاعات هویتی ذخیره شد، ولی ثبت صفحه دوم ناموفق بود؛ دوباره تلاش کنید."));
+          },
+        });
+      },
+      error: error => {
+        this.updating = false;
+        this.toast.error(this.errorMessage(error, "ویرایش پرونده انجام نشد."));
+        this.cdr.markForCheck();
+      },
+    });
   }
+
   remove(): void {
     if (!this.deleting || this.deleteLoading) return;
     this.deleteLoading = true;
