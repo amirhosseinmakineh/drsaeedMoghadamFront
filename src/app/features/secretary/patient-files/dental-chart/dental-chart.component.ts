@@ -80,7 +80,7 @@ export class SecretaryDentalChartComponent {
     { id: "implant", label: "ایمپلنت", fill: "#ffe0e1", stroke: "#e13f4b" },
     { id: "root", label: "اندو", fill: "#fff0c9", stroke: "#d49128" },
     { id: "filling", label: "ترمیم", fill: "#d9f5e8", stroke: "#38a478" },
-    { id: "crown", label: "روکش", fill: "#fff0df", stroke: "#d98545" },
+      { id: "crown", label: "روکش", fill: "#fbd7f0", stroke: "#ff00d2" },
     { id: "extraction", label: "کشیدن", fill: "#e7ebed", stroke: "#7c858c" },
   ];
   readonly teeth: Tooth[] = [
