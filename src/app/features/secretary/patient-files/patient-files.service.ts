@@ -30,6 +30,14 @@ export class PatientFilesService {
     return this.http.post<{ financialCaseId: string }>(`${this.endpoint}/${patientFileId}/complete-finance`, body, { headers: this.authHeaders() });
   }
 
+  confirmFinance(patientFileId: number) {
+    return this.http.post<{ financeConfirmedAtUtc: string }>(`${this.endpoint}/${patientFileId}/confirm-finance`, {}, { headers: this.authHeaders() });
+  }
+
+  confirmProfile(patientFileId: number) {
+    return this.http.post<{ profileConfirmedAtUtc: string }>(`${this.endpoint}/${patientFileId}/confirm-profile`, {}, { headers: this.authHeaders() });
+  }
+
   approveService(patientFileId: number) {
     return this.http.post<{ approvedAtUtc: string }>(`${this.endpoint}/${patientFileId}/approve-service`, {}, { headers: this.authHeaders() });
   }
