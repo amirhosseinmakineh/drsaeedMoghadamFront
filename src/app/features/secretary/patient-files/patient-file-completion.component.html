@@ -4,7 +4,7 @@
   @if (error) { <p class="completion-error" role="alert">{{ error }}</p> }
   @if (!loading && file.financeCompleted && !details) { <app-base-button variant="secondary" (pressed)="load()">دریافت دوباره اطلاعات مالی</app-base-button> }
   @if (!loading && details) {
-    <p class="completion-intro">وجه و اسناد تحویل‌گرفته‌شده را بررسی کنید و سپس اجازه انجام خدمات را ثبت کنید.</p>
+    <p class="completion-intro">هر مرحله باید به‌صورت مستقل توسط منشی بررسی و تأیید شود: مالی، پروفایل بیمار، سپس مجوز درمان.</p>
     <div class="completion-summary">
       <div><span>روش پرداخت</span><strong>{{ details.case.paymentMethod || '—' }}</strong></div>
       <div><span>هزینه درمان</span><strong>{{ money(details.case.totalAmount) }}</strong></div>
@@ -17,8 +17,15 @@
     @for (note of details.promissoryNotes ?? []; track note.id) {
       <article class="document-review"><strong>سفته {{ note.serialNumber }}</strong><span>{{ money(note.amount) }}</span><b>سررسید: {{ date(note.dueDate) }}</b><span>{{ status(note.status) }}</span></article>
     }
-    <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="reviewConfirmed" [disabled]="saving" /><span>اطلاعات مالی و وجه یا اصل اسناد را بررسی کردم؛ انجام خدمات برای بیمار مجاز است.</span></label>
-    <app-base-button [disabled]="!reviewConfirmed" [loading]="saving" (pressed)="approve()">تأیید؛ انجام کار بشود</app-base-button>
+    <p class="completion-intro">مرحله فعلی: {{ file.workflowStage || 'در انتظار تأیید' }}</p>
+    <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="reviewConfirmed" [disabled]="saving" /><span>اطلاعات این مرحله را شخصاً بررسی و تأیید می‌کنم.</span></label>
+    @if (!file.financeConfirmedAtUtc) {
+      <app-base-button [disabled]="!reviewConfirmed" [loading]="saving" (pressed)="confirmFinance()">۱. تأیید مالی توسط منشی</app-base-button>
+    } @else if (!file.profileConfirmedAtUtc) {
+      <app-base-button [disabled]="!reviewConfirmed" [loading]="saving" (pressed)="confirmProfile()">۲. تأیید پروفایل بیمار توسط منشی</app-base-button>
+    } @else if (!file.serviceApproved) {
+      <app-base-button [disabled]="!reviewConfirmed" [loading]="saving" (pressed)="approve()">۳. تأیید نهایی و اجازه انجام خدمات</app-base-button>
+    } @else { <p role="status">مجوز انجام خدمات تأیید شده است.</p> }
   }
   @if (!loading && !file.financeCompleted) {
     @if (existingCases.length) {
