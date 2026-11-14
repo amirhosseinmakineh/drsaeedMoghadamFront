@@ -39,7 +39,12 @@
   <app-base-modal class="statements-modal" [open]="!!statementsFile" [title]="'صورت‌حساب‌های ' + (statementsFile?.firstName ?? '') + ' ' + (statementsFile?.lastName ?? '')" (close)="closeStatements()">
     @if (statementsFile) {
       <div class="patient-meta"><span>شماره پرونده: <b>{{ statementsFile.fileNumber }}</b></span><span dir="ltr">{{ statementsFile.phoneNumber }}</span></div>
-      @if (statementsFile.id > 0) {
+      @if (statementsLoading) {
+        <p role="status">در حال دریافت پرونده کامل بیمار...</p>
+      } @else if (statementsError) {
+        <p class="error" role="alert">{{ statementsError }}</p>
+        <button type="button" (click)="retryStatements()">تلاش دوباره</button>
+      } @else if (statementsFile.id > 0) {
         <app-patient-file-view [file]="statementsFile" [medicalConditions]="medicalConditions" />
       } @else {
         <p class="empty">پرونده بیمار در حال بارگذاری است.</p>
