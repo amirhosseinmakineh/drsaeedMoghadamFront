@@ -12,6 +12,23 @@
       <div><span>پرداخت قطعی</span><strong>{{ money(details.case.totalPaidAmount) }}</strong></div>
       <div><span>مانده وصول‌نشده</span><strong>{{ money(details.case.remainingAmount) }}</strong></div>
     </div>
+    @if (existingInstallments.length) {
+      <section class="completion-section">
+        <h3>جدول اقساط ماهانه</h3>
+        @for (item of existingInstallments; track item.id) {
+          <article class="document-review">
+            <strong>قسط {{ $index + 1 }} · {{ money(item.amount) }}</strong>
+            <span>سررسید: {{ date(item.dueDate) }}</span>
+            @if (item.paidAtUtc) {
+              <strong>پرداخت‌شده · {{ date(item.paidAtUtc) }}</strong>
+            } @else {
+              <span>در انتظار پرداخت</span>
+              <button type="button" [disabled]="payingInstallmentId !== null" (click)="markInstallmentPaid(item.id)">ثبت پرداخت‌شده</button>
+            }
+          </article>
+        }
+      </section>
+    }
     @for (cheque of details.cheques ?? []; track cheque.id) {
       <article class="document-review"><strong>{{ cheque.isGuarantee ? 'چک ضمانت' : 'چک معمولی' }} {{ cheque.sayadNumber }}</strong><span>{{ cheque.ownerName }} · {{ money(cheque.amount) }}</span><b>سررسید: {{ date(cheque.dueDate) }}</b><span>{{ cheque.isGuarantee && cheque.status === 1 ? 'نگهداری ضمانت' : status(cheque.status) }}</span></article>
     }
@@ -109,7 +126,7 @@
           @if (paymentExcess > 0) { <p class="completion-error">مجموع نقد و اسناد پرداخت از هزینه درمان بیشتر است؛ فقط مبلغ سفته ضمانت می‌تواند مازاد باشد.</p> }
         </section>
       }
-      <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="receiptConfirmed" /><span>{{ paymentMode === 'cash' ? 'کل مبلغ ' + money(totalAmount) + ' را از بیمار دریافت کرده‌ام.' : 'وجه نقد درج‌شده و اصل تمام چک‌ها و سفته‌های ثبت‌شده را تحویل گرفته‌ام.' }}</span></label>
+      <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="receiptConfirmed" /><span>{{ paymentMode === 'cash' ? 'کل مبلغ ' + money(totalAmount) + ' را از بیمار دریافت کرده‌ام.' : 'وجه نقد درج‌شده و اسناد فیزیکی ثبت‌شده (در صورت وجود) را دریافت کرده‌ام و برنامه اقساط را بررسی کرده‌ام.' }}</span></label>
     </fieldset>
     <app-base-button [loading]="saving" [disabled]="!receiptConfirmed || !hasChartServices" (pressed)="submit()">{{ editFinance ? 'ذخیره اصلاحات مالی' : 'ثبت مالی پرونده' }}</app-base-button>
   }
