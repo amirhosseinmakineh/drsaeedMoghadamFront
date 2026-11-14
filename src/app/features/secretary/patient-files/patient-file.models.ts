@@ -77,6 +77,7 @@ export interface PatientFileFinancialIdentity {
 }
 
 export interface CompletePatientFileRequest {
+  installments?: { amount: number; dueDate: string }[];
   installmentDescription?: string | null;
   patientId: string;
   paymentMode: "cash" | "installments";
