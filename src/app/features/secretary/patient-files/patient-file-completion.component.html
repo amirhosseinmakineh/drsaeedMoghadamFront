@@ -47,7 +47,7 @@
       <legend>روش پرداخت</legend>
       <div class="payment-modes">
         <label [class.selected]="paymentMode === 'cash'"><input type="radio" name="completion-mode" [checked]="paymentMode === 'cash'" (change)="changeMode('cash')" /><span>نقدی</span><small>دریافت کل هزینه درمان</small></label>
-        <label [class.selected]="paymentMode === 'installments'"><input type="radio" name="completion-mode" [checked]="paymentMode === 'installments'" (change)="changeMode('installments')" /><span>اقساط</span><small>چک، چک ضمانت یا سفته</small></label>
+        <label [class.selected]="paymentMode === 'installments'"><input type="radio" name="completion-mode" [checked]="paymentMode === 'installments'" (change)="changeMode('installments')" /><span>اقساط</span><small>چک، سفته یا جدول اقساط</small></label>
       </div>
       <section class="completion-section">
         <h3>خدمات ثبت‌شده در چارت پرونده</h3>
@@ -65,6 +65,24 @@
           <label class="installment-description-field">توضیحات نحوه پرداخت اقساط<textarea rows="4" maxlength="4000" [(ngModel)]="installmentDescription" (ngModelChange)="receiptConfirmed = false" placeholder="مثلاً: مانده درمان در ۱۰ قسط ماهانه، هر قسط ۱۵ میلیون تومان؛ سفته بابت ضمانت تحویل گرفته شد."></textarea></label>
           <p>چک معمولی برای پرداخت اقساط است و تاریخ سررسید دارد. چک ضمانت تا عدم پرداخت اقساط نزد مجموعه می‌ماند و خودکار وصول نمی‌شود. می‌توانید چک معمولی، چک ضمانت و سفته را هم‌زمان ثبت کنید. چک ضمانت و سفته جدید صرفاً برای ضمانت هستند و مبلغش می‌تواند بیشتر از هزینه درمان باشد؛ بدهی بیمار بر اساس هزینه درمان محاسبه می‌شود.</p>
           <div class="document-actions"><button type="button" (click)="addCheque(false)">+ چک معمولی</button><button type="button" (click)="addCheque(true)">+ چک ضمانت</button><button type="button" (click)="addNote()">+ سفته ضمانت</button></div>
+          <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="useInstallmentTable" (ngModelChange)="receiptConfirmed = false" /><span>جدول اقساط (پرداخت ماهانه در یکتا یا کارت‌به‌کارت)</span></label>
+          @if (useInstallmentTable) {
+            <section class="completion-section">
+              <h3>جدول اقساط</h3>
+              <p>هر قسط فقط تاریخ و مبلغ دارد. بعد از پرداخت، از بخش پرونده مالی آن را تسویه کنید.</p>
+              <button type="button" (click)="addInstallment()">+ افزودن قسط</button>
+              @for (installment of installments; track installment; let i = $index) {
+                <article class="completion-document">
+                  <div class="document-heading"><h4>قسط {{ i + 1 }}</h4><button type="button" (click)="installments.splice(i, 1); receiptConfirmed = false">حذف</button></div>
+                  <div class="document-fields">
+                    <app-base-persian-date-picker label="تاریخ سررسید" [value]="installment.dueDate" (valueChange)="installment.dueDate = $event; receiptConfirmed = false" />
+                    <app-base-number-input [inputId]="'completion-installment-' + i" label="مبلغ قسط" suffix="تومان" [maxFractionDigits]="2" [value]="installment.amount" (valueChange)="installment.amount = $event; receiptConfirmed = false" />
+                  </div>
+                </article>
+              }
+              <strong>جمع اقساط: {{ money(installmentTotal) }}</strong>
+            </section>
+          }
           @for (cheque of cheques; track cheque; let i = $index) {
             <article class="completion-document">
               <div class="document-heading"><h4>{{ cheque.isGuarantee ? 'چک ضمانت' : 'چک معمولی' }} {{ i + 1 }}</h4><button type="button" (click)="cheques.splice(i, 1); receiptConfirmed = false">حذف</button></div>
