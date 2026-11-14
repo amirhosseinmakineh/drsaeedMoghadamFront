@@ -20,11 +20,13 @@ import { formatIranDateTime, toIranDateInputValue } from "../../utils/iran-datet
 import { BaseModalComponent } from "../../basemadual";
 import { PatientFinanceDetailsComponent } from "../../shared/patient-finance/patient-finance-details.component";
 import { environment } from "../../../environments/environment";
+import { PatientFileViewComponent } from "../../features/secretary/patient-files/patient-file-view.component";
+import { PatientPaperMedicalHistory } from "../../features/secretary/patient-files/patient-paper-intake.models";
 
 @Component({
   selector: "app-admin-patient-finance-report",
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseDatepickerComponent, BaseModalComponent, PatientFinanceDetailsComponent],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent, BaseModalComponent, PatientFinanceDetailsComponent, PatientFileViewComponent],
   templateUrl: "./admin-patient-finance-report.component.html",
   styleUrl: "./admin-patient-finance-report.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +53,24 @@ export class AdminPatientFinanceReportComponent implements OnInit {
   statementsError = "";
   uploadingDocument = false;
   deletingDocument = false;
+
+  readonly medicalConditions: { key: keyof PatientPaperMedicalHistory; label: string }[] = [
+    { key: "heartDisease", label: "ناراحتی قلبی" },
+    { key: "bloodPressure", label: "فشار خون" },
+    { key: "bleeding", label: "خونریزی" },
+    { key: "diabetes", label: "دیابت" },
+    { key: "thyroid", label: "تیروئید" },
+    { key: "liverDisease", label: "بیماری کبدی" },
+    { key: "respiratoryDisease", label: "بیماری تنفسی" },
+    { key: "kidneyDisease", label: "بیماری کلیوی" },
+    { key: "hepatitis", label: "هپاتیت" },
+    { key: "malignancy", label: "بدخیمی" },
+    { key: "infectiousDisease", label: "بیماری عفونی" },
+    { key: "digestiveDisease", label: "بیماری گوارشی" },
+    { key: "allergy", label: "حساسیت" },
+    { key: "rheumatism", label: "روماتیسم" },
+    { key: "epilepsy", label: "صرع" },
+  ];
 
   readonly services = [
     { value: 1, label: "کامپوزیت" },
