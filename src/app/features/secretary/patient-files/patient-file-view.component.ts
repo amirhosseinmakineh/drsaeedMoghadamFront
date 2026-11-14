@@ -28,6 +28,16 @@ export class PatientFileViewComponent implements OnInit {
   financeLoading = false;
   paperError = "";
   financeError = "";
+  installmentsByCase: Record<string, { id: number; amount: number; dueDate: string; paidAtUtc: string | null }[]> = {};
+  installmentError = "";
+  loadInstallmentsForCases(): void {
+    for (const financialCase of this.currentFile.finance?.cases ?? []) {
+      this.api.getInstallments(financialCase.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: rows => { this.installmentsByCase = { ...this.installmentsByCase, [financialCase.id]: rows }; this.cdr.markForCheck(); },
+        error: () => { this.installmentError = "دریافت برخی اقساط انجام نشد."; this.cdr.markForCheck(); }
+      });
+    }
+  }
 
   constructor(private readonly api: PatientFilesService, private readonly cdr: ChangeDetectorRef) {}
   ngOnInit(): void { this.currentFile = this.file; this.loadPaper(); this.loadFile(); }
@@ -47,7 +57,7 @@ export class PatientFileViewComponent implements OnInit {
     this.financeLoading = true; this.financeError = "";
     this.api.getPatientFileById(this.file.id).pipe(takeUntilDestroyed(this.destroyRef),
       finalize(() => { this.financeLoading = false; this.cdr.markForCheck(); }),
-    ).subscribe({ next: file => this.currentFile = file,
+    ).subscribe({ next: file => { this.currentFile = file; this.loadInstallmentsForCases(); },
       error: error => this.financeError = error?.error?.message || "دریافت آخرین اطلاعات بیمار و صورت‌حساب انجام نشد." });
   }
 
