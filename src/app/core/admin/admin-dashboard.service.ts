@@ -447,6 +447,16 @@ export interface AdminPatientFinanceFile {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  description?: string | null;
+  sourceType: "System" | "Legacy";
+  createdAt?: string;
+  consultationCompleted?: boolean;
+  treatmentConfirmedAtUtc?: string | null;
+  financeConfirmedAtUtc?: string | null;
+  profileConfirmedAtUtc?: string | null;
+  financeCompleted?: boolean;
+  serviceApproved?: boolean;
+  serviceApprovedAtUtc?: string | null;
   finance: PatientFinanceDetails | null;
 }
 
