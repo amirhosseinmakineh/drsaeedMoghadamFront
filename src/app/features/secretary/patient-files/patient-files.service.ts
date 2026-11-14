@@ -39,6 +39,18 @@ export class PatientFilesService {
     private readonly auth: AuthService,
   ) {}
 
+  getInstallments(caseId: string): Observable<{ id: number; amount: number; dueDate: string; paidAtUtc: string | null }[]> {
+    return this.http.get<{ id: number; amount: number; dueDate: string; paidAtUtc: string | null }[]>(
+      `${environment.apiBaseUrl}/secretary/patient-financial-cases/${caseId}/installments`,
+      { headers: this.authHeaders() });
+  }
+
+  payInstallment(caseId: string, id: number): Observable<unknown> {
+    return this.http.post(
+      `${environment.apiBaseUrl}/secretary/patient-financial-cases/${caseId}/installments/${id}/pay`,
+      {}, { headers: this.authHeaders() });
+  }
+
   completeFinance(patientFileId: number, body: CompletePatientFileRequest) {
     return this.http.post<{ financialCaseId: string }>(`${this.endpoint}/${patientFileId}/complete-finance`, body, { headers: this.authHeaders() });
   }
