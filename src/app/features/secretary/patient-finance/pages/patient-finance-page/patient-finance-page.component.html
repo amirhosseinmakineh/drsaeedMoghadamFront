@@ -133,7 +133,7 @@
           </article>
         } @else { @let item = noteItem(rawItem);
           <article class="payment-document note-document">
-            <div class="document-watermark">سفته</div><div class="document-top"><span>سفته شماره {{ i + 1 }}</span><span class="badge s{{item.status}}">{{ statusLabel(item.status) }}</span></div>
+            <div class="document-watermark">سفته</div><div class="document-top"><span>{{ item.isGuarantee ? 'سفته ضمانت' : 'سفته پرداخت' }} شماره {{ i + 1 }}</span><span class="badge s{{item.status}}">{{ item.isGuarantee ? 'ضمانت؛ بدون اثر پرداخت' : statusLabel(item.status) }}</span></div>
             <div class="document-amount"><span>مبلغ تعهد</span><strong>{{ money(item.amount) }}</strong></div>
             <dl><div><dt>شماره سریال</dt><dd dir="ltr">{{ item.serialNumber }}</dd></div><div><dt>تاریخ سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div></dl>
           </article>

@@ -95,6 +95,15 @@ export class PatientFilesPageComponent implements OnInit {
   completionFile: PatientFile | null = null;
   completionBusy = false;
   financeEditMode = false;
+  private resumeFinance: { fileId: number; edit: boolean } | null = null;
+
+  editChartFromFinance(): void {
+    if (!this.completionFile || this.completionBusy) return;
+    const file = this.completionFile;
+    this.resumeFinance = { fileId: file.id, edit: this.financeEditMode };
+    this.completionFile = null;
+    this.openEdit(file);
+  }
 
   openFinanceEdit(file: PatientFile): void {
     if (!file.financeCompleted) return;
@@ -385,6 +394,7 @@ export class PatientFilesPageComponent implements OnInit {
   }
 
   openEdit(file: PatientFile): void {
+    if (this.resumeFinance?.fileId !== file.id) this.resumeFinance = null;
     this.editing = file;
     this.editForm = {
       firstName: file.firstName,
@@ -416,6 +426,7 @@ export class PatientFilesPageComponent implements OnInit {
       },
       error: error => {
         this.toast.error(this.errorMessage(error, "دریافت اطلاعات پرونده ناموفق بود."));
+        this.resumeFinance = null;
         this.editOpen = false;
       },
     });
@@ -423,6 +434,7 @@ export class PatientFilesPageComponent implements OnInit {
 
   closeEdit(): void {
     if (!this.updating) {
+      this.resumeFinance = null;
       this.editOpen = false;
       this.editing = null;
     }
@@ -460,6 +472,14 @@ export class PatientFilesPageComponent implements OnInit {
             this.editOpen = false;
             this.editing = null;
             this.loadFiles();
+            const resume = this.resumeFinance;
+            this.resumeFinance = null;
+            if (resume) {
+              this.api.getPatientFileById(resume.fileId).subscribe({
+                next: file => { this.financeEditMode = resume.edit; this.completionFile = file; this.cdr.markForCheck(); },
+                error: error => this.toast.error(this.errorMessage(error, "چارت ذخیره شد؛ بخش مالی را دوباره باز کنید.")),
+              });
+            }
           },
           error: error => {
             this.toast.error(this.errorMessage(error, "اطلاعات هویتی ذخیره شد، ولی ثبت صفحه دوم ناموفق بود؛ دوباره تلاش کنید."));

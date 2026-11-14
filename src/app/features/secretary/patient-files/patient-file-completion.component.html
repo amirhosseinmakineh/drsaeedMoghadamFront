@@ -4,6 +4,7 @@
   @if (error) { <p class="completion-error" role="alert">{{ error }}</p> }
   @if (!loading && (editFinance ? !editHash : file.financeCompleted && !details)) { <app-base-button variant="secondary" (pressed)="load()">دریافت دوباره اطلاعات مالی</app-base-button> }
   @if (!loading && details) {
+    <app-base-button variant="secondary" [disabled]="saving" (pressed)="editChartRequested.emit()">اصلاح چارت در پرونده</app-base-button>
     <p class="completion-intro">هر مرحله باید به‌صورت مستقل توسط منشی بررسی و تأیید شود: مالی، پروفایل بیمار، سپس مجوز درمان.</p>
     <div class="completion-summary">
       <div><span>روش پرداخت</span><strong>{{ details.case.paymentMethod || '—' }}</strong></div>
@@ -12,11 +13,12 @@
       <div><span>مانده وصول‌نشده</span><strong>{{ money(details.case.remainingAmount) }}</strong></div>
     </div>
     @for (cheque of details.cheques ?? []; track cheque.id) {
-      <article class="document-review"><strong>چک {{ cheque.sayadNumber }}</strong><span>{{ cheque.ownerName }} · {{ money(cheque.amount) }}</span><b>سررسید: {{ date(cheque.dueDate) }}</b><span>{{ status(cheque.status) }}</span></article>
+      <article class="document-review"><strong>{{ cheque.isGuarantee ? 'چک ضمانت' : 'چک معمولی' }} {{ cheque.sayadNumber }}</strong><span>{{ cheque.ownerName }} · {{ money(cheque.amount) }}</span><b>سررسید: {{ date(cheque.dueDate) }}</b><span>{{ cheque.isGuarantee && cheque.status === 1 ? 'نگهداری ضمانت' : status(cheque.status) }}</span></article>
     }
     @for (note of details.promissoryNotes ?? []; track note.id) {
-      <article class="document-review"><strong>سفته {{ note.serialNumber }}</strong><span>{{ money(note.amount) }}</span><b>سررسید: {{ date(note.dueDate) }}</b><span>{{ status(note.status) }}</span></article>
+      <article class="document-review"><strong>{{ note.isGuarantee ? 'سفته ضمانت' : 'سفته پرداخت' }} {{ note.serialNumber }}</strong><span>{{ money(note.amount) }}</span><b>سررسید: {{ date(note.dueDate) }}</b><span>{{ note.isGuarantee ? 'سند ضمانت؛ مبلغ آن پرداخت بیمار نیست' : status(note.status) }}</span></article>
     }
+    @if (details.case.notes) { <article class="document-review"><strong>توضیحات نحوه پرداخت اقساط</strong><p class="installment-description">{{ details.case.notes }}</p></article> }
     <p class="completion-intro">مرحله فعلی: {{ file.workflowStage || 'در انتظار تأیید' }}</p>
     <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="reviewConfirmed" [disabled]="saving" /><span>اطلاعات این مرحله را شخصاً بررسی و تأیید می‌کنم.</span></label>
     @if (!file.financeConfirmedAtUtc) {
@@ -28,6 +30,7 @@
     } @else { <p role="status">مجوز انجام خدمات تأیید شده است.</p> }
   }
   @if (!loading && (editFinance ? !!editHash : !file.financeCompleted)) {
+    @if (!hasChartServices) { <p class="completion-error" role="alert">چارت پرونده هنوز دندان و خدمت مشخص‌شده ندارد. ابتدا چارت را تکمیل کنید و سپس به مالی برگردید.</p> }
     @if (editFinance) { <p class="completion-intro" role="note">در حال اصلاح همان صورت‌حساب هستید. با ذخیره، تأیید مالی، تأیید پروفایل و مجوز انجام خدمات پاک می‌شوند و باید دوباره تأیید شوند. نتیجه خدمت و پاداش مشاور تغییر نمی‌کنند. تاریخ اسناد قبلی را بررسی کنید.</p> }
     @if (!editFinance && existingCases.length) {
       <section class="completion-section">
@@ -44,37 +47,39 @@
       <legend>روش پرداخت</legend>
       <div class="payment-modes">
         <label [class.selected]="paymentMode === 'cash'"><input type="radio" name="completion-mode" [checked]="paymentMode === 'cash'" (change)="changeMode('cash')" /><span>نقدی</span><small>دریافت کل هزینه درمان</small></label>
-        <label [class.selected]="paymentMode === 'installments'"><input type="radio" name="completion-mode" [checked]="paymentMode === 'installments'" (change)="changeMode('installments')" /><span>اقساط</span><small>چک، چک اقساط یا سفته</small></label>
+        <label [class.selected]="paymentMode === 'installments'"><input type="radio" name="completion-mode" [checked]="paymentMode === 'installments'" (change)="changeMode('installments')" /><span>اقساط</span><small>چک، چک ضمانت یا سفته</small></label>
       </div>
       <section class="completion-section">
-        <h3>خدمات درمانی</h3>
-        <div class="service-options">@for (service of services; track service.id) {
-          <div class="service-option"><label><input type="checkbox" [checked]="!!serviceUnits[service.id]" (change)="toggleService(service.id, $any($event.target).checked)" />{{ service.label }}</label>
-          @if (serviceUnits[service.id]) { <label class="unit-count">تعداد واحد<input type="number" min="1" max="100" [(ngModel)]="serviceUnits[service.id]" /></label> }</div>
+        <h3>خدمات ثبت‌شده در چارت پرونده</h3>
+        <p>خدمات و تعداد واحد فقط از چارت دندان خوانده می‌شوند. برای اصلاح آن‌ها، چارت پرونده را ویرایش کنید.</p>
+        <div class="service-options">@for (service of chartServices; track service.id) {
+          <div class="service-option"><strong>{{ service.label }}</strong><span>{{ serviceUnits[service.id] }} واحد</span></div>
         }</div>
+        <app-base-button variant="secondary" [disabled]="saving" (pressed)="editChartRequested.emit()">{{ hasChartServices ? 'اصلاح چارت در پرونده' : 'تکمیل چارت پرونده' }}</app-base-button>
         <app-base-number-input inputId="completion-total" label="هزینه کل درمان" suffix="تومان" [maxFractionDigits]="2" [value]="totalAmount" (valueChange)="totalAmount = $event; receiptConfirmed = false" />
       </section>
       @if (paymentMode === 'installments') {
         <section class="completion-section">
           <app-base-number-input inputId="completion-upfront" label="وجه نقد دریافت‌شده (در صورت وجود)" suffix="تومان" [maxFractionDigits]="2" [value]="cashReceived" (valueChange)="cashReceived = $event; receiptConfirmed = false" />
           <h3>اسناد تحویل‌گرفته‌شده</h3>
-          <p>می‌توانید چک، چک اقساط و سفته را هم‌زمان ثبت کنید. چک روز تا وصول، پرداخت قطعی محسوب نمی‌شود.</p>
-          <div class="document-actions"><button type="button" (click)="addCheque(false)">+ چک روز</button><button type="button" (click)="addCheque(true)">+ چک اقساط</button><button type="button" (click)="addNote()">+ سفته</button></div>
+          <label class="installment-description-field">توضیحات نحوه پرداخت اقساط<textarea rows="4" maxlength="4000" [(ngModel)]="installmentDescription" (ngModelChange)="receiptConfirmed = false" placeholder="مثلاً: مانده درمان در ۱۰ قسط ماهانه، هر قسط ۱۵ میلیون تومان؛ سفته بابت ضمانت تحویل گرفته شد."></textarea></label>
+          <p>چک معمولی برای پرداخت اقساط است و تاریخ سررسید دارد. چک ضمانت تا عدم پرداخت اقساط نزد مجموعه می‌ماند و خودکار وصول نمی‌شود. می‌توانید چک معمولی، چک ضمانت و سفته را هم‌زمان ثبت کنید. چک ضمانت و سفته جدید صرفاً برای ضمانت هستند و مبلغش می‌تواند بیشتر از هزینه درمان باشد؛ بدهی بیمار بر اساس هزینه درمان محاسبه می‌شود.</p>
+          <div class="document-actions"><button type="button" (click)="addCheque(false)">+ چک معمولی</button><button type="button" (click)="addCheque(true)">+ چک ضمانت</button><button type="button" (click)="addNote()">+ سفته ضمانت</button></div>
           @for (cheque of cheques; track cheque; let i = $index) {
             <article class="completion-document">
-              <div class="document-heading"><h4>{{ cheque.installment ? 'چک اقساط' : 'چک روز' }} {{ i + 1 }}</h4><button type="button" (click)="cheques.splice(i, 1); receiptConfirmed = false">حذف</button></div>
+              <div class="document-heading"><h4>{{ cheque.isGuarantee ? 'چک ضمانت' : 'چک معمولی' }} {{ i + 1 }}</h4><button type="button" (click)="cheques.splice(i, 1); receiptConfirmed = false">حذف</button></div>
               <div class="document-fields">
                 <label>شماره چک / شناسه صیادی<input maxlength="32" dir="ltr" [(ngModel)]="cheque.number" /></label>
                 <label>نام صاحب چک<input maxlength="200" [(ngModel)]="cheque.ownerName" /></label>
                 <app-base-number-input [inputId]="'completion-cheque-' + i" label="مبلغ چک" suffix="تومان" [maxFractionDigits]="2" [value]="cheque.amount" (valueChange)="cheque.amount = $event; receiptConfirmed = false" />
                 @if (cheque.installment) { <app-base-persian-date-picker label="تاریخ سررسید چک" [minDate]="editFinance ? null : today" [value]="cheque.dueDate" (valueChange)="cheque.dueDate = $event; receiptConfirmed = false" /> }
-                @else { <p class="due-note">سررسید چک روز، تاریخ امروز ثبت می‌شود.</p> }
+                @else { <p class="due-note">سررسید این چک قدیمی تاریخ ثبت آن است.</p> }
               </div>
             </article>
           }
           @for (note of notes; track note; let i = $index) {
             <article class="completion-document">
-              <div class="document-heading"><h4>سفته {{ i + 1 }}</h4><button type="button" (click)="notes.splice(i, 1); receiptConfirmed = false">حذف</button></div>
+              <div class="document-heading"><h4>{{ note.isGuarantee !== false ? 'سفته ضمانت' : 'سفته پرداخت' }} {{ i + 1 }}</h4><button type="button" (click)="notes.splice(i, 1); receiptConfirmed = false">حذف</button></div>
               <div class="document-fields">
                 <label>شماره سفته<input maxlength="64" dir="ltr" [(ngModel)]="note.number" /></label>
                 <app-base-number-input [inputId]="'completion-note-' + i" label="مبلغ سفته" suffix="تومان" [maxFractionDigits]="2" [value]="note.amount" (valueChange)="note.amount = $event; receiptConfirmed = false" />
@@ -82,11 +87,12 @@
               </div>
             </article>
           }
-          <div class="completion-summary"><div><span>جمع اسناد</span><strong>{{ money(documentTotal) }}</strong></div><div [class.amount-error]="uncoveredAmount !== 0"><span>مبلغ پوشش‌داده‌نشده</span><strong>{{ money(uncoveredAmount) }}</strong></div></div>
+          <div class="completion-summary"><div><span>جمع مبلغ اسمی اسناد</span><strong>{{ money(documentTotal) }}</strong></div><div><span>مبلغ اسناد ضمانت</span><strong>{{ money(guaranteeTotal) }}</strong></div><div [class.amount-error]="uncoveredAmount !== 0"><span>مانده بدون پوشش سند یا ضمانت</span><strong>{{ money(uncoveredAmount) }}</strong></div>@if (excessGuarantee > 0) { <div><span>ضمانت مازاد بر مانده درمان</span><strong>{{ money(excessGuarantee) }}</strong></div> }</div>
+          @if (paymentExcess > 0) { <p class="completion-error">مجموع نقد و اسناد پرداخت از هزینه درمان بیشتر است؛ فقط مبلغ سفته ضمانت می‌تواند مازاد باشد.</p> }
         </section>
       }
       <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="receiptConfirmed" /><span>{{ paymentMode === 'cash' ? 'کل مبلغ ' + money(totalAmount) + ' را از بیمار دریافت کرده‌ام.' : 'وجه نقد درج‌شده و اصل تمام چک‌ها و سفته‌های ثبت‌شده را تحویل گرفته‌ام.' }}</span></label>
     </fieldset>
-    <app-base-button [loading]="saving" [disabled]="!receiptConfirmed" (pressed)="submit()">{{ editFinance ? 'ذخیره اصلاحات مالی' : 'ثبت مالی پرونده' }}</app-base-button>
+    <app-base-button [loading]="saving" [disabled]="!receiptConfirmed || !hasChartServices" (pressed)="submit()">{{ editFinance ? 'ذخیره اصلاحات مالی' : 'ثبت مالی پرونده' }}</app-base-button>
   }
 </div>

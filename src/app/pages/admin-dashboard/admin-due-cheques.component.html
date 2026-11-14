@@ -1,22 +1,24 @@
-<section class="cheques" aria-labelledby="due-cheques-title" dir="rtl">
-  <header><div><h3 id="due-cheques-title">چک‌ها</h3><p>چک‌های سررسید {{ date(selectedDate) }}</p></div><button type="button" (click)="today()">امروز</button></header>
+<section class="cheques" [attr.aria-label]="title" dir="rtl">
+  <header><div><h3>{{ title }}</h3><p>{{ title }} با سررسید از {{ date(fromDate) }} تا {{ date(toDate) }}</p></div><button type="button" (click)="today()">امروز</button></header>
   <div class="filters">
-    <app-base-datepicker [label]="dateLabel" [selectedDate]="selectedDate" [compact]="true" [unrestrictedDates]="true" [monthYearSelection]="true" (dateChange)="select($event)"></app-base-datepicker>
-    <button type="button" [disabled]="loading" (click)="load()">به‌روزرسانی</button>
+    <app-base-datepicker [label]="fromDateLabel" [selectedDate]="fromDate" [compact]="true" [unrestrictedDates]="true" [monthYearSelection]="true" (dateChange)="select($event)"></app-base-datepicker>
+    <app-base-datepicker [label]="toDateLabel" [selectedDate]="toDate" [compact]="true" [unrestrictedDates]="true" [monthYearSelection]="true" (dateChange)="select($event, true)"></app-base-datepicker>
+    <button type="button" [disabled]="loading" (click)="load()">اعمال بازه</button>
   </div>
-  @if (loading) { <p role="status">در حال دریافت چک‌ها...</p> }
+  @if (collectionMessage) { <p role="status">{{ collectionMessage }}</p> }
+  @if (loading) { <p role="status">در حال دریافت {{ title }}...</p> }
   @if (error) { <p class="error" role="alert">{{ error }}</p><button type="button" (click)="load()">تلاش دوباره</button> }
   @if (report; as result) {
-    <div class="summary"><span>تعداد چک‌ها: <strong>{{ result.totalCount.toLocaleString('fa-IR') }}</strong></span><span>مجموع مبلغ: <strong>{{ money(result.totalAmount) }}</strong></span></div>
+    <div class="summary"><span>تعداد اسناد: <strong>{{ result.totalCount.toLocaleString('fa-IR') }}</strong></span><span>مجموع مبلغ: <strong>{{ money(result.totalAmount) }}</strong></span></div>
     @if (result.items.length) {
       <div class="table-scroll" tabindex="0" aria-label="فهرست چک‌های سررسید">
-        <table><thead><tr><th>بیمار</th><th>شماره پرونده</th><th>تلفن</th><th>شماره چک / صیادی</th><th>صاحب چک</th><th>مبلغ</th><th>سررسید</th><th>نوع چک</th><th>وضعیت</th></tr></thead>
+        <table><thead><tr><th>بیمار</th><th>شماره پرونده</th><th>تلفن</th><th>{{ kind === "notes" ? "شماره سفته" : "شماره چک / صیادی" }}</th>@if (kind === "cheques") { <th>صاحب چک</th> }<th>مبلغ</th><th>سررسید</th><th>نوع سند</th><th>وضعیت</th>@if (kind === "cheques") { <th>عملیات ضمانت</th> }</tr></thead>
           <tbody>@for (item of result.items; track item.id) {
-            <tr><td>{{ item.patientName }}</td><td>{{ item.fileNumber || '—' }}</td><td dir="ltr">{{ item.phoneNumber }}</td><td dir="ltr">{{ item.sayadNumber }}</td><td>{{ item.ownerName }}</td><td>{{ money(item.amount) }}</td><td>{{ date(item.dueDate) }}</td><td>{{ item.isGuarantee ? 'ضمانت' : 'پرداخت' }}</td><td><span class="status" [class.paid]="item.status === 2" [class.unpaid]="item.status === 3">{{ status(item.status) }}</span></td></tr>
+            <tr><td>{{ item.patientName }}</td><td>{{ item.fileNumber || '—' }}</td><td dir="ltr">{{ item.phoneNumber }}</td><td dir="ltr">{{ item.sayadNumber }}</td>@if (kind === "cheques") { <td>{{ item.ownerName }}</td> }<td>{{ money(item.amount) }}</td><td>{{ date(item.dueDate) }}</td><td>{{ item.isGuarantee ? 'ضمانت' : 'پرداخت اقساط' }}</td><td><span class="status" [class.paid]="item.status === 2" [class.unpaid]="item.status === 3">{{ item.isGuarantee && item.status === 1 ? 'نگهداری ضمانت' : status(item.status) }}</span></td>@if (kind === "cheques") { <td>@if (item.isGuarantee && item.status === 1) { <button type="button" [disabled]="collecting" (click)="collect(item.id)">وصول بابت اقساط پرداخت‌نشده</button> } @else { — }</td> }</tr>
           }</tbody>
         </table>
       </div>
       @if (pages > 1) { <nav aria-label="صفحه‌بندی چک‌ها"><button type="button" [disabled]="result.pageNumber <= 1" (click)="load(result.pageNumber - 1)">قبلی</button><span>صفحه {{ result.pageNumber }} از {{ pages }}</span><button type="button" [disabled]="result.pageNumber >= pages" (click)="load(result.pageNumber + 1)">بعدی</button></nav> }
-    } @else { <p class="empty">برای این تاریخ چکی با سررسید ثبت نشده است.</p> }
+    } @else { <p class="empty">در این بازه سندی با سررسید ثبت نشده است.</p> }
   }
 </section>

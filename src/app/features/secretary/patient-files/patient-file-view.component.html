@@ -77,7 +77,7 @@
 
         <div class="intake-field">
           <label for="viewPatientNationalCode">کد ملی:</label>
-          <input readonly id="viewPatientNationalCode" name="viewPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" />
+          <input readonly id="viewPatientNationalCode" name="viewPatientNationalCode" [value]="paper.intake.nationalCode ?? ''" maxlength="10" inputmode="numeric" dir="ltr" />
         </div>
       </div>
 

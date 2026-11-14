@@ -146,6 +146,7 @@ function fixture(chart = { 1: { service: "composite" } }) {
 {
   const calls = [];
   const draft = { expectedFinanceHash: "snapshot-1", finance: {
+    installmentDescription: "اقساط ماهانه با سفته ضمانت",
     patientId: "original-patient", paymentMode: "installments", totalAmount: 1000, cashReceived: 100,
     serviceUnitCounts: { 1: 2 },
     cheques: [{ id: 71, amount: 500, number: "123", ownerName: "owner", installment: true, dueDate: "2026-01-20" }],
@@ -169,6 +170,7 @@ function fixture(chart = { 1: { service: "composite" } }) {
   const body = calls.find(x => x[0] === "edit")[2];
   assert.equal(body.expectedFinanceHash, "snapshot-1");
   assert.equal(body.finance.patientId, "original-patient");
+  assert.equal(body.finance.installmentDescription, "اقساط ماهانه با سفته ضمانت");
   assert.equal(body.finance.cheques[0].id, 71);
   assert.equal(body.finance.cheques[0].dueDate, "2026-01-20", "Existing past due dates must remain unchanged");
   assert.equal(body.finance.notes[0].id, 81);
@@ -177,4 +179,90 @@ function fixture(chart = { 1: { service: "composite" } }) {
   failSave = true; c.submit();
   assert.equal(c.error, "stale"); assert.equal(c.saved.values.length, 1); assert.equal(c.saving, false);
 }
-console.log("PASS: receipts, due dates, service approval, multi-service charts, financial corrections, document IDs, stale forms and per-service financial units.");
+{
+  const { c, calls } = fixture({});
+  c.receiptConfirmed = true; c.totalAmount = 1000; c.submit();
+  assert.equal(calls.length, 0, "An empty chart must not create a financial identity or invoice");
+  assert.equal(c.hasChartServices, false);
+  assert.ok(c.error.includes("چارت"));
+  assert.equal(c.toggleService, undefined, "The finance component must not offer manual service selection");
+}
+{
+  const { c } = fixture({ 1: { services: ["root", "crown"] }, 33: { service: "root" },
+    "01": { service: "root" }, anything: { service: "root" } });
+  assert.equal(c.serviceUnits[5], 1, "Only valid chart teeth may contribute units");
+  assert.equal(c.chartServices.length, 2);
+}
+{
+  const pageModule = { exports: {} };
+  vm.runInNewContext(compile("src/app/features/secretary/patient-files/patient-files-page.component.ts"), {
+    exports: pageModule.exports,
+    require(name) {
+      if (name === "rxjs") return rxjs;
+      if (name.includes("iran-datetime.util")) return dateModule.exports;
+      return { Component: decorator, ChangeDetectionStrategy: { OnPush: 0 } };
+    },
+  });
+  for (const edit of [false, true]) {
+    const file = { id: 42, firstName: "test", lastName: "patient", phoneNumber: "09123456789", financeCompleted: edit };
+    const fresh = { ...file, refreshed: true };
+    const calls = [];
+    const api = {
+      getPaperRecord: () => rxjs.of({ intake: { medicalHistory: {} }, treatments: [], dentalChart: {} }),
+      updatePatientFile: id => { calls.push(["identity", id]); return rxjs.of({}); },
+      savePaperRecord: (id, record) => { calls.push(["paper", id, record]); return rxjs.of({}); },
+      getPatientFiles: () => rxjs.of({ items: [fresh], totalCount: 1 }),
+      getPatientFileById: id => { calls.push(["refresh", id]); return rxjs.of(fresh); },
+    };
+    const page = new pageModule.exports.PatientFilesPageComponent(api, { success() {}, error() {} }, { markForCheck() {} }, {});
+    page.completionFile = file; page.financeEditMode = edit; page.editChartFromFinance();
+    assert.equal(page.completionFile, null); assert.equal(page.editing.id, 42);
+    page.paperRecord.dentalChart = { 1: { services: ["root", "crown"] } };
+    page.update();
+    assert.equal(calls.find(x => x[0] === "paper")[1], 42);
+    assert.equal(page.editOpen, false); assert.equal(page.completionFile.refreshed, true);
+    assert.equal(page.financeEditMode, edit, "Return must preserve whether finance was being created or edited");
+  }
+}
+{
+  const { c, calls } = fixture();
+  c.changeMode("installments"); c.totalAmount = 150_000_000; c.cashReceived = 0;
+  c.addNote();
+  c.notes[0] = { isGuarantee: true, amount: 300_000_000, number: "۱۲۳", dueDate: dateModule.exports.fromIranDateInputValue("2027-01-20") };
+  c.installmentDescription = "  ۱۰ قسط ماهانه ۱۵ میلیون تومان  ";
+  c.receiptConfirmed = true; c.submit();
+  const payload = calls.find(x => x[0] === "complete")[2];
+  assert.equal(payload.totalAmount, 150_000_000);
+  assert.equal(payload.cashReceived, 0, "A guarantee must not become a patient payment");
+  assert.equal(payload.notes[0].amount, 300_000_000);
+  assert.equal(payload.notes[0].isGuarantee, true);
+  assert.equal(payload.installmentDescription, "۱۰ قسط ماهانه ۱۵ میلیون تومان");
+  assert.equal(c.uncoveredAmount, 0); assert.equal(c.excessGuarantee, 150_000_000);
+}
+{
+  const { c, calls } = fixture();
+  c.changeMode("installments"); c.totalAmount = 150_000_000;
+  c.notes = [{ isGuarantee: false, amount: 300_000_000, number: "123", dueDate: new Date() }];
+  c.receiptConfirmed = true; c.submit();
+  assert.equal(calls.length, 0, "Ordinary payment notes must retain the overpayment guard");
+}
+{
+  const { c, calls } = fixture();
+  c.changeMode("installments"); c.totalAmount = 150_000_000; c.cashReceived = 0;
+  c.addCheque(true);
+  assert.equal(c.cheques[0].isGuarantee, true);
+  assert.equal(c.cheques[0].installment, true);
+  Object.assign(c.cheques[0], { amount: 300_000_000, number: "guarantee", ownerName: "owner", dueDate: dateModule.exports.fromIranDateInputValue("2027-01-20") });
+  c.receiptConfirmed = true; c.submit();
+  const payload = calls.find(x => x[0] === "complete")[2];
+  assert.equal(payload.cheques[0].isGuarantee, true);
+  assert.equal(c.paymentDocumentTotal, 0);
+  assert.equal(c.guaranteeTotal, 300_000_000);
+  assert.equal(c.excessGuarantee, 150_000_000);
+}
+{
+  const { c } = fixture(); c.changeMode("installments"); c.addCheque(false);
+  assert.equal(c.cheques[0].isGuarantee, false);
+  assert.equal(c.cheques[0].installment, true, "Ordinary installment cheques require a selectable due date");
+}
+console.log("PASS: chart-only services, financial corrections, guarantee notes above treatment cost, installment descriptions, payment guards and due dates.");

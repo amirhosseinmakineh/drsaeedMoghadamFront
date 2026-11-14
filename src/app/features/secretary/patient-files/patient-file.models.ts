@@ -77,13 +77,14 @@ export interface PatientFileFinancialIdentity {
 }
 
 export interface CompletePatientFileRequest {
+  installmentDescription?: string | null;
   patientId: string;
   paymentMode: "cash" | "installments";
   totalAmount: number;
   cashReceived: number;
   serviceUnitCounts: Record<number, number>;
-  cheques: { id?: number; amount: number; number: string; ownerName: string; dueDate: string | null; installment: boolean }[];
-  notes: { id?: number; amount: number; number: string; dueDate: string | null }[];
+  cheques: { id?: number; amount: number; number: string; ownerName: string; dueDate: string | null; installment: boolean; isGuarantee?: boolean }[];
+  notes: { id?: number; isGuarantee?: boolean; amount: number; number: string; dueDate: string | null }[];
 }
 
 export interface ImportPatientFilesResult {

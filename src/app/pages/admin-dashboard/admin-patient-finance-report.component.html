@@ -1,9 +1,10 @@
 <section class="finance-report" aria-labelledby="patient-finance-report-title">
   <header class="report-header">
     <div><span>گزارش مالی</span><h2 id="patient-finance-report-title">گزارش مالی بیماران</h2><p>هر پرونده مالی جداگانه در فهرست نمایش داده می‌شود و خروجی اکسل مطابق فیلترهای انتخاب‌شده است.</p></div>
-    <div class="report-actions"><button type="button" [attr.aria-expanded]="chequesOpen" aria-controls="due-cheques-section" (click)="chequesOpen = !chequesOpen">{{ chequesOpen ? 'بستن چک‌ها' : 'چک‌ها' }}</button><button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button></div>
+    <div class="report-actions"><button type="button" [attr.aria-expanded]="chequesOpen" aria-controls="due-cheques-section" (click)="chequesOpen = !chequesOpen">{{ chequesOpen ? 'بستن چک‌ها' : 'چک‌ها' }}</button><button type="button" [attr.aria-expanded]="notesOpen" aria-controls="due-notes-section" (click)="notesOpen = !notesOpen">{{ notesOpen ? "بستن سفته‌ها" : "سفته‌ها" }}</button><button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button></div>
   </header>
 
+  @if (notesOpen) { <app-admin-due-cheques kind="notes" id="due-notes-section"></app-admin-due-cheques> }
   @if (chequesOpen) { <app-admin-due-cheques id="due-cheques-section"></app-admin-due-cheques> }
   <form class="filters" (ngSubmit)="load(true)">
     <label>نام بیمار<input [(ngModel)]="filters.patientName" name="patientName" placeholder="نام یا نام خانوادگی بیمار" /></label>
@@ -100,7 +101,7 @@
           } @empty { <p class="empty">چکی ثبت نشده است.</p> }
           <h4>سفته‌ها</h4>
           @for (note of details.promissoryNotes || []; track note.id) {
-            <form class="commitment-row note" (ngSubmit)="saveNote(note)"><label>مبلغ<input type="number" min="0.001" step="0.001" [(ngModel)]="note.amount" [name]="'noteAmount' + note.id"></label><label>شماره سریال<input [(ngModel)]="note.serialNumber" [name]="'serial' + note.id"></label><label>سررسید<input type="date" [(ngModel)]="note.dueDate" [name]="'noteDate' + note.id"></label><button type="submit" [disabled]="commitmentSavingId === note.id">ذخیره</button><button type="button" class="delete" (click)="deleteNote(note)">حذف</button></form>
+            <form class="commitment-row note" (ngSubmit)="saveNote(note)"><label>{{ note.isGuarantee ? "مبلغ سفته ضمانت" : "مبلغ سفته" }}<input type="number" min="0.001" step="0.001" [(ngModel)]="note.amount" [name]="'noteAmount' + note.id"></label><label>شماره سریال<input [(ngModel)]="note.serialNumber" [name]="'serial' + note.id"></label><label>سررسید<input type="date" [(ngModel)]="note.dueDate" [name]="'noteDate' + note.id"></label><button type="submit" [disabled]="commitmentSavingId === note.id">ذخیره</button><button type="button" class="delete" (click)="deleteNote(note)">حذف</button></form>
           } @empty { <p class="empty">سفته‌ای ثبت نشده است.</p> }
           <p class="delete-hint">حذف کل حسابداری فقط بعد از حذف همه چک‌ها و سفته‌ها فعال می‌شود.</p>
           <button type="button" class="delete delete-case" (click)="delete(editing)" [disabled]="(details.cheques?.length || 0) > 0 || (details.promissoryNotes?.length || 0) > 0 || deletingId === editing.caseId">

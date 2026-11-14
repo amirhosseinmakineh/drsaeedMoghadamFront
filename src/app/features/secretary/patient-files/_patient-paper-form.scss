@@ -479,6 +479,13 @@
 /* Keep the Persian calendar visible inside the patient-paper modal on desktop.
    The modal has its own scrolling region, so an absolutely positioned calendar
    would be clipped and cover adjacent treatment cards. */
+/* The top and medical sections are isolated stacking contexts. Raise the whole
+   top section while its calendar is open; the popup's own z-index cannot escape
+   that context to paint above the following medical section. Keep this selector
+   deep so it can see the datepicker's internal calendar-open class. */
+.patient-intake-modal ::ng-deep .patient-intake-top:has(app-base-persian-date-picker .calendar-open) {
+  z-index: 10;
+}
 @media (min-width: 701px) {
   .patient-intake-modal ::ng-deep .patient-intake-sheet app-base-persian-date-picker .compact.calendar-open .calendar-content {
     position: fixed;

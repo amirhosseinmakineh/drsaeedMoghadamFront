@@ -34,6 +34,7 @@ import { PatientPaperMedicalHistory } from "../../features/secretary/patient-fil
 })
 export class AdminPatientFinanceReportComponent implements OnInit {
   chequesOpen = false;
+  notesOpen = false;
   filters: PatientFinanceReportFilters = { page: 1, pageSize: 20 };
   report: PatientFinanceReportResponse | null = null;
   loading = false;

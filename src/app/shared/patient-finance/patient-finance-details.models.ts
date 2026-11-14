@@ -42,6 +42,7 @@ export interface FinancialCaseDetails {
 }
 
 export interface PatientChequeDetails {
+  isGuarantee?: boolean;
   id: number;
   amount: number;
   sayadNumber: string;
@@ -51,6 +52,7 @@ export interface PatientChequeDetails {
 }
 
 export interface PatientPromissoryNoteDetails {
+  isGuarantee?: boolean;
   id: number;
   serialNumber: string;
   amount: number;

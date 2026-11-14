@@ -538,7 +538,7 @@ export interface UpdatePatientFinanceRequest {
 }
 
 export interface AdminPatientCheque { id: number; amount: number; sayadNumber: string; ownerName: string; dueDate: string; status: number; }
-export interface AdminPatientPromissoryNote { id: number; amount: number; serialNumber: string; dueDate: string; status: number; }
+export interface AdminPatientPromissoryNote { isGuarantee?: boolean; id: number; amount: number; serialNumber: string; dueDate: string; status: number; }
 export interface AdminFinancialCaseDto {
   id: string;
   guaranteeDocument?: string | null;
@@ -1157,10 +1157,17 @@ export class AdminDashboardService {
     return this.exportCsvReport("daily-reservations/export", filters);
   }
 
-  getPatientChequesDue(date: string, page = 1): Observable<AdminPatientChequesDueReport> {
+  collectGuaranteeCheque(id: number): Observable<{ amount: number; message: string }> {
+    return this.http.post<{ amount: number; message: string }>(
+      this.apiBaseUrl + "/admin/reports/patient-finances/cheques/" + id + "/collect-guarantee", {},
+      { headers: this.authHeaders() },
+    ).pipe(catchError(error => throwError(() => this.toUserFacingError(error, "وصول ضمانت انجام نشد"))));
+  }
+
+  getPatientChequesDue(date: string, page = 1, kind: "cheques" | "notes" = "cheques", toDate: string = date): Observable<AdminPatientChequesDueReport> {
     return this.http.get<AdminPatientChequesDueReport>(
-      `${this.apiBaseUrl}/admin/reports/patient-finances/cheques/due`,
-      { headers: this.authHeaders(), params: new HttpParams().set("date", date).set("page", page).set("pageSize", 50) },
+      `${this.apiBaseUrl}/admin/reports/patient-finances/${kind}/due`,
+      { headers: this.authHeaders(), params: new HttpParams().set("fromDate", date).set("toDate", toDate).set("page", page).set("pageSize", 50) },
     ).pipe(catchError(error => throwError(() =>
       this.toUserFacingError(error, "دریافت چک‌های سررسید انجام نشد"))));
   }

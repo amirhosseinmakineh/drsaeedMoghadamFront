@@ -1,4 +1,7 @@
 :host { display: block; }
+.installment-description-field { display: grid; gap: 8px; }
+.installment-description-field textarea { width: 100%; box-sizing: border-box; min-height: 110px; padding: 12px; border: 1px solid #cdded5; border-radius: 10px; background: white; color: inherit; font: inherit; resize: vertical; }
+.installment-description { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
 .completion { display: grid; gap: 1rem; color: #253b38; }
 .patient-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: 1rem; border-radius: 12px; background: #edf5f2; }
 .patient-heading span, .completion-intro, .completion-section p { color: #5f706b; font-size: .9rem; line-height: 1.9; margin: 0; }

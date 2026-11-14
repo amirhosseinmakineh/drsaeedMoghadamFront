@@ -129,7 +129,7 @@
 
         <div class="intake-field">
           <label for="reservationPatientNationalCode">کد ملی:</label>
-          <input id="reservationPatientNationalCode" name="reservationPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" />
+          <input id="reservationPatientNationalCode" name="reservationPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" [(ngModel)]="paperRecord.intake.nationalCode" />
         </div>
       </div>
 
@@ -261,7 +261,7 @@
 
         <div class="intake-field">
           <label for="newPatientNationalCode">کد ملی:</label>
-          <input id="newPatientNationalCode" name="newPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" />
+          <input id="newPatientNationalCode" name="newPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" [(ngModel)]="paperRecord.intake.nationalCode" />
         </div>
       </div>
 
@@ -392,7 +392,7 @@
 
         <div class="intake-field">
           <label for="editPatientNationalCode">کد ملی:</label>
-          <input id="editPatientNationalCode" name="editPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" />
+          <input id="editPatientNationalCode" name="editPatientNationalCode" maxlength="10" inputmode="numeric" dir="ltr" [(ngModel)]="paperRecord.intake.nationalCode" />
         </div>
       </div>
 
@@ -484,7 +484,8 @@
         <p>اطلاعات درمان، پرداخت و وضعیت دندان‌ها را در بخش‌های زیر ثبت کنید.</p>
       </div>
     </header>
-    <label class="consultation-confirmation"><input type="checkbox" name="consultationCompleted" [(ngModel)]="paperRecord.consultationCompleted" /><span><strong>طرح درمان تکمیل و توسط منشی تأیید شد</strong><small>پس از ثبت شرح خدمات، هزینه هر خدمت و رضایت بیمار، این مرحله را تأیید کنید. تنها پس از تأیید و ذخیره، پرونده وارد مرحله مالی می‌شود.</small></span></label>
+    <label class="consultation-confirmation"><input type="checkbox" name="consultationCompleted" [(ngModel)]="paperRecord.consultationCompleted" /><span><strong>طرح درمان تکمیل و توسط منشی تأیید شد</strong><small>پس از ثبت شرح خدمات، هزینه هر خدمت و رضایت بیمار، این مرحله را تأیید کنید. خدمات و تعداد واحد مالی از چارت خوانده می‌شوند؛ دندان‌ها و خدمات آن‌ها را در چارت مشخص کنید.</small></span></label>
+    @if (editing?.financeCompleted) { <p class="consultation-confirmation">اصلاح فرم، تأیید مالی و مجوز خدمات را نیازمند تأیید دوباره می‌کند. تغییر چارت، خدمات صورت‌حساب را همگام می‌کند و مبالغ و اسناد مالی را تغییر نمی‌دهد.</p> }
 
     <section class="paper-panel" aria-labelledby="paper-notes-title">
       <div class="paper-panel__heading"><div><span class="paper-section-index">۰۱</span><h3 id="paper-notes-title">یادداشت دندانپزشک</h3></div></div>
@@ -547,7 +548,7 @@
 </ng-template>
 <app-base-modal class="completion-modal" [open]="!!completionFile" [title]="financeEditMode ? 'ویرایش مالی پرونده' : completionFile?.financeCompleted ? 'بررسی مالی و اجازه انجام خدمات' : 'تکمیل مالی پرونده'" [closeOnBackdrop]="!completionBusy" (close)="!completionBusy && (completionFile = null)">
   @if (completionFile) {
-    <app-patient-file-completion [file]="completionFile" [editFinance]="financeEditMode" (busyChange)="completionBusy = $event" (saved)="completionSaved()" />
+    <app-patient-file-completion [file]="completionFile" [editFinance]="financeEditMode" (busyChange)="completionBusy = $event" (saved)="completionSaved()" (editChartRequested)="editChartFromFinance()" />
   }
   <div baseModalFooter><app-base-button variant="secondary" [disabled]="completionBusy" (pressed)="completionFile = null">بستن</app-base-button></div>
 </app-base-modal>

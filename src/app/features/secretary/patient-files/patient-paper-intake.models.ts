@@ -5,6 +5,7 @@
  * The server alone assigns fileNumber via the existing locking algorithm.
  */
 export interface PatientPaperIntake {
+  nationalCode?: string | null;
   birthDate?: string | null;
   maritalStatus?: string | null;
   educationLevel?: string | null;
