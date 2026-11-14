@@ -158,6 +158,7 @@ export class AdminPatientFinanceReportComponent implements OnInit {
       firstName: item.patientName,
       lastName: "",
       phoneNumber: item.phoneNumber,
+      sourceType: "System",
       finance: null,
     };
     this.loadStatements(item.fileNumber);
