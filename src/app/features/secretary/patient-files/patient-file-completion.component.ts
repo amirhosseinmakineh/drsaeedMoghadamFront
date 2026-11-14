@@ -13,6 +13,7 @@ import { PatientFilesService } from "./patient-files.service";
 import { toothServiceIds } from "./dental-chart/dental-chart.models";
 
 interface ChequeDraft { id?: number; amount: number | null; number: string; ownerName: string; dueDate: Date | null; installment: boolean; isGuarantee?: boolean; }
+interface InstallmentDraft { amount: number | null; dueDate: Date | null; }
 interface NoteDraft { id?: number; isGuarantee?: boolean; amount: number | null; number: string; dueDate: Date | null; }
 
 @Component({
@@ -49,6 +50,10 @@ export class PatientFileCompletionComponent implements OnInit {
   serviceUnits: Record<number, number> = {};
   cheques: ChequeDraft[] = [];
   notes: NoteDraft[] = [];
+  installments: InstallmentDraft[] = [];
+  useInstallmentTable = false;
+  addInstallment(): void { this.installments.push({ amount: null, dueDate: null }); this.receiptConfirmed = false; }
+  get installmentTotal(): number { return this.useInstallmentTable ? this.installments.reduce((sum, x) => sum + Number(x.amount || 0), 0) : 0; }
   receiptConfirmed = false;
   reviewConfirmed = false;
   newFinanceConfirmed = false;
@@ -114,7 +119,7 @@ export class PatientFileCompletionComponent implements OnInit {
   get chartServices() { return this.services.filter(s => !!this.serviceUnits[s.id]); }
   changeMode(mode: "cash" | "installments"): void {
     this.paymentMode = mode; this.receiptConfirmed = false; this.error = "";
-    if (mode === "cash") { this.cheques = []; this.notes = []; this.cashReceived = 0; }
+    if (mode === "cash") { this.cheques = []; this.notes = []; this.installments = []; this.useInstallmentTable = false; this.cashReceived = 0; }
   }
   addCheque(isGuarantee: boolean): void {
     this.cheques.push({ amount: null, number: "", ownerName: "", dueDate: null, installment: true, isGuarantee });
@@ -126,9 +131,9 @@ export class PatientFileCompletionComponent implements OnInit {
   }
   get guaranteeTotal(): number { return this.cheques.filter(x => x.isGuarantee === true).reduce((sum, x) => sum + Number(x.amount || 0), 0) + this.notes.filter(x => x.isGuarantee !== false).reduce((sum, x) => sum + Number(x.amount || 0), 0); }
   get paymentDocumentTotal(): number { return this.documentTotal - this.guaranteeTotal; }
-  get paymentExcess(): number { return Math.max(0, Number(this.cashReceived || 0) + this.paymentDocumentTotal - Number(this.totalAmount || 0)); }
-  get uncoveredAmount(): number { return Math.max(0, Number(this.totalAmount || 0) - Number(this.cashReceived || 0) - this.documentTotal); }
-  get excessGuarantee(): number { return Math.max(0, this.guaranteeTotal - Math.max(0, Number(this.totalAmount || 0) - Number(this.cashReceived || 0) - this.paymentDocumentTotal)); }
+  get paymentExcess(): number { return Math.max(0, Number(this.cashReceived || 0) + this.paymentDocumentTotal + this.installmentTotal - Number(this.totalAmount || 0)); }
+  get uncoveredAmount(): number { return Math.max(0, Number(this.totalAmount || 0) - Number(this.cashReceived || 0) - this.documentTotal - this.guaranteeTotal + this.installmentTotal + this.guaranteeTotal); }
+  get excessGuarantee(): number { return Math.max(0, this.guaranteeTotal - Math.max(0, Number(this.totalAmount || 0) - Number(this.cashReceived || 0) - this.paymentDocumentTotal + this.installmentTotal)); }
   money(amount: number | null | undefined): string { return `${new Intl.NumberFormat("fa-IR").format(amount ?? 0)} تومان`; }
   date(value: string): string { return formatIranDate(value); }
   status(status: number): string { return ({ 1: "در انتظار وصول", 2: "پرداخت‌شده", 3: "پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[status] ?? "—"; }
@@ -144,7 +149,8 @@ export class PatientFileCompletionComponent implements OnInit {
       return "ابتدا دندان‌ها و خدمات را در چارت پرونده ثبت کنید؛ خدمات مالی فقط از چارت خوانده می‌شوند.";
     if (!this.receiptConfirmed) return "دریافت وجه یا تحویل گرفتن اصل اسناد را تأیید کنید.";
     if (this.paymentMode === "cash") return null;
-    if (!this.cheques.length && !this.notes.length) return "حداقل یک چک یا سفته اضافه کنید.";
+    if (!this.cheques.length && !this.notes.length && !this.installments.length) return "حداقل یک چک یا سفته اضافه کنید.";
+    if (this.useInstallmentTable && this.installments.some(x => !x.amount || x.amount <= 0 || !x.dueDate)) return "تاریخ و مبلغ تمام اقساط را کامل کنید.";
     if (this.cheques.some(x => !x.amount || x.amount <= 0 || !x.number.trim() || !x.ownerName.trim() || (x.installment && !x.dueDate)))
       return "شماره، مبلغ و نام صاحب چک و سررسید چک را کامل کنید.";
     if (this.notes.some(x => !x.amount || x.amount <= 0 || !x.number.trim() || !x.dueDate)) return "شماره، مبلغ و سررسید سفته را کامل کنید.";
@@ -162,6 +168,7 @@ export class PatientFileCompletionComponent implements OnInit {
         installmentDescription: this.installmentDescription.trim() || null,
         cashReceived: this.paymentMode === "cash" ? this.totalAmount! : Number(this.cashReceived || 0),
         serviceUnitCounts: this.serviceUnits,
+        installments: this.useInstallmentTable ? this.installments.map(x => ({ amount: x.amount!, dueDate: toIranDateInputValue(x.dueDate!) })) : [],
         cheques: this.cheques.map(x => ({ id: x.id, amount: x.amount!, number: this.normalizeNumber(x.number), ownerName: x.ownerName.trim(),
           dueDate: x.installment && x.dueDate ? toIranDateInputValue(x.dueDate) : null, installment: x.installment, isGuarantee: x.isGuarantee === true })),
         notes: this.notes.map(x => ({ id: x.id, isGuarantee: x.isGuarantee !== false, amount: x.amount!, number: this.normalizeNumber(x.number), dueDate: x.dueDate ? toIranDateInputValue(x.dueDate) : null })),
