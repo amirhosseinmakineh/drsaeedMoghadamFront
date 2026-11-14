@@ -110,6 +110,8 @@ export class PatientFileCompletionComponent implements OnInit {
         this.serviceUnits = { ...f.serviceUnitCounts };
         this.cheques = f.cheques.map(x => ({ ...x, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate) : null }));
         this.notes = f.notes.map(x => ({ ...x, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate) : null }));
+        this.installments = (f.installments ?? []).map(x => ({ amount: x.amount, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate) : null }));
+        this.useInstallmentTable = this.installments.length > 0;
         this.receiptConfirmed = false;
       }, error: e => this.error = this.message(e) });
       return;
@@ -177,6 +179,7 @@ export class PatientFileCompletionComponent implements OnInit {
     if (!this.receiptConfirmed) return "دریافت وجه یا تحویل گرفتن اصل اسناد را تأیید کنید.";
     if (this.paymentMode === "cash") return null;
     if (!this.cheques.length && !this.notes.length && !(this.useInstallmentTable && this.installments.length)) return "حداقل یک چک یا سفته اضافه کنید.";
+    if (this.useInstallmentTable && !this.installments.length) return "حداقل یک قسط وارد کنید.";
     if (this.useInstallmentTable && this.installments.some(x => !x.amount || x.amount <= 0 || !x.dueDate)) return "تاریخ و مبلغ تمام اقساط را کامل کنید.";
     if (this.cheques.some(x => !x.amount || x.amount <= 0 || !x.number.trim() || !x.ownerName.trim() || (x.installment && !x.dueDate)))
       return "شماره، مبلغ و نام صاحب چک و سررسید چک را کامل کنید.";
