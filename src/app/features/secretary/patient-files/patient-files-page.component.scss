@@ -64,7 +64,7 @@ th { color: #64748b; font-size: .85rem; background: #f8fafc; }
 .row-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-areas: "view finance" "edit delete" "workflow workflow";
+  grid-template-areas: "view finance" "edit delete" "financeEdit financeEdit" "workflow workflow" "result result";
   gap: 8px;
   width: 264px;
   align-items: stretch;
@@ -94,6 +94,8 @@ th { color: #64748b; font-size: .85rem; background: #f8fafc; }
 .row-actions > button:hover { filter: brightness(.96); border-color: currentColor; }
 .row-actions > button:focus-visible { outline: 2px solid #2a6956; outline-offset: 3px; }
 .row-actions .view-file-action { grid-area: view; }
+.row-actions .service-results-action { grid-area: result; background: #27614f; color: white; }
+.row-actions .edit-finance-action { grid-area: financeEdit; background: #fff4de; color: #805817; }
 .row-actions .finance-action { grid-area: finance; }
 .row-actions .edit-file-action { grid-area: edit; background: #f0f3f7; color: #405169; }
 .row-actions .danger { grid-area: delete; color: #a63d3d; background: #fff0ef; }
@@ -119,7 +121,7 @@ th { color: #64748b; font-size: .85rem; background: #f8fafc; }
   .row-actions > button, .row-actions > .service-approved { min-height: 46px; padding: 11px 10px; font-size: .85rem; }
 }
 @media (max-width: 360px) {
-  .row-actions { grid-template-columns: minmax(0, 1fr); grid-template-areas: "view" "finance" "edit" "delete" "workflow"; }
+  .row-actions { grid-template-columns: minmax(0, 1fr); grid-template-areas: "view" "finance" "edit" "delete" "financeEdit" "workflow" "result"; }
 }
 @media (prefers-reduced-motion: reduce) {
   .row-actions > button { transition: none; }

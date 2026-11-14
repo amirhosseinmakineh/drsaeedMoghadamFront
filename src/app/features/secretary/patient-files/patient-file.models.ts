@@ -82,8 +82,8 @@ export interface CompletePatientFileRequest {
   totalAmount: number;
   cashReceived: number;
   serviceUnitCounts: Record<number, number>;
-  cheques: { amount: number; number: string; ownerName: string; dueDate: string | null; installment: boolean }[];
-  notes: { amount: number; number: string; dueDate: string | null }[];
+  cheques: { id?: number; amount: number; number: string; ownerName: string; dueDate: string | null; installment: boolean }[];
+  notes: { id?: number; amount: number; number: string; dueDate: string | null }[];
 }
 
 export interface ImportPatientFilesResult {

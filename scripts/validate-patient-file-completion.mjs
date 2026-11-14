@@ -11,6 +11,8 @@ const compile = path => ts.transpileModule(fs.readFileSync(path, "utf8"), {
 }).outputText;
 const dateModule = { exports: {} };
 vm.runInNewContext(compile("src/app/utils/iran-datetime.util.ts"), { exports: dateModule.exports, Date, Intl });
+const chartModels = { exports: {} };
+vm.runInNewContext(compile("src/app/features/secretary/patient-files/dental-chart/dental-chart.models.ts"), { exports: chartModels.exports });
 const decorator = () => () => {};
 class EventEmitter { values = []; emit(value) { this.values.push(value); } }
 const module = { exports: {} };
@@ -22,14 +24,15 @@ vm.runInNewContext(compile("src/app/features/secretary/patient-files/patient-fil
       EventEmitter, inject: () => ({}), ChangeDetectionStrategy: { OnPush: 0 } };
     if (name === "@angular/core/rxjs-interop") return { takeUntilDestroyed: () => source => source };
     if (name.includes("iran-datetime.util")) return dateModule.exports;
+    if (name.includes("dental-chart.models")) return chartModels.exports;
     return {};
   },
 });
 const Component = module.exports.PatientFileCompletionComponent;
-function fixture() {
+function fixture(chart = { 1: { service: "composite" } }) {
   const calls = [];
   const api = {
-    getPaperRecord: () => rxjs.of({ treatments: [{ cost: 1000 }], dentalChart: { 1: { service: "composite" } } }),
+    getPaperRecord: () => rxjs.of({ treatments: [{ cost: 1000 }], dentalChart: chart }),
     ensureFinancialIdentity: id => { calls.push(["identity", id]); return rxjs.of({ financialPatientId: "test-patient" }); },
     completeFinance: (id, body) => { calls.push(["complete", id, body]); return rxjs.of({ financialCaseId: "test-case" }); },
     linkFinance: (id, caseId) => { calls.push(["link", id, caseId]); return rxjs.of({ financialCaseId: caseId }); },
@@ -97,4 +100,81 @@ function fixture() {
   c.reviewConfirmed = true; c.approve();
   assert.equal(calls[0][0], "approve");
 }
-console.log("PASS: cash receipt, mixed documents, Iran due dates, underpayment, legacy reuse, and manual service approval.");
+{
+  const { c } = fixture({ 1: { services: ["composite", "root", "composite"] },
+    2: { services: ["root", "crown"] }, 3: { service: "crown" } });
+  assert.equal(c.serviceUnits[1], 1, "A repeated service on one tooth counts once");
+  assert.equal(c.serviceUnits[5], 2, "The same service on two teeth counts as two units");
+  assert.equal(c.serviceUnits[4], 2, "Old and new chart entries both count toward finance");
+}
+{
+  const chartModule = { exports: {} };
+  vm.runInNewContext(compile("src/app/features/secretary/patient-files/dental-chart/dental-chart.component.ts"), {
+    exports: chartModule.exports,
+    require(name) {
+      if (name.includes("dental-chart.models")) return chartModels.exports;
+      return { Component: decorator, Input: decorator, Output: decorator, EventEmitter, ChangeDetectionStrategy: { OnPush: 0 } };
+    },
+  });
+  const chart = new chartModule.exports.SecretaryDentalChartComponent();
+  const historical = { 1: { service: "root", description: "old note" } };
+  chart.value = historical;
+  assert.equal(chart.treatments[1].services[0], "root");
+  chart.select(chart.teeth[0]);
+  chart.toggleService("crown", true);
+  chart.closeEditor();
+  assert.equal(chart.treatments[1].services.length, 1, "Cancelling must preserve the saved selection");
+  chart.select(chart.teeth[0]); chart.toggleService("crown", true); chart.save();
+  const saved = chart.valueChange.values.at(-1);
+  assert.equal(saved[1].services.length, 2);
+  assert.equal(saved[1].description, "old note");
+  assert.equal(historical[1].services, undefined, "Editing must not mutate incoming historical records");
+  chart.value = JSON.parse(JSON.stringify(saved)); chart.select(chart.teeth[0]);
+  assert.equal(chart.draftServices.length, 2, "Reopening must restore every saved service");
+  assert.ok(chart.fillFor(1).startsWith("url(#"), "Multiple services must use the multi-colour fill");
+  chart.toggleService("root", false); chart.save();
+  assert.equal(chart.treatments[1].services.length, 1);
+  assert.equal(chart.treatments[1].services[0], "crown");
+  chart.select(chart.teeth[0]); chart.toggleService("crown", false); chart.save();
+  assert.ok(chart.validationError, "Clearing every service must ask for explicit removal");
+  chart.remove();
+  assert.equal(chart.treatments[1], undefined);
+  chart.value = saved; chart.readOnly = true; chart.select(chart.teeth[0]); chart.remove();
+  assert.equal(chart.selectedTooth, null);
+  assert.equal(chart.treatments[1].services.length, 2, "Read-only views must preserve all services");
+}
+{
+  const calls = [];
+  const draft = { expectedFinanceHash: "snapshot-1", finance: {
+    patientId: "original-patient", paymentMode: "installments", totalAmount: 1000, cashReceived: 100,
+    serviceUnitCounts: { 1: 2 },
+    cheques: [{ id: 71, amount: 500, number: "123", ownerName: "owner", installment: true, dueDate: "2026-01-20" }],
+    notes: [{ id: 81, amount: 400, number: "456", dueDate: "2026-02-21" }],
+  } };
+  let failSave = false;
+  const api = {
+    getFinanceEdit: id => { calls.push(["load-edit", id]); return rxjs.of(draft); },
+    updateFinance: (id, body) => { calls.push(["edit", id, body]); return failSave
+      ? rxjs.throwError(() => ({ error: { message: "stale" } })) : rxjs.of({ financialCaseId: "same-case" }); },
+    ensureFinancialIdentity: () => { throw new Error("Editing must preserve the existing financial identity"); },
+    completeFinance: () => { throw new Error("Editing must never create another invoice"); },
+  };
+  const c = new Component(api, {}, { markForCheck() {} });
+  c.file = { id: 42, financeCompleted: true, finance: { cases: [{ id: "same-case", status: 1 }] } };
+  c.editFinance = true; c.ngOnInit();
+  assert.equal(c.loading, false); assert.equal(c.totalAmount, 1000);
+  assert.equal(c.cheques[0].id, 71); assert.equal(c.notes[0].id, 81);
+  c.submit(); assert.equal(calls.filter(x => x[0] === "edit").length, 0, "Corrections require receipt review");
+  c.totalAmount = 1100; c.cashReceived = 200; c.receiptConfirmed = true; c.submit();
+  const body = calls.find(x => x[0] === "edit")[2];
+  assert.equal(body.expectedFinanceHash, "snapshot-1");
+  assert.equal(body.finance.patientId, "original-patient");
+  assert.equal(body.finance.cheques[0].id, 71);
+  assert.equal(body.finance.cheques[0].dueDate, "2026-01-20", "Existing past due dates must remain unchanged");
+  assert.equal(body.finance.notes[0].id, 81);
+  assert.equal(body.finance.notes[0].dueDate, "2026-02-21");
+  assert.equal(c.saved.values.length, 1); assert.equal(c.saving, false);
+  failSave = true; c.submit();
+  assert.equal(c.error, "stale"); assert.equal(c.saved.values.length, 1); assert.equal(c.saving, false);
+}
+console.log("PASS: receipts, due dates, service approval, multi-service charts, financial corrections, document IDs, stale forms and per-service financial units.");

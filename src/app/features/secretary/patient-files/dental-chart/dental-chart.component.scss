@@ -43,3 +43,18 @@
 .validation-error{color:#b91c1c;font-size:12px}.editor-note{font-size:11px;color:#728088;line-height:1.9;margin-top:12px}
 @media(max-width:850px){.chart-layout{grid-template-columns:1fr}.chart-card{max-width:610px;margin:auto;width:100%}.chart-details{max-width:610px;width:100%;margin:auto}}
 @media(max-width:540px){.dental-chart{padding:16px 8px 10px}.chart-title strong{font-size:16px}.chart-card-title{padding:13px;font-size:12px}.chart-frame{padding:4px 0 12px}}
+.service-picker { min-width: 0; margin: 0; padding: 0; border: 0; }
+.service-picker legend { font-size: 13px; font-weight: bold; color: #4a5862; }
+.service-picker > p { font-size: 12px; color: #71818b; margin: 8px 0 12px; }
+.service-picker-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.service-picker-options label { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px; border: 1px solid #dce5e9; border-radius: 9px; font-size: 12px; cursor: pointer; }
+.service-picker-options label.checked { border-color: #078ac9; background: #edf9ff; }
+.service-picker-options input { width: 18px; height: 18px; min-height: 18px; margin: 0; flex: none; accent-color: #078ac9; }
+.service-picker-options i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.service-picker-options input:focus-visible { outline: 2px solid #078ac9; outline-offset: 3px; }
+.saved-treatment { display: grid; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.saved-services { display: flex; flex-wrap: wrap; gap: 5px; }
+.saved-services .pill { padding: 4px 8px; }
+.tooth-editor { max-height: calc(100dvh - 32px); overflow-y: auto; }
+.buttons { flex-wrap: wrap; }
+@media (max-width: 360px) { .service-picker-options { grid-template-columns: 1fr; } }

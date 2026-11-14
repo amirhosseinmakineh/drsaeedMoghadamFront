@@ -2,7 +2,7 @@
   <div class="patient-heading"><strong>{{ file.firstName }} {{ file.lastName }}</strong><span>شماره پرونده {{ file.fileNumber }}</span></div>
   @if (loading) { <p role="status">در حال دریافت اطلاعات…</p> }
   @if (error) { <p class="completion-error" role="alert">{{ error }}</p> }
-  @if (!loading && file.financeCompleted && !details) { <app-base-button variant="secondary" (pressed)="load()">دریافت دوباره اطلاعات مالی</app-base-button> }
+  @if (!loading && (editFinance ? !editHash : file.financeCompleted && !details)) { <app-base-button variant="secondary" (pressed)="load()">دریافت دوباره اطلاعات مالی</app-base-button> }
   @if (!loading && details) {
     <p class="completion-intro">هر مرحله باید به‌صورت مستقل توسط منشی بررسی و تأیید شود: مالی، پروفایل بیمار، سپس مجوز درمان.</p>
     <div class="completion-summary">
@@ -27,8 +27,9 @@
       <app-base-button [disabled]="!reviewConfirmed" [loading]="saving" (pressed)="approve()">۳. تأیید نهایی و اجازه انجام خدمات</app-base-button>
     } @else { <p role="status">مجوز انجام خدمات تأیید شده است.</p> }
   }
-  @if (!loading && !file.financeCompleted) {
-    @if (existingCases.length) {
+  @if (!loading && (editFinance ? !!editHash : !file.financeCompleted)) {
+    @if (editFinance) { <p class="completion-intro" role="note">در حال اصلاح همان صورت‌حساب هستید. با ذخیره، تأیید مالی، تأیید پروفایل و مجوز انجام خدمات پاک می‌شوند و باید دوباره تأیید شوند. نتیجه خدمت و پاداش مشاور تغییر نمی‌کنند. تاریخ اسناد قبلی را بررسی کنید.</p> }
+    @if (!editFinance && existingCases.length) {
       <section class="completion-section">
         <h3>صورت‌حساب‌های قبلی بیمار</h3>
         <p>اگر وجه یا اسناد قبلاً در حسابداری ثبت شده‌اند، همان صورت‌حساب را انتخاب کنید تا دوباره ثبت نشوند.</p>
@@ -66,7 +67,7 @@
                 <label>شماره چک / شناسه صیادی<input maxlength="32" dir="ltr" [(ngModel)]="cheque.number" /></label>
                 <label>نام صاحب چک<input maxlength="200" [(ngModel)]="cheque.ownerName" /></label>
                 <app-base-number-input [inputId]="'completion-cheque-' + i" label="مبلغ چک" suffix="تومان" [maxFractionDigits]="2" [value]="cheque.amount" (valueChange)="cheque.amount = $event; receiptConfirmed = false" />
-                @if (cheque.installment) { <app-base-persian-date-picker label="تاریخ سررسید چک اقساط" [minDate]="today" [value]="cheque.dueDate" (valueChange)="cheque.dueDate = $event; receiptConfirmed = false" /> }
+                @if (cheque.installment) { <app-base-persian-date-picker label="تاریخ سررسید چک" [minDate]="editFinance ? null : today" [value]="cheque.dueDate" (valueChange)="cheque.dueDate = $event; receiptConfirmed = false" /> }
                 @else { <p class="due-note">سررسید چک روز، تاریخ امروز ثبت می‌شود.</p> }
               </div>
             </article>
@@ -77,7 +78,7 @@
               <div class="document-fields">
                 <label>شماره سفته<input maxlength="64" dir="ltr" [(ngModel)]="note.number" /></label>
                 <app-base-number-input [inputId]="'completion-note-' + i" label="مبلغ سفته" suffix="تومان" [maxFractionDigits]="2" [value]="note.amount" (valueChange)="note.amount = $event; receiptConfirmed = false" />
-                <app-base-persian-date-picker label="تاریخ سررسید سفته" [minDate]="today" [value]="note.dueDate" (valueChange)="note.dueDate = $event; receiptConfirmed = false" />
+                <app-base-persian-date-picker label="تاریخ سررسید سفته" [minDate]="editFinance ? null : today" [value]="note.dueDate" (valueChange)="note.dueDate = $event; receiptConfirmed = false" />
               </div>
             </article>
           }
@@ -86,6 +87,6 @@
       }
       <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="receiptConfirmed" /><span>{{ paymentMode === 'cash' ? 'کل مبلغ ' + money(totalAmount) + ' را از بیمار دریافت کرده‌ام.' : 'وجه نقد درج‌شده و اصل تمام چک‌ها و سفته‌های ثبت‌شده را تحویل گرفته‌ام.' }}</span></label>
     </fieldset>
-    <app-base-button [loading]="saving" [disabled]="!receiptConfirmed" (pressed)="submit()">ثبت مالی پرونده</app-base-button>
+    <app-base-button [loading]="saving" [disabled]="!receiptConfirmed" (pressed)="submit()">{{ editFinance ? 'ذخیره اصلاحات مالی' : 'ثبت مالی پرونده' }}</app-base-button>
   }
 </div>

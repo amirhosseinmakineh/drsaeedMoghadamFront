@@ -5,14 +5,15 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { finalize, switchMap } from "rxjs";
 import { BaseButtonComponent, BaseNumberInputComponent } from "../../../basemadual";
 import { PersianDatePickerComponent } from "../../../basemadual/forms/persian-date-picker/persian-date-picker.component";
-import { toIranDateInputValue, formatIranDate, startOfIranDay } from "../../../utils/iran-datetime.util";
+import { toIranDateInputValue, fromIranDateInputValue, formatIranDate, startOfIranDay } from "../../../utils/iran-datetime.util";
 import { PatientFinanceApiService } from "../patient-finance/services/patient-finance-api.service";
 import { PatientFinancialCaseDetails } from "../patient-finance/models/patient-finance.models";
-import { PatientFile } from "./patient-file.models";
+import { CompletePatientFileRequest, PatientFile } from "./patient-file.models";
 import { PatientFilesService } from "./patient-files.service";
+import { toothServiceIds } from "./dental-chart/dental-chart.models";
 
-interface ChequeDraft { amount: number | null; number: string; ownerName: string; dueDate: Date | null; installment: boolean; }
-interface NoteDraft { amount: number | null; number: string; dueDate: Date | null; }
+interface ChequeDraft { id?: number; amount: number | null; number: string; ownerName: string; dueDate: Date | null; installment: boolean; }
+interface NoteDraft { id?: number; amount: number | null; number: string; dueDate: Date | null; }
 
 @Component({
   selector: "app-patient-file-completion",
@@ -24,10 +25,13 @@ interface NoteDraft { amount: number | null; number: string; dueDate: Date | nul
 })
 export class PatientFileCompletionComponent implements OnInit {
   @Input({ required: true }) file!: PatientFile;
+  @Input() editFinance = false;
   @Output() saved = new EventEmitter<void>();
   @Output() busyChange = new EventEmitter<boolean>();
   private readonly destroyRef = inject(DestroyRef);
-  readonly today = startOfIranDay();
+  readonly today = startOfIranDay(new Date());
+  editHash = "";
+  private editPatientId = "";
   readonly services = [
     { id: 1, key: "composite", label: "کامپوزیت" }, { id: 2, key: "implant", label: "ایمپلنت" },
     { id: 3, key: "laminate", label: "لمینت" }, { id: 4, key: "crown", label: "روکش" },
@@ -61,6 +65,21 @@ export class PatientFileCompletionComponent implements OnInit {
   }
   load(): void {
     this.loading = true; this.error = "";
+    if (this.editFinance) {
+      this.editHash = "";
+      this.filesApi.getFinanceEdit(this.file.id).pipe(
+        takeUntilDestroyed(this.destroyRef), finalize(() => { this.loading = false; this.cdr.markForCheck(); }),
+      ).subscribe({ next: draft => {
+        const f = draft.finance;
+        this.editHash = draft.expectedFinanceHash; this.editPatientId = f.patientId;
+        this.paymentMode = f.paymentMode; this.totalAmount = f.totalAmount; this.cashReceived = f.cashReceived;
+        this.serviceUnits = { ...f.serviceUnitCounts };
+        this.cheques = f.cheques.map(x => ({ ...x, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate) : null }));
+        this.notes = f.notes.map(x => ({ ...x, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate) : null }));
+        this.receiptConfirmed = false;
+      }, error: e => this.error = this.message(e) });
+      return;
+    }
     if (this.file.financeCompleted && this.file.completionFinancialCaseId) {
       this.financeApi.getCase(this.file.completionFinancialCaseId).pipe(
         takeUntilDestroyed(this.destroyRef), finalize(() => { this.loading = false; this.cdr.markForCheck(); }),
@@ -74,8 +93,10 @@ export class PatientFileCompletionComponent implements OnInit {
           this.totalAmount = total > 0 ? total : null;
           const units: Record<number, number> = {};
           for (const value of Object.values(record.dentalChart ?? {})) {
-            const service = this.services.find(s => s.key === (value as { service?: string })?.service);
-            if (service) units[service.id] = (units[service.id] ?? 0) + 1;
+            for (const id of toothServiceIds(value)) {
+              const service = this.services.find(s => s.key === id);
+              if (service) units[service.id] = (units[service.id] ?? 0) + 1;
+            }
           }
           this.serviceUnits = units;
         },
@@ -107,7 +128,8 @@ export class PatientFileCompletionComponent implements OnInit {
     return value.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).trim();
   }
   private validate(): string | null {
-    if (this.existingCases.length && !this.newFinanceConfirmed) return "صورت‌حساب قبلی را انتخاب کنید یا ثبت یک درمان جدید و جداگانه را تأیید کنید.";
+    if (!this.editFinance && this.existingCases.length && !this.newFinanceConfirmed) return "صورت‌حساب قبلی را انتخاب کنید یا ثبت یک درمان جدید و جداگانه را تأیید کنید.";
+    if (this.editFinance && !this.editHash) return "ابتدا اطلاعات مالی را دوباره دریافت کنید.";
     if (!this.totalAmount || this.totalAmount <= 0) return "هزینه درمان را وارد کنید.";
     if (!Object.keys(this.serviceUnits).length || Object.values(this.serviceUnits).some(x => !Number.isInteger(x) || x < 1 || x > 100))
       return "خدمات و تعداد واحد معتبر را انتخاب کنید.";
@@ -126,15 +148,18 @@ export class PatientFileCompletionComponent implements OnInit {
     this.error = this.validate() ?? "";
     if (this.error) return;
     this.setBusy(true);
-    this.filesApi.ensureFinancialIdentity(this.file.id).pipe(
-      switchMap(identity => this.filesApi.completeFinance(this.file.id, {
-        patientId: identity.financialPatientId, paymentMode: this.paymentMode, totalAmount: this.totalAmount!,
+    const body: CompletePatientFileRequest = {
+        patientId: this.editPatientId, paymentMode: this.paymentMode, totalAmount: this.totalAmount!,
         cashReceived: this.paymentMode === "cash" ? this.totalAmount! : Number(this.cashReceived || 0),
         serviceUnitCounts: this.serviceUnits,
-        cheques: this.cheques.map(x => ({ amount: x.amount!, number: this.normalizeNumber(x.number), ownerName: x.ownerName.trim(),
+        cheques: this.cheques.map(x => ({ id: x.id, amount: x.amount!, number: this.normalizeNumber(x.number), ownerName: x.ownerName.trim(),
           dueDate: x.installment && x.dueDate ? toIranDateInputValue(x.dueDate) : null, installment: x.installment })),
-        notes: this.notes.map(x => ({ amount: x.amount!, number: this.normalizeNumber(x.number), dueDate: x.dueDate ? toIranDateInputValue(x.dueDate) : null })),
-      })), takeUntilDestroyed(this.destroyRef), finalize(() => this.setBusy(false)),
+        notes: this.notes.map(x => ({ id: x.id, amount: x.amount!, number: this.normalizeNumber(x.number), dueDate: x.dueDate ? toIranDateInputValue(x.dueDate) : null })),
+    };
+    const request = this.editFinance ? this.filesApi.updateFinance(this.file.id, { expectedFinanceHash: this.editHash, finance: body }) :
+      this.filesApi.ensureFinancialIdentity(this.file.id).pipe(
+        switchMap(identity => this.filesApi.completeFinance(this.file.id, { ...body, patientId: identity.financialPatientId })));
+    request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.setBusy(false)),
     ).subscribe({ next: () => this.saved.emit(), error: e => { this.error = this.message(e); this.cdr.markForCheck(); } });
   }
   confirmFinance(): void {

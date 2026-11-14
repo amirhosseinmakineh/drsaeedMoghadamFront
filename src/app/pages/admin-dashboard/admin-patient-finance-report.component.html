@@ -1,9 +1,10 @@
 <section class="finance-report" aria-labelledby="patient-finance-report-title">
   <header class="report-header">
     <div><span>گزارش مالی</span><h2 id="patient-finance-report-title">گزارش مالی بیماران</h2><p>هر پرونده مالی جداگانه در فهرست نمایش داده می‌شود و خروجی اکسل مطابق فیلترهای انتخاب‌شده است.</p></div>
-    <button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button>
+    <div class="report-actions"><button type="button" [attr.aria-expanded]="chequesOpen" aria-controls="due-cheques-section" (click)="chequesOpen = !chequesOpen">{{ chequesOpen ? 'بستن چک‌ها' : 'چک‌ها' }}</button><button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button></div>
   </header>
 
+  @if (chequesOpen) { <app-admin-due-cheques id="due-cheques-section"></app-admin-due-cheques> }
   <form class="filters" (ngSubmit)="load(true)">
     <label>نام بیمار<input [(ngModel)]="filters.patientName" name="patientName" placeholder="نام یا نام خانوادگی بیمار" /></label>
     <label>شماره پرونده<input type="number" min="1" inputmode="numeric" [(ngModel)]="filters.fileNumber" name="fileNumber" placeholder="شماره پرونده" /></label>

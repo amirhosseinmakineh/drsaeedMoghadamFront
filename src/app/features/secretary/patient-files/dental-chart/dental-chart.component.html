@@ -10,6 +10,16 @@
       <div class="chart-frame">
         <svg class="teeth-svg" viewBox="0 0 529 760" xmlns="http://www.w3.org/2000/svg" role="group"
           aria-label="نمودار دندان‌ها، نمای فک بالا و پایین">
+          <defs>
+            @for (entry of savedTreatments; track entry.tooth.id) {
+              <linearGradient [attr.id]="gradientId(entry.tooth.id)" x1="0%" y1="0%" x2="100%" y2="0%">
+                @for (service of entry.services; track service; let i = $index) {
+                  <stop [attr.offset]="(i * 100 / entry.services.length) + '%'" [attr.stop-color]="serviceFill(service)" />
+                  <stop [attr.offset]="((i + 1) * 100 / entry.services.length) + '%'" [attr.stop-color]="serviceFill(service)" />
+                }
+              </linearGradient>
+            }
+          </defs>
           <text x="264" y="253" class="quadrant-label">Upper jaw</text>
           <text x="264" y="514" class="quadrant-label">Lower jaw</text>
           <text x="210" y="382" class="axis-label">R</text>
@@ -36,7 +46,7 @@
 
     <aside class="chart-details">
       <h3>راهنمای رنگ خدمات</h3>
-      <p>{{ readOnly ? 'رنگ دندان‌ها و فهرست زیر، خدمات ثبت‌شده در پرونده را نشان می‌دهند.' : 'برای هر دندان یک خدمت اصلی و توضیح کوتاه ثبت کنید. رنگ هر دندان بر اساس خدمت انتخابی تغییر می‌کند.' }}</p>
+      <p>{{ readOnly ? 'رنگ دندان‌ها و فهرست زیر، خدمات ثبت‌شده در پرونده را نشان می‌دهند.' : 'برای هر دندان می‌توانید چند خدمت انتخاب کنید. دندان‌های دارای چند خدمت با چند رنگ نمایش داده می‌شوند.' }}</p>
       <div class="legend">
         @for (service of services; track service.id) {
           <span class="pill"><i [style.background]="service.stroke"></i>{{ service.label }}</span>
@@ -47,7 +57,7 @@
       <div class="saved-list">
         @for (entry of savedTreatments; track entry.tooth.id) {
           <div class="saved">
-            <span><strong>{{ toothLabel(entry.tooth) }}</strong> · {{ serviceLabel(entry.service) }}{{ entry.description ? ' · ' + entry.description : '' }}</span>
+            <div class="saved-treatment"><strong>{{ toothLabel(entry.tooth) }}</strong><div class="saved-services">@for (service of entry.services; track service) { <span class="pill">{{ serviceLabel(service) }}</span> }</div>@if (entry.description) { <span>{{ entry.description }}</span> }</div>
             @if (!readOnly) { <button type="button" (click)="select(entry.tooth)">ویرایش</button> }
           </div>
         } @empty {
@@ -69,14 +79,15 @@
         </div>
         <button type="button" class="close" aria-label="بستن" (click)="closeEditor()">×</button>
       </div>
-      <label class="field">خدمت درمانی
-        <select [value]="draftService" (change)="changeService($event)">
-          <option value="">انتخاب خدمت...</option>
+      <fieldset class="service-picker">
+        <legend>خدمات درمانی این دندان</legend>
+        <p>می‌توانید بیش از یک گزینه انتخاب کنید.</p>
+        <div class="service-picker-options">
           @for (service of services; track service.id) {
-            <option [value]="service.id">{{ service.label }}</option>
+            <label [class.checked]="draftServices.includes(service.id)"><input type="checkbox" [checked]="draftServices.includes(service.id)" (change)="toggleService(service.id, $any($event.target).checked)" /><i [style.background]="service.stroke" aria-hidden="true"></i><span>{{ service.label }}</span></label>
           }
-        </select>
-      </label>
+        </div>
+      </fieldset>
       <label class="field">توضیحات کوتاه
         <textarea [value]="draftDescription" (input)="changeDescription($event)"
           placeholder="مثلاً سطح دندان، رنگ کامپوزیت، یا توضیح پزشک..."></textarea>
@@ -86,7 +97,7 @@
         <button type="button" class="save" (click)="save()">تأیید و ثبت</button>
         <button type="button" class="cancel" (click)="closeEditor()">انصراف</button>
         @if (treatments[selectedTooth.id]) {
-          <button type="button" class="remove" (click)="remove()">حذف</button>
+          <button type="button" class="remove" (click)="remove()">حذف همه خدمات</button>
         }
       </div>
       <p class="editor-note">خدمات انتخاب‌شده فعلاً فقط در همین فرم نگهداری می‌شوند.</p>

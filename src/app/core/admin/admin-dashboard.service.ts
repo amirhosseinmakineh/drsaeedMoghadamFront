@@ -13,6 +13,17 @@ export interface ApiCommandResponse<T = unknown> {
   data?: T;
 }
 
+export interface AdminPatientChequesDueReport {
+  date: string;
+  items: { id: number; caseId: string; patientName: string; phoneNumber: string;
+    fileNumber: string; sayadNumber: string; ownerName: string; amount: number;
+    dueDate: string; status: number; isGuarantee: boolean }[];
+  totalCount: number;
+  totalAmount: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
 export type LeadAssignmentSourceType = 1 | 2;
 export interface LeadAssignmentSettingResponse {
   assignmentSourceType: LeadAssignmentSourceType;
@@ -1144,6 +1155,14 @@ export class AdminDashboardService {
     filters: DailyReservationsReportFilters,
   ): Observable<Blob> {
     return this.exportCsvReport("daily-reservations/export", filters);
+  }
+
+  getPatientChequesDue(date: string, page = 1): Observable<AdminPatientChequesDueReport> {
+    return this.http.get<AdminPatientChequesDueReport>(
+      `${this.apiBaseUrl}/admin/reports/patient-finances/cheques/due`,
+      { headers: this.authHeaders(), params: new HttpParams().set("date", date).set("page", page).set("pageSize", 50) },
+    ).pipe(catchError(error => throwError(() =>
+      this.toUserFacingError(error, "دریافت چک‌های سررسید انجام نشد"))));
   }
 
   getPatientFinanceReport(

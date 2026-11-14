@@ -1,4 +1,5 @@
 import { PatientPaperRecord } from "./patient-paper-intake.models";
+import { SecretaryReservation, ReviewAttendanceRequest } from "../../../core/secretary/secretary-dashboard.service";
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { map, Observable } from "rxjs";
@@ -21,6 +22,18 @@ import {
 export class PatientFilesService {
   private readonly endpoint = `${environment.apiBaseUrl}/secretary/patient-files`;
 
+  getServiceResults(fileId: number, page = 1) {
+    return this.http.get<{ items: SecretaryReservation[]; pageNumber: number; totalPages: number;
+      totalCount: number; reviewableReservationIds: number[] }>(`${this.endpoint}/${fileId}/service-results`, {
+      headers: this.authHeaders(), params: new HttpParams().set("page", page),
+    });
+  }
+
+  reviewServiceResult(fileId: number, body: ReviewAttendanceRequest) {
+    return this.http.post<{ isSuccess: boolean; message: string }>(`${this.endpoint}/${fileId}/service-results`, body,
+      { headers: this.authHeaders() });
+  }
+
   constructor(
     private readonly http: HttpClient,
     private readonly auth: AuthService,
@@ -28,6 +41,16 @@ export class PatientFilesService {
 
   completeFinance(patientFileId: number, body: CompletePatientFileRequest) {
     return this.http.post<{ financialCaseId: string }>(`${this.endpoint}/${patientFileId}/complete-finance`, body, { headers: this.authHeaders() });
+  }
+
+  getFinanceEdit(patientFileId: number) {
+    return this.http.get<{ expectedFinanceHash: string; finance: CompletePatientFileRequest }>(
+      `${this.endpoint}/${patientFileId}/finance-edit`, { headers: this.authHeaders() });
+  }
+
+  updateFinance(patientFileId: number, body: { expectedFinanceHash: string; finance: CompletePatientFileRequest }) {
+    return this.http.put<{ financialCaseId: string }>(`${this.endpoint}/${patientFileId}/finance-edit`, body,
+      { headers: this.authHeaders() });
   }
 
   confirmFinance(patientFileId: number) {

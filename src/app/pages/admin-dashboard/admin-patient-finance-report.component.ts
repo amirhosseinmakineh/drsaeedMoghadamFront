@@ -1,4 +1,5 @@
 import { CommonModule } from "@angular/common";
+import { AdminDueChequesComponent } from "./admin-due-cheques.component";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
@@ -26,12 +27,13 @@ import { PatientPaperMedicalHistory } from "../../features/secretary/patient-fil
 @Component({
   selector: "app-admin-patient-finance-report",
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseDatepickerComponent, BaseModalComponent, PatientFinanceDetailsComponent, PatientFileViewComponent],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent, BaseModalComponent, PatientFinanceDetailsComponent, PatientFileViewComponent, AdminDueChequesComponent],
   templateUrl: "./admin-patient-finance-report.component.html",
   styleUrl: "./admin-patient-finance-report.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminPatientFinanceReportComponent implements OnInit {
+  chequesOpen = false;
   filters: PatientFinanceReportFilters = { page: 1, pageSize: 20 };
   report: PatientFinanceReportResponse | null = null;
   loading = false;

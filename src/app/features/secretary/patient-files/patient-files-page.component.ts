@@ -2,6 +2,7 @@ import { PersianDatePickerComponent } from "../../../basemadual/forms/persian-da
 import { PatientPaperRecord, PatientPaperMedicalHistory } from "./patient-paper-intake.models";
 import { PatientFileCompletionComponent } from "./patient-file-completion.component";
 import { PatientFileViewComponent } from "./patient-file-view.component";
+import { PatientFileServiceResultsComponent } from "./patient-file-service-results.component";
 import { fromIranDateInputValue, toIranDateInputValue } from "../../../utils/iran-datetime.util";
 import { CommonModule, Location } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
@@ -29,7 +30,7 @@ import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/
     BaseFilterBarComponent, BaseLoadingComponent, BaseModalComponent, BasePageHeaderComponent,
     BasePageShellComponent, BaseSearchFilterComponent, BaseSelectFilterComponent,
     BaseTablePaginationComponent, SecretaryAccountShellComponent, PatientFinanceDetailsComponent,
-    SecretaryDentalChartComponent, PersianDatePickerComponent, PatientFileCompletionComponent, PatientFileViewComponent],
+    SecretaryDentalChartComponent, PersianDatePickerComponent, PatientFileCompletionComponent, PatientFileViewComponent, PatientFileServiceResultsComponent],
   templateUrl: "./patient-files-page.component.html",
   styleUrl: "./patient-files-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +38,8 @@ import { PatientFinanceDetailsComponent } from "../../../shared/patient-finance/
 export class PatientFilesPageComponent implements OnInit {
   files: PatientFile[] = [];
   viewingFile: PatientFile | null = null;
+  serviceResultsFile: PatientFile | null = null;
+  serviceResultSaving = false;
   paperFile: PatientFile | null = null;
   paperLoading = false;
   paperSaving = false;
@@ -91,16 +94,23 @@ export class PatientFilesPageComponent implements OnInit {
   financeError = "";
   completionFile: PatientFile | null = null;
   completionBusy = false;
+  financeEditMode = false;
+
+  openFinanceEdit(file: PatientFile): void {
+    if (!file.financeCompleted) return;
+    this.financeEditMode = true;
+    this.completionFile = file;
+  }
 
   openCompletion(file: PatientFile): void {
     if (!file.consultationCompleted || file.serviceApproved) return;
+    this.financeEditMode = false;
     this.completionFile = file;
   }
 
   completionSaved(): void {
-    const approved = this.completionFile?.financeCompleted;
     this.completionFile = null;
-    this.toast.success(approved ? "اجازه انجام خدمات ثبت شد." : "اطلاعات مالی ثبت شد؛ اکنون می‌توانید اجازه انجام خدمات را تأیید کنید.");
+    this.toast.success(this.financeEditMode ? "اصلاحات مالی ذخیره شد؛ مراحل تأیید را دوباره انجام دهید." : "مرحله پرونده با موفقیت ثبت شد.");
     this.loadFiles();
   }
   readonly sourceOptions = [{ value: "System", label: "جدید" }, { value: "Legacy", label: "قدیمی" }];

@@ -38,7 +38,8 @@
                   @if (!file.consultationCompleted) { <button class="consultation-pending" type="button" (click)="openEdit(file)">در انتظار تأیید طرح درمان</button> }
                   @else if (!file.financeCompleted) { <button class="complete-file-action" type="button" (click)="openCompletion(file)">ثبت مالی پرونده</button> }
                   @else if (!file.serviceApproved) { <button class="approve-service-action" type="button" (click)="openCompletion(file)">{{ !file.financeConfirmedAtUtc ? 'در انتظار تأیید مالی' : !file.profileConfirmedAtUtc ? 'در انتظار تأیید پروفایل' : 'در انتظار مجوز درمان' }}</button> }
-                  @else { <span class="service-approved" role="status">✓ مجاز به انجام خدمات</span> }
+                  @else { <span class="service-approved" role="status">✓ مجاز به انجام خدمات</span><button class="service-results-action" type="button" (click)="serviceResultsFile = file">ثبت نتیجه خدمت</button> }
+                  @if (file.financeCompleted) { <button class="edit-finance-action" type="button" (click)="openFinanceEdit(file)">ویرایش مالی</button> }
                   <button class="danger" type="button" (click)="deleting = file">حذف</button></div></td>
               </tr>
             }</tbody>
@@ -51,6 +52,10 @@
   </app-base-content-container>
 </app-base-page-shell>
 </app-secretary-account-shell>
+
+<app-base-modal [open]="!!serviceResultsFile" title="ثبت نتیجه خدمت" [closeOnBackdrop]="!serviceResultSaving" (close)="!serviceResultSaving && (serviceResultsFile = null)">
+  @if (serviceResultsFile; as file) { <app-patient-file-service-results [file]="file" (busyChange)="serviceResultSaving = $event" /> }
+</app-base-modal>
 
 <app-base-modal [open]="createOpen" title="ایجاد پرونده جدید" [closeOnBackdrop]="!creating" (close)="closeCreate()">
   <app-base-search-filter label="جستجوی بیمار" placeholder="نام، نام خانوادگی یا شماره تماس" [value]="eligibleSearch" (valueChange)="searchEligible($event)" />
@@ -540,9 +545,9 @@
     </section>
   </section>
 </ng-template>
-<app-base-modal class="completion-modal" [open]="!!completionFile" [title]="completionFile?.financeCompleted ? 'بررسی مالی و اجازه انجام خدمات' : 'تکمیل مالی پرونده'" [closeOnBackdrop]="!completionBusy" (close)="!completionBusy && (completionFile = null)">
+<app-base-modal class="completion-modal" [open]="!!completionFile" [title]="financeEditMode ? 'ویرایش مالی پرونده' : completionFile?.financeCompleted ? 'بررسی مالی و اجازه انجام خدمات' : 'تکمیل مالی پرونده'" [closeOnBackdrop]="!completionBusy" (close)="!completionBusy && (completionFile = null)">
   @if (completionFile) {
-    <app-patient-file-completion [file]="completionFile" (busyChange)="completionBusy = $event" (saved)="completionSaved()" />
+    <app-patient-file-completion [file]="completionFile" [editFinance]="financeEditMode" (busyChange)="completionBusy = $event" (saved)="completionSaved()" />
   }
   <div baseModalFooter><app-base-button variant="secondary" [disabled]="completionBusy" (pressed)="completionFile = null">بستن</app-base-button></div>
 </app-base-modal>

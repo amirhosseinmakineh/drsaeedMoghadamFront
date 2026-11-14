@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from "@angular/core";
+import { DentalServiceId as ServiceId, ToothTreatment, toothServiceIds } from "./dental-chart.models";
 
 type ToothType = "molar" | "premolar" | "canine" | "central";
-type ServiceId = "composite" | "laminate" | "implant" | "root" | "filling" | "crown" | "extraction";
+let chartSequence = 0;
 
 interface Tooth {
   id: number;
@@ -13,13 +14,6 @@ interface Tooth {
   transform: string;
   numberX: number;
   numberY: number;
-}
-
-interface ToothTreatment {
-  service: ServiceId;
-  description: string;
-  toothName: string;
-  serviceName: string;
 }
 
 const PATHS: Record<ToothType, { outline: string; detail: string }> = {
@@ -79,6 +73,7 @@ function generateJaw(numbers: number[], upper: boolean): Tooth[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SecretaryDentalChartComponent {
+  private readonly gradientPrefix = `dental-services-${++chartSequence}`;
   @Input() readOnly = false;
   readonly services: { id: ServiceId; label: string; fill: string; stroke: string }[] = [
     { id: "composite", label: "کامپوزیت", fill: "#dcefff", stroke: "#087fc1" },
@@ -97,8 +92,17 @@ export class SecretaryDentalChartComponent {
   private currentTreatments: Record<number, ToothTreatment> = {};
 
   @Input()
-  set value(value: Record<number, ToothTreatment> | null | undefined) {
-    this.currentTreatments = value ? { ...value } : {};
+  set value(value: Record<number, unknown> | null | undefined) {
+    const treatments: Record<number, ToothTreatment> = {};
+    for (const tooth of this.teeth) {
+      const entry = value?.[tooth.id];
+      const services = toothServiceIds(entry);
+      if (!services.length) continue;
+      const description = (entry as { description?: unknown }).description;
+      treatments[tooth.id] = { services, description: typeof description === "string" ? description : "",
+        toothName: this.toothLabel(tooth), serviceNames: services.map(id => this.serviceLabel(id)) };
+    }
+    this.currentTreatments = treatments;
   }
 
   get treatments(): Record<number, ToothTreatment> {
@@ -112,13 +116,13 @@ export class SecretaryDentalChartComponent {
     this.valueChange.emit({ ...value });
   }
   selectedTooth: Tooth | null = null;
-  draftService = "";
+  draftServices: ServiceId[] = [];
   draftDescription = "";
   validationError = "";
 
   get treatmentCount(): number { return Object.keys(this.treatments).length; }
 
-  get savedTreatments(): { tooth: Tooth; service: ServiceId; description: string }[] {
+  get savedTreatments(): { tooth: Tooth; services: ServiceId[]; description: string }[] {
     return this.teeth.filter(tooth => !!this.treatments[tooth.id]).map(tooth => ({
       tooth, ...this.treatments[tooth.id],
     }));
@@ -134,24 +138,29 @@ export class SecretaryDentalChartComponent {
 
   fillFor(id: number): string | null {
     const selected = this.treatments[id];
-    return selected ? this.services.find(service => service.id === selected.service)?.fill ?? null : null;
+    if (selected && selected.services.length > 1) return `url(#${this.gradientId(id)})`;
+    return selected ? this.services.find(service => service.id === selected.services[0])?.fill ?? null : null;
   }
 
   strokeFor(id: number): string | null {
     const selected = this.treatments[id];
-    return selected ? this.services.find(service => service.id === selected.service)?.stroke ?? null : null;
+    return selected ? this.services.find(service => service.id === selected.services[0])?.stroke ?? null : null;
   }
+
+  gradientId(id: number): string { return `${this.gradientPrefix}-${id}`; }
+  serviceFill(id: ServiceId): string { return this.services.find(service => service.id === id)!.fill; }
 
   select(tooth: Tooth): void {
     if (this.readOnly) return;
     this.selectedTooth = tooth;
-    this.draftService = this.treatments[tooth.id]?.service ?? "";
+    this.draftServices = [...(this.treatments[tooth.id]?.services ?? [])];
     this.draftDescription = this.treatments[tooth.id]?.description ?? "";
     this.validationError = "";
   }
 
-  changeService(event: Event): void {
-    this.draftService = (event.target as HTMLSelectElement).value;
+  toggleService(id: ServiceId, checked: boolean): void {
+    if (this.readOnly) return;
+    this.draftServices = checked ? [...new Set([...this.draftServices, id])] : this.draftServices.filter(service => service !== id);
     this.validationError = "";
   }
 
@@ -162,18 +171,18 @@ export class SecretaryDentalChartComponent {
   save(): void {
     if (this.readOnly) return;
     if (!this.selectedTooth) return;
-    const service = this.services.find(item => item.id === this.draftService);
-    if (!service) {
-      this.validationError = "لطفاً یک خدمت انتخاب کنید.";
+    const services = this.services.filter(item => this.draftServices.includes(item.id));
+    if (!services.length) {
+      this.validationError = "لطفاً حداقل یک خدمت انتخاب کنید.";
       return;
     }
     this.commitTreatments({
       ...this.treatments,
       [this.selectedTooth.id]: {
-        service: service.id,
+        services: services.map(service => service.id),
         description: this.draftDescription.trim(),
         toothName: this.toothLabel(this.selectedTooth),
-        serviceName: service.label,
+        serviceNames: services.map(service => service.label),
       },
     });
     this.closeEditor();
@@ -189,6 +198,8 @@ export class SecretaryDentalChartComponent {
 
   closeEditor(): void {
     this.selectedTooth = null;
+    this.draftServices = [];
+    this.draftDescription = "";
     this.validationError = "";
   }
 }
