@@ -196,6 +196,23 @@
       }
     }
   } @else {
-    <section class="view-section"><h3>صورت‌حساب‌ها و اسناد مالی بیمار</h3><app-patient-finance-details [finance]="currentFile.finance" [patientName]="currentFile.firstName + ' ' + currentFile.lastName" [loading]="financeLoading" [error]="financeError" (retry)="loadFile()" /></section>
+    <section class="view-section"><h3>صورت‌حساب‌ها و اسناد مالی بیمار</h3>
+      @if (installmentError) { <p role="alert">{{ installmentError }}</p> }
+      @for (financialCase of currentFile.finance?.cases ?? []; track financialCase.id) {
+        @if (installmentsByCase[financialCase.id]?.length) {
+          <section class="paper-panel">
+            <h3>جدول اقساط پرونده مالی</h3>
+            <p>مبلغ قرارداد: {{ financialCase.totalAmount | number }} تومان</p>
+            @for (item of installmentsByCase[financialCase.id]; track item.id) {
+              <article class="document-review">
+                <strong>قسط {{ $index + 1 }} — {{ item.amount | number }} تومان</strong>
+                <span>سررسید: {{ date(item.dueDate) }}</span>
+                <strong>{{ item.paidAtUtc ? 'پرداخت‌شده' : 'در انتظار پرداخت' }}</strong>
+                @if (item.paidAtUtc) { <span>تاریخ وصول: {{ date(item.paidAtUtc) }}</span> }
+              </article>
+            }
+          </section>
+        }
+      }<app-patient-finance-details [finance]="currentFile.finance" [patientName]="currentFile.firstName + ' ' + currentFile.lastName" [loading]="financeLoading" [error]="financeError" (retry)="loadFile()" /></section>
   }
 </div>
