@@ -73,6 +73,9 @@
           <div class="service-option"><strong>{{ service.label }}</strong><span>{{ serviceUnits[service.id] }} واحد</span></div>
         }</div>
         <app-base-button variant="secondary" [disabled]="saving" (pressed)="editChartRequested.emit()">{{ hasChartServices ? 'اصلاح چارت در پرونده' : 'تکمیل چارت پرونده' }}</app-base-button>
+        @if (treatmentPaid > 0) {
+          <p class="completion-intro">پرداخت‌های ثبت‌شده در طرح درمان: <strong>{{ money(treatmentPaid) }}</strong> — این مبلغ در وجه دریافتی لحاظ شده و دوباره دریافت نمی‌شود.</p>
+        }
         <app-base-number-input inputId="completion-total" label="هزینه کل درمان" suffix="تومان" [maxFractionDigits]="2" [value]="totalAmount" (valueChange)="totalAmount = $event; receiptConfirmed = false" />
       </section>
       @if (paymentMode === 'installments') {
