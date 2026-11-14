@@ -59,6 +59,30 @@ export class PatientFileCompletionComponent implements OnInit {
   reviewConfirmed = false;
   newFinanceConfirmed = false;
   details: PatientFinancialCaseDetails | null = null;
+  existingInstallments: { id: number; amount: number; dueDate: string; paidAtUtc: string | null }[] = [];
+  payingInstallmentId: number | null = null;
+  loadInstallments(caseId: string): void {
+    this.filesApi.getInstallments(caseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: rows => { this.existingInstallments = rows; this.cdr.markForCheck(); },
+      error: e => { this.error = this.message(e); this.cdr.markForCheck(); }
+    });
+  }
+  markInstallmentPaid(id: number): void {
+    if (!this.details || this.payingInstallmentId !== null || !confirm("پرداخت این قسط ثبت شود؟")) return;
+    const caseId = this.details.case.id;
+    this.payingInstallmentId = id;
+    this.filesApi.payInstallment(caseId, id).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      this.payingInstallmentId = null; this.cdr.markForCheck();
+    })).subscribe({
+      next: () => {
+        this.loadInstallments(caseId);
+        this.financeApi.getCase(caseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: data => { this.details = data; this.cdr.markForCheck(); }
+        });
+      },
+      error: e => { this.error = this.message(e); this.cdr.markForCheck(); }
+    });
+  }
 
   constructor(private readonly filesApi: PatientFilesService, private readonly financeApi: PatientFinanceApiService,
     private readonly cdr: ChangeDetectorRef) {}
@@ -93,7 +117,7 @@ export class PatientFileCompletionComponent implements OnInit {
     if (this.file.financeCompleted && this.file.completionFinancialCaseId) {
       this.financeApi.getCase(this.file.completionFinancialCaseId).pipe(
         takeUntilDestroyed(this.destroyRef), finalize(() => { this.loading = false; this.cdr.markForCheck(); }),
-      ).subscribe({ next: data => this.details = data, error: e => this.error = this.message(e) });
+      ).subscribe({ next: data => { this.details = data; this.loadInstallments(data.case.id); }, error: e => this.error = this.message(e) });
     } else {
       this.filesApi.getPaperRecord(this.file.id).pipe(
         takeUntilDestroyed(this.destroyRef), finalize(() => { this.loading = false; this.cdr.markForCheck(); }),
