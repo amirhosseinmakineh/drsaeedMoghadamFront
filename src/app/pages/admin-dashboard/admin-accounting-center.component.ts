@@ -1,3 +1,4 @@
+import { PatientDocumentsManagerComponent } from "../../shared/patient-finance/patient-documents-manager.component";
 import { CommonModule } from "@angular/common";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -12,13 +13,14 @@ import { AdminConsultantRewardsComponent } from "./admin-consultant-rewards.comp
 import { AdminAccountingFilters, AdminAccountingReport, AdminStaffAccountingRow } from "./admin-accounting.models";
 import { AdminAccountingService } from "./admin-accounting.service";
 
-type AccountingTab = "overview" | "secretaries" | "consultants" | "referrals";
+type AccountingTab = "overview" | "secretaries" | "consultants" | "referrals" | "documents";
 
 @Component({
   selector: "app-admin-accounting-center",
   standalone: true,
   imports: [
     CommonModule,
+    PatientDocumentsManagerComponent,
     FormsModule,
     BaseDatepickerComponent,
     AdminSecretarySalesApprovalComponent,
