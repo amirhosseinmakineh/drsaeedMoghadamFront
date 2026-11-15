@@ -265,4 +265,22 @@ function fixture(chart = { 1: { service: "composite" } }) {
   assert.equal(c.cheques[0].isGuarantee, false);
   assert.equal(c.cheques[0].installment, true, "Ordinary installment cheques require a selectable due date");
 }
+for (const storedDate of ["2026-11-23T00:00:00", "2026-11-23", "2026-11-23T00:00:00.0000000"]) {
+  const calls = [];
+  const finance = { patientId: "same-patient", paymentMode: "installments", totalAmount: 1000,
+    cashReceived: 100, serviceUnitCounts: { 1: 1 }, cheques: [], notes: [],
+    installments: [{ amount: 400, dueDate: storedDate }, { amount: 500, dueDate: "2026-12-23T00:00:00" }] };
+  const api = { getFinanceEdit: () => rxjs.of({ expectedFinanceHash: "schedule", finance }),
+    updateFinance: (_id, body) => { calls.push(body); return rxjs.of({}); } };
+  const c = new Component(api, {}, { markForCheck() {} });
+  c.file = { id: 42, financeCompleted: true, finance: { cases: [] } }; c.editFinance = true; c.ngOnInit();
+  assert.equal(c.useInstallmentTable, true); assert.equal(c.installments.length, 2);
+  assert.equal(c.installments[0].amount, 400); assert.equal(Number.isNaN(c.installments[0].dueDate.getTime()), false,
+    "Stored DateTime installment due dates must reopen as valid calendar values");
+  assert.equal(dateModule.exports.toIranDateInputValue(c.installments[0].dueDate), "2026-11-23");
+  c.receiptConfirmed = true; c.submit();
+  assert.equal(calls.length, 1); assert.equal(calls[0].finance.installments.length, 2);
+  assert.equal(calls[0].finance.installments[0].dueDate, "2026-11-23");
+  assert.equal(calls[0].finance.installments[1].dueDate, "2026-12-23");
+}
 console.log("PASS: chart-only services, financial corrections, guarantee notes above treatment cost, installment descriptions, payment guards and due dates.");

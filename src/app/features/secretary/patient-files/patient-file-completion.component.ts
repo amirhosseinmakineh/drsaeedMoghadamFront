@@ -110,7 +110,8 @@ export class PatientFileCompletionComponent implements OnInit {
         this.serviceUnits = { ...f.serviceUnitCounts };
         this.cheques = f.cheques.map(x => ({ ...x, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate) : null }));
         this.notes = f.notes.map(x => ({ ...x, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate) : null }));
-        this.installments = (f.installments ?? []).map(x => ({ amount: x.amount, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate) : null }));
+        // Installment due dates are calendar days; the edit API may also include a time portion.
+        this.installments = (f.installments ?? []).map(x => ({ amount: x.amount, dueDate: x.dueDate ? fromIranDateInputValue(x.dueDate.slice(0, 10)) : null }));
         this.useInstallmentTable = this.installments.length > 0;
         this.receiptConfirmed = false;
       }, error: e => this.error = this.message(e) });
