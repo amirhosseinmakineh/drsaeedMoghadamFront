@@ -9,6 +9,8 @@
     @for (tab of tabs; track tab.id) { <button type="button" [class.active]="activeTab === tab.id" (click)="selectTab(tab.id)">{{ tab.label }}</button> }
   </nav>
 
+  @if (activeTab === 'documents') { <app-patient-documents-manager /> }
+
   @if (activeTab === 'create') {
     <form class="card create-form" [formGroup]="createForm" (ngSubmit)="submitCase()">
       <div class="section-title"><div><h2>ثبت حساب مالی بیمار</h2></div></div>
