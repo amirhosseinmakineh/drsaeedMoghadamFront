@@ -14,6 +14,7 @@
     <button type="button" [class.active]="tab === 'overview'" (click)="selectTab('overview')">نمای مالی</button>
     <button type="button" [class.active]="tab === 'secretaries'" (click)="selectTab('secretaries')">حسابداری منشی‌ها</button>
     <button type="button" [class.active]="tab === 'consultants'" (click)="selectTab('consultants')">حسابداری مشاوران</button>
+    <button type="button" [class.active]="tab === 'documents'" (click)="selectTab('documents')">مدیریت چک و سفته</button>
     <button type="button" [class.active]="tab === 'referrals'" (click)="selectTab('referrals')">رفرال بیماران</button>
   </nav>
 
@@ -56,5 +57,6 @@
 
   @if (tab === "secretaries") { <app-admin-secretary-sales-approval /> }
   @if (tab === "consultants") { <app-admin-consultant-rewards /> }
+  @if (tab === "documents") { <app-patient-documents-manager /> }
   @if (tab === "referrals") { <app-admin-patient-referrals /> }
 </section>
