@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { PatientFinanceApiService } from "../../features/secretary/patient-finance/services/patient-finance-api.service";
-import { CommitmentStatus, PatientCheque, PatientPromissoryNote } from "../../features/secretary/patient-finance/models/patient-finance.models";
+import { CommitmentStatus, PaginatedResult, PatientCheque, PatientPromissoryNote } from "../../features/secretary/patient-finance/models/patient-finance.models";
 
 type DocumentRow = PatientCheque | PatientPromissoryNote;
 @Component({
@@ -101,9 +101,11 @@ export class PatientDocumentsManagerComponent implements OnInit {
   }
   load(page = this.page): void {
     this.page = page; this.loading = true; this.error = "";
-    const request = this.kind === "cheques" ? this.api.getCheques({page,pageSize:20}) : this.api.getPromissoryNotes({page,pageSize:20});
+    const request = this.kind === "cheques"
+      ? this.api.getCheques({page,pageSize:20}) as import("rxjs").Observable<PaginatedResult<DocumentRow>>
+      : this.api.getPromissoryNotes({page,pageSize:20}) as import("rxjs").Observable<PaginatedResult<DocumentRow>>;
     request.subscribe({
-      next: result => { this.rows = result.items; this.totalCount = result.totalCount; this.loading = false; this.cdr.markForCheck(); },
+      next: (result: PaginatedResult<DocumentRow>) => { this.rows = result.items; this.totalCount = result.totalCount; this.loading = false; this.cdr.markForCheck(); },
       error: err => { this.error = err?.error?.message || err?.message || "دریافت اسناد ناموفق بود."; this.loading = false; this.cdr.markForCheck(); }
     });
   }
