@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from "@angular/core";
-import { PatientFinanceDetails } from "./patient-finance-details.models";
+import { PatientFinanceDetails, PatientInstallmentDetails } from "./patient-finance-details.models";
+import { formatIranDate, fromIranDateInputValue } from "../../utils/iran-datetime.util";
 
 @Component({
   selector: "app-patient-finance-details",
@@ -7,12 +8,15 @@ import { PatientFinanceDetails } from "./patient-finance-details.models";
   templateUrl: "./patient-finance-details.component.html",
   styleUrl: "./patient-finance-details.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { "[class.paper-layout]": "appearance === 'paper'" },
 })
 export class PatientFinanceDetailsComponent {
   @Input() finance: PatientFinanceDetails | null = null;
   @Input() patientName = "";
   @Input() loading = false;
   @Input() error = "";
+  @Input() appearance: "default" | "paper" = "default";
+  @Input() installmentsByCase: Record<string, PatientInstallmentDetails[]> = {};
   @Output() readonly retry = new EventEmitter<void>();
 
   money(value: number): string {
@@ -26,6 +30,9 @@ export class PatientFinanceDetailsComponent {
       : new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(parsed);
   }
   optionalDate(value: string | null | undefined): string { return value ? this.date(value) : ""; }
+  installmentDate(value: string): string {
+    return formatIranDate(fromIranDateInputValue(value.slice(0, 10)));
+  }
   optionalMoney(value: number | null | undefined): string { return value == null ? "" : this.money(value); }
   chequeDates(value: PatientFinanceDetails["cases"][number]): string {
     return value.cheques.filter(item => item.status !== 4).map(item => this.optionalDate(item.dueDate)).filter(Boolean).join("، ");
@@ -41,5 +48,5 @@ export class PatientFinanceDetailsComponent {
   caseStatusLabel(value: number): string { return ({ 1: "فعال", 2: "تسویه‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
   commitmentStatusLabel(value: number): string { return ({ 1: "در انتظار", 2: "وصول/پرداخت‌شده", 3: "برگشتی/پرداخت‌نشده", 4: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
   debtStatusLabel(value: number): string { return ({ 1: "پرداخت‌نشده", 2: "پرداخت‌شده", 3: "لغوشده" } as Record<number, string>)[value] ?? "نامشخص"; }
-  financialSourceLabel(value: number): string { return value === 1 ? "چک" : value === 2 ? "سفته" : "نامشخص"; }
+  financialSourceLabel(value: number): string { return value === 1 ? "چک" : value === 2 ? "سفته" : value === 3 ? "قسط" : "نامشخص"; }
 }

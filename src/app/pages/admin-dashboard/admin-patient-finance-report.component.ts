@@ -1,5 +1,4 @@
 import { CommonModule } from "@angular/common";
-import { AdminDueChequesComponent } from "./admin-due-cheques.component";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { finalize } from "rxjs";
@@ -19,7 +18,6 @@ import { downloadBlob } from "../../utils/file-download.util";
 import { BaseDatepickerComponent } from "../../shared/base/base-datepicker/base-datepicker.component";
 import { formatIranDateTime, toIranDateInputValue } from "../../utils/iran-datetime.util";
 import { BaseModalComponent } from "../../basemadual";
-import { PatientFinanceDetailsComponent } from "../../shared/patient-finance/patient-finance-details.component";
 import { environment } from "../../../environments/environment";
 import { PatientFileViewComponent } from "../../features/secretary/patient-files/patient-file-view.component";
 import { PatientPaperMedicalHistory } from "../../features/secretary/patient-files/patient-paper-intake.models";
@@ -27,14 +25,18 @@ import { PatientPaperMedicalHistory } from "../../features/secretary/patient-fil
 @Component({
   selector: "app-admin-patient-finance-report",
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseDatepickerComponent, BaseModalComponent, PatientFinanceDetailsComponent, PatientFileViewComponent, AdminDueChequesComponent],
+  imports: [CommonModule, FormsModule, BaseDatepickerComponent, BaseModalComponent, PatientFileViewComponent],
   templateUrl: "./admin-patient-finance-report.component.html",
   styleUrl: "./admin-patient-finance-report.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminPatientFinanceReportComponent implements OnInit {
-  chequesOpen = false;
-  notesOpen = false;
+  get collectionRate(): number {
+    const summary = this.report?.summary;
+    return summary && summary.totalAmount > 0 ? Math.min(100, Math.max(0, summary.paidAmount / summary.totalAmount * 100)) : 0;
+  }
+  get collectionRateLabel(): string { return new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 1 }).format(this.collectionRate) + "٪"; }
+
   filters: PatientFinanceReportFilters = { page: 1, pageSize: 20 };
   report: PatientFinanceReportResponse | null = null;
   loading = false;

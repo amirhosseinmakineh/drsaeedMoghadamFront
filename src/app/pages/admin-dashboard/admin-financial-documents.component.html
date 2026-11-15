@@ -1,0 +1,18 @@
+<section class="financial-documents" dir="rtl" aria-labelledby="financial-documents-title">
+  <header>
+    <span>حسابداری / اسناد مالی</span>
+    <h2 id="financial-documents-title">مدیریت چک و سفته‌ها</h2>
+    <p>مدیریت وضعیت اسناد بیماران و بررسی سررسید چک‌ها، سفته‌ها و اقساط پرداختی در سامانه بیرونی</p>
+  </header>
+  <nav aria-label="بخش‌های مدیریت اسناد">
+    @for (item of views; track item.id) {
+      <button type="button" [class.active]="view === item.id" [attr.aria-pressed]="view === item.id" (click)="view = item.id">{{ item.label }}</button>
+    }
+  </nav>
+  @switch (view) {
+    @case ("management") { <app-patient-documents-manager /> }
+    @case ("cheques") { <app-admin-due-cheques kind="cheques" /> }
+    @case ("notes") { <app-admin-due-cheques kind="notes" /> }
+    @case ("installments") { <app-admin-installments /> }
+  }
+</section>

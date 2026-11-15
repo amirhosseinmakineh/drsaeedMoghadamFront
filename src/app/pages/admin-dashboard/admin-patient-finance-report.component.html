@@ -1,11 +1,9 @@
 <section class="finance-report" aria-labelledby="patient-finance-report-title">
   <header class="report-header">
-    <div><span>گزارش مالی</span><h2 id="patient-finance-report-title">گزارش مالی بیماران</h2><p>هر پرونده مالی جداگانه در فهرست نمایش داده می‌شود و خروجی اکسل مطابق فیلترهای انتخاب‌شده است.</p></div>
-    <div class="report-actions"><button type="button" [attr.aria-expanded]="chequesOpen" aria-controls="due-cheques-section" (click)="chequesOpen = !chequesOpen">{{ chequesOpen ? 'بستن چک‌ها' : 'چک‌ها' }}</button><button type="button" [attr.aria-expanded]="notesOpen" aria-controls="due-notes-section" (click)="notesOpen = !notesOpen">{{ notesOpen ? "بستن سفته‌ها" : "سفته‌ها" }}</button><button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button></div>
+    <div><span>حسابداری بیماران</span><h2 id="patient-finance-report-title">حسابداری کل</h2><p>نمای یکپارچه هزینه درمان، دریافتی و مانده حساب بیماران؛ جزئیات و خروجی اکسل مطابق فیلترهای انتخاب‌شده.</p></div>
+    <div class="report-actions"><button type="button" class="export" [disabled]="downloading" (click)="download()">{{ downloading ? "در حال ساخت فایل..." : "خروجی اکسل" }}</button></div>
   </header>
 
-  @if (notesOpen) { <app-admin-due-cheques kind="notes" id="due-notes-section"></app-admin-due-cheques> }
-  @if (chequesOpen) { <app-admin-due-cheques id="due-cheques-section"></app-admin-due-cheques> }
   <form class="filters" (ngSubmit)="load(true)">
     <label>نام بیمار<input [(ngModel)]="filters.patientName" name="patientName" placeholder="نام یا نام خانوادگی بیمار" /></label>
     <label>شماره پرونده<input type="number" min="1" inputmode="numeric" [(ngModel)]="filters.fileNumber" name="fileNumber" placeholder="شماره پرونده" /></label>
@@ -19,16 +17,21 @@
 
   @if (errorMessage) { <p class="error">{{ errorMessage }}</p> }
   @if (report) {
+    <section class="collection-overview" aria-label="وضعیت وصول حساب بیماران">
+      <div><small>نسبت دریافتی به کل هزینه درمان</small><strong>{{ collectionRateLabel }}</strong><span>در پرونده‌های مطابق فیلتر</span></div>
+      <progress [value]="collectionRate" max="100" aria-label="درصد وصول هزینه درمان"></progress>
+      <p>دریافتی شامل پیش‌پرداخت، ودیعه و پرداخت‌های ثبت‌شده است. مبلغ اسمی چک و سفته به‌تنهایی دریافتی محسوب نمی‌شود. بدهی اسناد وصول‌نشده بخشی از مانده حساب است و دوباره به آن اضافه نمی‌شود.</p>
+    </section>
     <div class="summary">
       <article><small>تعداد پرونده</small><strong>{{ report.summary.caseCount }}</strong></article>
-      <article><small>مبلغ کل</small><strong>{{ money(report.summary.totalAmount) }}</strong></article>
+      <article><small>کل هزینه درمان</small><strong>{{ money(report.summary.totalAmount) }}</strong></article>
       <article><small>پیش‌پرداخت</small><strong>{{ money(report.summary.prePaymentAmount) }}</strong></article>
       <article><small>ودیعه</small><strong>{{ money(report.summary.depositAmount) }}</strong></article>
-      <article class="success"><small>مبلغ پرداختی</small><strong>{{ money(report.summary.paidAmount) }}</strong></article>
-      <article class="warning"><small>مانده</small><strong>{{ money(report.summary.remainingAmount) }}</strong></article>
-      <article class="danger"><small>بدهی باز</small><strong>{{ money(report.summary.unpaidDebtAmount) }}</strong></article>
-      <article><small>مجموع چک‌ها</small><strong>{{ money(report.summary.chequeAmount) }}</strong></article>
-      <article><small>مجموع سفته‌ها</small><strong>{{ money(report.summary.promissoryNoteAmount) }}</strong></article>
+      <article class="success"><small>کل دریافتی</small><strong>{{ money(report.summary.paidAmount) }}</strong></article>
+      <article class="warning"><small>مانده قابل دریافت</small><strong>{{ money(report.summary.remainingAmount) }}</strong></article>
+      <article class="danger"><small>بدهی اسناد وصول‌نشده</small><strong>{{ money(report.summary.unpaidDebtAmount) }}</strong></article>
+      <article><small>مبلغ اسمی چک‌ها</small><strong>{{ money(report.summary.chequeAmount) }}</strong></article>
+      <article><small>مبلغ اسمی سفته‌ها</small><strong>{{ money(report.summary.promissoryNoteAmount) }}</strong></article>
     </div>
 
     <div class="table-wrap"><table><thead><tr><th>ردیف</th><th>نام بیمار</th><th>شماره پرونده</th><th>شماره تماس</th><th>شرح خدمات</th><th>واحد دندان</th><th>آخرین وضعیت</th><th>تاریخ</th><th>نحوه پرداخت</th><th>وضعیت اقساط</th><th>تاریخ چک</th><th>ثبت چک</th><th>مبلغ خدمات</th><th>مبلغ پرداختی</th><th>بیعانه</th><th>مانده بدهکاری/بستانکاری</th><th>سند تضمین</th><th>توضیحات</th><th>نام مشاور</th><th>عملیات</th></tr></thead><tbody>

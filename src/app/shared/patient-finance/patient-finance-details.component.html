@@ -36,12 +36,26 @@
             <div><dt>بیعانه</dt><dd>{{ optionalMoney(financialCase.depositAmount) }}</dd></div>
             <div><dt>مانده بدهکاری/بستانکاری</dt><dd>{{ optionalMoney(financialCase.balanceAmount) }}</dd></div>
             <div><dt>سند تضمین</dt><dd>{{ financialCase.guaranteeDocument || "" }}</dd></div>
-            <div><dt>توضیحات</dt><dd>{{ financialCase.notes || "" }}</dd></div>
+            <div class="notes-field"><dt>توضیحات</dt><dd>{{ financialCase.notes || "" }}</dd></div>
             <div><dt>نام مشاور</dt><dd>{{ financialCase.consultantName || "" }}</dd></div>
             <div><dt>شماره چک صیادی</dt><dd class="copy-value" dir="ltr">{{ chequeRegistrations(financialCase) }}</dd></div>
             <div><dt>شماره سفته</dt><dd class="copy-value" dir="ltr">{{ noteSerialNumbers(financialCase) }}</dd></div>
           </dl>
           <dl class="case-amounts"><div><dt>پیش‌پرداخت</dt><dd>{{ optionalMoney(financialCase.prePaymentAmount) }}</dd></div><div><dt>مانده</dt><dd>{{ money(financialCase.remainingAmount) }}</dd></div><div><dt>بدهی</dt><dd>{{ money(financialCase.totalDebtAmount) }}</dd></div></dl>
+          @if (installmentsByCase[financialCase.id]; as installments) {
+            @if (installments.length) {
+              <section class="finance-section installment-section">
+                <h3>جدول اقساط</h3>
+                <div class="installments-table-wrap" tabindex="0" aria-label="جدول اقساط این صورت‌حساب">
+                  <table class="installments-table"><caption>برنامه اقساط {{ financialCase.serviceName }}</caption><thead><tr><th scope="col">ردیف</th><th scope="col">مبلغ قسط</th><th scope="col">سررسید</th><th scope="col">وضعیت</th><th scope="col">تاریخ ثبت پرداخت</th></tr></thead><tbody>
+                    @for (item of installments; track item.id) {
+                      <tr><td>{{ $index + 1 }}</td><td>{{ money(item.amount) }}</td><td>{{ installmentDate(item.dueDate) }}</td><td><span class="installment-status" [class.is-paid]="item.paidAtUtc">{{ item.paidAtUtc ? 'پرداخت‌شده' : 'در انتظار پرداخت' }}</span></td><td>{{ item.paidAtUtc ? date(item.paidAtUtc) : '—' }}</td></tr>
+                    }
+                  </tbody></table>
+                </div>
+              </section>
+            }
+          }
           <section class="finance-section"><h3>چک‌ها</h3>@if (!financialCase.cheques.length) { <p class="section-empty">چکی ثبت نشده است</p> } @for (item of financialCase.cheques; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>شماره صیاد</dt><dd class="copy-value" dir="ltr">{{ item.sayadNumber }}</dd></div><div><dt>صاحب چک</dt><dd>{{ item.ownerName }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ commitmentStatusLabel(item.status) }}</dd></div></dl></article> }</section>
           <section class="finance-section"><h3>سفته‌ها</h3>@if (!financialCase.promissoryNotes.length) { <p class="section-empty">سفته‌ای ثبت نشده است</p> } @for (item of financialCase.promissoryNotes; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>شماره سریال</dt><dd class="copy-value" dir="ltr">{{ item.serialNumber }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ item.isGuarantee ? "سفته ضمانت؛ مبلغ اسمی، پرداخت بیمار نیست" : commitmentStatusLabel(item.status) }}</dd></div></dl></article> }</section>
           <section class="finance-section"><h3>بدهی‌ها</h3>@if (!financialCase.debts.length) { <p class="section-empty">بدهی ثبت نشده است</p> } @for (item of financialCase.debts; track item.id) { <article class="finance-item"><dl><div><dt>مبلغ</dt><dd>{{ money(item.amount) }}</dd></div><div><dt>منبع</dt><dd>{{ financialSourceLabel(item.sourceType) }} #{{ item.sourceId }}</dd></div><div><dt>سررسید</dt><dd>{{ date(item.dueDate) }}</dd></div><div><dt>وضعیت</dt><dd>{{ debtStatusLabel(item.status) }}</dd></div></dl></article> }</section>

@@ -44,3 +44,11 @@ dd { margin: 6px 0 0; line-height: 1.9; overflow-wrap: anywhere; white-space: pr
 .file-view { max-width: 100%; min-width: 0; overflow-x: hidden; }
 .file-view .paper-ledger-scroll { max-width: 100%; overflow-x: auto; }
 @media (max-width: 600px) { .workflow-overview { margin: 10px; padding: 12px; } .workflow-grid { grid-template-columns: 1fr; } .file-view-summary { flex-wrap: wrap; overflow-wrap: anywhere; } }
+
+.finance-paper { box-sizing: border-box; background: #f5f0eb; color: #302b2b; }
+.finance-paper .finance-paper-heading { background: linear-gradient(110deg, #eee5df, #faf6f1); border-color: #d9c5b8; border-radius: 16px; }
+.finance-paper .paper-eyebrow { color: #88685a; }
+.finance-paper .finance-paper-heading h2 { color: #59453e; font-size: clamp(1.15rem, 2vw, 1.55rem); }
+.finance-paper .finance-paper-heading p { color: #77675f; overflow-wrap: anywhere; }
+.finance-paper-logo { width: 68px; height: 76px; object-fit: contain; flex: 0 0 auto; mix-blend-mode: multiply; }
+@media (max-width: 600px) { .finance-paper .finance-paper-heading { align-items: center; padding: 14px; gap: 12px; } .finance-paper-logo { width: 48px; height: 58px; } }

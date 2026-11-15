@@ -1,0 +1,35 @@
+<section dir="rtl" aria-labelledby="installments-title" class="installments">
+  <header><h3 id="installments-title">مدیریت جدول اقساط</h3><p>پیگیری اقساط پرداختی در سامانه بیرونی و ثبت پرداخت تأییدشده در حساب بیمار. داشتن چک یا سفته ضمانت الزامی نیست.</p></header>
+  <form class="filters" (ngSubmit)="load()">
+    <label>بیمار / شماره پرونده / تلفن<input name="installment-search" [(ngModel)]="filters.search" placeholder="جست‌وجو در اقساط بیماران" /></label>
+    <label>وضعیت<select name="installment-status" [(ngModel)]="filters.status"><option value="">همه</option><option value="unpaid">همه پرداخت‌نشده‌ها</option><option value="overdue">معوق</option><option value="pending">جاری</option><option value="paid">پرداخت‌شده</option></select></label>
+    <app-base-datepicker [label]="fromLabel" [selectedDate]="fromDate" [compact]="true" [unrestrictedDates]="true" [monthYearSelection]="true" (dateChange)="setDate($event)" />
+    <app-base-datepicker [label]="toLabel" [selectedDate]="toDate" [compact]="true" [unrestrictedDates]="true" [monthYearSelection]="true" (dateChange)="setDate($event, true)" />
+    <div class="actions"><button type="submit" [disabled]="loading">اعمال فیلتر</button><button type="button" class="secondary" (click)="clear()">پاک‌کردن</button></div>
+  </form>
+  @if (loading) { <p role="status">در حال دریافت اقساط...</p> }
+  @if (error) { <p role="alert" class="error">{{ error }}</p><button type="button" (click)="load()">تلاش دوباره</button> }
+  @if (report; as data) {
+    <div class="summary" aria-label="جمع اقساط مطابق فیلتر">
+      <article><small>مبلغ کل اقساط</small><strong>{{ money(data.summary.totalAmount) }}</strong></article>
+      <article><small>پرداخت‌شده</small><strong>{{ money(data.summary.paidAmount) }}</strong></article>
+      <article><small>مانده اقساط</small><strong>{{ money(data.summary.remainingAmount) }}</strong></article>
+      <article class="overdue"><small>معوق از مانده اقساط</small><strong>{{ money(data.summary.overdueAmount) }}</strong></article>
+    </div>
+    <p>تعداد اقساط مطابق فیلتر: {{ data.totalCount.toLocaleString('fa-IR') }}</p>
+    <div class="table-scroll" tabindex="0" aria-label="جدول اقساط بیماران"><table><thead><tr><th>بیمار</th><th>شماره پرونده</th><th>تلفن</th><th>مبلغ قسط</th><th>سررسید</th><th>وضعیت</th><th>زمان ثبت پرداخت</th><th>ثبت‌کننده پرداخت</th><th>توضیحات پرداخت اقساط</th><th>عملیات</th></tr></thead><tbody>
+      @for (row of data.items; track row.id) {
+        <tr><td>{{ row.patientName }}</td><td>{{ row.fileNumber || '—' }}</td><td dir="ltr">{{ row.phoneNumber }}</td><td>{{ money(row.amount) }}</td><td>{{ dueDate(row.dueDate) }}</td><td><span class="badge" [class.overdue]="row.status === 'overdue'" [class.paid]="row.status === 'paid'">{{ status(row) }}</span></td><td>{{ row.paidAtUtc ? paidDate(row.paidAtUtc) : '—' }}</td><td>{{ row.paidBy || '—' }}</td><td class="description">{{ row.description || '—' }}</td><td>@if (!row.paidAtUtc) { <button type="button" [disabled]="saving" (click)="openPayment(row)">ثبت پرداخت</button> } @else { ثبت‌شده }</td></tr>
+      } @empty { <tr><td colspan="10" class="empty">قسطی مطابق فیلتر پیدا نشد.</td></tr> }
+    </tbody></table></div>
+    @if (pages > 1) { <nav class="pagination" aria-label="صفحه‌بندی اقساط"><button type="button" [disabled]="data.pageNumber <= 1 || loading" (click)="load(data.pageNumber - 1)">قبلی</button><span>صفحه {{ data.pageNumber }} از {{ pages }}</span><button type="button" [disabled]="data.pageNumber >= pages || loading" (click)="load(data.pageNumber + 1)">بعدی</button></nav> }
+  }
+  <app-base-modal [open]="!!selected" title="تأیید ثبت پرداخت قسط" (close)="closePayment()">
+    @if (selected; as row) {
+      <p><strong>{{ row.patientName }}</strong> — پرونده {{ row.fileNumber || '—' }}</p><p>مبلغ: <strong>{{ money(row.amount) }}</strong></p><p>سررسید: {{ dueDate(row.dueDate) }}</p>
+      <p>فقط پس از بررسی پرداخت در سامانه بیرونی تأیید کنید. این عملیات، دریافت وجه را در حساب بیمار ثبت می‌کند و پرداخت جدیدی در سامانه بیرونی انجام نمی‌دهد.</p>
+      @if (paymentError) { <p role="alert" class="error">{{ paymentError }}</p> }
+    }
+    <div baseModalFooter class="actions"><button type="button" [disabled]="saving" (click)="recordPayment()">{{ saving ? 'در حال ثبت...' : 'پرداخت بررسی شد؛ ثبت شود' }}</button><button type="button" class="secondary" [disabled]="saving" (click)="closePayment()">انصراف</button></div>
+  </app-base-modal>
+</section>

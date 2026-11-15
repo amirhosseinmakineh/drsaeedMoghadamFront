@@ -505,3 +505,10 @@ label {
   .lead-source-settings,
   .lead-source-settings__controls { align-items: stretch; flex-direction: column; }
 }
+
+.dashboard-nav .accordion-chevron { margin-inline-start: auto; transition: transform .18s ease; }
+.dashboard-nav .accordion-chevron.expanded { transform: rotate(180deg); }
+.accounting-submenu { display: grid; gap: 6px; margin-inline-start: 14px; padding-inline-start: 10px; border-inline-start: 2px solid var(--line); min-width: 0; }
+.dashboard-nav .accounting-submenu button { padding: 11px 10px; font-size: .85rem; border-radius: 12px; }
+.dashboard-nav button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .dashboard-nav .accordion-chevron { transition: none; } }

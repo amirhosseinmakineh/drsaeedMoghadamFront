@@ -1,0 +1,14 @@
+:host { display: block; min-width: 0; }
+.installments { display: grid; gap: 1rem; min-width: 0; }
+h3 { margin: 0; } header p { color: var(--muted); line-height: 1.9; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; align-items: end; padding: 1rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--surface); }
+label { display: grid; gap: .5rem; } input, select { width: 100%; box-sizing: border-box; padding: .7rem; border: 1px solid var(--line); border-radius: .7rem; font: inherit; color: var(--text); background: var(--surface); }
+button { padding: .7rem 1rem; border: 0; border-radius: .7rem; background: #0f766e; color: white; font: inherit; cursor: pointer; } button:disabled { opacity: .5; cursor: default; } .secondary { background: #64748b; }
+.actions, .pagination { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; } .pagination { justify-content: center; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .7rem; }
+.summary article { display: grid; gap: .5rem; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: .9rem; } .summary small { color: var(--muted); }
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: .9rem; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; white-space: nowrap; text-align: right; } th, td { padding: .9rem; border-bottom: 1px solid var(--line); } th { background: var(--surface-muted); }
+.description { min-width: 220px; max-width: 340px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; } .badge { padding: .3rem .5rem; border-radius: .4rem; background: #fff1d5; color: #80540c; } .paid { color: #17633c; background: #e0f4e8; } .overdue, .error { color: #b91c1c; } .badge.overdue { background: #fee2e2; }
+.empty { text-align: center; padding: 2rem; color: var(--muted); } button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+@media (max-width: 600px) { .filters { grid-template-columns: 1fr; } .actions button { flex: 1; } }

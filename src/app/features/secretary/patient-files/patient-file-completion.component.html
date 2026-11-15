@@ -89,7 +89,7 @@
           @if (useInstallmentTable) {
             <section class="completion-section">
               <h3>جدول اقساط</h3>
-              <p>هر قسط فقط تاریخ و مبلغ دارد. بعد از پرداخت، از بخش پرونده مالی آن را تسویه کنید.</p>
+              <p>هر قسط تاریخ و مبلغ دارد. ثبت چک یا سفته ضمانت اختیاری است. پس از پرداخت در سامانه، پرداخت آن را از پرونده مالی یا مدیریت اقساط ادمین ثبت کنید.</p>
               <button type="button" (click)="addInstallment()">+ افزودن قسط</button>
               @for (installment of installments; track installment; let i = $index) {
                 <article class="completion-document">
@@ -125,8 +125,8 @@
               </div>
             </article>
           }
-          <div class="completion-summary"><div><span>جمع مبلغ اسمی اسناد</span><strong>{{ money(documentTotal) }}</strong></div><div><span>مبلغ اسناد ضمانت</span><strong>{{ money(guaranteeTotal) }}</strong></div><div [class.amount-error]="uncoveredAmount !== 0"><span>مانده بدون پوشش سند یا ضمانت</span><strong>{{ money(uncoveredAmount) }}</strong></div>@if (excessGuarantee > 0) { <div><span>ضمانت مازاد بر مانده درمان</span><strong>{{ money(excessGuarantee) }}</strong></div> }</div>
-          @if (paymentExcess > 0) { <p class="completion-error">مجموع نقد و اسناد پرداخت از هزینه درمان بیشتر است؛ فقط مبلغ سفته ضمانت می‌تواند مازاد باشد.</p> }
+          <div class="completion-summary"><div><span>جمع مبلغ اسمی اسناد</span><strong>{{ money(documentTotal) }}</strong></div><div><span>مبلغ اسناد ضمانت</span><strong>{{ money(guaranteeTotal) }}</strong></div><div [class.amount-error]="uncoveredAmount !== 0"><span>مانده بدون برنامه پرداخت یا سند</span><strong>{{ money(uncoveredAmount) }}</strong></div>@if (excessGuarantee > 0) { <div><span>ضمانت مازاد بر مانده درمان</span><strong>{{ money(excessGuarantee) }}</strong></div> }</div>
+          @if (paymentExcess > 0) { <p class="completion-error">مجموع نقد و اسناد پرداخت از هزینه درمان بیشتر است؛ فقط مبلغ اسناد ضمانت می‌تواند مازاد باشد.</p> }
         </section>
       }
       <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="receiptConfirmed" /><span>{{ paymentMode === 'cash' ? 'کل مبلغ ' + money(totalAmount) + ' را از بیمار دریافت کرده‌ام.' : 'وجه نقد درج‌شده و اسناد فیزیکی ثبت‌شده (در صورت وجود) را دریافت کرده‌ام و برنامه اقساط را بررسی کرده‌ام.' }}</span></label>

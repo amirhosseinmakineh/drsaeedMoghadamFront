@@ -42,6 +42,7 @@ import { AdminLeadSheetsComponent } from "../admin-dashboard/admin-lead-sheets.c
 import { AdminPatientFinanceReportComponent } from "../admin-dashboard/admin-patient-finance-report.component";
 import { AdminConsultantRewardsComponent } from "../admin-dashboard/admin-consultant-rewards.component";
 import { AdminPatientReferralsComponent } from "../../features/patient-referrals/admin/pages/admin-patient-referrals/admin-patient-referrals.component";
+import { AdminFinancialDocumentsComponent } from "../admin-dashboard/admin-financial-documents.component";
 import { AdminAccountingCenterComponent } from "../admin-dashboard/admin-accounting-center.component";
 import { PatientReferralDashboardComponent } from "../../features/patient-referrals/patient/pages/patient-referral-dashboard/patient-referral-dashboard.component";
 import { BaseDialogComponent } from "../../shared/base/base-dialog/base-dialog.component";
@@ -81,6 +82,7 @@ type DashboardSection =
   | "leadAssignmentSettings"
   | "patientFinanceReport"
   | "accountingCenter"
+  | "financialDocuments"
   | "consultantRewards"
   | "patientReferrals"
   | "leadSheets";
@@ -90,6 +92,7 @@ interface DashboardLink {
   id: DashboardSection;
   label: string;
   icon: string;
+  children?: DashboardLink[];
 }
 
 interface UserFormModel {
@@ -126,6 +129,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
   "leadAssignmentSettings",
   "patientFinanceReport",
   "accountingCenter",
+  "financialDocuments",
   "consultantRewards",
   "patientReferrals",
   "leadSheets",
@@ -153,6 +157,7 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
     AdminLeadSheetsComponent,
     AdminPatientFinanceReportComponent,
     AdminAccountingCenterComponent,
+    AdminFinancialDocumentsComponent,
     AdminConsultantRewardsComponent,
     AdminPatientReferralsComponent,
     PatientReferralDashboardComponent,
@@ -165,6 +170,16 @@ const ADMIN_DASHBOARD_SECTIONS: DashboardSection[] = [
 export class DashboardComponent implements OnInit, OnDestroy {
   readonly user = this.auth.user;
   activeSection: DashboardSection = "overview";
+
+  accountingOpen = false;
+  readonly accountingLinks: DashboardLink[] = [
+    { id: "accountingCenter", label: "حسابداری کلینیک", icon: "wallet" },
+    { id: "patientFinanceReport", label: "حسابداری کل", icon: "wallet" },
+    { id: "financialDocuments", label: "مدیریت چک و سفته‌ها", icon: "clipboard" },
+  ];
+  isAccountingSection(section: DashboardSection): boolean {
+    return this.accountingLinks.some(item => item.id === section);
+  }
 
   readonly adminLinks: DashboardLink[] = [
     { id: "overview", label: "نمای کلی", icon: "dashboard" },
@@ -180,8 +195,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: "secretarySales", label: "فروش‌های منشی‌ها", icon: "wallet" },
     { id: "leadAssignmentSettings", label: "مدیریت تخصیص لیدها", icon: "clipboard" },
     { id: "leadSheets", label: "شیت‌های لید ادمین", icon: "table" },
-    { id: "patientFinanceReport", label: "گزارش مالی بیماران", icon: "wallet" },
-    { id: "accountingCenter", label: "حسابداری جامع", icon: "wallet" },
+    { id: "accountingCenter", label: "حسابداری", icon: "wallet", children: this.accountingLinks },
     { id: "consultantRewards", label: "پاداش مشاوران", icon: "wallet" },
     { id: "patientReferrals", label: "گزارش رفرال بیماران", icon: "users" },
   ];
@@ -504,6 +518,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   setSection(section: DashboardSection): void {
+    if (this.isAccountingSection(section)) this.accountingOpen = true;
     if (!this.isAdmin()) {
       this.activeSection = section;
       this.markDirty();
@@ -551,6 +566,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private activateSectionFromRoute(section: DashboardSection): void {
+    if (this.isAccountingSection(section)) this.accountingOpen = true;
     if (section === this.activeSection) return;
 
     this.activeSection = section;

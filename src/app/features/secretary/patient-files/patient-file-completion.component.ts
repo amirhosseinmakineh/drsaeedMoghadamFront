@@ -178,14 +178,14 @@ export class PatientFileCompletionComponent implements OnInit {
       return "ابتدا دندان‌ها و خدمات را در چارت پرونده ثبت کنید؛ خدمات مالی فقط از چارت خوانده می‌شوند.";
     if (!this.receiptConfirmed) return "دریافت وجه یا تحویل گرفتن اصل اسناد را تأیید کنید.";
     if (this.paymentMode === "cash") return null;
-    if (!this.cheques.length && !this.notes.length && !(this.useInstallmentTable && this.installments.length)) return "حداقل یک چک یا سفته اضافه کنید.";
+    if (!this.cheques.length && !this.notes.length && !(this.useInstallmentTable && this.installments.length)) return "جدول اقساط را تکمیل کنید یا یک سند پرداخت اضافه کنید؛ ضمانت اختیاری است.";
     if (this.useInstallmentTable && !this.installments.length) return "حداقل یک قسط وارد کنید.";
     if (this.useInstallmentTable && this.installments.some(x => !x.amount || x.amount <= 0 || !x.dueDate)) return "تاریخ و مبلغ تمام اقساط را کامل کنید.";
     if (this.cheques.some(x => !x.amount || x.amount <= 0 || !x.number.trim() || !x.ownerName.trim() || (x.installment && !x.dueDate)))
       return "شماره، مبلغ و نام صاحب چک و سررسید چک را کامل کنید.";
     if (this.notes.some(x => !x.amount || x.amount <= 0 || !x.number.trim() || !x.dueDate)) return "شماره، مبلغ و سررسید سفته را کامل کنید.";
     if (this.cashReceived === null || this.cashReceived < this.treatmentPaid || this.uncoveredAmount !== 0 || this.paymentExcess > 0)
-      return "نقد و اسناد پرداخت نباید از هزینه درمان بیشتر شوند؛ مانده باید با اسناد یا سفته ضمانت پوشش داده شود.";
+      return "نقد و اسناد پرداخت نباید از هزینه درمان بیشتر شوند؛ مانده باید با جدول اقساط یا اسناد پوشش داده شود؛ دریافت ضمانت اختیاری است.";
     return null;
   }
   submit(): void {

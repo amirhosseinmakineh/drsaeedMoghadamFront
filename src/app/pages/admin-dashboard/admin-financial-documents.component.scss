@@ -1,0 +1,11 @@
+:host { display: block; min-width: 0; }
+.financial-documents { display: grid; gap: 1rem; min-width: 0; }
+header { padding: 1.25rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--surface); }
+h2 { margin: .4rem 0; }
+header span, header p { color: var(--muted); }
+header p { margin-bottom: 0; line-height: 1.8; }
+nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+button { padding: .8rem 1rem; border: 1px solid var(--line); border-radius: .8rem; font: inherit; font-weight: 700; background: var(--surface); color: var(--text); cursor: pointer; }
+button.active { background: #0f766e; border-color: #0f766e; color: white; }
+button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+@media (max-width: 600px) { nav button { flex: 1 1 140px; } }

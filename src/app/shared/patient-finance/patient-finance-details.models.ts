@@ -2,7 +2,14 @@ export type AgreementType = 1 | 2;
 export type FinancialCaseStatus = 1 | 2 | 3;
 export type CommitmentStatus = 1 | 2 | 3 | 4;
 export type DebtStatus = 1 | 2 | 3;
-export type FinancialSourceType = 1 | 2;
+export type FinancialSourceType = 1 | 2 | 3;
+
+export interface PatientInstallmentDetails {
+  id: number;
+  amount: number;
+  dueDate: string;
+  paidAtUtc: string | null;
+}
 
 export interface PatientFinanceDetails {
   financialPatientId: string;
