@@ -1,3 +1,4 @@
+import { PatientDocumentsManagerComponent } from "../../../../../shared/patient-finance/patient-documents-manager.component";
 import { CommonModule } from "@angular/common";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
@@ -15,7 +16,7 @@ import { PatientFinanceApiService } from "../../services/patient-finance-api.ser
 import { PatientAdditionalDocumentsComponent } from "../../components/patient-additional-documents/patient-additional-documents.component";
 import { environment } from "../../../../../../environments/environment";
 
-type FinanceTab = "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
+type FinanceTab = "documents" | "cases" | "create" | "cheques" | "notes" | "debts" | "transactions" | "due";
 type ListItem = PatientFinancialCase | PatientCheque | PatientPromissoryNote | PatientDebt | PatientFinancialTransaction | PatientFinancialCommitment;
 interface FinancePatientOption { patientFileId: number; financialPatientId: string | null; fileNumber: number; firstName: string; lastName: string; phoneNumber: string; }
 type ChequeEditForm = FormGroup<{
@@ -54,14 +55,14 @@ function todayOrLater(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: "app-patient-finance-page",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PersianDatePickerComponent, BaseNumberInputComponent, BaseModalComponent, SecretaryAccountShellComponent, PatientAdditionalDocumentsComponent],
+  imports: [PatientDocumentsManagerComponent,CommonModule, ReactiveFormsModule, PersianDatePickerComponent, BaseNumberInputComponent, BaseModalComponent, SecretaryAccountShellComponent, PatientAdditionalDocumentsComponent],
   templateUrl: "./patient-finance-page.component.html",
   styleUrl: "./patient-finance-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PatientFinancePageComponent implements OnInit, OnDestroy {
   readonly tabs: { id: FinanceTab; label: string }[] = [
-    { id: "cases", label: "پرونده‌ها" }, { id: "create", label: "پرونده جدید" },
+    { id: "documents", label: "مدیریت اسناد" }, { id: "cases", label: "پرونده‌ها" }, { id: "create", label: "پرونده جدید" },
     { id: "cheques", label: "چک‌ها" }, { id: "notes", label: "سفته‌ها" },
     { id: "debts", label: "بدهی‌ها" }, { id: "transactions", label: "پرداخت‌ها" },
     { id: "due", label: "نزدیک سررسید" },
