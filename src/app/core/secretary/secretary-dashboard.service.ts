@@ -47,6 +47,7 @@ export interface SecretaryAccessResult {
 }
 
 export interface SecretaryReservation extends ReservationDto {
+  rewardConsultantFullName?: string | null;
   reservationAtPersian?: string | null;
   ReservationAtPersian?: string | null;
   createdAt?: string | null;
@@ -213,6 +214,9 @@ export interface SecretaryReservationFilters {
 }
 
 export interface ReviewAttendanceRequest {
+  rewardConsultantProfileId?: number | null;
+  performedServices?: { serviceId: number; toothIds: number[] }[];
+  expectedRewardHash?: string;
   reservationId: number;
   patientReceivedService: boolean;
   doctorName: string | null;

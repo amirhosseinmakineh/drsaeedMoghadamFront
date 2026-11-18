@@ -1,3 +1,4 @@
+import { readRewardLines } from "../../core/consultant/service-reward.models";
 import { CommonModule } from "@angular/common";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
 import { finalize } from "rxjs";
@@ -7,6 +8,7 @@ import { formatIranDateTime } from "../../utils/iran-datetime.util";
 @Component({ selector: "app-consultant-wallet", standalone: true, imports: [CommonModule], templateUrl: "./consultant-wallet.component.html", styleUrl: "./consultant-wallet.component.scss", changeDetection: ChangeDetectionStrategy.OnPush })
 export class ConsultantWalletComponent implements OnInit {
   report: ConsultantWalletReport = { balance: 0, totalApprovedRewards: 0, approvedPatientCount: 0, pendingPatientCount: 0, items: [] };
+  readonly rewardLines = (item: ConsultantRewardItem) => readRewardLines(item.rewardCalculationJson);
   loading = false;
   constructor(private readonly api: ConsultantRewardService, private readonly cdr: ChangeDetectorRef) {}
   ngOnInit(): void { this.load(); }

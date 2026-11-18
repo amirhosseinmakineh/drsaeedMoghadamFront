@@ -1,2 +1,67 @@
-<section class="rewards"><header><div><span>حسابداری مشاوران</span><h2>تأیید پاداش حضور بیماران</h2><p>فقط رزروهایی نمایش داده می‌شوند که مشاور ثبت کرده و منشی حضور بیمار را تأیید کرده است.</p></div></header><form (ngSubmit)="load()"><select [(ngModel)]="status" name="status"><option [ngValue]="undefined">همه</option><option value="Pending">در انتظار تأیید</option><option value="Approved">تأییدشده</option><option value="Rejected">ردشده</option></select><button type="submit">نمایش</button></form>
-<div class="list">@for(item of items;track item.reservationId){<article><div><strong>{{ item.consultantName }}</strong><small>بیمار: {{ item.patientName }} — {{ item.patientPhoneNumber || "—" }}</small><small>رزرو #{{ item.reservationId }} • وضعیت منشی: {{ item.secretaryApprovalStatus === "Approved" ? "حضور را تأیید کرده" : item.secretaryApprovalStatus === "Rejected" ? "حضور را رد کرده" : "هنوز بررسی نکرده" }}</small><small>زمان بررسی منشی: {{ date(item.secretaryReviewedAt) }}</small></div><div><b>{{ item.patientCount }} بیمار × ۱,۰۰۰,۰۰۰</b><strong>{{ money(item.rewardAmount) }}</strong>@if(item.status === "Pending"){<span class="actions"><button type="button" (click)="review(item,true)">تأیید و شارژ</button><button class="reject" type="button" (click)="review(item,false)">رد</button></span>}@else{<small>{{ item.status === "Approved" ? "تأییدشده توسط ادمین" : item.status === "Rejected" ? "ردشده توسط ادمین" : item.status === "LegacyNotEligible" ? "رزرو قدیمی؛ مشمول شارژ خودکار نیست" : "منتظر بررسی منشی" }}</small>}</div></article>}@empty{<p>{{ loading ? "در حال دریافت..." : "موردی وجود ندارد." }}</p>}</div></section>
+<nav class="reward-tabs" aria-label="بخش‌های پاداش">
+  <button type="button" [attr.aria-pressed]="tab === 'rewards'" (click)="tab = 'rewards'">بررسی پاداش‌ها</button>
+  <button type="button" [attr.aria-pressed]="tab === 'rules'" (click)="tab = 'rules'">تنظیم نرخ خدمات</button>
+</nav>
+@if (tab === "rules") {
+  <app-admin-consultant-reward-rules />
+} @else {
+  <section class="rewards">
+    <header><div><span>حسابداری مشاوران</span><h2>تأیید پاداش خدمات مشاوران</h2><p>پاداش خدمات انجام‌شده پس از ثبت نتیجه منشی؛ تأیید هر مورد فقط یک بار کیف پول دریافت‌کننده مشخص‌شده را شارژ می‌کند.</p></div></header>
+    <form (ngSubmit)="load()">
+      <select [(ngModel)]="status" name="status">
+        <option [ngValue]="undefined">همه</option><option value="Pending">در انتظار تأیید</option>
+        <option value="Approved">تأییدشده</option><option value="Rejected">ردشده</option>
+      </select>
+      <button type="submit" [disabled]="loading">نمایش</button>
+    </form>
+    <div class="list">
+      @for (item of items; track item.reservationId) {
+        <article>
+          <div>
+            <strong>{{ item.consultantName }}</strong>
+            <small>بیمار: {{ item.patientName }} — {{ item.patientPhoneNumber || '—' }}</small>
+            <small>رزرو #{{ item.reservationId }} · وضعیت منشی: {{ item.secretaryApprovalStatus === 'Approved' ? 'انجام خدمت را تأیید کرده' : item.secretaryApprovalStatus === 'Rejected' ? 'انجام خدمت را رد کرده' : 'هنوز بررسی نکرده' }}</small>
+            <small>زمان بررسی منشی: {{ date(item.secretaryReviewedAt) }}</small>
+          </div>
+          <div>
+            @if (item.rewardCalculationJson) {
+              <div class="reward-breakdown">
+                @for (line of rewardLines(item); track line.serviceId) {
+                  <p><strong>{{ line.serviceName }}</strong> · {{ line.newUnits }} واحد جدید · قبلی: {{ line.previousUnits }}<br />
+                    {{ line.ruleId ? ('نرخ: ' + money(line.rate) + ' / ' + (line.basis === 'Jaw' ? 'هر فک با حداقل ' + line.unitsPerReward + ' واحد' : line.unitsPerReward + ' واحد')) : 'بدون قانون فعال؛ بدون پاداش' }}<br />
+                    پاداش این بخش: {{ money(line.amount) }}
+                  </p>
+                }
+              </div>
+            } @else { <b>{{ item.patientCount }} بیمار · قانون ثابت قبلی</b> }
+            <strong>{{ money(item.rewardAmount) }}</strong>
+            @if (reviewNote(item)) { <small>دلیل رد: {{ reviewNote(item) }}</small> }
+            @if (item.status === 'Pending') {
+              <span class="actions">
+                <button type="button" [disabled]="reviewingId !== null" (click)="review(item, true)">تأیید و شارژ</button>
+                <button class="reject" type="button" [disabled]="reviewingId !== null" (click)="review(item, false)">رد</button>
+              </span>
+            } @else {
+              <small>{{ item.status === 'Approved' ? 'تأییدشده توسط ادمین' : item.status === 'Rejected' ? 'ردشده توسط ادمین' : item.status === 'LegacyNotEligible' ? 'رزرو قدیمی؛ مشمول شارژ خودکار نیست' : 'منتظر بررسی منشی' }}</small>
+            }
+          </div>
+        </article>
+      } @empty { <p>{{ loading ? 'در حال دریافت...' : 'موردی وجود ندارد.' }}</p> }
+    </div>
+  </section>
+}
+<app-base-modal [open]="!!reviewItem" [title]="reviewApproved ? 'تأیید و شارژ پاداش' : 'رد پاداش'" (close)="closeReview()">
+  @if (reviewItem; as item) {
+    <p>مشاور: <strong>{{ item.consultantName }}</strong></p><p>بیمار: {{ item.patientName }}</p>
+    <p>مبلغ: <strong>{{ money(item.rewardAmount) }}</strong></p>
+    @if (reviewApproved) { <p>با تأیید، همین مبلغ فقط یک بار به کیف پول مشاور مشخص‌شده اضافه می‌شود.</p> }
+    @else if (item.rewardCalculationJson) {
+      <label>دلیل رد<textarea rows="3" maxlength="1000" [(ngModel)]="rejectionReason" [disabled]="reviewingId !== null"></textarea></label>
+    }
+    @if (reviewError) { <p role="alert">{{ reviewError }}</p> }
+  }
+  <div baseModalFooter class="actions">
+    <button type="button" [disabled]="reviewingId !== null" (click)="confirmReview()">{{ reviewingId !== null ? 'در حال ثبت...' : reviewApproved ? 'تأیید و شارژ' : 'ثبت رد پاداش' }}</button>
+    <button type="button" [disabled]="reviewingId !== null" (click)="closeReview()">انصراف</button>
+  </div>
+</app-base-modal>

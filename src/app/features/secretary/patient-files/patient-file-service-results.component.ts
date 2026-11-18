@@ -1,3 +1,4 @@
+import { ServiceRewardContext, ServiceRewardQuote } from "../../../core/consultant/service-reward.models";
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, OnDestroy, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Subscription } from "rxjs";
@@ -11,37 +12,8 @@ import { PatientFilesService } from "./patient-files.service";
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <p>بیمار: {{ file.firstName }} {{ file.lastName }} · پرونده {{ file.fileNumber }}</p>
-    <p>نتیجه را برای رزرو مربوط به همین مراجعه ثبت کنید.</p>
-    @if (feedback) { <p role="status">{{ feedback }}</p> }
-    @if (error) { <p class="error" role="alert">{{ error }}</p> }
-    @if (loading) { <p role="status">در حال دریافت رزروهای بیمار...</p> }
-    @else {
-      @for (item of items; track item.id) {
-        <article>
-          <strong>مراجعه: {{ item.reservationAtPersian || item.reservationAt }}</strong>
-          <p>مشاور: {{ item.consultantFullName || '—' }}</p>
-          <p>نتیجه: {{ item.patientReceivedService === true ? 'خدمت انجام شد' : item.patientReceivedService === false ? 'خدمت انجام نشد' : 'ثبت نشده' }}</p>
-          @if (item.doctorName) { <p>دکتر: {{ item.doctorName }}</p> }
-          @if (canReview(item)) {
-            @if (approvingId === id(item)) {
-              <label>نام دکتر<input [(ngModel)]="doctorName" maxlength="120" [disabled]="saving" autocomplete="off" /></label>
-              <label>یادداشت<textarea [(ngModel)]="note" [disabled]="saving"></textarea></label>
-              <div class="actions"><button type="button" [disabled]="saving || !doctorName.trim()" (click)="review(item, true)">ثبت انجام خدمت</button><button type="button" [disabled]="saving" (click)="approvingId = null">انصراف</button></div>
-            } @else {
-              <div class="actions"><button type="button" [disabled]="saving" (click)="start(item)">ثبت نتیجه خدمت</button><button type="button" class="danger" [disabled]="saving" (click)="review(item, false)">خدمت انجام نشد</button></div>
-            }
-          } @else if (item.patientReceivedService == null && !item.isAttendanceScoreApplied) {
-            <p>ثبت نتیجه پس از زمان مراجعه و با دسترسی تأیید حضور امکان‌پذیر است.</p>
-          }
-        </article>
-      } @empty { <p>رزروی برای این بیمار یافت نشد. ابتدا رزرو مربوط به مراجعه را ثبت کنید.</p> }
-      @if (pages > 1) { <nav><button type="button" [disabled]="saving || page <= 1" (click)="load(page - 1)">قبلی</button><span>{{ page }} از {{ pages }}</span><button type="button" [disabled]="saving || page >= pages" (click)="load(page + 1)">بعدی</button></nav> }
-    }
-    <button type="button" [disabled]="loading || saving" (click)="load(page)">به‌روزرسانی</button>
-  `,
-  styles: [`:host{display:block;direction:rtl}article{padding:16px;margin:12px 0;border:1px solid #d9e5df;border-radius:12px;background:#f9fcfa}p{line-height:1.9}.actions,nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center}label{display:grid;gap:6px;margin:12px 0}input,textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cadbd2;border-radius:8px;font:inherit}button{padding:10px 16px;border:1px solid #cdded5;border-radius:9px;background:#edf6f1;color:#225b44;font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:default}.danger,.error{color:#a83232}.danger{background:#fff0f0}nav{justify-content:center;margin:14px 0}`],
+  templateUrl: "./patient-file-service-results.component.html",
+  styleUrl: "./patient-file-service-results.component.scss",
 })
 export class PatientFileServiceResultsComponent implements OnInit, OnDestroy {
   @Input({ required: true }) file!: PatientFile;
@@ -57,6 +29,47 @@ export class PatientFileServiceResultsComponent implements OnInit, OnDestroy {
   approvingId: number | null = null;
   doctorName = "";
   note = "";
+  context: ServiceRewardContext | null = null;
+  quote: ServiceRewardQuote | null = null;
+  selectedConsultant: number | null = null;
+  selected = new Set<string>();
+  loadingContext = false;
+  previewing = false;
+  private contextRequest?: Subscription;
+  private quoteRequest?: Subscription;
+  key(serviceId: number, toothId: number): string { return serviceId + ":" + toothId; }
+  toggle(serviceId: number, toothId: number, checked: boolean): void {
+    const key = this.key(serviceId, toothId);
+    if (checked) this.selected.add(key); else this.selected.delete(key);
+    this.invalidateQuote();
+  }
+  invalidateQuote(): void { this.quoteRequest?.unsubscribe(); this.quote = null; this.previewing = false; }
+  get consultantName(): string { return this.context?.consultants.find(x => x.id === this.selectedConsultant)?.name || "مشاور غیرفعال؛ با مدیر بررسی کنید"; }
+  cancel(): void {
+    if (this.saving) return;
+    this.contextRequest?.unsubscribe(); this.invalidateQuote(); this.approvingId = null; this.loadingContext = false;
+  }
+  get performedServices(): { serviceId: number; toothIds: number[] }[] {
+    const groups = new Map<number, number[]>();
+    for (const option of this.context?.options ?? []) {
+      if (!this.selected.has(this.key(option.serviceId, option.toothId))) continue;
+      groups.set(option.serviceId, [...(groups.get(option.serviceId) ?? []), option.toothId]);
+    }
+    return [...groups].map(([serviceId, toothIds]) => ({ serviceId, toothIds }));
+  }
+  money(value: number): string { return value.toLocaleString("fa-IR") + " تومان"; }
+  preview(item: SecretaryReservation): void {
+    if (this.saving || this.previewing || !this.context || this.performedServices.length === 0 || !this.selectedConsultant) return;
+    this.previewing = true; this.error = ""; this.quote = null;
+    this.quoteRequest = this.api.previewServiceReward(this.file.id, {
+      reservationId: this.id(item), patientReceivedService: true, doctorName: this.doctorName.trim() || null, note: null, rewardConsultantProfileId: this.selectedConsultant,
+      performedServices: this.performedServices,
+    }).subscribe({
+      next: quote => { this.quote = quote; this.previewing = false; this.cdr.markForCheck(); },
+      error: e => { this.error = e?.error?.message || "محاسبه پاداش انجام نشد."; this.previewing = false; this.cdr.markForCheck(); },
+    });
+    this.requests.add(this.quoteRequest);
+  }
   private requests = new Subscription();
   constructor(private api: PatientFilesService, private cdr: ChangeDetectorRef, private sync: ReservationSyncService) {}
   ngOnInit(): void { this.load(); }
@@ -70,10 +83,20 @@ export class PatientFileServiceResultsComponent implements OnInit, OnDestroy {
   }
   start(item: SecretaryReservation): void {
     if (!this.canReview(item)) return;
+    this.contextRequest?.unsubscribe(); this.invalidateQuote();
+    this.context = null; this.selected = new Set(); this.selectedConsultant = null;
     this.approvingId = this.id(item); this.doctorName = ""; this.note = ""; this.error = "";
+    this.loadingContext = true;
+    this.contextRequest = this.api.getServiceRewardContext(this.file.id, this.id(item)).subscribe({
+      next: context => { this.context = context; this.selectedConsultant = context.linkedConsultantProfileId;
+        this.loadingContext = false; this.cdr.markForCheck(); },
+      error: e => { this.loadingContext = false; this.error = e?.error?.message || "دریافت خدمات و مشاوران انجام نشد."; this.cdr.markForCheck(); },
+    });
+    this.requests.add(this.contextRequest);
   }
   load(page = 1): void {
     if (this.saving || this.loading) return;
+    this.contextRequest?.unsubscribe(); this.invalidateQuote();
     this.loading = true; this.error = ""; this.approvingId = null;
     this.requests.add(this.api.getServiceResults(this.file.id, page).subscribe({
       next: result => { this.items = result.items; this.reviewable = result.reviewableReservationIds;
@@ -83,11 +106,12 @@ export class PatientFileServiceResultsComponent implements OnInit, OnDestroy {
     }));
   }
   review(item: SecretaryReservation, received: boolean): void {
-    if (this.saving || !this.canReview(item) || (received && !this.doctorName.trim())) return;
+    if (this.saving || !this.canReview(item) || (received && (!this.doctorName.trim() || !this.quote || !this.context || !this.selectedConsultant || this.approvingId !== this.id(item)))) return;
     this.saving = true; this.busyChange.emit(true); this.error = ""; this.feedback = "";
     this.requests.add(this.api.reviewServiceResult(this.file.id, {
       reservationId: this.id(item), patientReceivedService: received,
       doctorName: received ? this.doctorName.trim() : null,
+      ...(received ? { rewardConsultantProfileId: this.selectedConsultant, performedServices: this.performedServices, expectedRewardHash: this.quote!.hash } : {}),
       note: this.approvingId === this.id(item) ? this.note.trim() || null : null,
     }).subscribe({
       next: result => {
@@ -97,7 +121,7 @@ export class PatientFileServiceResultsComponent implements OnInit, OnDestroy {
         this.sync.requestRefresh();
         this.load(this.page); this.cdr.markForCheck();
       },
-      error: error => { this.saving = false; this.busyChange.emit(false); this.error = error?.error?.message || "ثبت نتیجه خدمت انجام نشد."; this.cdr.markForCheck(); },
+      error: error => { this.saving = false; this.busyChange.emit(false); if (received && error?.status === 409) this.invalidateQuote(); this.error = error?.error?.message || "ثبت نتیجه خدمت انجام نشد."; this.cdr.markForCheck(); },
     }));
   }
 }

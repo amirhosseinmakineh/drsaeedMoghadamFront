@@ -1,0 +1,51 @@
+<p>بیمار: {{ file.firstName }} {{ file.lastName }} · پرونده {{ file.fileNumber }}</p>
+    <p>نتیجه را برای رزرو مربوط به همین مراجعه ثبت کنید.</p>
+    @if (feedback) { <p role="status">{{ feedback }}</p> }
+    @if (error) { <p class="error" role="alert">{{ error }}</p> }
+    @if (loading) { <p role="status">در حال دریافت رزروهای بیمار...</p> }
+    @else {
+      @for (item of items; track item.id) {
+        <article>
+          <strong>مراجعه: {{ item.reservationAtPersian || item.reservationAt }}</strong>
+          <p>مشاور رزرو: {{ item.consultantFullName || '—' }}</p>
+          @if (item.rewardConsultantFullName) { <p>دریافت‌کننده پاداش: {{ item.rewardConsultantFullName }}</p> }
+          <p>نتیجه: {{ item.patientReceivedService === true ? 'خدمت انجام شد' : item.patientReceivedService === false ? 'خدمت انجام نشد' : 'ثبت نشده' }}</p>
+          @if (item.doctorName) { <p>دکتر: {{ item.doctorName }}</p> }
+          @if (canReview(item)) {
+            @if (approvingId === id(item)) {
+              @if (loadingContext) { <p role="status">در حال دریافت چارت و مشاور دریافت‌کننده...</p> }
+              @if (context; as rewardContext) {
+                <section class="reward-scope" aria-label="خدمات انجام‌شده و دریافت‌کننده پاداش">
+                  <h4>دریافت‌کننده پاداش</h4>
+                  @if (!rewardContext.consultants.length) { <p role="alert">مشاور فعالی وجود ندارد؛ مدیر باید مشاور را تعریف یا فعال کند.</p> }
+                  @if (rewardContext.canChooseConsultant) {
+                    <label>مشاور متصل نیست؛ مشاور را انتخاب کنید<select [(ngModel)]="selectedConsultant" (ngModelChange)="invalidateQuote()" [disabled]="saving || previewing"><option [ngValue]="null">انتخاب مشاور</option>@for (consultant of rewardContext.consultants; track consultant.id) { <option [ngValue]="consultant.id">{{ consultant.name }}</option> }</select></label>
+                  } @else { <p class="recipient">{{ consultantName }}</p> }
+                  <h4>فقط خدمات واقعاً انجام‌شده این مراجعه را انتخاب کنید</h4>
+                  <p>هر دندان برای هر خدمت در همین درمان فقط یک بار ثبت می‌شود. پاداش پس از تأیید ادمین وارد کیف پول می‌شود.</p>
+                  <div class="performed-options">@for (option of rewardContext.options; track key(option.serviceId, option.toothId)) {
+                    <label class="tooth-choice"><input type="checkbox" [checked]="selected.has(key(option.serviceId, option.toothId))" [disabled]="saving || previewing" (change)="toggle(option.serviceId, option.toothId, $any($event.target).checked)" /><span><strong>{{ option.serviceName }}</strong><small>{{ option.toothLabel }}</small></span></label>
+                  } @empty { <p>خدمت ثبت‌نشده‌ای در چارت این درمان باقی نمانده است.</p> }</div>
+                  <button type="button" [disabled]="saving || previewing || !selectedConsultant || !selected.size" (click)="preview(item)">{{ previewing ? 'در حال محاسبه...' : 'محاسبه و بررسی پاداش' }}</button>
+                  @if (quote; as reward) {
+                    <div class="reward-quote" role="status">
+                      @for (line of reward.snapshot.lines; track line.serviceId) { <p><strong>{{ line.serviceName }}</strong> · {{ line.newUnits }} واحد جدید · {{ money(line.amount) }}<small>{{ line.ruleId ? ('نرخ: ' + money(line.rate) + (line.basis === 'Jaw' ? ' برای هر فک' : ' برای هر ' + line.unitsPerReward + ' واحد')) : 'قانون فعالی برای این خدمت وجود ندارد؛ پاداش صفر است.' }}</small></p> }
+                      <strong>پاداش پیشنهادی: {{ money(reward.snapshot.total) }}</strong>
+                    </div>
+                  }
+                </section>
+              } @else if (!loadingContext) { <button type="button" (click)="start(item)">دریافت دوباره خدمات و مشاوران</button> }
+              <label>نام دکتر<input [(ngModel)]="doctorName" maxlength="120" [disabled]="saving" autocomplete="off" /></label>
+              <label>یادداشت<textarea maxlength="1000" [(ngModel)]="note" [disabled]="saving"></textarea></label>
+              <div class="actions"><button type="button" [disabled]="saving || !doctorName.trim() || !quote || loadingContext || previewing" (click)="review(item, true)">ثبت انجام خدمت و درخواست پاداش</button><button type="button" [disabled]="saving" (click)="cancel()">انصراف</button></div>
+            } @else {
+              <div class="actions"><button type="button" [disabled]="saving" (click)="start(item)">ثبت نتیجه خدمت</button><button type="button" class="danger" [disabled]="saving" (click)="review(item, false)">خدمت انجام نشد</button></div>
+            }
+          } @else if (item.patientReceivedService == null && !item.isAttendanceScoreApplied) {
+            <p>ثبت نتیجه پس از زمان مراجعه و با دسترسی تأیید حضور امکان‌پذیر است.</p>
+          }
+        </article>
+      } @empty { <p>رزروی برای این بیمار یافت نشد. ابتدا رزرو مربوط به مراجعه را ثبت کنید.</p> }
+      @if (pages > 1) { <nav><button type="button" [disabled]="saving || page <= 1" (click)="load(page - 1)">قبلی</button><span>{{ page }} از {{ pages }}</span><button type="button" [disabled]="saving || page >= pages" (click)="load(page + 1)">بعدی</button></nav> }
+    }
+    <button type="button" [disabled]="loading || saving" (click)="load(page)">به‌روزرسانی</button>

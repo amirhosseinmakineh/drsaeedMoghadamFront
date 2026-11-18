@@ -1,0 +1,19 @@
+<section dir="rtl" class="rules" aria-label="تنظیم پاداش خدمات مشاور">
+  <header><h3>تنظیم نرخ پاداش خدمات</h3><p>این مبالغ پاداش مشاور هستند و قیمت درمان بیمار را تغییر نمی‌دهند. نرخ هر خدمت در یک درمان با اولین ثبت انجام آن ثابت می‌شود؛ نرخ جدید برای درمان‌هایی است که ثبت آن خدمت را هنوز شروع نکرده‌اند. باقی‌مانده واحدهای جلسات همان درمان با همان نسخه قانون محاسبه می‌شود.</p><p>خدمت فاقد قانون فعال پاداش ندارد. پاداش هر مراجعه پس از بررسی و تأیید ادمین وارد کیف پول می‌شود.</p></header>
+  @if (loading) { <p role="status">در حال دریافت قوانین...</p> }
+  @if (error) { <p role="alert" class="error">{{ error }}</p><button type="button" (click)="load()">تلاش دوباره</button> }
+  @for (row of rows; track row.serviceId) {
+    <form class="rule" (ngSubmit)="save(row)"><fieldset [disabled]="savingId === row.serviceId || loading">
+      <div class="heading"><h4>{{ row.serviceName }}</h4><label class="enabled"><input type="checkbox" name="active" [(ngModel)]="row.isActive" /> قانون فعال</label></div>
+      <div class="fields">
+        <label>مبنای پاداش<select name="basis" [(ngModel)]="row.basis" (ngModelChange)="changeBasis(row)"><option value="Unit">هر واحد دندان</option><option value="Block">هر چند واحد</option><option value="Jaw">هر فک</option></select></label>
+        @if (row.basis !== 'Unit') { <label>{{ row.basis === 'Jaw' ? 'حداقل واحد انجام‌شده در هر فک' : 'تعداد واحد هر بلوک' }}<input type="number" name="units" min="1" [max]="row.basis === 'Jaw' ? 16 : 32" step="1" [(ngModel)]="row.units" required /></label> }
+        <label>مبلغ پاداش (تومان)<input type="number" name="amount" min="0" max="999999999999" step="0.01" [(ngModel)]="row.amount" required /></label>
+        @if (row.basis === 'Block') { <label>باقی‌مانده واحدها<select name="remainder" [(ngModel)]="row.remainderMode"><option value="FullBlocks">فقط بلوک کامل؛ باقی‌مانده برای جلسه بعد</option><option value="Proportional">متناسب با تعداد واحد انجام‌شده</option></select></label> }
+      </div>
+      @if (row.basis === 'Jaw') { <p>برای هر فک فقط یک بار در همین درمان پاداش محاسبه می‌شود؛ پس از رسیدن تعداد خدمات واقعاً انجام‌شده به حداقل تعیین‌شده.</p> }
+      @if (row.basis === 'Block') { <p>واحدهای جلسات همین درمان تجمیع می‌شوند. نمونه: هر ۴ واحد، یک میلیون؛ برای ۶ واحد در حالت بلوک کامل یک میلیون و در حالت تناسبی یک‌ونیم میلیون تومان.</p> }
+      <footer><small>{{ row.createdAt ? 'آخرین نسخه: ' + date(row.createdAt) : 'هنوز قانونی ذخیره نشده' }}</small><button type="submit" [disabled]="savingId !== null || loading">{{ savingId === row.serviceId ? 'در حال ذخیره...' : 'ذخیره قانون ' + row.serviceName }}</button></footer>
+    </fieldset></form>
+  }
+</section>

@@ -1,3 +1,4 @@
+import { ServiceRewardContext, ServiceRewardQuote } from "../../../core/consultant/service-reward.models";
 import { PatientPaperRecord } from "./patient-paper-intake.models";
 import { SecretaryReservation, ReviewAttendanceRequest } from "../../../core/secretary/secretary-dashboard.service";
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
@@ -27,6 +28,17 @@ export class PatientFilesService {
       totalCount: number; reviewableReservationIds: number[] }>(`${this.endpoint}/${fileId}/service-results`, {
       headers: this.authHeaders(), params: new HttpParams().set("page", page),
     });
+  }
+
+  getServiceRewardContext(fileId: number, reservationId: number) {
+    return this.http.get<ServiceRewardContext>(
+      this.endpoint + "/" + fileId + "/service-results/reward-context", {
+        headers: this.authHeaders(), params: new HttpParams().set("reservationId", reservationId),
+      });
+  }
+  previewServiceReward(fileId: number, body: ReviewAttendanceRequest) {
+    return this.http.post<ServiceRewardQuote>(this.endpoint + "/" + fileId + "/service-results/reward-preview", body,
+      { headers: this.authHeaders() });
   }
 
   reviewServiceResult(fileId: number, body: ReviewAttendanceRequest) {

@@ -1,0 +1,12 @@
+:host { display: block; }
+.rules { display: grid; gap: 1rem; }
+header p, .rule p, small { color: var(--muted, #64748b); line-height: 1.9; }
+.rule { padding: 1rem; border: 1px solid var(--line, #dbe5e0); border-radius: 1rem; background: var(--surface, white); }
+.heading, footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+h4 { margin: 0; } .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
+label { display: grid; gap: .5rem; } label.enabled { display: flex; align-items: center; }
+input:not([type=checkbox]), select { box-sizing: border-box; width: 100%; min-width: 0; padding: .7rem; border: 1px solid var(--line, #cbd5e1); border-radius: .6rem; background: var(--surface, white); color: inherit; font: inherit; }
+button { border: 0; border-radius: .65rem; padding: .7rem 1rem; background: #0f766e; color: white; font: inherit; cursor: pointer; } button:disabled { opacity: .5; cursor: default; } .error { color: #b91c1c; }
+@media (max-width: 600px) { footer button { width: 100%; } .fields { grid-template-columns: 1fr; } }
+
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
