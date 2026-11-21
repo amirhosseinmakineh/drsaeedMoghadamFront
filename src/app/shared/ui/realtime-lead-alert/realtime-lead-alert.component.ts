@@ -11,6 +11,7 @@ import {
 } from "@angular/core";
 import { Subscription } from "rxjs";
 import {
+  SMS_PANEL_LEAD_ALERT_TITLE,
   LEAD_ALERT_ACTION_LABEL,
   LEAD_ALERT_PUSH_TITLE,
 } from "../../../core/lead/lead-alert-copy";
@@ -69,6 +70,7 @@ export class RealtimeLeadAlertComponent implements OnInit, OnDestroy {
   }
 
   titleFor(alert: RealtimeLeadAlert): string {
+    if (alert.isSmsPanel) return SMS_PANEL_LEAD_ALERT_TITLE;
     return alert.leadLimitType === "Burnt"
       ? "لید سوخته دارید"
       : this.leadAlertTitle;

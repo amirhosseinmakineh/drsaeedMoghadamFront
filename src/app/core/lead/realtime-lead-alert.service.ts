@@ -22,6 +22,7 @@ import {
 import { RealtimeLeadPickupService } from "./realtime-lead-pickup.service";
 
 export interface RealtimeLeadAlert {
+  isSmsPanel?: boolean;
   leadId: number;
   leadLimitType: "Realtime" | "Burnt";
   userName?: string | null;
@@ -89,6 +90,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
       detail.data?.["leadLimitType"] === "Burnt" ? "Burnt" : "Realtime";
 
     void this.notifyIncomingLead(leadId, {
+      isSmsPanel: detail.data?.["isSmsPanel"] === "true",
       leadLimitType,
       userName: detail?.data?.["userName"] ?? detail?.data?.["UserName"],
       phoneNumber:
@@ -287,6 +289,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
         }
 
         await this.notifyIncomingLead(leadId, {
+          isSmsPanel: alert.isSmsPanel,
           leadLimitType: alert.leadLimitType,
           userName: alert.userName,
           phoneNumber: alert.phoneNumber,
@@ -309,6 +312,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
       if (!leadId) return;
 
       await this.notifyIncomingLead(leadId, {
+        isSmsPanel: lead.isSmsPanel ?? lead.IsSmsPanel ?? false,
         leadLimitType: this.readBroadcastLeadLimitType(lead),
         userName: lead.userName ?? lead.UserName,
         phoneNumber: lead.phoneNumber ?? lead.PhoneNumber,
@@ -389,6 +393,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
         profileId,
       );
       const notificationDetails: RealtimeLeadNotificationDetails = {
+        isSmsPanel: enrichedDetails.isSmsPanel,
         leadLimitType: enrichedDetails.leadLimitType,
         userName: enrichedDetails.userName,
         phoneNumber: enrichedDetails.phoneNumber,
@@ -405,6 +410,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
       const existingAlert = this.activeAlerts.get(leadId);
       if (existingAlert) {
+        existingAlert.isSmsPanel = enrichedDetails.isSmsPanel;
         existingAlert.leadLimitType = enrichedDetails.leadLimitType ?? "Realtime";
         existingAlert.userName =
           notificationDetails.userName ?? existingAlert.userName;
@@ -414,6 +420,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
       } else {
         this.activeAlerts.set(leadId, {
           leadId,
+          isSmsPanel: enrichedDetails.isSmsPanel,
           leadLimitType: enrichedDetails.leadLimitType ?? "Realtime",
           userName: notificationDetails.userName,
           phoneNumber: notificationDetails.phoneNumber,
@@ -438,6 +445,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
         data: {
           type: "RealtimeLead",
           leadId: String(leadId),
+          isSmsPanel: enrichedDetails.isSmsPanel ? "true" : "false",
           leadLimitType: enrichedDetails.leadLimitType ?? "Realtime",
           userName: notificationDetails.userName ?? "",
           phoneNumber: notificationDetails.phoneNumber ?? "",
@@ -469,6 +477,7 @@ export class RealtimeLeadAlertService implements OnDestroy {
 
       return {
         ...details,
+        isSmsPanel: lead.isSmsPanel ?? lead.IsSmsPanel ?? false,
         leadLimitType: this.readBroadcastLeadLimitType(lead),
         userName:
           userName ||

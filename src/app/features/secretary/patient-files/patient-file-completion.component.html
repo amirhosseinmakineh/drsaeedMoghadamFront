@@ -98,6 +98,7 @@
                     <app-base-persian-date-picker label="تاریخ سررسید" [value]="installment.dueDate" (valueChange)="installment.dueDate = $event; receiptConfirmed = false" />
                     <app-base-number-input [inputId]="'completion-installment-' + i" label="مبلغ قسط" suffix="تومان" [maxFractionDigits]="2" [value]="installment.amount" (valueChange)="installment.amount = $event; receiptConfirmed = false" />
                   </div>
+                  @if (validationAttempted && documentError('installment', i)) { <p class="completion-error" role="alert">{{ documentError('installment', i) }}</p> }
                 </article>
               }
               <strong>جمع اقساط: {{ money(installmentTotal) }}</strong>
@@ -113,6 +114,7 @@
                 @if (cheque.installment) { <app-base-persian-date-picker label="تاریخ سررسید چک" [minDate]="editFinance ? null : today" [value]="cheque.dueDate" (valueChange)="cheque.dueDate = $event; receiptConfirmed = false" /> }
                 @else { <p class="due-note">سررسید این چک قدیمی تاریخ ثبت آن است.</p> }
               </div>
+              @if (validationAttempted && documentError('cheque', i)) { <p class="completion-error" role="alert">{{ documentError('cheque', i) }}</p> }
             </article>
           }
           @for (note of notes; track note; let i = $index) {
@@ -123,6 +125,7 @@
                 <app-base-number-input [inputId]="'completion-note-' + i" label="مبلغ سفته" suffix="تومان" [maxFractionDigits]="2" [value]="note.amount" (valueChange)="note.amount = $event; receiptConfirmed = false" />
                 <app-base-persian-date-picker label="تاریخ سررسید سفته" [minDate]="editFinance ? null : today" [value]="note.dueDate" (valueChange)="note.dueDate = $event; receiptConfirmed = false" />
               </div>
+              @if (validationAttempted && documentError('note', i)) { <p class="completion-error" role="alert">{{ documentError('note', i) }}</p> }
             </article>
           }
           <div class="completion-summary"><div><span>جمع مبلغ اسمی اسناد</span><strong>{{ money(documentTotal) }}</strong></div><div><span>مبلغ اسناد ضمانت</span><strong>{{ money(guaranteeTotal) }}</strong></div><div [class.amount-error]="uncoveredAmount !== 0"><span>مانده بدون برنامه پرداخت یا سند</span><strong>{{ money(uncoveredAmount) }}</strong></div>@if (excessGuarantee > 0) { <div><span>ضمانت مازاد بر مانده درمان</span><strong>{{ money(excessGuarantee) }}</strong></div> }</div>
@@ -131,6 +134,7 @@
       }
       <label class="receipt-confirm"><input type="checkbox" [(ngModel)]="receiptConfirmed" /><span>{{ paymentMode === 'cash' ? 'کل مبلغ ' + money(totalAmount) + ' را از بیمار دریافت کرده‌ام.' : 'وجه نقد درج‌شده و اسناد فیزیکی ثبت‌شده (در صورت وجود) را دریافت کرده‌ام و برنامه اقساط را بررسی کرده‌ام.' }}</span></label>
     </fieldset>
-    <app-base-button [loading]="saving" [disabled]="!receiptConfirmed || !hasChartServices" (pressed)="submit()">{{ editFinance ? 'ذخیره اصلاحات مالی' : 'ثبت مالی پرونده' }}</app-base-button>
+    @if (error) { <p class="completion-error" role="alert">{{ error }}</p> }
+    <app-base-button [loading]="saving" [disabled]="loading || saving" (pressed)="submit()">{{ editFinance ? 'ذخیره اصلاحات مالی' : 'ثبت مالی پرونده' }}</app-base-button>
   }
 </div>

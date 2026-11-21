@@ -1,9 +1,11 @@
+export const SMS_PANEL_LEAD_ALERT_TITLE = "لید جدید پنل پیامکی دارید";
 export const LEAD_ALERT_MESSAGE = "شماره جدید دارید";
 export const LEAD_ALERT_ACTION_LABEL = "ببین";
 export const LEAD_ALERT_PUSH_TITLE = "شماره جدید دارید";
 export const LEAD_ALERT_PUSH_BODY = "برای مشاهده، اعلان را باز کنید.";
 
 export interface RealtimeLeadNotificationDetails {
+  isSmsPanel?: boolean;
   leadLimitType?: "Realtime" | "Burnt";
   userName?: string | null;
   phoneNumber?: string | null;
@@ -13,6 +15,7 @@ export interface RealtimeLeadNotificationDetails {
 export function buildRealtimeLeadNotificationTitle(
   details?: RealtimeLeadNotificationDetails,
 ): string {
+  if (details?.isSmsPanel) return SMS_PANEL_LEAD_ALERT_TITLE;
   const name = normalizeLeadField(details?.userName);
   const leadTitle =
     details?.leadLimitType === "Burnt" ? "لید سوخته" : "شماره جدید";

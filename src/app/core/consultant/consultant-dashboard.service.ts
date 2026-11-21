@@ -69,6 +69,8 @@ export interface ConsultantDashboardStatus {
 }
 
 export interface BroadcastRealtimeLeadItem {
+  isSmsPanel?: boolean;
+  IsSmsPanel?: boolean;
   leadAssignmentId?: number;
   LeadAssignmentId?: number;
   userName?: string | null;

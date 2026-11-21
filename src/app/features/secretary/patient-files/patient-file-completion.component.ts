@@ -170,27 +170,42 @@ export class PatientFileCompletionComponent implements OnInit {
   normalizeNumber(value: string): string {
     return value.replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).trim();
   }
+  validationAttempted = false;
+  documentError(kind: "cheque" | "note" | "installment", index: number): string {
+    const row = kind === "cheque" ? this.cheques[index] : kind === "note" ? this.notes[index] : this.installments[index];
+    if (!row) return "";
+    const missing: string[] = [];
+    if (!Number.isFinite(row.amount) || Number(row.amount) <= 0) missing.push("مبلغ معتبر و بیشتر از صفر");
+    if ("number" in row && (typeof row.number !== "string" || !row.number.trim())) missing.push("شماره سند");
+    if ("ownerName" in row && (typeof row.ownerName !== "string" || !row.ownerName.trim())) missing.push("نام صاحب چک");
+    if ((!("installment" in row) || row.installment) && (!(row.dueDate instanceof Date) || !Number.isFinite(row.dueDate.getTime()))) missing.push("تاریخ سررسید معتبر");
+    return missing.length ? missing.join("، ") + " را وارد کنید." : "";
+  }
   private validate(): string | null {
     if (this.installmentDescription.length > 4000) return "توضیحات نحوه پرداخت اقساط حداکثر ۴۰۰۰ کاراکتر است.";
     if (!this.editFinance && this.existingCases.length && !this.newFinanceConfirmed) return "صورت‌حساب قبلی را انتخاب کنید یا ثبت یک درمان جدید و جداگانه را تأیید کنید.";
     if (this.editFinance && !this.editHash) return "ابتدا اطلاعات مالی را دوباره دریافت کنید.";
-    if (!this.totalAmount || this.totalAmount <= 0) return "هزینه درمان را وارد کنید.";
+    if (!Number.isFinite(this.totalAmount) || !this.totalAmount || this.totalAmount <= 0) return "هزینه درمان را وارد کنید.";
     if (!Object.keys(this.serviceUnits).length || Object.values(this.serviceUnits).some(x => !Number.isInteger(x) || x < 1 || x > 100))
       return "ابتدا دندان‌ها و خدمات را در چارت پرونده ثبت کنید؛ خدمات مالی فقط از چارت خوانده می‌شوند.";
     if (!this.receiptConfirmed) return "دریافت وجه یا تحویل گرفتن اصل اسناد را تأیید کنید.";
     if (this.paymentMode === "cash") return null;
     if (!this.cheques.length && !this.notes.length && !(this.useInstallmentTable && this.installments.length)) return "جدول اقساط را تکمیل کنید یا یک سند پرداخت اضافه کنید؛ ضمانت اختیاری است.";
     if (this.useInstallmentTable && !this.installments.length) return "حداقل یک قسط وارد کنید.";
-    if (this.useInstallmentTable && this.installments.some(x => !x.amount || x.amount <= 0 || !x.dueDate)) return "تاریخ و مبلغ تمام اقساط را کامل کنید.";
-    if (this.cheques.some(x => !x.amount || x.amount <= 0 || !x.number.trim() || !x.ownerName.trim() || (x.installment && !x.dueDate)))
-      return "شماره، مبلغ و نام صاحب چک و سررسید چک را کامل کنید.";
-    if (this.notes.some(x => !x.amount || x.amount <= 0 || !x.number.trim() || !x.dueDate)) return "شماره، مبلغ و سررسید سفته را کامل کنید.";
-    if (this.cashReceived === null || this.cashReceived < this.treatmentPaid || this.uncoveredAmount !== 0 || this.paymentExcess > 0)
+    for (const kind of ["installment", "cheque", "note"] as const) {
+      const rows = kind === "installment" ? (this.useInstallmentTable ? this.installments : []) : kind === "cheque" ? this.cheques : this.notes;
+      for (let i = 0; i < rows.length; i++) {
+        const error = this.documentError(kind, i);
+        if (error) return (kind === "cheque" ? "چک" : kind === "note" ? "سفته" : "قسط") + " ردیف " + (i + 1) + ": " + error;
+      }
+    }
+    if (!Number.isFinite(this.cashReceived) || this.cashReceived === null || this.cashReceived < this.treatmentPaid || this.uncoveredAmount !== 0 || this.paymentExcess > 0)
       return "نقد و اسناد پرداخت نباید از هزینه درمان بیشتر شوند؛ مانده باید با جدول اقساط یا اسناد پوشش داده شود؛ دریافت ضمانت اختیاری است.";
     return null;
   }
   submit(): void {
     if (this.loading || this.saving) return;
+    this.validationAttempted = true;
     this.error = this.validate() ?? "";
     if (this.error) return;
     this.setBusy(true);
@@ -232,5 +247,16 @@ export class PatientFileCompletionComponent implements OnInit {
     ).subscribe({ next: () => this.saved.emit(), error: e => { this.error = this.message(e); this.cdr.markForCheck(); } });
   }
   private setBusy(value: boolean): void { this.saving = value; this.busyChange.emit(value); this.cdr.markForCheck(); }
-  private message(error: any): string { return error?.error?.message || error?.message || "ثبت اطلاعات انجام نشد؛ دوباره تلاش کنید."; }
+  private message(error: any): string {
+    const body = error?.error;
+    if (typeof body === "string" && body.trim() && !body.trim().startsWith("<")) return body;
+    const errors = body?.errors;
+    if (errors && typeof errors === "object") {
+      const messages = Object.values(errors).flat().filter((x): x is string => typeof x === "string" && !!x.trim());
+      if (messages.length) return messages.join(" — ");
+    }
+    if (body?.message || body?.detail || body?.title) return body.message || body.detail || body.title;
+    if (error?.status === 0) return "ارتباط با سرور برقرار نشد؛ اتصال اینترنت را بررسی و دوباره تلاش کنید.";
+    return "ثبت اطلاعات انجام نشد؛ دوباره تلاش کنید.";
+  }
 }

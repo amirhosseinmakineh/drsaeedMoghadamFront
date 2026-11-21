@@ -284,3 +284,25 @@ for (const storedDate of ["2026-11-23T00:00:00", "2026-11-23", "2026-11-23T00:00
   assert.equal(calls[0].finance.installments[1].dueDate, "2026-12-23");
 }
 console.log("PASS: chart-only services, financial corrections, guarantee notes above treatment cost, installment descriptions, payment guards and due dates.");
+
+// Incomplete document rows must identify the missing field and never call HTTP.
+{
+  const { c, calls } = fixture();
+  c.changeMode("installments"); c.addCheque(false);
+  c.cheques[0].number = "123"; c.cheques[0].ownerName = "صاحب چک";
+  c.cheques[0].amount = 1000; c.receiptConfirmed = true;
+  c.submit();
+  assert.equal(calls.length, 0);
+  assert.match(c.error, /چک ردیف 1/);
+  assert.match(c.error, /تاریخ سررسید/);
+  assert.equal(c.validationAttempted, true);
+  c.cheques[0].amount = null;
+  assert.match(c.documentError("cheque", 0), /مبلغ/);
+  c.cheques[0].dueDate = new Date("invalid");
+  assert.match(c.documentError("cheque", 0), /تاریخ/);
+  assert.equal(c.message({ error: "خطای ثبت سند" }), "خطای ثبت سند");
+  assert.equal(c.message({ error: { errors: { DueDate: ["تاریخ الزامی است"] } } }), "تاریخ الزامی است");
+  assert.equal(c.message({ error: { message: "صورت حساب تغییر کرده است" } }), "صورت حساب تغییر کرده است");
+  assert.match(c.message({ status: 0 }), /ارتباط/);
+}
+console.log("PASS: visible row validation and server error formats.");

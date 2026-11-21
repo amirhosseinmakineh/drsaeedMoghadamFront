@@ -97,7 +97,9 @@ self.addEventListener("push", (event) => {
     const tag = `${REALTIME_LEAD_TAG_PREFIX}${leadId}`;
     const userName = (data.userName || data.UserName || "").trim();
     const phoneNumber = (data.phoneNumber || data.PhoneNumber || "").trim();
-    const title = "شماره جدید دارید";
+    const title = data.isSmsPanel === "true"
+      ? "لید جدید پنل پیامکی دارید"
+      : "شماره جدید دارید";
     const body = "برای مشاهده، اعلان را باز کنید.";
     const baseOptions = {
       body,
