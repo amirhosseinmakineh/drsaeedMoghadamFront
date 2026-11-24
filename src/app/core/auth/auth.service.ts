@@ -3,7 +3,7 @@ import { Injectable, computed, signal } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { environment } from "../../../environments/environment";
 
-export type AuthRole = "admin" | "consultant" | "secretary" | "patient";
+export type AuthRole = "admin" | "consultant" | "secretary" | "patient" | "accountant";
 
 export interface AuthUser {
   firstName: string;
@@ -86,6 +86,7 @@ export class AuthService {
   private readonly sessionStorageKey = "clinic-auth-session";
   private readonly dashboardRolePriority: AuthRole[] = [
     "admin",
+    "accountant",
     "consultant",
     "secretary",
     "patient",
@@ -348,6 +349,7 @@ export class AuthService {
 
   roleLabel(role: AuthRole, language: "fa" | "en"): string {
     const labels: Record<AuthRole, { fa: string; en: string }> = {
+      accountant: { fa: "حسابدار", en: "Accountant" },
       admin: { fa: "ادمین", en: "Admin" },
       consultant: { fa: "مشاور", en: "Consultant" },
       secretary: { fa: "منشی", en: "Secretary" },
@@ -535,6 +537,7 @@ export class AuthService {
 
   private roleNameFromAuthRole(role: AuthRole): string {
     const roleNames: Record<AuthRole, string> = {
+      accountant: "Accountant",
       admin: "Admin",
       consultant: "Consultant",
       secretary: "Secretary",
@@ -551,6 +554,7 @@ export class AuthService {
       return "admin";
     if (["consultant", "advisor", "مشاور"].includes(normalized))
       return "consultant";
+    if (["accountant", "حسابدار"].includes(normalized)) return "accountant";
     if (["secretary", "منشی"].includes(normalized)) return "secretary";
     if (
       ["patient", "normaluser", "user", "بیمار", "کاربر"].includes(normalized)

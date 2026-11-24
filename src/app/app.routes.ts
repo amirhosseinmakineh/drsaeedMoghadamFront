@@ -6,6 +6,7 @@ import {
 } from "./core/auth/auth.guard";
 
 export const routes: Routes = [
+  { path: "dashboard/accountant", canActivate: [authGuard, roleGuard(["accountant", "admin"])], loadComponent: () => import("./pages/accounting-dashboard/accounting-dashboard.component").then(m => m.AccountingDashboardComponent) },
   {
     path: "",
     loadComponent: () =>

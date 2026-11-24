@@ -1,5 +1,49 @@
 @use "../../shared/dashboard/dashboard-mobile-layout" as mobile-layout;
 
+.admin-workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  strong { font-size: .92rem; }
+  small { display: block; margin-top: 4px; color: var(--text-secondary, #536967); font-size: .76rem; }
+}
+.admin-workspace-header .accounting-header-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-height: 46px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid #c4e3de;
+  border-radius: 14px;
+  background: #f0f9f7;
+  color: #115e59;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: .82rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 5px rgba(15, 118, 110, .04);
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  &:hover { background: #e3f3ef; border-color: #84bfb5; box-shadow: 0 4px 12px rgba(15, 118, 110, .1); }
+  &:focus-visible { outline: 3px solid #99d7cb; outline-offset: 3px; }
+  .accounting-link-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: #0f766e; color: #fff; }
+  .accounting-link-icon app-fa-icon { width: 17px; height: 17px; }
+  .accounting-link-label { white-space: nowrap; }
+  .accounting-link-arrow { width: 15px; height: 15px; margin-inline-start: 6px; opacity: .65; }
+}
+@media (max-width: 600px) {
+  .admin-workspace-header { padding: 12px; gap: 10px; }
+  .admin-workspace-header .accounting-header-link { min-height: 42px; gap: 8px; padding-inline-end: 10px; font-size: .76rem; }
+  .admin-workspace-header .accounting-link-arrow { display: none; }
+}
+
 .dashboard-layout {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);

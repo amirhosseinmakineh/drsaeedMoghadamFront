@@ -1,0 +1,25 @@
+<app-base-modal [open]="true" [title]="title" [closeOnBackdrop]="!saving" (close)="!saving && close.emit()">
+  <div dir="rtl" class="accounting-form">
+    @if (row) { <p><strong>{{ row.person }}</strong> · {{ row.description }} · {{ row.amount.toLocaleString('fa-IR') }} تومان</p> }
+    @if (!fields.length) { <p>این عملیات روی اطلاعات مالی ثبت می‌شود. پس از بررسی مبلغ، شخص و وضعیت، تأیید کنید.</p> }
+    @if (operation === 'UpdatePatient') { <p>خدمات و تعداد واحد از چارت پرونده حفظ می‌شوند. تغییر مالی ممکن است مجوز قبلی انجام خدمت را نامعتبر کند و نیازمند بررسی مجدد منشی باشد.</p> }
+    @if (loading) { <p role="status">در حال دریافت اطلاعات…</p> }
+    <fieldset [disabled]="saving || loading" class="editor-fields">
+      @for (field of fields; track field.key) {
+        <div class="editor-field">
+          @switch (field.kind) {
+            @case ('money') { <app-base-number-input [inputId]="'accounting-' + field.key" [label]="field.label" suffix="تومان" [maxFractionDigits]="2" [value]="numberValue(field.key)" (valueChange)="model[field.key] = $event" /> }
+            @case ('date') { <app-base-persian-date-picker [label]="field.label" [value]="dateValue(field.key)" (valueChange)="model[field.key] = $event" /> }
+            @case ('select') { <label>{{ field.label }}<select [(ngModel)]="model[field.key]"><option [ngValue]="null">انتخاب کنید</option>@for (option of field.options; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label> }
+            @case ('textarea') { <label>{{ field.label }}<textarea rows="4" [(ngModel)]="model[field.key]" [attr.maxlength]="field.maxLength"></textarea></label> }
+            @case ('check') { <label class="checkbox"><input type="checkbox" [(ngModel)]="model[field.key]" />{{ field.label }}</label> }
+            @default { <label>{{ field.label }}<input [(ngModel)]="model[field.key]" [attr.maxlength]="field.maxLength" /></label> }
+          }
+          @if (errors[field.key]) { <small role="alert" class="error">{{ errors[field.key] }}</small> }
+        </div>
+      }
+    </fieldset>
+    @if (error) { <p role="alert" class="error">{{ error }}</p> }
+    <div class="actions"><button type="button" [disabled]="saving || loading" (click)="submit()">{{ saving ? 'در حال ثبت…' : 'تأیید و ثبت' }}</button><button type="button" class="secondary" [disabled]="saving" (click)="close.emit()">انصراف</button></div>
+  </div>
+</app-base-modal>

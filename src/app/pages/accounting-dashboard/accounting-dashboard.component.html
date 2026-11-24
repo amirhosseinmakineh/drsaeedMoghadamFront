@@ -1,0 +1,60 @@
+<main class="accounting-workspace" dir="rtl">
+  <header class="workspace-header"><div><span class="eyebrow">کلینیک دندان‌پزشکی</span><h1>پنل حسابداری</h1><p>{{ auth.user()?.firstName }} {{ auth.user()?.lastName }}</p></div><div class="actions">@if (access?.isAdmin) { <a routerLink="/dashboard/admin">پنل مدیریت</a> }<a routerLink="/select-dashboard">انتخاب پنل</a><button type="button" class="secondary" (click)="logout()">خروج</button></div></header>
+  <div class="workspace-layout">
+    <nav class="accounting-nav" aria-label="بخش‌های حسابداری">
+      <button type="button" class="mobile-menu-toggle" (click)="menuOpen = !menuOpen" [attr.aria-expanded]="menuOpen" aria-controls="accounting-menu">بخش‌های حسابداری <span>{{ menuOpen ? 'بستن −' : 'نمایش +' }}</span></button>
+      <div id="accounting-menu" class="nav-items" [class.mobile-open]="menuOpen">
+      <div class="nav-brand"><span class="brand-mark" aria-hidden="true">◆</span><div><strong>مدیریت مالی</strong><small>کلینیک دندان‌پزشکی</small></div></div>
+      <button type="button" [class.active]="section === 'overview'" [attr.aria-current]="section === 'overview' ? 'page' : null" (click)="select('overview')">نمای کلی حسابداری</button>
+      @for (group of navigationGroups; track group.label) {
+        @if (group.label !== 'مدیریت و نظارت' || can('ViewAudit') || access?.isAdmin) {
+          <div class="nav-group"><span class="nav-group-label">{{ group.label }}</span>
+            @for (tab of group.tabs; track tab.id) { @if (tab.id !== 'Audit' || can('ViewAudit')) { <button type="button" [class.active]="section === tab.id" [attr.aria-current]="section === tab.id ? 'page' : null" (click)="select(tab.id)">{{ tab.label }}</button> } }
+            @if (group.label === 'مدیریت و نظارت' && access?.isAdmin) { <button type="button" [class.active]="section === 'permissions'" [attr.aria-current]="section === 'permissions' ? 'page' : null" (click)="select('permissions')">دسترسی حسابداران</button> }
+          </div>
+        }
+      }
+      </div>
+    </nav>
+    <section class="workspace-content">
+      <div class="content-heading"><div><span class="eyebrow">حسابداری / {{ section === 'overview' ? 'داشبورد' : 'مدیریت اطلاعات' }}</span><h2>{{ title }}</h2></div><span class="workspace-tag">مبالغ به تومان</span></div>
+      @if (section === 'permissions' && access?.isAdmin) { <app-accounting-permissions [available]="access?.availablePermissions ?? []" /> }
+      @else {
+        <form class="filters panel" (ngSubmit)="load(true)">
+          @if (section !== 'overview') { <label>جست‌وجو<input name="search" [(ngModel)]="filter.search" placeholder="نام، شرح یا شماره سند" maxlength="200" /></label><label>وضعیت<select name="status" [(ngModel)]="filter.status"><option value="">همه وضعیت‌ها</option>@for (entry of currentTab?.statuses | keyvalue; track entry.key) { <option [value]="entry.key">{{ entry.value }}</option> }</select></label> }
+          <app-base-persian-date-picker [label]="'از ' + (currentTab?.dateLabel || 'تاریخ')" [value]="fromDate" (valueChange)="fromDate = $event" />
+          <app-base-persian-date-picker [label]="'تا ' + (currentTab?.dateLabel || 'تاریخ')" [value]="toDate" (valueChange)="toDate = $event" />
+          <div class="actions"><button type="submit" [disabled]="loading">اعمال فیلتر</button><button type="button" class="secondary" [disabled]="loading" (click)="clear()">پاک‌کردن</button>@if (can('Export') && section !== 'overview') { <button type="button" class="secondary" [disabled]="exporting || loading" (click)="download()">{{ exporting ? 'در حال آماده‌سازی…' : 'خروجی CSV' }}</button><button type="button" class="secondary" [disabled]="exporting || loading" (click)="download(true)">خروجی Excel</button> }</div>
+        </form>
+        @if (filter.userId || filter.caseId) { <p class="notice">فهرست برای شخص یا پرونده انتخاب‌شده فیلتر شده است. برای نمایش همه، «پاک‌کردن» را بزنید.</p> }
+        @if (success) { <p class="success" role="status">{{ success }}</p> }
+        @if (error) { <p class="error" role="alert">{{ error }}</p><button type="button" (click)="load()">تلاش دوباره</button> }
+        @if (loading) { <p role="status" class="panel">در حال دریافت اطلاعات مالی…</p> }
+        @if (!loading && !error && section === 'overview') {
+          <p class="notice">درآمد کلینیک، ارزش درمان و پاداش‌ها مستقل‌اند و با هم جمع نمی‌شوند. بازه پرونده بیمار بر اساس تاریخ ایجاد آن است؛ وصول نشان‌دهنده کل دریافتی همین پرونده‌هاست. بازه درآمد و هزینه بر اساس تاریخ تراکنش و بدهی بر اساس سررسید است.</p>
+          <div class="metric-grid">@for (metric of metrics; track metric.key) { <article><span>{{ metricLabels[metric.key] || metric.key }}</span><strong>{{ money(metric.amount) }}</strong>@if (metric.count) { <small>{{ metric.count.toLocaleString('fa-IR') }} مورد</small> }</article> }</div>
+        }
+        @if (section !== 'overview') {
+          <div class="actions">@if (section === 'Transactions' && can('ManageTransactions')) { <button type="button" (click)="open({ operation: 'CreateTransaction', label: 'ثبت درآمد یا هزینه', permission: 'ManageTransactions' }, null)">+ ثبت درآمد یا هزینه</button> }@if (section === 'Categories' && can('ManageCategories')) { <button type="button" (click)="open({ operation: 'CreateCategory', label: 'دسته‌بندی جدید', permission: 'ManageCategories' }, null)">+ دسته‌بندی جدید</button> }</div>
+          @if (section === 'ConsultantRewards') { <p class="notice">پاداش‌های جدید بر اساس خدمات و نرخ ثبت‌شده زمان انجام خدمت محاسبه می‌شوند. موجودی مشاور مجموع پاداش‌های تأییدشده است و به معنی تسویه بانکی نیست.</p> }
+          @if (section === 'Cheques' || section === 'Notes') { <p class="notice">مبلغ ضمانت پرداخت محسوب نمی‌شود. وصول چک ضمانت فقط بابت بدهی واجد شرایط انجام می‌شود.</p> }
+          @if (!loading && !error) {
+            <p class="results-count">تعداد نتایج <strong>{{ (page?.totalCount ?? 0).toLocaleString('fa-IR') }}</strong></p>
+            <div class="table-scroll panel"><table><thead><tr><th>شخص / شرح</th><th>مبلغ</th><th>{{ currentTab?.dateLabel }}</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>
+              @for (row of page?.items ?? []; track row.id) {
+                <tr><td><strong>{{ row.person || description(row) }}</strong>@if (row.person) { <small>{{ description(row) }}</small> }@if (row.number) { <small>شماره: {{ row.number }}</small> }@if (row.owner) { <small>{{ row.owner }}</small> }</td>
+                  <td>{{ money(row.amount) }}@if (row.paidAmount !== null) { <small>{{ section === 'SecretarySales' ? 'مبلغ فروش' : 'پرداخت قطعی' }}: {{ money(row.paidAmount) }}</small> }@if (row.isGuarantee) { <span class="badge guarantee">ضمانت</span> }</td><td>{{ date(row.date) }}</td><td><span class="badge">{{ status(row) }}</span></td>
+                  <td><div class="row-actions">@if (row.caseId) { <button type="button" class="secondary" (click)="detailsId = row.caseId">جزئیات پرونده</button> }@if (section === 'Patients') { <button type="button" class="secondary" (click)="filterCase(row, 'PatientPayments')">پرداخت‌ها</button><button type="button" class="secondary" (click)="filterCase(row, 'Debts')">بدهی‌ها</button> }@if (row.detailsJson && (section === 'ConsultantRewards' || section === 'Audit')) { <button type="button" class="secondary" (click)="inspecting = row">ریز اطلاعات</button> }@if (section === 'SecretaryWallets' || section === 'PatientWallets' || section === 'ConsultantWallets') { <button type="button" class="secondary" (click)="history(row)">گردش کیف پول</button> }@if (section === 'Transactions') { <button type="button" class="secondary" (click)="receipt(row)">رسید</button> }@for (action of actions(row); track action.operation + action.label) { <button type="button" class="secondary" (click)="open(action, row)">{{ action.label }}</button> }</div></td>
+                </tr>
+              } @empty { <tr><td colspan="5" class="empty">اطلاعاتی مطابق فیلترها پیدا نشد.</td></tr> }
+            </tbody></table></div>
+            <div class="pagination"><button type="button" class="secondary" [disabled]="filter.page <= 1" (click)="changePage(-1)">قبلی</button><span>صفحه {{ filter.page }}</span><button type="button" class="secondary" [disabled]="filter.page * filter.pageSize >= (page?.totalCount ?? 0)" (click)="changePage(1)">بعدی</button></div>
+          }
+        }
+      }
+    </section>
+  </div>
+  @if (editor; as edit) { <app-accounting-editor [operation]="edit.operation" [title]="edit.title" [row]="edit.row" [initialData]="edit.data" (close)="editor = null" (saved)="saved()" /> }
+  @if (detailsId) { <app-accounting-case-details [caseId]="detailsId" (close)="detailsId = null" /> }
+  @if (inspecting; as row) { <app-base-modal [open]="true" title="ریز اطلاعات ثبت‌شده" (close)="inspecting = null"><div dir="rtl">@if (section === 'ConsultantRewards') { @for (line of rewardLines(row.detailsJson); track line.serviceId) { <article class="document-card"><b>{{ line.serviceName }}</b><span>{{ line.newUnits }} واحد · {{ money(line.amount) }}</span><small>نرخ: {{ money(line.rate) }} · مبنا: {{ rewardBasis(line.basis) }}</small></article> } @if (rewardNote(row.detailsJson)) { <p class="notice">دلیل رد: {{ rewardNote(row.detailsJson) }}</p> } } @else { <div class="table-scroll"><table><thead><tr><th>اطلاعات</th><th>قبل از تغییر</th><th>بعد از تغییر</th></tr></thead><tbody>@for (change of auditChanges(row.detailsJson); track change.label) { <tr><td>{{ change.label }}</td><td>{{ change.before }}</td><td>{{ change.after }}</td></tr> }</tbody></table></div> }</div></app-base-modal> }
+</main>

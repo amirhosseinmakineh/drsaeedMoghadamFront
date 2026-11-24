@@ -1,0 +1,17 @@
+<section class="panel" dir="rtl">
+  <h2>دسترسی حسابداران</h2>
+  <p>حسابدار جدید را از مدیریت کاربران با نقش «حسابدار» بسازید. دسترسی اولیه فقط مشاهده است؛ مجوزهای تغییر و تأیید را جداگانه فعال کنید.</p>
+  @if (loading) { <p role="status">در حال دریافت حسابداران…</p> }
+  @if (error) { <p class="error" role="alert">{{ error }}</p><button type="button" (click)="load()">دریافت دوباره</button> }
+  @if (success) { <p class="success" role="status">{{ success }}</p> }
+  @for (user of users; track user.id) {
+    <article class="permission-card"><h3>{{ user.name }} · {{ user.phoneNumber }}</h3>
+      <fieldset [disabled]="busyId !== null" class="permission-grid">
+        @for (permission of available; track permission) {
+          <label class="checkbox"><input type="checkbox" [checked]="user.permissions.includes(permission)" [disabled]="permission === 'Accounting.View'" (change)="toggle(user, permission)" />{{ labels[permission] || permission }}</label>
+        }
+      </fieldset>
+      <button type="button" [disabled]="busyId !== null" (click)="save(user)">{{ busyId === user.id ? 'در حال ذخیره…' : 'ذخیره دسترسی' }}</button>
+    </article>
+  } @empty { @if (!loading && !error) { <p>هنوز کاربر فعالی با نقش حسابدار ثبت نشده است.</p> } }
+</section>

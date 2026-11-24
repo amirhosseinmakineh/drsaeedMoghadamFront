@@ -125,6 +125,14 @@
   <main class="dashboard-content">
     @if (isAdmin()) {
       <section class="admin-shell">
+        <header class="admin-workspace-header">
+          <div><strong>پنل مدیریت</strong><small>{{ displayName() }}</small></div>
+          <a class="accounting-header-link" routerLink="/dashboard/accountant">
+            <span class="accounting-link-icon" aria-hidden="true"><app-fa-icon name="wallet"></app-fa-icon></span>
+            <span class="accounting-link-label">پنل حسابداری</span>
+            <app-fa-icon class="accounting-link-arrow" name="arrowLeft" aria-hidden="true"></app-fa-icon>
+          </a>
+        </header>
         @if (activeSection === "overview") {
           <header class="dashboard-hero admin-hero">
             <span>داشبورد مدیر سیستم</span>
@@ -267,6 +275,7 @@
                   <option value="Admin">مدیر سیستم</option>
                   <option value="Consultant">مشاور</option>
                   <option value="Secretary">منشی</option>
+              <option value="Accountant">حسابدار</option>
                   <option value="NormalUser">کاربر عادی</option>
                 </select>
               </label>
@@ -643,6 +652,7 @@
               <option value="Admin">مدیر سیستم</option>
               <option value="Consultant">مشاور</option>
               <option value="Secretary">منشی</option>
+              <option value="Accountant">حسابدار</option>
               <option value="NormalUser">کاربر عادی</option>
             </select>
           </label>

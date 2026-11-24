@@ -1,0 +1,21 @@
+<app-base-modal [open]="true" title="جزئیات پرونده مالی" (close)="close.emit()">
+  <section dir="rtl" class="case-paper">
+    @if (loading) { <p role="status">در حال دریافت…</p> }
+    @if (error) { <p class="error" role="alert">{{ error }}</p><button type="button" (click)="load()">تلاش دوباره</button> }
+    @if (details; as d) {
+      <h3>{{ d.case.patientName }}</h3><p>شماره پرونده: {{ d.case.patientFileNumber }} · {{ d.case.patientPhoneNumber }}</p>
+      <p>{{ d.case.serviceNames.join('، ') }} · {{ d.case.toothUnitCount || 0 }} واحد</p>
+      <div class="metric-grid"><article><span>کل درمان</span><strong>{{ money(d.case.totalAmount) }}</strong></article><article><span>پرداخت قطعی</span><strong>{{ money(d.case.totalPaidAmount) }}</strong></article><article><span>مانده</span><strong>{{ money(d.case.remainingAmount) }}</strong></article><article><span>بدهی ثبت‌شده</span><strong>{{ money(d.case.totalDebtAmount) }}</strong></article></div>
+      <p>روش پرداخت: {{ d.case.paymentMethod || '—' }} · وضعیت اقساط: {{ d.case.installmentStatus || '—' }}</p>
+      <p class="multiline">{{ d.case.notes }}</p>
+      <h4>اسناد پرونده</h4>
+      @for (x of d.cheques; track x.id) { <article class="document-card"><b>{{ x.isGuarantee ? 'چک ضمانت' : 'چک پرداخت' }} · {{ x.sayadNumber }}</b><span>{{ x.ownerName }} · {{ money(x.amount) }} · {{ date(x.dueDate) }}</span></article> }
+      @for (x of d.promissoryNotes; track x.id) { <article class="document-card"><b>{{ x.isGuarantee ? 'سفته ضمانت' : 'سفته پرداخت' }} · {{ x.serialNumber }}</b><span>{{ money(x.amount) }} · {{ date(x.dueDate) }}</span></article> }
+      <h4>مدارک مالی پرونده</h4>
+      @for (document of documents; track document.id) { <article class="document-card"><span>{{ document.description || 'مدرک مالی' }}</span><button type="button" (click)="downloadDocument(document.id)">دریافت تصویر مدرک</button></article> } @empty { <p>مدرک تصویری ثبت نشده است.</p> }
+      <h4>برنامه اقساط</h4>
+      @for (x of installments?.items ?? []; track x.id) { <article class="document-card"><span>{{ date(x.date) }} · {{ money(x.amount) }} · {{ x.status === 'Paid' ? 'پرداخت‌شده' : 'در انتظار پرداخت' }}</span></article> } @empty { <p>قسطی در این پرونده ثبت نشده است.</p> }
+      <p>برای تمام ردیف‌های پرداخت و بدهی این پرونده، از فیلتر پرونده در فهرست اصلی استفاده کنید.</p>
+    }
+  </section>
+</app-base-modal>

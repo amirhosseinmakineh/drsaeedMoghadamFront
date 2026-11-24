@@ -28,6 +28,7 @@ export class SelectDashboardComponent {
     AuthRole,
     { title: string; description: string; icon: string }
   > = {
+    accountant: { title: "داشبورد حسابداری", description: "امور مالی بیماران، کلینیک و پاداش‌ها", icon: "wallet" },
     admin: {
       title: "داشبورد ادمین",
       description: "مدیریت کاربران، مشاوران، لیدها و رزروها",
